@@ -1,0 +1,12 @@
+:root {
+  --bg-dark: #0a0a0a;
+  --bg-secondary: #121111;
+  --gold: #dfba86;
+  --gold-light: #e6c89f;
+  --white: #f3f3f3;
+  --gray: #a09f9f;
+  --accent: #e63946;
+  --shadow: 0 20px 40px rgba(0,0,0,0.5);
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --radius: 24px;
+}

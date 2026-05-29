@@ -1,0 +1,29 @@
+<?php
+header('Content-Type: application/json');
+require_once __DIR__ . '/config.php';
+requireLogin();
+
+$user_id = $_SESSION['user_id'];
+
+try {
+    $stmt = $pdo->prepare("
+        SELECT c.food_item_id AS id, c.food_item_id, c.quantity, f.name, f.price, f.image_url
+        FROM cart c
+        JOIN food_items f ON f.id = c.food_item_id
+        WHERE c.user_id = ?
+        ORDER BY c.id ASC
+    ");
+    $stmt->execute([$user_id]);
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Coerce types
+    foreach ($items as &$item) {
+        $item['quantity'] = intval($item['quantity']);
+        $item['price']    = floatval($item['price']);
+    }
+
+    echo json_encode(['success' => true, 'items' => $items]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'items' => []]);
+}
+?>

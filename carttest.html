@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Medusa</title>
+    <!-- Global Theme Controller -->
+    <script src="assets/js/theme-toggle.js"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+    <style>
+        body {
+            background-color: var(--bg-dark);
+            color: var(--white);
+        }
+
+        .cart-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .cart-title i {
+            color: #dc3545;
+            /* text-danger */
+        }
+
+        /* Table Styles */
+        .table {
+            color: var(--white);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .table> :not(caption)>*>* {
+            background-color: transparent;
+            color: var(--white);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 1rem;
+            vertical-align: middle;
+        }
+
+        .table thead th {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .cart-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .cart-item-price {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        /* Order Summary Card */
+        .summary-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .summary-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--gray);
+            font-size: 1.05rem;
+        }
+
+        .summary-row.total {
+            color: var(--white);
+            font-size: 1.3rem;
+            font-weight: 700;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .gst-notice {
+            font-size: 0.85rem;
+            color: #198754;
+            /* text-success */
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn-checkout {
+            background-color: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-weight: 600;
+            width: 100%;
+            transition: var(--transition);
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-checkout:hover {
+            background-color: var(--gold-light);
+            transform: translateY(-2px);
+            color: #000;
+        }
+
+        .btn-continue {
+            background-color: #1a1a1a;
+            color: var(--white);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 1rem;
+            transition: var(--transition);
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-continue:hover {
+            background-color: #2a2a2a;
+            color: var(--white);
+        }
+
+        .btn-remove {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-remove:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .quantity-controller-inline {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .quantity-controller-inline .qty-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            background: var(--gold);
+            color: #0c0a0a;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quantity-controller-inline .qty-btn:hover {
+            background: var(--gold-light);
+            transform: scale(1.05);
+        }
+
+        .quantity-controller-inline .qty-number {
+            width: 30px;
+            text-align: center;
+            color: #fff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="menutest.html" style="display: flex; align-items: center; gap: 8px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
+                Medusa
+            </a>
+            <a href="menutest.html" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Back to Menu</a>
+        </div>
+    </nav>
+
+    <div class="container my-5 fade-up">
+        <h1 class="cart-title"><i class="fas fa-shopping-cart text-danger"></i> Your Shopping Cart</h1>
+
+        <div class="row g-5">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>ITEM</th>
+                                <th>PRICE</th>
+                                <th>QUANTITY</th>
+                                <th>SUBTOTAL</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-5">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="summary-card">
+                    <h5 class="summary-title">Order Summary</h5>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">₹0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Charge:</span>
+                        <span>₹40.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (18%):</span>
+                        <span id="gstAmount">₹0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="totalAmount">₹0.00</span>
+                    </div>
+                    <div class="gst-notice">
+                        <i class="fas fa-check-circle"></i> Includes government GST charges
+                    </div>
+                    <a href="checkouttest.php" class="btn-checkout">Proceed to Checkout</a>
+                    <a href="menutest.html" class="btn-continue">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let localItems = [];
+        async function loadCart() {
+            try {
+                // Fetch cart data from backend
+                const response = await fetch('api/get-cart.php');
+                if (response.status === 401) {
+                    alert('Please login first', () => {
+                        window.location.href = 'login.html';
+                    });
+                    return;
+                }
+                const result = await response.json();
+                if (result.success && result.items.length > 0) {
+                    localItems = result.items;
+                    displayCartItems(localItems);
+                    // Compute subtotal from items (API doesn't return a separate total field)
+                    const subtotal = localItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                    updateTotals(localItems, subtotal);
+                    localStorage.setItem('foodie_cart', JSON.stringify(localItems));
+                } else {
+                    showEmptyCart();
+                }
+            } catch (e) {
+                console.warn('API get-cart failed, using local cart state.', e);
+                const savedCart = localStorage.getItem('foodie_cart');
+                if (savedCart) {
+                    try {
+                        localItems = JSON.parse(savedCart);
+                    } catch (err) {
+                        localItems = [];
+                    }
+                }
+                if (localItems.length > 0) {
+                    displayCartItems(localItems);
+                    const subtotal = localItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                    updateTotals(localItems, subtotal);
+                } else {
+                    showEmptyCart();
+                }
+            }
+        }
+
+        function displayCartItems(items) {
+            const tbody = document.getElementById('cartTableBody');
+            tbody.innerHTML = items.map(item => {
+                let imgSrc = item.image_url || 'default.jpg';
+                if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
+                    imgSrc = 'uploads/' + imgSrc;
+                }
+                return `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${imgSrc}" class="cart-img me-3" onerror="this.src='uploads/default.jpg'">
+                            <span class="cart-item-name">${item.name}</span>
+                        </div>
+                    </td>
+                    <td class="cart-item-price">₹${parseFloat(item.price).toFixed(2)}</td>
+                    <td>
+                        <div class="quantity-controller-inline">
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                            <span class="qty-number" id="qty-${item.id}">${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                        </div>
+                    </td>
+                    <td class="cart-item-price">₹${(item.price * item.quantity).toFixed(2)}</td>
+                    <td>
+                        <button class="btn-remove" onclick="removeItem(${item.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;}).join('');
+        }
+
+        function showEmptyCart() {
+            const emptyHtml = `
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x mb-3 text-muted"></i>
+                    <h4>Your cart is empty</h4>
+                    <p class="text-muted">Looks like you haven't added any items yet.</p>
+                    <a href="menutest.html" class="btn-checkout d-inline-block mt-3" style="width: auto; padding: 0.8rem 2rem;">Browse Menu</a>
+                </div>
+            `;
+            document.getElementById('cartTableBody').innerHTML = `<tr><td colspan="5">${emptyHtml}</td></tr>`;
+            updateTotals([], 0);
+        }
+
+        function updateTotals(items, subtotal) {
+            const delivery = items.length > 0 ? 40 : 0;
+            const gstRate = 0.18;
+            const gstAmount = subtotal * gstRate;
+            const total = subtotal + delivery + gstAmount;
+
+            document.getElementById('subtotal').textContent = `₹${parseFloat(subtotal).toFixed(2)}`;
+            document.getElementById('gstAmount').textContent = `₹${gstAmount.toFixed(2)}`;
+            document.getElementById('totalAmount').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        async function updateQuantity(id, newQty) {
+            if (newQty < 1) {
+                await removeItem(id);
+                return;
+            }
+            try {
+                const response = await fetch('api/update-cart-qty.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_item_id: id, quantity: newQty })
+                });
+                if (response.ok) {
+                    loadCart();
+                    return;
+                }
+                throw new Error('API failed');
+            } catch (e) {
+                localItems = localItems.map(item => {
+                    if (item.id === id) {
+                        item.quantity = newQty;
+                    }
+                    return item;
+                });
+                localStorage.setItem('foodie_cart', JSON.stringify(localItems));
+                displayCartItems(localItems);
+                const subtotal = localItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                updateTotals(localItems, subtotal);
+            }
+        }
+
+        async function removeItem(id) {
+            try {
+                const response = await fetch('api/remove-from-cart.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_item_id: id })
+                });
+                if (response.ok) {
+                    loadCart();
+                    return;
+                }
+                throw new Error('API failed');
+            } catch (e) {
+                localItems = localItems.filter(item => item.id !== id);
+                localStorage.setItem('foodie_cart', JSON.stringify(localItems));
+                if (localItems.length > 0) {
+                    displayCartItems(localItems);
+                    const subtotal = localItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                    updateTotals(localItems, subtotal);
+                } else {
+                    showEmptyCart();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+
+</html>

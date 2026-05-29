@@ -1,0 +1,1469 @@
+\
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+
+        Medusa - Premium Dining
+
+    </title>
+
+    <!-- Global Theme Controller -->
+    <script src="assets/js/theme-toggle.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --gold: #dfba86;
+            --gold-hover: #f3dfc1;
+            --dark: #0b0a09;
+            --card-bg: rgba(22, 20, 18, 0.6);
+            --border-light: rgba(223, 186, 134, 0.12);
+            --border-hover: rgba(223, 186, 134, 0.35);
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            background: var(--dark);
+            color: #f7f5f2;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            letter-spacing: 0.2px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        /* NAVBAR */
+
+        .navbar {
+            background: rgba(11, 10, 9, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 0;
+            transition: var(--transition-smooth);
+        }
+
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-size: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 2px;
+        }
+
+        .navbar-brand:hover img {
+            transform: rotate(360deg) scale(1.08);
+        }
+
+        .nav-link {
+            color: #eae5df !important;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 8px;
+            right: 8px;
+            height: 1px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* HERO */
+
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.35) contrast(1.05);
+            transition: transform 10s ease-out;
+        }
+
+        .hero:hover img {
+            transform: scale(1.04);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(11, 10, 9, 0.2) 0%, rgba(11, 10, 9, 0.9) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            padding: 20px;
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .hero-subtitle {
+            color: var(--gold);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: inline-block;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 8px;
+        }
+
+        .hero-title {
+            font-size: 4.8rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            line-height: 1.15;
+            margin-bottom: 35px;
+            color: #ffffff;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-title br {
+            display: block;
+        }
+
+        .hero-buttons .btn {
+            margin: 10px;
+            padding: 15px 36px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #0b0a09 !important;
+            border: 1px solid var(--gold);
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(223, 186, 134, 0.15);
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-hover);
+            border-color: var(--gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(223, 186, 134, 0.3);
+        }
+
+        .btn-outline-gold {
+            border: 1px solid var(--gold);
+            color: var(--gold) !important;
+            background: transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-outline-gold:hover {
+            background: rgba(223, 186, 134, 0.06);
+            border-color: var(--gold-hover);
+            color: var(--gold-hover) !important;
+            transform: translateY(-2px);
+        }
+
+        /* SECTION */
+
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 3.4rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--gold);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 600;
+            margin-bottom: 70px;
+        }
+
+        /* CARDS */
+
+        .premium-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: var(--transition-smooth);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .premium-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-hover);
+            box-shadow: 0 25px 50px rgba(223, 186, 134, 0.08);
+        }
+
+        .premium-card .img-wrapper {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .premium-card img {
+            width: 100%;
+            height: 290px;
+            object-fit: cover;
+            transition: var(--transition-smooth);
+        }
+
+        .premium-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .card-content {
+            padding: 30px;
+        }
+
+        .card-content h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .card-content p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .card-content h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .card-content .btn {
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* FLOATING IMAGES */
+
+        .floating-img {
+            animation: float 6s ease-in-out infinite;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.5);
+            transition: var(--transition-smooth);
+        }
+
+        .floating-img:hover {
+            border-color: var(--border-hover);
+            transform: scale(1.02);
+        }
+
+        /* FOOTER */
+
+        footer {
+            padding: 100px 0 50px;
+            background: #060505;
+            border-top: 1px solid var(--border-light);
+            color: #a09a93;
+        }
+
+        footer h2 {
+            margin-bottom: 20px;
+        }
+
+        footer h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+        }
+
+        footer ul li a {
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer ul li a:hover {
+            color: var(--gold) !important;
+            padding-left: 5px;
+        }
+
+        footer p.text-secondary {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        footer input.form-control {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-light);
+            color: white;
+            border-radius: 8px 0 0 8px;
+            padding: 12px 18px;
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer input.form-control:focus {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--gold);
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.15);
+            color: white;
+        }
+
+        footer button.btn-gold {
+            border-radius: 0 8px 8px 0;
+            padding: 12px 24px;
+        }
+
+        /* SCROLL REVEAL */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* MOUSE INDICATOR */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            animation: fadeInUp 2s ease both 1.2s;
+        }
+        .mouse-icon {
+            width: 26px;
+            height: 42px;
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            position: relative;
+            margin: 0 auto;
+        }
+        .scroll-wheel {
+            width: 4px;
+            height: 8px;
+            background-color: var(--gold);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollWheel 1.6s infinite ease-in-out;
+        }
+        @keyframes scrollWheel {
+            0% { opacity: 0; top: 8px; }
+            20% { opacity: 1; }
+            80% { opacity: 0; top: 22px; }
+            100% { opacity: 0; top: 22px; }
+        }
+
+        /* STATS BANNER */
+        .stats-banner {
+            background: linear-gradient(90deg, rgba(11,10,9,0.95) 0%, rgba(20,18,16,0.95) 100%);
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 60px 0;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            color: var(--gold);
+            font-weight: 300;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(223,186,134,0.2);
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #eae5df;
+        }
+
+        /* EXPERIENCE/SERVICES GRID */
+        .feature-icon-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            color: var(--gold);
+            background: rgba(223, 186, 134, 0.03);
+            transition: var(--transition-smooth);
+        }
+        .feature-item {
+            padding: 40px 30px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.01);
+            transition: var(--transition-smooth);
+            height: 100%;
+        }
+        .feature-item:hover {
+            background: rgba(223, 186, 134, 0.03);
+            border-color: var(--border-light);
+            transform: translateY(-5px);
+        }
+        .feature-item:hover .feature-icon-box {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.1);
+            box-shadow: 0 0 20px rgba(223, 186, 134, 0.2);
+            color: var(--gold-hover);
+        }
+        .feature-item h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        .feature-item p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #a09a93;
+            margin: 0;
+        }
+
+        /* CARD BADGES */
+        .badge-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(11, 10, 9, 0.8);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* TESTIMONIALS */
+        .review-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 40px;
+            height: 100%;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: var(--transition-smooth);
+        }
+        .review-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 15px 35px rgba(223, 186, 134, 0.05);
+        }
+        .stars {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+        .review-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            font-style: italic;
+            color: #eae5df;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        .reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .reviewer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--gold);
+            object-fit: cover;
+        }
+        .reviewer-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .reviewer-title {
+            font-size: 0.75rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* FAQ ACCORDION */
+        .faq-accordion {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--border-light);
+            padding: 24px 0;
+        }
+        .faq-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition-smooth);
+        }
+        .faq-header:hover h3 {
+            color: var(--gold);
+        }
+        .faq-header h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #ffffff;
+            margin: 0;
+            transition: var(--transition-smooth);
+        }
+        .faq-icon {
+            color: var(--gold);
+            font-size: 1rem;
+            transition: transform 0.4s ease;
+        }
+        .faq-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), padding 0.4s ease;
+        }
+        .faq-content p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #a09a93;
+            margin: 0;
+            padding-top: 15px;
+        }
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+        .faq-item.active .faq-content {
+            max-height: 200px;
+            transition: max-height 0.4s cubic-bezier(1, 0, 1, 0), padding 0.4s ease;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+
+        <div class="container">
+
+            <a class="navbar-brand d-flex align-items-center gap-2" href="indextest.html" style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
+            </a>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+
+                <span class="navbar-toggler-icon">
+
+                </span>
+
+            </button>
+
+            <div class="collapse navbar-collapse" id="navMenu">
+
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+
+                        <a class="nav-link auth-required" href="menutest.html">
+
+                            Menu
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="book-table-test.html">
+
+                            Book Table
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link auth-required" href="carttest.html">
+
+                            Cart
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="login.html" id="authLink">
+
+                            Login
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <section class="hero">
+
+        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1800&auto=format&fit=crop"
+            alt="Medusa Restaurant">
+
+        <div class="hero-overlay">
+
+        </div>
+
+        <div class="hero-content">
+
+            <p class="hero-subtitle">
+
+                Premium Dining Experience
+
+            </p>
+
+            <h1 class="hero-title">
+
+                Luxury Taste <br>
+
+                Crafted Perfectly
+
+            </h1>
+
+            <div class="hero-buttons">
+
+                <a href="menutest.html" class="btn btn-gold auth-required">
+
+                    Order Now
+
+                </a>
+
+                <a href="book-table-test.html" class="btn btn-outline-gold">
+
+                    Book Table
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- Scroll Down Mouse Indicator -->
+        <div class="scroll-indicator">
+            <div class="mouse-icon">
+                <div class="scroll-wheel"></div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- STATS BANNER -->
+    <section class="stats-banner">
+        <div class="container">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Culinary Awards</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">20K+</div>
+                        <div class="stat-label">Happy Diners</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Master Chefs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES & FEATURES GRID -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title reveal">The Medusa Experience</h2>
+            <p class="section-subtitle reveal">Every detail curated to perfection</p>
+            
+            <div class="row g-4">
+                <!-- FEATURE 1 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <h3>Artisanal Menu</h3>
+                        <p>Dishes handcrafted with ingredients flown in fresh from organic heritage farms daily.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 2 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22a7 7 0 0 0 7-7V4H5v11a7 7 0 0 0 7 7z"/>
+                                <path d="M12 2v2"/>
+                                <path d="M9 10h6"/>
+                            </svg>
+                        </div>
+                        <h3>Private Reserve</h3>
+                        <p>An expansive private collection of cellar-aged wines curated by world-class sommeliers.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 3 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                                <circle cx="12" cy="12" r="4"/>
+                            </svg>
+                        </div>
+                        <h3>Bespoke Ambience</h3>
+                        <p>Enjoy candlelight setting, velvet fixtures, and acoustic space designed for conversations.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 4 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="7"/>
+                                <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"/>
+                            </svg>
+                        </div>
+                        <h3>Master Chefs</h3>
+                        <p>Dishes orchestrated by Michelin-awarded culinary experts pushing boundaries of taste.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- FEATURED DISHES -->
+
+    <section class="section">
+
+        <div class="container">
+
+            <h2 class="section-title reveal">
+
+                Featured Dishes
+
+            </h2>
+
+            <p class="section-subtitle reveal">
+
+                Chef curated premium selections
+
+            </p>
+
+            <div class="row g-4">
+
+                <!-- CARD 1 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Chef's Special</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800&auto=format&fit=crop"
+                                alt="Pizza">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Margherita Pizza
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Fresh mozzarella, basil,
+                                rich tomato sauce
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹299
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CARD 2 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Award Winning</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=800&auto=format&fit=crop"
+                                alt="Butter Chicken">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Butter Chicken
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Creamy curry with
+                                premium spices
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹349
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CARD 3 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Premium Reserve</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=800&auto=format&fit=crop"
+                                alt="Dessert">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Gulab Jamun
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Luxury Indian dessert
+                                with saffron syrup
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹99
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+    <!-- EXPERIENCE SECTION -->
+
+    <section class="section">
+
+        <div class="container">
+
+            <div class="row align-items-center g-5">
+
+                <div class="col-lg-6 reveal">
+
+                    <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?q=80&w=800&auto=format&fit=crop"
+                        class="img-fluid rounded-4 shadow-lg floating-img" alt="Chef">
+
+                </div>
+
+                <!-- CONTENT -->
+
+                <div class="col-lg-6 reveal">
+
+                    <p class="hero-subtitle">
+
+                        OUR STORY
+
+                    </p>
+
+                    <h2 class="section-title text-start">
+
+                        Crafting Luxury Dining Experiences
+
+                    </h2>
+
+                    <p class="text-secondary fs-5 mb-4">
+
+                        At Medusa,
+                        we believe dining is more than food.
+
+                        It is atmosphere,
+                        emotion,
+                        and unforgettable taste.
+
+                    </p>
+
+                    <p class="text-secondary fs-5 mb-5">
+
+                        From premium ingredients
+                        to handcrafted dishes,
+                        every plate is designed
+                        to deliver elegance
+                        and perfection.
+
+                    </p>
+
+                    <a href="book-table-test.html" class="btn btn-gold px-5 py-3">
+
+                        Reserve A Table
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+    <!-- LUXURY STORY SECTION -->
+
+    <section class="section" style="padding-bottom:0;">
+
+        <div class="container">
+
+            <div class="premium-card p-4 p-lg-5 reveal">
+
+                <div class="row align-items-center g-5">
+
+                    <div class="col-lg-5">
+
+                        <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=800&auto=format&fit=crop"
+                            class="img-fluid rounded-4 floating-img" alt="Chef">
+
+                    </div>
+
+                    <div class="col-lg-7">
+
+                        <p class="hero-subtitle">
+
+                            THE ESSENCE
+
+                        </p>
+
+                        <h2 class="section-title text-start mb-4">
+
+                            A Culinary Experience Beyond Taste
+
+                        </h2>
+
+                        <p class="text-secondary fs-5 mb-4">
+
+                            Medusa combines
+                            premium ingredients,
+                            luxury atmosphere,
+                            and culinary artistry
+                            to create unforgettable dining.
+
+                        </p>
+
+                        <p class="text-secondary fs-5 mb-5">
+
+                            Every dish is carefully crafted
+                            to deliver elegance,
+                            emotion,
+                            and exceptional flavor.
+
+                        </p>
+
+                        <a href="book-table-test.html" class="btn btn-outline-gold px-5 py-3">
+
+                            Discover Our Philosophy →
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- SIGNATURE REVIEWS -->
+    <section class="section" style="background: rgba(11, 10, 9, 0.3);">
+        <div class="container">
+            <h2 class="section-title reveal">Guest Experiences</h2>
+            <p class="section-subtitle reveal">Accolades from our esteemed patrons</p>
+            
+            <div class="row g-4">
+                <!-- REVIEW 1 -->
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <div class="review-text">"Medusa is not merely a restaurant; it's a sensory performance. The butter chicken customizations are absolutely exquisite. A truly majestic fine dining encounter."</div>
+                        <div class="reviewer-info">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <div>
+                                <div class="reviewer-name">Vikram Malhotra</div>
+                                <div class="reviewer-title">Elite Member</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- REVIEW 2 -->
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <div class="review-text">"The private cellar wine options paired with the custom pizza was incredibly divine. The candlelit atmosphere creates a level of elegance unmatched in the city."</div>
+                        <div class="reviewer-info">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <div>
+                                <div class="reviewer-name">Ananya Sen</div>
+                                <div class="reviewer-title">Food Critic</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- REVIEW 3 -->
+                <div class="col-md-6 col-lg-4 reveal d-md-none d-lg-block">
+                    <div class="review-card">
+                        <div class="stars">★★★★★</div>
+                        <div class="review-text">"Flawless reservation system and outstanding service. The dessert list is a masterpiece of flavors. Easily the finest dining establishment in the region."</div>
+                        <div class="reviewer-info">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <div>
+                                <div class="reviewer-name">Rohan Verma</div>
+                                <div class="reviewer-title">Gourmand</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQS ACCORDION -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title reveal">Frequently Asked Questions</h2>
+            <p class="section-subtitle reveal">Your inquiries, resolved</p>
+            
+            <div class="faq-accordion reveal">
+                <!-- FAQ 1 -->
+                <div class="faq-item">
+                    <div class="faq-header" onclick="toggleFaq(this)">
+                        <h3>What is the dress code at Medusa?</h3>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                    </div>
+                    <div class="faq-content">
+                        <p>We maintain a smart casual to formal dress code to preserve the elegant atmosphere of our dining rooms. Sportswear, sandals, and sleeveless shirts are discouraged.</p>
+                    </div>
+                </div>
+                <!-- FAQ 2 -->
+                <div class="faq-item">
+                    <div class="faq-header" onclick="toggleFaq(this)">
+                        <h3>Do I need to reserve a table in advance?</h3>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                    </div>
+                    <div class="faq-content">
+                        <p>While walk-ins are welcome if space allows, we highly recommend booking a table via our online system to ensure availability, especially for weekend dinner reservations.</p>
+                    </div>
+                </div>
+                <!-- FAQ 3 -->
+                <div class="faq-item">
+                    <div class="faq-header" onclick="toggleFaq(this)">
+                        <h3>Can you accommodate specific dietary restrictions?</h3>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                    </div>
+                    <div class="faq-content">
+                        <p>Yes, absolutely. Our culinary team is highly experienced in preparing custom options for gluten-free, vegan, nut allergies, and other dietary preferences. Simply specify when reserving or ordering.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        <div class="container">
+
+            <div class="row g-5">
+
+                <div class="col-lg-3">
+
+                    <h2 class="d-flex align-items-center gap-2" style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
+                        <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
+                        <span>Medusa</span>
+                    </h2>
+
+                    <p class="mt-4 text-secondary">
+
+                        Luxury dining experience
+                        crafted for unforgettable moments.
+
+                    </p>
+
+                </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Navigation
+
+                    </h5>
+
+                    <ul class="list-unstyled">
+
+                        <li class="mb-3">
+
+                            <a href="menutest.html" class="text-secondary text-decoration-none auth-required">
+
+                                Our Menu
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="book-table-test.html" class="text-secondary text-decoration-none">
+
+                                Reservations
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="carttest.html" class="text-secondary text-decoration-none auth-required">
+
+                                Cart
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="login.html" class="text-secondary text-decoration-none" id="footerAuthLink">
+
+                                Login
+
+                            </a>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Contact
+
+                    </h5>
+
+                    <p class="text-secondary">
+
+                        Elite Avenue<br>
+                        Chandigarh, India
+
+                    </p>
+
+                    <p class="text-secondary">
+
+                        +91 98765 43210
+
+                    </p>
+
+                    <p class="text-secondary">
+
+                        contact@medusa.com
+
+                    </p>
+
+                </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Join Our Circle
+
+                    </h5>
+
+                    <p class="text-secondary mb-4">
+
+                        Get exclusive offers
+                        and premium updates.
+
+                    </p>
+
+                    <div class="d-flex">
+
+                        <input type="email" class="form-control" placeholder="Email Address">
+
+                        <button class="btn btn-gold">
+
+                            →
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <hr class="my-5" style="border-color:rgba(255,255,255,0.1);">
+
+            <p class="text-center text-secondary mb-0">
+
+                © 2026 Medusa.
+                All Rights Reserved.
+
+            </p>
+
+        </div>
+
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // FAQ Accordion Toggle
+        function toggleFaq(headerElement) {
+            const item = headerElement.closest('.faq-item');
+            const isActive = item.classList.contains('active');
+            
+            // Close other items
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('msg') === 'login_first') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let loggedIn = false;
+            try {
+                const res = await fetch('api/check-session.php');
+                const data = await res.json();
+                if (data.success && data.logged_in) {
+                    loggedIn = true;
+                    
+                    // Update main nav link
+                    const authLink = document.getElementById('authLink');
+                    if (authLink) {
+                        authLink.textContent = 'Logout';
+                        authLink.href = 'api/logout.php';
+                    }
+                    
+                    // Update footer nav link
+                    const footerAuthLink = document.getElementById('footerAuthLink');
+                    if (footerAuthLink) {
+                        footerAuthLink.textContent = 'Logout';
+                        footerAuthLink.href = 'api/logout.php';
+                    }
+                }
+            } catch (e) {
+                console.error("Session check failed:", e);
+            }
+
+            // Intercept clicks on links and buttons requiring authentication
+            document.querySelectorAll('.auth-required').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    if (!loggedIn) {
+                        e.preventDefault();
+                        alert('Login first');
+                        window.location.href = 'login.html';
+                    }
+                });
+            });
+
+            // Scroll Reveal Observer
+            const revealCallback = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            };
+
+            const revealObserver = new IntersectionObserver(revealCallback, {
+                root: null,
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            });
+
+            document.querySelectorAll('.reveal').forEach(element => {
+                revealObserver.observe(element);
+            });
+        });
+    </script>
+
+</body>
+
+</html>
