@@ -1215,6 +1215,31 @@ $table_zones = [
             box-shadow: none !important;
         }
 
+        /* Premium Search Bar Custom Layout */
+        .premium-search-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .premium-search-group .search-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--gold);
+            z-index: 5;
+            pointer-events: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .premium-search-group .form-control-dashboard {
+            padding-left: 2.6rem !important;
+            width: 100%;
+        }
+        .premium-search-group:focus-within .search-icon {
+            color: var(--gold-light);
+            transform: scale(1.1);
+        }
+
         .btn-gold-action {
             background-color: var(--gold);
             color: #000000;
@@ -1419,9 +1444,368 @@ $table_zones = [
         .card-header-premium {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
-    </style>
+    
+
+/* ===== CHATGPT FINAL UI FIX ===== */
+.sidebar{
+    transition:all .3s ease;
+    width:260px;
+}
+.sidebar.collapsed{
+    width:80px;
+    padding-left:.8rem;
+    padding-right:.8rem;
+}
+.sidebar.collapsed .sidebar-brand span,
+.sidebar.collapsed .sidebar-link span{
+    display:none;
+}
+.sidebar.collapsed .sidebar-link{
+    justify-content:center;
+}
+.main-content{
+    transition:all .3s ease;
+}
+.main-content.expanded{
+    margin-left:80px!important;
+}
+
+/* Burger button: bottom-left, always visible */
+#sidebarToggle{
+    position:fixed;
+    left:1.15rem;
+    bottom:1.15rem;
+    z-index:2000;
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,.28);
+    background:var(--bg-secondary);
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 18px rgba(0,0,0,.12);
+    transition:all .25s ease, background-color .25s ease, border-color .25s ease;
+}
+#sidebarToggle:hover{
+    transform:translateY(-1px);
+    border-color:rgba(223,186,134,.55);
+}
+html.light-mode #sidebarToggle{
+    background:#ffffff;
+    border-color:rgba(15,23,42,.12);
+}
+#sidebarToggle.closed{
+    left:1.15rem;
+}
+
+/* Gold action buttons: consistent and no wrapping */
+.btn-gold-action{
+    width:auto!important;
+    min-width:108px!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:0 14px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+    white-space:nowrap!important;
+    line-height:1!important;
+    flex-wrap:nowrap!important;
+    vertical-align:middle;
+}
+.btn-gold-action i{
+    flex:0 0 auto;
+}
+.btn-action-form{
+    min-width:112px!important;
+}
+.btn-action-wide{
+    min-width:148px!important;
+}
+.btn-action-full{
+    width:100%!important;
+    min-width:0!important;
+}
+.btn-icon-only{
+    min-width:42px!important;
+    width:42px!important;
+    padding:0!important;
+}
+.content-card .btn-gold-action{
+    max-height:42px!important;
+}
+
+/* Dark mode visibility fixes */
+html:not(.light-mode) .form-label,
+html:not(.light-mode) label,
+html:not(.light-mode) th,
+html:not(.light-mode) .text-muted,
+html:not(.light-mode) .small,
+html:not(.light-mode) .card-header-premium,
+html:not(.light-mode) .page-subtitle{
+    color:#cbd5e1!important;
+}
+html:not(.light-mode) input,
+html:not(.light-mode) select,
+html:not(.light-mode) textarea,
+.form-control-dashboard{
+    color:var(--white)!important;
+}
+html:not(.light-mode) input::placeholder,
+html:not(.light-mode) textarea::placeholder{
+    color:#9ca3af!important;
+    opacity:1;
+}
+html:not(.light-mode) .premium-table td{
+    color:#f5f5f5!important;
+}
+html:not(.light-mode) .premium-table th{
+    color:#94a3b8!important;
+}
+html:not(.light-mode) .form-control-dashboard:focus,
+html:not(.light-mode) .form-control:focus,
+html:not(.light-mode) .form-select:focus{
+    color:var(--white)!important;
+}
+
+/* Align buttons in filter rows a bit closer to fields */
+.content-card form .row.g-3 > [class*="col-"]{
+    align-self:flex-start;
+}
+.content-card form .row.g-3 > [class*="col-"]:has(.btn-gold-action){
+    align-self:end;
+}
+
+/* Mobile drawer */
+@media(max-width:768px){
+    .sidebar{
+        transform:translateX(-100%);
+        width:260px;
+        z-index:2500;
+    }
+    .sidebar.mobile-open{
+        transform:translateX(0);
+        width:260px;
+    }
+    .main-content{
+        margin-left:0!important;
+        padding-left:1rem;
+        padding-right:1rem;
+    }
+    .main-content.expanded{
+        margin-left:0!important;
+    }
+    #sidebarToggle{
+        left:1rem!important;
+        bottom:1rem!important;
+    }
+}
+
+/* Orders Management filter box tuning */
+#ordersSearchForm .row.g-3{
+    align-items:end;
+}
+
+#ordersSearchForm .form-label{
+    margin-bottom:.35rem;
+    font-size:.72rem;
+    letter-spacing:.4px;
+}
+
+#ordersSearchForm .form-control-dashboard,
+#ordersSearchForm .form-select{
+    min-height:48px;
+    height:48px;
+    padding-top:.6rem !important;
+    padding-bottom:.6rem !important;
+    font-size:.95rem;
+}
+
+#ordersSearchForm .premium-search-group .form-control-dashboard{
+    min-height:48px;
+    height:48px;
+}
+
+#ordersSearchForm .premium-search-group .search-icon{
+    top:50%;
+    transform:translateY(-50%);
+}
+
+#ordersSearchForm .btn-action-form{
+    min-width:96px!important;
+    width:auto!important;
+    height:48px!important;
+    min-height:48px!important;
+    padding:0 12px!important;
+}
+
+/* Kitchen quick status alignment */
+#kitchen-tab .content-card.mb-4 .d-flex.gap-2.flex-wrap{
+    margin-top:0 !important;
+}
+
+#kitchen-tab .content-card.mb-4 .btn.btn-outline-light.btn-sm{
+    height:36px;
+    padding:.35rem .7rem;
+    line-height:1;
+}
+
+#kitchen-tab .content-card.mb-4 .form-label.mb-1{
+    margin-bottom:.35rem !important;
+}
+
+/* ===== END FIX ===== */
+
+
+
+/* ===== V10 FINAL FILTER COLUMN GAP FIX ===== */
+.content-card form .row.g-3 > .d-flex:has(.btn-gold-action),
+.filter-btn-wrapper{
+    width:auto!important;
+    flex:0 0 auto!important;
+    max-width:max-content!important;
+    margin-left:0!important;
+    margin-top:0!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+    justify-content:flex-start!important;
+    align-items:flex-end!important;
+}
+
+.content-card form .row.g-3 > [class*="col-"]:has(.btn-gold-action){
+    width:auto!important;
+    flex:0 0 auto!important;
+    max-width:max-content!important;
+    justify-content:flex-start!important;
+}
+
+.btn-gold-action{
+    width:auto!important;
+    min-width:110px!important;
+    height:42px!important;
+    margin:0!important;
+    flex:none!important;
+}
+/* ===== END V10 FIX ===== */
+/* ===== V13 SIZE TWEAKS ONLY ===== */
+
+/* Keep the working layout, only tighten control sizing */
+#ordersSearchForm .btn-action-form,
+#paymentsSearchForm .btn-action-form,
+#menuSearchForm .btn-action-form{
+    min-width: 104px !important;
+    width: auto !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    font-size: 0.92rem;
+}
+
+#customersSearchForm .btn-action-wide{
+    min-width: 140px !important;
+    width: auto !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 0.92rem;
+}
+
+#reportsFilterForm .btn-action-wide{
+    min-width: 178px !important;
+    width: auto !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 0.92rem;
+}
+
+/* Align the action columns closer to their fields */
+#customersSearchForm .col-md-3.d-flex.align-items-end.justify-content-end.ms-md-1,
+#reportsFilterForm .col-md-3.d-flex.align-items-end.justify-content-end.ms-md-1,
+#paymentsSearchForm .col-md-2.d-flex.align-items-end.justify-content-end,
+#ordersSearchForm .col-auto.d-flex.align-items-end,
+#paymentsSearchForm .col-auto.d-flex.align-items-end{
+    margin-left: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+}
+
+/* Keep the controls at a consistent visual height */
+#ordersSearchForm .form-control-dashboard,
+#ordersSearchForm .form-select,
+#paymentsSearchForm .form-control-dashboard,
+#paymentsSearchForm .form-select,
+#menuSearchForm .form-control-dashboard,
+#menuSearchForm .form-select,
+#customersSearchForm .form-control-dashboard,
+#reportsFilterForm .form-control-dashboard,
+#reportsFilterForm .form-select{
+    min-height: 44px !important;
+    height: 44px !important;
+}
+
+/* Match the icon size to the tighter buttons */
+#ordersSearchForm .btn-gold-action i,
+#paymentsSearchForm .btn-gold-action i,
+#menuSearchForm .btn-gold-action i,
+#customersSearchForm .btn-gold-action i,
+#reportsFilterForm .btn-gold-action i{
+    font-size: 14px;
+}
+
+/* Prevent text wrapping in the wider buttons */
+#customersSearchForm .btn-action-wide span,
+#reportsFilterForm .btn-action-wide span,
+#ordersSearchForm .btn-action-form span,
+#paymentsSearchForm .btn-action-form span,
+#menuSearchForm .btn-action-form span{
+    white-space: nowrap !important;
+}
+
+/* ===== Kitchen monitor size alignment fix ONLY ===== */
+
+#kitchen-tab .content-card.mb-4 .row{
+    align-items: end !important;
+}
+
+#kitchen-tab .content-card.mb-4 .col-md-6{
+    width: 50% !important;
+    flex: 0 0 50% !important;
+}
+
+#kitchen-tab .content-card.mb-4 .premium-search-group{
+    width: 100% !important;
+}
+
+#kitchen-tab .content-card.mb-4 .form-control-dashboard{
+    height: 48px !important;
+    min-height: 48px !important;
+}
+
+#kitchen-tab .content-card.mb-4 .d-flex.gap-2.flex-wrap{
+    height: 48px !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+#kitchen-tab .content-card.mb-4 .btn.btn-outline-light.btn-sm{
+    height: 38px !important;
+    padding: 0 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ===== END V13 SIZE TWEAKS ONLY ===== */
+
+</style>
 </head>
 <body>
+<button id="sidebarToggle" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar"><i class="fas fa-bars"></i></button>
+
 
     <!-- GLOBAL THEME TOGGLE BUTTON -->
     <div style="position: fixed; top: 2rem; right: 2.5rem; z-index: 1050;">
@@ -1579,13 +1963,14 @@ $table_zones = [
             <!-- Orders Search Box -->
             <div class="content-card mb-4">
                 <form id="ordersSearchForm" onsubmit="performOrdersSearch(event)">
-                    <div class="row g-3">
+                    <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label text-muted small text-uppercase">Search Text</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-dark border-secondary text-muted" style="border:1.5px solid rgba(255,255,255,0.08); border-right:none;"><i class="fas fa-search"></i></span>
-                                <input type="text" id="order_search_input" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Order ID, Customer, Phone, Address...">
+                            <div class="premium-search-group">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="order_search_input" class="form-control form-control-dashboard" placeholder="Order ID, Customer, Phone, Address...">
                             </div>
+
                         </div>
                         <div class="col-md-2">
                             <label class="form-label text-muted small text-uppercase">Status</label>
@@ -1625,8 +2010,8 @@ $table_zones = [
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-gold-action w-100 h-100 py-2"><i class="fas fa-search"></i></button>
+                        <div class="col-auto d-flex align-items-end">
+                            <button type="submit" class="btn btn-gold-action btn-action-form"><i class="fas fa-search me-1"></i><span>Filter</span></button>
                         </div>
                     </div>
                     <div class="row g-3 mt-2" id="orders_custom_date_row" style="display:none;">
@@ -1810,7 +2195,7 @@ $table_zones = [
                                         <h4>Grand Total: <span id="detail-table-total" class="text-gold">₹0.00</span></h4>
                                         <div>
                                             <button class="btn btn-outline-light" onclick="openAddTableItemModal()"><i class="fas fa-plus"></i> Add Items</button>
-                                            <button class="btn btn-gold-action ms-2" onclick="openBillSettleModal()"><i class="fas fa-file-invoice"></i> Generate Bill & Pay</button>
+                                            <button class="btn btn-gold-action ms-2 btn-action-wide" onclick="openBillSettleModal()"><i class="fas fa-file-invoice"></i><span>Generate Bill & Pay</span></button>
                                         </div>
                                     </div>
                                 </div>
@@ -1908,14 +2293,15 @@ $table_zones = [
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label text-muted small text-uppercase">Search Active Orders</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-dark border-secondary text-muted" style="border:1.5px solid rgba(255,255,255,0.08); border-right:none;"><i class="fas fa-search"></i></span>
-                            <input type="text" id="kitchen_search_input" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Search Order ID, Dish Name, Customer, Table..." onkeyup="filterKitchenOrders()">
+                        <div class="premium-search-group">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="kitchen_search_input" class="form-control form-control-dashboard" placeholder="Search Order ID, Dish Name, Customer, Table..." onkeyup="filterKitchenOrders()">
                         </div>
+
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-muted small text-uppercase">Quick Status Filter</label>
-                        <div class="d-flex gap-2 align-items-center h-100" style="padding-top: 5px;">
+                        <label class="form-label text-muted small text-uppercase mb-1">Quick Status Filter</label>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
                             <button class="btn btn-outline-light active btn-sm" id="btn-kitchen-filter-all" onclick="filterKitchenStatus('all')">All</button>
                             <button class="btn btn-outline-light btn-sm ms-1" id="btn-kitchen-filter-pending" onclick="filterKitchenStatus('pending')">Pending</button>
                             <button class="btn btn-outline-light btn-sm ms-1" id="btn-kitchen-filter-preparing" onclick="filterKitchenStatus('preparing')">Cooking</button>
@@ -2004,8 +2390,8 @@ $table_zones = [
                                 <option value="0">Out of Stock</option>
                             </select>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-gold-action w-100 h-100 py-2"><i class="fas fa-search"></i></button>
+                        <div class="col-md-2 d-flex align-items-end justify-content-end">
+                            <button type="submit" class="btn btn-gold-action btn-action-wide"><i class="fas fa-search me-1"></i><span>Filter</span></button>
                         </div>
                     </div>
                     <div class="row g-3 mt-2">
@@ -2048,7 +2434,7 @@ $table_zones = [
             <div class="content-card">
                 <div class="card-header-premium">
                     <span>Active Food Items</span>
-                    <button class="btn btn-gold-action" onclick="openAddMenuModal()"><i class="fas fa-plus"></i> Add New Dish</button>
+                    <button class="btn btn-gold-action btn-action-wide" onclick="openAddMenuModal()"><i class="fas fa-plus"></i><span>Add New Dish</span></button>
                 </div>
                 <div class="table-responsive">
                     <table class="table premium-table align-middle">
@@ -2119,13 +2505,14 @@ $table_zones = [
                     <div class="row g-3">
                         <div class="col-md-9">
                             <label class="form-label text-muted small text-uppercase">Customer Lookup</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-dark border-secondary text-muted" style="border:1.5px solid rgba(255,255,255,0.08); border-right:none;"><i class="fas fa-search"></i></span>
-                                <input type="text" id="customer_search_input" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Search by name, phone, email, customer ID...">
+                            <div class="premium-search-group">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="customer_search_input" class="form-control form-control-dashboard" placeholder="Search by name, phone, email, customer ID...">
                             </div>
+
                         </div>
-                        <div class="col-md-3 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-gold-action w-100 h-100 py-2"><i class="fas fa-search me-1"></i>Search</button>
+                        <div class="col-md-3 d-flex align-items-end justify-content-end ms-md-1">
+                            <button type="submit" class="btn btn-gold-action btn-action-wide"><i class="fas fa-search me-1"></i><span>Search</span></button>
                         </div>
                     </div>
                 </form>
@@ -2224,7 +2611,7 @@ $table_zones = [
                             </div>
                         </div>
                         <div class="col-md-2 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-gold-action w-100 h-100 py-2"><i class="fas fa-search me-1"></i>Filter</button>
+                            <button type="submit" class="btn btn-gold-action btn-action-form"><i class="fas fa-search me-1"></i><span>Filter</span></button>
                         </div>
                     </div>
                 </form>
@@ -2314,8 +2701,8 @@ $table_zones = [
                             <label class="form-label text-muted small text-uppercase">End Date</label>
                             <input type="date" id="report_end_date" class="form-control bg-dark text-white border-secondary form-control-dashboard">
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-gold-action w-100 py-2"><i class="fas fa-sync-alt me-1"></i>Update Report</button>
+                        <div class="col-md-3 d-flex align-items-end justify-content-end ms-md-1">
+                            <button type="submit" class="btn btn-gold-action btn-action-wide"><i class="fas fa-sync-alt me-1"></i><span>Update Report</span></button>
                         </div>
                     </div>
                 </form>
@@ -2494,7 +2881,7 @@ $table_zones = [
                         <input type="text" id="set_opening_hours" class="form-control form-control-dashboard" value="<?php echo htmlspecialchars($settings['opening_hours']); ?>" required>
                     </div>
 
-                    <button type="submit" class="btn btn-gold-action mt-3">Save Server Config</button>
+                    <button type="submit" class="btn btn-gold-action mt-3 btn-action-wide">Save Server Config</button>
                 </form>
             </div>
         </div>
@@ -2557,7 +2944,7 @@ $table_zones = [
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="submit" class="btn btn-gold-action w-100">Settle & Mark Paid</button>
+                        <button type="submit" class="btn btn-gold-action btn-action-full">Settle & Mark Paid</button>
                     </div>
                 </form>
             </div>
@@ -2591,7 +2978,7 @@ $table_zones = [
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="submit" class="btn btn-gold-action w-100">Add Item</button>
+                        <button type="submit" class="btn btn-gold-action btn-action-full">Add Item</button>
                     </div>
                 </form>
             </div>
@@ -2655,7 +3042,7 @@ $table_zones = [
                             </div>
 
                             <div class="mt-3 d-flex gap-2">
-                                <button type="submit" class="btn btn-gold-action" id="custGroupSubmitBtn">Save Group</button>
+                                <button type="submit" class="btn btn-gold-action btn-action-wide" id="custGroupSubmitBtn">Save Group</button>
                                 <button type="button" class="btn btn-outline-secondary" onclick="resetCustomGroupForm()">Cancel / Reset</button>
                             </div>
                         </form>
@@ -2709,7 +3096,7 @@ $table_zones = [
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="submit" class="btn btn-gold-action w-100" id="btnMenuSubmit">Save Dish</button>
+                        <button type="submit" class="btn btn-gold-action btn-action-full" id="btnMenuSubmit">Save Dish</button>
                     </div>
                 </form>
             </div>
@@ -3105,7 +3492,7 @@ $table_zones = [
                 
                 let btn = '';
                 if (columnType === 'pending') {
-                    btn = `<button class="btn btn-sm btn-gold-action w-100" onclick="updateOrderStatus(${order.id}, 'preparing')">Start Cooking</button>`;
+                    btn = `<button class="btn btn-sm btn-gold-action btn-action-full" onclick="updateOrderStatus(${order.id}, 'preparing')">Start Cooking</button>`;
                 } else if (columnType === 'preparing') {
                     btn = `<button class="btn btn-sm btn-success w-100 text-dark" onclick="updateOrderStatus(${order.id}, 'ready')">Mark Ready</button>`;
                 } else if (columnType === 'ready') {
@@ -4246,5 +4633,33 @@ $table_zones = [
             };
         })();
     </script>
+
+<script>
+function toggleSidebar(){
+ const sidebar=document.querySelector('.sidebar');
+ const main=document.querySelector('.main-content');
+ const btn=document.getElementById('sidebarToggle');
+ if(window.innerWidth<=768){
+  sidebar.classList.toggle('mobile-open');
+  return;
+ }
+ sidebar.classList.toggle('collapsed');
+ main.classList.toggle('expanded');
+ btn.classList.toggle('closed');
+ document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+ localStorage.setItem('sidebarCollapsed',sidebar.classList.contains('collapsed'));
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ const sidebar=document.querySelector('.sidebar');
+ const main=document.querySelector('.main-content');
+ const btn=document.getElementById('sidebarToggle');
+ if(localStorage.getItem('sidebarCollapsed')==='true'){
+  sidebar?.classList.add('collapsed');
+  main?.classList.add('expanded');
+  btn?.classList.add('closed');
+  document.body.classList.add('sidebar-collapsed');
+ }
+});
+</script>
 </body>
 </html>
