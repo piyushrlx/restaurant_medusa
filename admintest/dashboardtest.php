@@ -120,6 +120,27 @@ function syncOrdersJsonToDb($pdo) {
 // Perform sync
 syncOrdersJsonToDb($pdo);
 
+// Ensure career_applications table exists
+try {
+    $table_sql = "CREATE TABLE IF NOT EXISTS `career_applications` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `full_name` VARCHAR(100) NOT NULL,
+      `email` VARCHAR(100) NOT NULL,
+      `mobile` VARCHAR(20) NOT NULL,
+      `position` VARCHAR(50) NOT NULL,
+      `experience` INT NOT NULL,
+      `city` VARCHAR(100) NOT NULL,
+      `expected_salary` DECIMAL(10,2) NOT NULL,
+      `resume_path` VARCHAR(255) NOT NULL,
+      `cover_letter` TEXT DEFAULT NULL,
+      `status` ENUM('Pending', 'Reviewed', 'Shortlisted', 'Rejected') DEFAULT 'Pending',
+      `applied_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    $pdo->exec($table_sql);
+} catch (PDOException $e) {
+    // Fail silently in dashboard load
+}
+
 // 2. Load Settings
 $settings_file = __DIR__ . '/settings.json';
 $settings = [
@@ -743,6 +764,63 @@ if (isset($_REQUEST['action'])) {
         ];
         file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT));
         echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // Get Career Applications Endpoint
+    if ($action === 'get_career_applications') {
+        $sql = "SELECT * FROM career_applications WHERE 1=1";
+        $params = [];
+        
+        if (!empty($_POST['search'])) {
+            $sql .= " AND (full_name LIKE ? OR email LIKE ? OR mobile LIKE ? OR city LIKE ?)";
+            $wildcard = "%" . $_POST['search'] . "%";
+            $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard;
+        }
+        
+        if (!empty($_POST['position']) && $_POST['position'] !== 'all') {
+            $sql .= " AND position = ?";
+            $params[] = $_POST['position'];
+        }
+        
+        if (!empty($_POST['status']) && $_POST['status'] !== 'all') {
+            $sql .= " AND status = ?";
+            $params[] = $_POST['status'];
+        }
+        
+        $sql .= " ORDER BY id DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Fetch counters for applications tab summary
+        $c_total = $pdo->query("SELECT COUNT(*) FROM career_applications")->fetchColumn() ?: 0;
+        $c_pending = $pdo->query("SELECT COUNT(*) FROM career_applications WHERE status = 'Pending'")->fetchColumn() ?: 0;
+        $c_shortlisted = $pdo->query("SELECT COUNT(*) FROM career_applications WHERE status = 'Shortlisted'")->fetchColumn() ?: 0;
+        $c_rejected = $pdo->query("SELECT COUNT(*) FROM career_applications WHERE status = 'Rejected'")->fetchColumn() ?: 0;
+        
+        echo json_encode([
+            'success' => true, 
+            'applications' => $applications,
+            'summary' => [
+                'total' => $c_total,
+                'pending' => $c_pending,
+                'shortlisted' => $c_shortlisted,
+                'rejected' => $c_rejected
+            ]
+        ]);
+        exit;
+    }
+    
+    // Update Career Application Status Endpoint
+    if ($action === 'update_career_status') {
+        $app_id = intval($_POST['id']);
+        $status = $_POST['status']; // Reviewed, Shortlisted, Rejected
+        
+        $stmt = $pdo->prepare("UPDATE career_applications SET status = ? WHERE id = ?");
+        $stmt->execute([$status, $app_id]);
+        
+        echo json_encode(['success' => true, 'message' => 'Application status updated to ' . $status]);
         exit;
     }
 }
@@ -1801,6 +1879,64 @@ html:not(.light-mode) .form-select:focus{
 
 /* ===== END V13 SIZE TWEAKS ONLY ===== */
 
+/* ===== Careers Portal Premium Action Styles ===== */
+.btn-action-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.04);
+}
+.btn-action-circle:hover {
+    transform: translateY(-2px);
+}
+.btn-action-circle-success {
+    color: #2ec4b6;
+    border-color: rgba(46, 196, 182, 0.2);
+    background: rgba(46, 196, 182, 0.05);
+}
+.btn-action-circle-success:hover {
+    background: #2ec4b6;
+    color: #0b0a09 !important;
+    box-shadow: 0 4px 12px rgba(46, 196, 182, 0.2);
+}
+.btn-action-circle-danger {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.05);
+}
+.btn-action-circle-danger:hover {
+    background: #ef4444;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+.btn-action-circle-info {
+    color: #00d2d3;
+    border-color: rgba(0, 210, 211, 0.2);
+    background: rgba(0, 210, 211, 0.05);
+}
+.btn-action-circle-info:hover {
+    background: #00d2d3;
+    color: #0b0a09 !important;
+    box-shadow: 0 4px 12px rgba(0, 210, 211, 0.2);
+}
+.btn-action-circle-light {
+    color: #dfba86;
+    border-color: rgba(223, 186, 134, 0.2);
+    background: rgba(223, 186, 134, 0.05);
+}
+.btn-action-circle-light:hover {
+    background: var(--gold);
+    color: #0b0a09 !important;
+    box-shadow: 0 4px 12px rgba(223, 186, 134, 0.25);
+}
+
 </style>
 </head>
 <body>
@@ -1861,6 +1997,12 @@ html:not(.light-mode) .form-select:focus{
                 <a class="sidebar-link" onclick="switchTab('payments-tab', this)">
                     <i class="fas fa-wallet"></i>
                     <span>Payments</span>
+                </a>
+            </li>
+            <li>
+                <a class="sidebar-link" onclick="switchTab('careers-tab', this)">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Careers</span>
                 </a>
             </li>
             <li>
@@ -2856,6 +2998,114 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- ==================== CAREERS TAB ==================== -->
+        <div id="careers-tab" class="tab-panel">
+            <div class="page-header">
+                <h1 class="page-title">Career Applications</h1>
+                <p class="page-subtitle">Manage, filter, and track applications submitted to the Medusa recruitment portal</p>
+            </div>
+
+            <!-- Metrics grid for Careers -->
+            <div class="metric-grid mb-4">
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h5>Total Applications</h5>
+                        <div class="value text-white" id="careers_total_metric">0</div>
+                    </div>
+                    <div class="metric-icon"><i class="fas fa-folder-open"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h5>Pending Review</h5>
+                        <div class="value text-warning" id="careers_pending_metric">0</div>
+                    </div>
+                    <div class="metric-icon"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h5>Shortlisted</h5>
+                        <div class="value text-success" id="careers_shortlisted_metric">0</div>
+                    </div>
+                    <div class="metric-icon"><i class="fas fa-user-check"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <h5>Rejected</h5>
+                        <div class="value text-danger" id="careers_rejected_metric">0</div>
+                    </div>
+                    <div class="metric-icon"><i class="fas fa-user-times"></i></div>
+                </div>
+            </div>
+
+            <!-- Filters Box -->
+            <div class="content-card mb-4">
+                <form id="careersFilterForm" onsubmit="performCareersSearch(event)">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small text-uppercase">Search Candidate</label>
+                            <div class="premium-search-group">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="career_search_input" class="form-control form-control-dashboard" placeholder="Name, Email, Mobile or City...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small text-uppercase">Position</label>
+                            <select id="career_position_filter" class="form-select bg-dark text-white border-secondary form-control-dashboard">
+                                <option value="all">All Positions</option>
+                                <option value="Waiter">Waiter</option>
+                                <option value="Captain">Captain</option>
+                                <option value="Head Chef">Head Chef</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Cleaning Staff">Cleaning Staff</option>
+                                <option value="CDP (Chef de Partie)">CDP (Chef de Partie)</option>
+                                <option value="Barista">Barista</option>
+                                <option value="Commis 1">Commis 1</option>
+                                <option value="Commis 2">Commis 2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small text-uppercase">Status</label>
+                            <select id="career_status_filter" class="form-select bg-dark text-white border-secondary form-control-dashboard">
+                                <option value="all">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Reviewed">Reviewed</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-gold-action btn-action-full"><i class="fas fa-filter me-1"></i>Filter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Applications Table -->
+            <div class="content-card">
+                <div class="card-header-premium">Applications List</div>
+                <div class="table-responsive">
+                    <table class="table premium-table align-middle" id="careers-table">
+                        <thead>
+                            <tr>
+                                <th>Applicant Details</th>
+                                <th>Position</th>
+                                <th>Experience</th>
+                                <th>Salary (Expected)</th>
+                                <th style="min-width: 120px;">Resume</th>
+                                <th>Status</th>
+                                <th style="min-width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="careers-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">Loading applications...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== SETTINGS TAB ==================== -->
         <div id="settings-tab" class="tab-panel">
             <div class="page-header">
@@ -2981,6 +3231,36 @@ html:not(.light-mode) .form-select:focus{
                         <button type="submit" class="btn btn-gold-action btn-action-full">Add Item</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cover Letter Viewer Modal -->
+    <div class="modal fade" id="coverLetterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title font-playfair text-gold">Cover Letter / Message</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:1.5rem; white-space:pre-wrap; font-size:0.9rem;" id="coverLetterContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Viewer Modal -->
+    <div class="modal fade" id="resumeViewerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 900px;">
+            <div class="modal-content bg-dark border-secondary text-white" style="border: 1px solid rgba(223, 186, 134, 0.25) !important;">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title font-playfair text-gold"><i class="fas fa-file-lines me-2"></i>Resume Viewer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="resumeViewerBody" style="min-height: 600px; display: flex; align-items: center; justify-content: center; background: #141311;">
+                    <!-- Content will be injected dynamically -->
+                </div>
             </div>
         </div>
     </div>
@@ -4538,6 +4818,30 @@ html:not(.light-mode) .form-select:focus{
                 payInput.addEventListener('input', debounce(() => performPaymentsSearch(null), 400));
             }
 
+            // Real-time debounced careers search
+            const careerInput = document.getElementById('career_search_input');
+            if (careerInput) {
+                careerInput.addEventListener('input', debounce(() => performCareersSearch(null), 400));
+            }
+
+            // Real-time selectors search for careers
+            const posFilter = document.getElementById('career_position_filter');
+            if (posFilter) {
+                posFilter.addEventListener('change', () => performCareersSearch(null));
+            }
+            const statFilter = document.getElementById('career_status_filter');
+            if (statFilter) {
+                statFilter.addEventListener('change', () => performCareersSearch(null));
+            }
+
+            // Auto-load career applications when careers tab is activated
+            const careersLink = document.querySelector('[onclick*="careers-tab"]');
+            if (careersLink) {
+                careersLink.addEventListener('click', function() {
+                    setTimeout(() => { performCareersSearch(); }, 150);
+                });
+            }
+
             // Ensure orders-search-results-card is hidden by default
             const ordResCard = document.getElementById('orders-search-results-card');
             if (ordResCard) ordResCard.style.display = 'none';
@@ -4559,6 +4863,154 @@ html:not(.light-mode) .form-select:focus{
             _origToggleTheme();
             document.dispatchEvent(new Event('themeChanged'));
         };
+
+        // =====================================================================
+        // CAREERS PORTAL DASHBOARD CONTROLLER
+        // =====================================================================
+        function performCareersSearch(event) {
+            if (event) event.preventDefault();
+            setTableLoading('careers-table-body', 7);
+
+            const params = new URLSearchParams({
+                action: 'get_career_applications',
+                search: document.getElementById('career_search_input')?.value || '',
+                position: document.getElementById('career_position_filter')?.value || 'all',
+                status: document.getElementById('career_status_filter')?.value || 'all'
+            });
+
+            fetch('dashboardtest.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) { showSearchError('careers-table-body', 7, 'Failed to load applications.'); return; }
+                
+                // Update metrics counters
+                if (data.summary) {
+                    const setMetric = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                    setMetric('careers_total_metric', data.summary.total);
+                    setMetric('careers_pending_metric', data.summary.pending);
+                    setMetric('careers_shortlisted_metric', data.summary.shortlisted);
+                    setMetric('careers_rejected_metric', data.summary.rejected);
+                }
+
+                renderCareersSearchResults(data.applications);
+            })
+            .catch(() => showSearchError('careers-table-body', 7, 'Network error loading applications.'));
+        }
+
+        function renderCareersSearchResults(applications) {
+            const tbody = document.getElementById('careers-table-body');
+            if (!tbody) return;
+
+            if (!applications || applications.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No applications found matching criteria.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = applications.map(app => {
+                const statusMap = {
+                    pending: 'bg-warning text-dark',
+                    reviewed: 'bg-info text-dark',
+                    shortlisted: 'bg-success text-dark',
+                    rejected: 'bg-danger text-white'
+                };
+                const badgeCls = statusMap[app.status?.toLowerCase()] || 'bg-secondary text-white';
+                const appliedDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                const escLetter = (app.cover_letter || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                
+                let viewLetterBtn = '';
+                if (app.cover_letter && app.cover_letter.trim() !== '') {
+                    viewLetterBtn = `<button class="btn-action-circle btn-action-circle-info" onclick="openCoverLetterModal('${escLetter}')" title="View Message"><i class="fas fa-envelope"></i></button>`;
+                }
+
+                const ext = app.resume_path.split('.').pop().toLowerCase();
+                const downloadName = `${app.full_name.replace(/\s+/g, '_')}_Resume.${ext}`;
+
+                return `<tr>
+                    <td>
+                        <strong>${app.full_name}</strong><br>
+                        <small class="text-muted"><i class="fas fa-envelope"></i> ${app.email}</small><br>
+                        <small class="text-muted"><i class="fas fa-phone"></i> ${app.mobile}</small><br>
+                        <small class="text-muted"><i class="fas fa-map-marker-alt"></i> ${app.city}</small>
+                    </td>
+                    <td><strong>${app.position}</strong></td>
+                    <td>${app.experience} Years</td>
+                    <td class="text-gold">₹${parseFloat(app.expected_salary).toLocaleString('en-IN')}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" onclick="openResumeModal('${app.resume_path}', '${app.full_name.replace(/'/g, "\\'")}')" title="View Resume"><i class="fas fa-eye"></i> View</button>
+                            <a href="../${app.resume_path}" download="${downloadName}" class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; padding: 0;" title="Download"><i class="fas fa-download"></i></a>
+                        </div>
+                    </td>
+                    <td><span class="status-badge ${badgeCls}">${app.status || 'Pending'}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2 flex-nowrap">
+                            ${viewLetterBtn}
+                            <button class="btn-action-circle btn-action-circle-light" onclick="updateCareerStatus(${app.id}, 'Reviewed')" title="Mark Reviewed"><i class="fas fa-check-double"></i></button>
+                            <button class="btn-action-circle btn-action-circle-success" onclick="updateCareerStatus(${app.id}, 'Shortlisted')" title="Shortlist"><i class="fas fa-user-check"></i></button>
+                            <button class="btn-action-circle btn-action-circle-danger" onclick="updateCareerStatus(${app.id}, 'Rejected')" title="Reject"><i class="fas fa-user-times"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateCareerStatus(id, newStatus) {
+            fetch('dashboardtest.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'update_career_status',
+                    id: id,
+                    status: newStatus
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    performCareersSearch();
+                } else {
+                    alert('Error updating status: ' + data.message);
+                }
+            })
+            .catch(() => alert('Network error updating application status.'));
+        }
+
+        function openCoverLetterModal(message) {
+            document.getElementById('coverLetterContent').textContent = message;
+            const modal = new bootstrap.Modal(document.getElementById('coverLetterModal'));
+            modal.show();
+        }
+
+        function openResumeModal(resumePath, candidateName) {
+            const body = document.getElementById('resumeViewerBody');
+            if (!body) return;
+            
+            const ext = resumePath.split('.').pop().toLowerCase();
+            const fullUrl = '../' + resumePath;
+            
+            if (ext === 'pdf') {
+                body.innerHTML = `<iframe src="${fullUrl}" style="width: 100%; height: 600px; border: none; background: #ffffff;"></iframe>`;
+            } else {
+                const downloadName = candidateName.replace(/\s+/g, '_') + '_Resume.' + ext;
+                body.innerHTML = `
+                    <div class="text-center p-5">
+                        <div style="font-size: 4rem; color: var(--gold); margin-bottom: 1.5rem;"><i class="far fa-file-word"></i></div>
+                        <h4 class="mb-3 text-gold">Word Document Resume</h4>
+                        <p class="text-muted mb-4">Word documents (.doc / .docx) cannot be previewed directly in the browser.<br>Please download the file to view its contents.</p>
+                        <a href="${fullUrl}" class="btn btn-outline-warning btn-lg px-4" download="${downloadName}" style="border-radius: 10px;">
+                            <i class="fas fa-file-download me-2"></i>Download Word Document
+                        </a>
+                    </div>
+                `;
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('resumeViewerModal'));
+            modal.show();
+        }
 
         // =====================================================================
         // END OF ADVANCED SEARCH & REPORTING CONTROLLER
