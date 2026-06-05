@@ -27,10 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = json_decode(file_get_contents('php://input'), true);
 $name = trim($data['name'] ?? '');
 $email = trim($data['email'] ?? '');
+$phone = trim($data['phone'] ?? '');
 $password = $data['password'] ?? '';
 
-if (empty($name) || empty($email) || empty($password)) {
-    echo json_encode(['success' => false, 'message' => 'All fields (name, email, password) are required']);
+if (empty($name) || empty($email) || empty($password) || empty($phone)) {
+    echo json_encode(['success' => false, 'message' => 'All fields (first name, last name, email, mobile number, password) are required']);
+    exit;
+}
+
+if (!preg_match('/^[0-9]{10}$/', $phone)) {
+    echo json_encode(['success' => false, 'message' => 'Mobile number must be exactly 10 digits']);
     exit;
 }
 
@@ -55,8 +61,8 @@ try {
 
     // Hash password and insert user
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-    $ins_stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'customer')");
-    $ins_stmt->execute([$name, $email, $hashed_password]);
+    $ins_stmt = $pdo->prepare("INSERT INTO users (name, email, password, phone, role) VALUES (?, ?, ?, ?, 'customer')");
+    $ins_stmt->execute([$name, $email, $hashed_password, $phone]);
 
     echo json_encode([
         'success' => true,

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medusa - Careers</title>
+
+    <!-- Global Theme Controller -->
+    <script src="assets/js/theme-toggle.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome for professional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #dfba86;
+            --gold-hover: #f3dfc1;
+            --dark: #0b0a09;
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            background: var(--dark);
+            color: #f7f5f2;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            letter-spacing: 0.2px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(11, 10, 9, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.12);
+            padding: 16px 0;
+            transition: var(--transition-smooth);
+        }
+
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-size: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 2px;
+        }
+
+        .navbar-brand:hover img {
+            transform: rotate(360deg) scale(1.08);
+        }
+
+        .nav-link {
+            color: #eae5df !important;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 8px;
+            right: 8px;
+            height: 1px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* MAIN CONTENT AREA */
+        .careers-container {
+            flex-grow: 1;
+            padding: 140px 0 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.04) 0%, rgba(11, 10, 9, 0) 70%);
+        }
+
+        /* BOXLESS FORM CONTAINER */
+        .careers-card {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: #f7f5f2;
+            padding: 20px;
+            max-width: 850px;
+            width: 100%;
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .careers-header {
+            border-bottom: 1px solid rgba(223, 186, 134, 0.15);
+            padding-bottom: 25px;
+            margin-bottom: 45px;
+            text-align: center;
+        }
+
+        .careers-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.2rem;
+            color: var(--gold);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .careers-subtitle {
+            font-size: 0.95rem;
+            color: #a09a93;
+            letter-spacing: 0.5px;
+            font-weight: 400;
+        }
+
+        /* PREMIUM LABELS & INPUTS */
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--gold);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .form-label i {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            transition: var(--transition-smooth);
+        }
+
+        /* Parent container highlight on focus */
+        .col-md-6:focus-within .form-label, 
+        .col-md-4:focus-within .form-label, 
+        .col-12:focus-within .form-label {
+            color: var(--gold-hover) !important;
+            text-shadow: 0 0 8px rgba(223, 186, 134, 0.35);
+        }
+        .col-md-6:focus-within .form-label i, 
+        .col-md-4:focus-within .form-label i, 
+        .col-12:focus-within .form-label i {
+            transform: scale(1.1);
+            color: #ffffff;
+        }
+
+        /* UNDERLINED SLEEK INPUTS */
+        .form-control, .form-select {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1.5px solid rgba(223, 186, 134, 0.2) !important;
+            border-radius: 0 !important;
+            padding: 10px 4px !important;
+            color: #ffffff !important;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-bottom-color: var(--gold) !important;
+            box-shadow: none !important;
+        }
+
+        /* Custom dropdown arrow for form-select */
+        .form-select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dfba86' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 4px center !important;
+            background-size: 14px 14px !important;
+            padding-right: 30px !important;
+        }
+
+        /* Select option color support on dark background dropdowns */
+        .form-select option {
+            background-color: #121110;
+            color: #ffffff;
+        }
+
+        .invalid-feedback {
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        /* File Upload Area */
+        .file-upload-wrapper {
+            position: relative;
+            border: 1.5px dashed rgba(223, 186, 134, 0.3);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            background: rgba(223, 186, 134, 0.01);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .file-upload-wrapper:hover {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.04);
+            box-shadow: inset 0 0 20px rgba(223, 186, 134, 0.03);
+        }
+
+        .file-upload-wrapper:hover i {
+            color: var(--gold) !important;
+            transform: translateY(-4px) scale(1.08);
+            text-shadow: 0 0 12px rgba(223, 186, 134, 0.3);
+        }
+
+        .file-upload-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-text {
+            font-size: 0.88rem;
+            color: #a09a93;
+            margin: 0;
+        }
+
+        .file-upload-text strong {
+            color: var(--gold);
+        }
+
+        /* PREMIUM BUTTON WITH HOVER EFFECT */
+        .btn-gold {
+            background: transparent;
+            color: var(--gold) !important;
+            border: 2px solid var(--gold);
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 16px 40px;
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+            width: auto;
+            min-width: 280px;
+            margin: 20px auto 0;
+            display: block;
+        }
+
+        .btn-gold:hover {
+            background: var(--gold);
+            color: #0b0a09 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(223, 186, 134, 0.25);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 80px 0 40px;
+            background: #060505;
+            border-top: 1px solid rgba(223, 186, 134, 0.12);
+            color: #a09a93;
+        }
+
+        footer h2 {
+            margin-bottom: 20px;
+        }
+
+        footer h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+        }
+
+        footer ul li a {
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer ul li a:hover {
+            color: var(--gold) !important;
+            padding-left: 5px;
+        }
+
+        /* Spinner */
+        .spinner-gold {
+            display: inline-block;
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+
+        /* Light Mode Styling Overrides */
+        html.light-mode body {
+            background: #f8f9fa;
+            color: #333333;
+        }
+        html.light-mode .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.25);
+        }
+        html.light-mode .nav-link {
+            color: #333333 !important;
+        }
+        html.light-mode .careers-card {
+            color: #333333;
+        }
+        html.light-mode .careers-subtitle {
+            color: #666666;
+        }
+        html.light-mode .form-label {
+            color: #555555;
+        }
+        html.light-mode .form-control, html.light-mode .form-select {
+            border-bottom-color: rgba(223, 186, 134, 0.4) !important;
+            color: #333333 !important;
+        }
+        html.light-mode .form-control:focus, html.light-mode .form-select:focus {
+            border-bottom-color: var(--gold) !important;
+        }
+        html.light-mode .form-select option {
+            background-color: #ffffff;
+            color: #333333;
+        }
+        html.light-mode .file-upload-wrapper {
+            background: rgba(0, 0, 0, 0.01);
+            border-color: rgba(223, 186, 134, 0.4);
+        }
+        html.light-mode .file-upload-text {
+            color: #666666;
+        }
+        html.light-mode .btn-gold {
+            color: #0b0a09 !important;
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+        html.light-mode .btn-gold:hover {
+            background: #0b0a09;
+            color: var(--gold) !important;
+            border-color: #0b0a09;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="indextest.html" style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
+            </a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="indextest.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link auth-required" href="menutest.html">Menu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="book-table-test.html">Book Table</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">Create Account</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="career.html">Career</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html" id="authLink">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN FORM CONTAINER -->
+    <main class="careers-container">
+        <div class="container d-flex justify-content-center">
+            <div class="careers-card">
+                <div class="careers-header">
+                    <h1 class="careers-title">Join Team Medusa</h1>
+                    <p class="careers-subtitle">Build your career with one of the most premium dining destinations.</p>
+                </div>
+                
+                <form id="careerForm" onsubmit="submitApplication(event)" novalidate>
+                    <div class="row g-5">
+                        <!-- Full Name -->
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label"><i class="fas fa-user"></i> Full Name</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="E.g. Vikram Malhotra">
+                            <div class="invalid-feedback">Please enter your full name (minimum 2 characters).</div>
+                        </div>
+
+                        <!-- Mobile Number -->
+                        <div class="col-md-6">
+                            <label for="mobile" class="form-label"><i class="fas fa-phone"></i> Mobile Number</label>
+                            <input type="tel" class="form-control" id="mobile" name="mobile" required placeholder="E.g. 9876543210">
+                            <div class="invalid-feedback">Please enter a valid mobile number (10-15 digits).</div>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="col-md-6">
+                            <label for="email" class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="E.g. vikram@example.com">
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+
+                        <!-- Position Selector -->
+                        <div class="col-md-6">
+                            <label for="position" class="form-label"><i class="fas fa-briefcase"></i> Position Applying For</label>
+                            <select class="form-select" id="position" name="position" required>
+                                <option value="" disabled selected>Select Position</option>
+                                <option value="Waiter">Waiter</option>
+                                <option value="Captain">Captain</option>
+                                <option value="Head Chef">Head Chef</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Cleaning Staff">Cleaning Staff</option>
+                                <option value="CDP (Chef de Partie)">CDP (Chef de Partie)</option>
+                                <option value="Barista">Barista</option>
+                                <option value="Commis 1">Commis 1</option>
+                                <option value="Commis 2">Commis 2</option>
+                            </select>
+                            <div class="invalid-feedback">Please select the position you are applying for.</div>
+                        </div>
+
+                        <!-- Years of Experience -->
+                        <div class="col-md-4">
+                            <label for="experience" class="form-label"><i class="fas fa-history"></i> Years of Experience</label>
+                            <input type="number" class="form-control" id="experience" name="experience" min="0" required placeholder="E.g. 3">
+                            <div class="invalid-feedback">Please specify years of experience (minimum 0).</div>
+                        </div>
+
+                        <!-- Current City -->
+                        <div class="col-md-4">
+                            <label for="city" class="form-label"><i class="fas fa-map-marker-alt"></i> Current City</label>
+                            <input type="text" class="form-control" id="city" name="city" required placeholder="E.g. Chandigarh">
+                            <div class="invalid-feedback">Please enter your current city.</div>
+                        </div>
+
+                        <!-- Expected Salary -->
+                        <div class="col-md-4">
+                            <label for="expected_salary" class="form-label"><i class="fas fa-indian-rupee-sign"></i> Expected Salary (₹ / Month)</label>
+                            <input type="number" class="form-control" id="expected_salary" name="expected_salary" min="1" required placeholder="E.g. 25000">
+                            <div class="invalid-feedback">Please enter your expected salary.</div>
+                        </div>
+
+                        <!-- Resume Upload -->
+                        <div class="col-12">
+                            <label class="form-label"><i class="fas fa-file-arrow-up"></i> Resume Upload (PDF/DOC/DOCX - Max 5MB)</label>
+                            <div class="file-upload-wrapper" id="uploadArea">
+                                <input type="file" class="file-upload-input" id="resume" name="resume" accept=".pdf,.doc,.docx" required onchange="handleFileSelected(this)">
+                                <div class="upload-icon-wrapper mb-2">
+                                    <i class="fas fa-cloud-arrow-up" style="font-size: 2.2rem; color: rgba(223, 186, 134, 0.6); transition: var(--transition-smooth);"></i>
+                                </div>
+                                <p class="file-upload-text" id="uploadText">
+                                    Drag & drop your resume file here or <strong>browse files</strong>
+                                </p>
+                            </div>
+                            <div class="invalid-feedback" id="fileFeedback" style="display:none;">Please upload a valid resume in PDF, DOC, or DOCX format (Max 5MB).</div>
+                        </div>
+
+                        <!-- Cover Letter -->
+                        <div class="col-12">
+                            <label for="cover_letter" class="form-label"><i class="fas fa-comment-dots"></i> Cover Letter / Message (Optional)</label>
+                            <textarea class="form-control" id="cover_letter" name="cover_letter" rows="4" placeholder="Describe why you are a great fit for Medusa..."></textarea>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="col-12 mt-5">
+                            <button type="submit" class="btn btn-gold" id="submitBtn">Submit Application</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-3">
+                    <h2 class="d-flex align-items-center gap-2" style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
+                        <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
+                        <span>Medusa</span>
+                    </h2>
+                    <p class="mt-4 text-secondary">
+                        Luxury dining experience crafted for unforgettable moments.
+                    </p>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="mb-4">Navigation</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><a href="indextest.html" class="text-secondary text-decoration-none">Home</a></li>
+                        <li class="mb-3"><a href="menutest.html" class="text-secondary text-decoration-none auth-required">Our Menu</a></li>
+                        <li class="mb-3"><a href="book-table-test.html" class="text-secondary text-decoration-none">Reservations</a></li>
+                        <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create Account</a></li>
+                        <li class="mb-3"><a href="career.html" class="text-secondary text-decoration-none text-gold">Career</a></li>
+                        <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none" id="footerAuthLink">Login</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="mb-4">Contact</h5>
+                    <p class="text-secondary">Elite Avenue<br>Chandigarh, India</p>
+                    <p class="text-secondary">+91 98765 43210</p>
+                    <p class="text-secondary">contact@medusa.com</p>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="mb-4">Join Our Circle</h5>
+                    <p class="text-secondary mb-4">Get exclusive offers and premium updates.</p>
+                    <div class="d-flex">
+                        <input type="email" class="form-control" placeholder="Email Address" style="border-radius: 8px 0 0 8px;">
+                        <button class="btn btn-gold" style="border-radius: 0 8px 8px 0; width: 60px;">→</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-5" style="border-color:rgba(255,255,255,0.1);">
+            <p class="text-center text-secondary mb-0">
+                © 2026 Medusa. All Rights Reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Check session to update Login/Logout link
+            try {
+                const res = await fetch('api/check-session.php');
+                const data = await res.json();
+                if (data.success && data.logged_in) {
+                    const authLink = document.getElementById('authLink');
+                    if (authLink) {
+                        authLink.textContent = 'Logout';
+                        authLink.href = 'api/logout.php';
+                    }
+                    const footerAuthLink = document.getElementById('footerAuthLink');
+                    if (footerAuthLink) {
+                        footerAuthLink.textContent = 'Logout';
+                        footerAuthLink.href = 'api/logout.php';
+                    }
+                }
+            } catch (e) {
+                console.error("Session check failed:", e);
+            }
+        });
+
+        // File upload visual selector
+        function handleFileSelected(input) {
+            const uploadText = document.getElementById('uploadText');
+            const fileFeedback = document.getElementById('fileFeedback');
+            const uploadArea = document.getElementById('uploadArea');
+
+            if (input.files && input.files.length > 0) {
+                const file = input.files[0];
+                const extension = file.name.split('.').pop().toLowerCase();
+                const allowed = ['pdf', 'doc', 'docx'];
+
+                if (!allowed.includes(extension) || file.size > 5 * 1024 * 1024) {
+                    uploadArea.style.borderColor = '#dc3545';
+                    uploadText.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> Invalid file: ${file.name}</span>`;
+                    fileFeedback.style.display = 'block';
+                    input.value = ''; // Reset input value
+                } else {
+                    uploadArea.style.borderColor = '#2ec4b6';
+                    uploadText.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Selected: <strong>${file.name}</strong> (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>`;
+                    fileFeedback.style.display = 'none';
+                }
+            } else {
+                uploadArea.style.borderColor = 'rgba(223, 186, 134, 0.3)';
+                uploadText.innerHTML = 'Drag & drop your resume file here or <strong>browse files</strong>';
+                fileFeedback.style.display = 'none';
+            }
+        }
+
+        // Form Submission with client validation & spinner feedback
+        async function submitApplication(event) {
+            event.preventDefault();
+            const form = document.getElementById('careerForm');
+            const resumeInput = document.getElementById('resume');
+            const fileFeedback = document.getElementById('fileFeedback');
+            
+            let isFileValid = true;
+            if (!resumeInput.files || resumeInput.files.length === 0) {
+                isFileValid = false;
+                document.getElementById('uploadArea').style.borderColor = '#dc3545';
+                fileFeedback.style.display = 'block';
+            }
+
+            if (!form.checkValidity() || !isFileValid) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // Set Loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-gold me-2"></span>Submitting...';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('api/submit-career.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Custom Alert Modal trigger (via theme-toggle.js override)
+                    alert('Success! ' + data.message);
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    
+                    // Reset file upload styles
+                    document.getElementById('uploadArea').style.borderColor = 'rgba(223, 186, 134, 0.3)';
+                    document.getElementById('uploadText').innerHTML = 'Drag & drop your resume file here or <strong>browse files</strong>';
+                    document.getElementById('fileFeedback').style.display = 'none';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error("Submission failed:", error);
+                alert('An error occurred during submission. Please check your network connection.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+    </script>
+</body>
+
+</html>
