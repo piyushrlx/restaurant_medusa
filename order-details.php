@@ -71,10 +71,29 @@ $subtotal = 0;
 foreach ($order_items as $item) {
     $subtotal += floatval($item['price']) * intval($item['quantity']);
 }
-$gst_rate = 18;
+
+// Load Settings
+$settings_file = __DIR__ . '/admintest/settings.json';
+$settings = [
+    'restaurant_name' => 'Medusa',
+    'gst_rate' => 18,
+    'packing_charge' => 0.00,
+    'opening_hours' => '11:00 AM - 11:00 PM'
+];
+if (file_exists($settings_file)) {
+    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
+}
+$gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
+$packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
+
 $gst = $subtotal * ($gst_rate / 100);
-$delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : 40.00;
-$grand_total = $subtotal + $gst + $delivery;
+$delivery_charge = floatval(get_env_var('DELIVERY_CHARGE', '40.00'));
+$delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $delivery_charge;
+
+// Apply packing charge only if order is not dine-in (not at a Table)
+$packing = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $packing_charge;
+
+$grand_total = $subtotal + $gst + $delivery + $packing;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -446,6 +465,12 @@ $grand_total = $subtotal + $gst + $delivery;
                     <span>GST (<?php echo $gst_rate; ?>%)</span>
                     <span>₹<?php echo number_format($gst, 2); ?></span>
                 </div>
+                <?php if ($packing > 0): ?>
+                <div class="breakdown-row">
+                    <span>Packing Charges</span>
+                    <span>₹<?php echo number_format($packing, 2); ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="breakdown-row">
                     <span>Delivery / Table Service</span>
                     <span>₹<?php echo number_format($delivery, 2); ?></span>

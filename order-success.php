@@ -87,7 +87,7 @@ if (!$order) {
         ],
         'subtotal' => 697.00,
         'gst' => 125.46,
-        'delivery' => 40.00,
+        'delivery' => floatval(get_env_var('DELIVERY_CHARGE', '40.00')),
         'total' => 862.46,
         'status' => 'Paid',
         'created_at' => date('Y-m-d H:i:s')
@@ -452,6 +452,258 @@ if (!$order) {
                 border-bottom: 1px solid #eeeeee !important;
             }
         }
+
+        /* Feedback Popup Styling */
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .feedback-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .feedback-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid rgba(223, 186, 134, 0.15);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            text-align: center;
+            transform: scale(0.85) translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--white);
+            animation: none;
+        }
+
+        .feedback-overlay.show .feedback-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .feedback-close-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .feedback-close-btn:hover {
+            color: var(--gold);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .feedback-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+        }
+
+        .feedback-subtitle {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .feedback-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 1.5rem 0;
+        }
+
+        .feedback-stars-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 1.2rem 0;
+        }
+
+        .feedback-star {
+            font-size: 2.2rem;
+            color: rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            transition: var(--transition);
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        .feedback-star:focus {
+            outline: none;
+            transform: scale(1.15);
+        }
+
+        .feedback-star.hover,
+        .feedback-star.selected {
+            color: var(--gold);
+            text-shadow: 0 0 12px rgba(223, 186, 134, 0.4);
+        }
+
+        .feedback-helper-text {
+            font-size: 0.88rem;
+            color: var(--gold-light);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .feedback-textarea-wrapper {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        .feedback-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .feedback-textarea {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 0.8rem 1.1rem !important;
+            font-size: 0.95rem !important;
+            width: 100%;
+            height: 100px;
+            resize: none;
+            transition: var(--transition);
+        }
+
+        .feedback-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.25) !important;
+        }
+
+        .feedback-textarea:focus {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 0 0.25rem rgba(223, 186, 134, 0.15) !important;
+            outline: none;
+        }
+
+        .feedback-char-count {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 0.35rem;
+        }
+
+        .feedback-validation-error {
+            color: #ffb3b8;
+            background: rgba(230, 57, 70, 0.08);
+            border: 1px solid rgba(230, 57, 70, 0.15);
+            border-radius: 6px;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            display: none;
+            font-weight: 500;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .feedback-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .feedback-btn-submit {
+            background-color: var(--gold);
+            color: #0c0a0a;
+            border: none;
+            border-radius: 8px;
+            padding: 0.85rem 1.8rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            cursor: pointer;
+            flex-grow: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .feedback-btn-submit:hover {
+            background-color: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        .feedback-btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .feedback-btn-cancel {
+            background-color: transparent;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.85rem 1.8rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            cursor: pointer;
+            flex-grow: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .feedback-btn-cancel:hover {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feedback-success-icon {
+            font-size: 3.5rem;
+            color: var(--success-color);
+            margin-bottom: 1.25rem;
+        }
+
+        @media print {
+            .feedback-overlay {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -557,14 +809,24 @@ if (!$order) {
             </table>
 
             <div class="totals-section">
+                <?php 
+                $gst_percent = ($order['subtotal'] > 0) ? round(($order['gst'] / $order['subtotal']) * 100) : 18;
+                $packing_charge = $order['packing'] ?? 0.00;
+                ?>
                 <div class="total-row">
                     <span>Subtotal</span>
                     <span>₹<?php echo number_format($order['subtotal'], 2); ?></span>
                 </div>
                 <div class="total-row">
-                    <span>GST (18%)</span>
+                    <span>GST (<?php echo $gst_percent; ?>%)</span>
                     <span>₹<?php echo number_format($order['gst'], 2); ?></span>
                 </div>
+                <?php if ($packing_charge > 0): ?>
+                <div class="total-row">
+                    <span>Packing Charges</span>
+                    <span>₹<?php echo number_format($packing_charge, 2); ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="total-row">
                     <span>Delivery Fee</span>
                     <span>₹<?php echo number_format($order['delivery'], 2); ?></span>
@@ -584,6 +846,70 @@ if (!$order) {
                 <i class="fas fa-print"></i> Print Invoice
             </button>
         </div>
+
+    <!-- Scoped Feedback Popup Overlay -->
+    <div id="feedbackOverlay" class="feedback-overlay" aria-modal="true" role="dialog" aria-labelledby="feedbackTitle">
+        <div class="feedback-card">
+            <button id="feedbackClose" class="feedback-close-btn" aria-label="Close Feedback Dialog">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div id="feedbackFormContent">
+                <h2 id="feedbackTitle" class="feedback-title">🎉 Thank You For Your Order!</h2>
+                <p class="feedback-subtitle">Your order has been successfully placed and is being prepared.</p>
+                
+                <p class="feedback-subtitle">We would love your feedback about your experience with our restaurant.</p>
+                
+                <div class="feedback-divider"></div>
+                
+                <p class="feedback-helper-text">How was your experience?</p>
+                
+                <div class="feedback-stars-container" role="radiogroup" aria-label="Rate your experience from 1 to 5 stars">
+                    <button type="button" class="feedback-star" data-rating="1" role="radio" aria-checked="false" aria-label="1 star"><i class="fas fa-star"></i></button>
+                    <button type="button" class="feedback-star" data-rating="2" role="radio" aria-checked="false" aria-label="2 stars"><i class="fas fa-star"></i></button>
+                    <button type="button" class="feedback-star" data-rating="3" role="radio" aria-checked="false" aria-label="3 stars"><i class="fas fa-star"></i></button>
+                    <button type="button" class="feedback-star" data-rating="4" role="radio" aria-checked="false" aria-label="4 stars"><i class="fas fa-star"></i></button>
+                    <button type="button" class="feedback-star" data-rating="5" role="radio" aria-checked="false" aria-label="5 stars"><i class="fas fa-star"></i></button>
+                </div>
+                
+                <div id="feedbackValidationError" class="feedback-validation-error" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Please select a rating before submitting.</span>
+                </div>
+
+                <div class="feedback-textarea-wrapper">
+                    <label for="feedbackReview" class="feedback-label">Tell us more (Optional)</label>
+                    <textarea id="feedbackReview" class="feedback-textarea" placeholder="Share your experience..." maxlength="300"></textarea>
+                    <div class="feedback-char-count"><span id="feedbackCharCount">0</span>/300</div>
+                </div>
+                
+                <div class="feedback-btn-group">
+                    <button type="button" id="feedbackCancel" class="feedback-btn-cancel">Maybe Later</button>
+                    <button type="button" id="feedbackSubmit" class="feedback-btn-submit">Submit Feedback</button>
+                </div>
+            </div>
+            
+            <div id="feedbackSuccessContent" style="display: none;">
+                <div class="feedback-success-icon">
+                    <i class="fas fa-check-circle" id="feedbackSuccessIconInner"></i>
+                </div>
+                <h2 class="feedback-title" id="feedbackSuccessTitle">✅ Thank you for your feedback!</h2>
+                <p class="feedback-subtitle" id="feedbackSuccessSubtitle" style="margin-bottom: 0;">Your feedback helps us improve our service.</p>
+                
+                <!-- Coupon Reward Container -->
+                <div id="feedbackCouponReward" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: rgba(223, 186, 134, 0.08); border: 1px dashed #dfba86; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: bold; color: #dfba86;">🎉 Reward Unlocked!</div>
+                    <p style="font-size: 0.9rem; color: #a09f9f; margin-bottom: 1rem;">Use this coupon code on your next order to receive <strong class="text-gold" id="rewardDiscount">10% OFF</strong>:</p>
+                    <div class="d-flex align-items-center justify-content-center gap-2" style="background: rgba(0,0,0,0.4); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; width: fit-content; margin-left: auto; margin-right: auto;">
+                        <code id="rewardCouponCode" style="font-family: monospace; font-size: 1.15rem; color: #dfba86; font-weight: bold; letter-spacing: 1px;"></code>
+                        <button type="button" id="copyCouponBtn" class="btn btn-sm btn-outline-light" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; border-color: rgba(255,255,255,0.2);"><i class="far fa-copy"></i> Copy</button>
+                    </div>
+                    <p style="font-size: 0.78rem; color: #a09f9f; margin-bottom: 0;">Expires on: <span id="rewardExpiry" style="color: #ffffff; font-weight: bold;"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Auto-trigger print/PDF download dialog if the print parameter is set to 1
         const urlParams = new URLSearchParams(window.location.search);
@@ -594,6 +920,200 @@ if (!$order) {
                 }, 1000); // 1-second delay to ensure graphics and animations load completely
             });
         }
+
+        // Feedback Popup Functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPrintMode = urlParams.get('print') === '1';
+            
+            // If the user requested direct printing, do not show the feedback dialog
+            if (isPrintMode) {
+                return;
+            }
+
+            const overlay = document.getElementById('feedbackOverlay');
+            const closeBtn = document.getElementById('feedbackClose');
+            const cancelBtn = document.getElementById('feedbackCancel');
+            const submitBtn = document.getElementById('feedbackSubmit');
+            const formContent = document.getElementById('feedbackFormContent');
+            const successContent = document.getElementById('feedbackSuccessContent');
+            const validationError = document.getElementById('feedbackValidationError');
+            const stars = document.querySelectorAll('.feedback-star');
+            const reviewTextarea = document.getElementById('feedbackReview');
+            const charCount = document.getElementById('feedbackCharCount');
+            
+            let selectedRating = 0;
+            const currentOrderId = "<?php echo htmlspecialchars($order['order_id']); ?>";
+
+            // 1. Open popup after 1 second
+            setTimeout(() => {
+                overlay.classList.add('show');
+                // Set focus to the first star button for accessibility
+                if (stars.length > 0) {
+                    stars[0].focus();
+                }
+            }, 1000);
+
+            // 2. Rating selection logic (click and hover support)
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    selectedRating = parseInt(star.getAttribute('data-rating'));
+                    updateStarHighlights(selectedRating);
+                    validationError.style.display = 'none'; // Hide validation warning when a star is selected
+                });
+
+                star.addEventListener('mouseenter', () => {
+                    const hoverValue = parseInt(star.getAttribute('data-rating'));
+                    highlightStarsOnHover(hoverValue);
+                });
+
+                star.addEventListener('mouseleave', () => {
+                    highlightStarsOnHover(0); // Clear hover states
+                });
+                
+                // Accessible Keyboard controls for Rating selection
+                star.addEventListener('keydown', (e) => {
+                    let nextIndex = index;
+                    if (e.key === 'ArrowRight') {
+                        nextIndex = (index + 1) % stars.length;
+                        stars[nextIndex].focus();
+                        e.preventDefault();
+                    } else if (e.key === 'ArrowLeft') {
+                        nextIndex = (index - 1 + stars.length) % stars.length;
+                        stars[nextIndex].focus();
+                        e.preventDefault();
+                    } else if (e.key === ' ' || e.key === 'Enter') {
+                        star.click();
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            function updateStarHighlights(rating) {
+                stars.forEach((star) => {
+                    const starVal = parseInt(star.getAttribute('data-rating'));
+                    if (starVal <= rating) {
+                        star.classList.add('selected');
+                        star.setAttribute('aria-checked', 'true');
+                    } else {
+                        star.classList.remove('selected');
+                        star.setAttribute('aria-checked', 'false');
+                    }
+                });
+            }
+
+            function highlightStarsOnHover(hoverValue) {
+                stars.forEach((star) => {
+                    const starVal = parseInt(star.getAttribute('data-rating'));
+                    if (hoverValue > 0 && starVal <= hoverValue) {
+                        star.classList.add('hover');
+                    } else {
+                        star.classList.remove('hover');
+                    }
+                });
+            }
+
+            // 3. Character counting for review
+            reviewTextarea.addEventListener('input', () => {
+                const len = reviewTextarea.value.length;
+                charCount.textContent = len;
+            });
+
+            // 4. Closing actions
+            const closeFeedbackPopup = () => {
+                overlay.classList.remove('show');
+            };
+
+            closeBtn.addEventListener('click', closeFeedbackPopup);
+            cancelBtn.addEventListener('click', closeFeedbackPopup);
+            
+            // Close when clicking outside on the background overlay
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeFeedbackPopup();
+                }
+            });
+
+            // Escape key closes popup
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.classList.contains('show')) {
+                    closeFeedbackPopup();
+                }
+            });
+
+            // 5. Submit feedback asynchronously using fetch API
+            submitBtn.addEventListener('click', () => {
+                if (selectedRating === 0) {
+                    validationError.style.display = 'flex';
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                validationError.style.display = 'none';
+
+                const payload = {
+                    order_id: currentOrderId,
+                    rating: selectedRating,
+                    review: reviewTextarea.value
+                };
+
+                fetch('api/submit-feedback.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Swap with Success state content
+                        formContent.style.display = 'none';
+                        successContent.style.display = 'block';
+                        
+                        if (data.couponGenerated) {
+                            // Update details and show coupon reward
+                            document.getElementById('feedbackSuccessTitle').textContent = '🎉 Thank You For Your Review!';
+                            document.getElementById('feedbackSuccessSubtitle').textContent = "You've unlocked a reward.";
+                            document.getElementById('rewardDiscount').textContent = data.discount || '10% OFF';
+                            document.getElementById('rewardCouponCode').textContent = data.couponCode;
+                            document.getElementById('rewardExpiry').textContent = data.expiresAt;
+                            document.getElementById('feedbackCouponReward').style.display = 'block';
+
+                            // Setup clipboard copy button
+                            const copyBtn = document.getElementById('copyCouponBtn');
+                            copyBtn.addEventListener('click', () => {
+                                navigator.clipboard.writeText(data.couponCode).then(() => {
+                                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                                    setTimeout(() => {
+                                        copyBtn.innerHTML = '<i class="far fa-copy"></i> Copy';
+                                    }, 2000);
+                                }).catch(err => {
+                                    console.error('Clipboard copy failed: ', err);
+                                    // Fallback copy alert
+                                    alert('Coupon Code: ' + data.couponCode);
+                                });
+                            });
+                        } else {
+                            // Wait 2 seconds, then close automatically
+                            setTimeout(() => {
+                                closeFeedbackPopup();
+                            }, 2000);
+                        }
+                    } else {
+                        // Display error message
+                        validationError.querySelector('span').textContent = data.message || 'An error occurred. Please try again.';
+                        validationError.style.display = 'flex';
+                        submitBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    validationError.querySelector('span').textContent = 'Network error. Please try again.';
+                    validationError.style.display = 'flex';
+                    submitBtn.disabled = false;
+                });
+            });
+        });
     </script>
 </body>
 </html>

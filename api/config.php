@@ -1,8 +1,30 @@
 <?php
-$host = "localhost";
-$dbname = "restaurant_db";
-$username = "root";
-$password = "";
+if (!function_exists('get_env_var')) {
+    function get_env_var($key, $default = null) {
+        static $env = null;
+        if ($env === null) {
+            $env = [];
+            $path = dirname(__DIR__) . '/.env';
+            if (file_exists($path)) {
+                $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (strpos($line, '#') === 0 || empty($line)) continue;
+                    $parts = explode('=', $line, 2);
+                    if (count($parts) === 2) {
+                        $env[trim($parts[0])] = trim($parts[1]);
+                    }
+                }
+            }
+        }
+        return $env[$key] ?? $default;
+    }
+}
+
+$host = get_env_var('DB_HOST', 'localhost');
+$dbname = get_env_var('DB_NAME', 'restaurant_db');
+$username = get_env_var('DB_USER', 'root');
+$password = get_env_var('DB_PASS', '');
 
 try {
     $pdo = new PDO(

@@ -267,12 +267,16 @@
                         <span id="subtotal">₹0.00</span>
                     </div>
                     <div class="summary-row">
-                        <span>Delivery Charge:</span>
-                        <span>₹40.00</span>
+                        <span id="gstLabel">GST (18%):</span>
+                        <span id="gstAmount">₹0.00</span>
                     </div>
                     <div class="summary-row">
-                        <span>GST (18%):</span>
-                        <span id="gstAmount">₹0.00</span>
+                        <span>Packing Charges:</span>
+                        <span id="packingAmount">₹0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Charge:</span>
+                        <span id="deliveryAmount">₹40.00</span>
                     </div>
                     <div class="summary-row total">
                         <span>Total:</span>
@@ -290,7 +294,24 @@
 
     <script>
         let localItems = [];
+        let GST_RATE = 18;
+        let PACKING_CHARGE = 0.00;
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('admintest/settings.json');
+                if (response.ok) {
+                    const settings = await response.json();
+                    GST_RATE = (settings.gst_rate !== undefined) ? parseInt(settings.gst_rate) : 18;
+                    PACKING_CHARGE = (settings.packing_charge !== undefined) ? parseFloat(settings.packing_charge) : 0.00;
+                }
+            } catch (e) {
+                console.warn('Failed to load settings from settings.json, using defaults.', e);
+            }
+        }
+
         async function loadCart() {
+            await loadSettings();
             try {
                 // Fetch cart data from backend
                 const response = await fetch('api/get-cart.php');
@@ -379,12 +400,15 @@
 
         function updateTotals(items, subtotal) {
             const delivery = items.length > 0 ? 40 : 0;
-            const gstRate = 0.18;
-            const gstAmount = subtotal * gstRate;
-            const total = subtotal + delivery + gstAmount;
+            const packing = items.length > 0 ? PACKING_CHARGE : 0;
+            const gstAmount = subtotal * (GST_RATE / 100);
+            const total = subtotal + delivery + packing + gstAmount;
 
             document.getElementById('subtotal').textContent = `₹${parseFloat(subtotal).toFixed(2)}`;
+            document.getElementById('gstLabel').textContent = `GST (${GST_RATE}%):`;
             document.getElementById('gstAmount').textContent = `₹${gstAmount.toFixed(2)}`;
+            document.getElementById('packingAmount').textContent = `₹${parseFloat(packing).toFixed(2)}`;
+            document.getElementById('deliveryAmount').textContent = `₹${parseFloat(delivery).toFixed(2)}`;
             document.getElementById('totalAmount').textContent = `₹${total.toFixed(2)}`;
         }
 

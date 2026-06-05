@@ -1,25 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-function get_env_var($key, $default = null) {
-    static $env = null;
-    if ($env === null) {
-        $env = [];
-        $path = dirname(__DIR__) . '/.env';
-        if (file_exists($path)) {
-            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (strpos($line, '#') === 0 || empty($line)) continue;
-                $parts = explode('=', $line, 2);
-                if (count($parts) === 2) {
-                    $env[trim($parts[0])] = trim($parts[1]);
-                }
-            }
-        }
-    }
-    return $env[$key] ?? $default;
-}
+
 
 header('Content-Type: application/json');
 
@@ -42,6 +24,7 @@ $delivery_address = $data['delivery_address'] ?? '';
 $message = $data['message'] ?? '';
 $payment_id = $data['razorpay_payment_id'] ?? 'MOCK_PAYMENT';
 $cart_items = $data['cart_items'] ?? [];
+$coupon_code = trim($data['coupon_code'] ?? '');
 
 $save_address = !empty($data['save_address']);
 $saved_address_id = intval($data['saved_address_id'] ?? 0);
@@ -74,9 +57,46 @@ if ($subtotal == 0) {
     ];
 }
 
-$gst = $subtotal * 0.18;
-$delivery = 40.00;
-$total = $subtotal + $gst + $delivery;
+// Load Settings
+$settings_file = dirname(__DIR__) . '/admintest/settings.json';
+$settings = [
+    'restaurant_name' => 'Medusa',
+    'gst_rate' => 18,
+    'packing_charge' => 0.00,
+    'opening_hours' => '11:00 AM - 11:00 PM'
+];
+if (file_exists($settings_file)) {
+    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
+}
+$gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
+$packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
+
+$gst = $subtotal * ($gst_rate / 100);
+$delivery = floatval(get_env_var('DELIVERY_CHARGE', '40.00'));
+$packing = (strpos(strtolower($delivery_address), 'table') !== false) ? 0.00 : $packing_charge;
+$total = $subtotal + $gst + $delivery + $packing;
+
+// Coupon Validation & Application
+$coupon_discount = 0;
+$coupon_valid = false;
+$coupon_entity = null;
+if (!empty($coupon_code)) {
+    require_once __DIR__ . '/CouponService.php';
+    try {
+        $couponService = new CouponService($pdo);
+        $coupon_entity = $couponService->validateCoupon($coupon_code);
+        // Calculate coupon discount (percentage of subtotal)
+        $coupon_discount = $subtotal * ($coupon_entity->discount_value / 100);
+        $coupon_valid = true;
+        $total = max(0, $total - $coupon_discount);
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Coupon validation failed: ' . $e->getMessage()
+        ]);
+        exit;
+    }
+}
 
 $order_id = 'ORD-' . strtoupper(substr(uniqid(), 7, 5));
 
@@ -104,7 +124,8 @@ $sms_message = "=============================\n"
              . "{$items_block}\n"
              . "-----------------------------\n"
              . "Subtotal: Rs. " . number_format($subtotal, 2) . "\n"
-             . "GST (18%): Rs. " . number_format($gst, 2) . "\n"
+             . "GST ({$gst_rate}%): Rs. " . number_format($gst, 2) . "\n"
+             . ($packing > 0 ? "Packing: Rs. " . number_format($packing, 2) . "\n" : "")
              . "Delivery: Rs. " . number_format($delivery, 2) . "\n"
              . "-----------------------------\n"
              . "GRAND TOTAL: Rs. " . number_format($total, 2) . "\n"
@@ -247,6 +268,7 @@ $new_order = [
     'subtotal' => $subtotal,
     'gst' => $gst,
     'delivery' => $delivery,
+    'packing' => $packing,
     'total' => $total,
     'status' => 'Paid',
     'sms_status' => $sms_status,
@@ -254,12 +276,19 @@ $new_order = [
     'created_at' => date('Y-m-d H:i:s')
 ];
 
+if ($coupon_valid && $coupon_discount > 0) {
+    $new_order['coupon_code'] = $coupon_code;
+    $new_order['coupon_discount'] = $coupon_discount;
+}
+
 $orders[$order_id] = $new_order;
 file_put_contents($orders_file, json_encode($orders, JSON_PRETTY_PRINT));
 
 // Save order to MySQL database directly
 if (isset($pdo)) {
     try {
+        $pdo->beginTransaction();
+
         $db_user_id = $_SESSION['user_id'] ?? null;
         $db_status = 'pending'; // Default status for new orders
         
@@ -344,8 +373,19 @@ if (isset($pdo)) {
                 $clear_defaults->execute([$db_user_id, $address_id]);
             }
         }
-    } catch(PDOException $e) {
+
+        // If coupon is valid, redeem it inside the transaction!
+        if ($coupon_valid && $coupon_entity) {
+            $couponService->redeemCoupon($coupon_code, $db_order_id);
+        }
+
+        $pdo->commit();
+    } catch(Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         // Log or handle error gracefully so checkout doesn't crash
+        error_log("Order save transaction failed: " . $e->getMessage());
     }
 }
 
