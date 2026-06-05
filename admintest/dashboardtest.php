@@ -2,6 +2,35 @@
 require_once dirname(__DIR__) . '/api/config.php';
 requireAdmin();
 
+// Ensure feedback table exists before running any queries
+try {
+    $createTableQuery = "
+        CREATE TABLE IF NOT EXISTS `feedback` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `order_number` VARCHAR(20) NOT NULL,
+            `rating` INT NOT NULL,
+            `review` TEXT DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT `fk_feedback_orders` FOREIGN KEY (`order_number`) REFERENCES `orders` (`order_number`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ";
+    $pdo->exec($createTableQuery);
+} catch (PDOException $e) {
+    // Fail silently
+}
+
+// Helper to render gold stars based on feedback rating
+function renderStars($rating, $review = '') {
+    $rating = intval($rating);
+    if ($rating < 1 || $rating > 5) return '';
+    $starsHtml = '<div class="feedback-stars mt-1" style="color: #dfba86; font-size: 0.85rem;" title="' . htmlspecialchars($rating) . '/5 Stars' . (!empty($review) ? ': ' . htmlspecialchars($review) : '') . '">';
+    for ($i = 1; $i <= 5; $i++) {
+        $starsHtml .= ($i <= $rating) ? '★' : '☆';
+    }
+    $starsHtml .= '</div>';
+    return $starsHtml;
+}
+
 // Helper to determine if a dish is Vegetarian based on name/description keywords
 function isVegItem($name, $description = '') {
     $non_veg_keywords = ['chicken', 'biryani', 'rogan', 'josh', 'lamb', 'mutton', 'pork', 'fish', 'prawn', 'shrimp', 'pepperoni', 'meat', 'wings', 'ribs', 'chashu', 'bolognese', 'lasagna', 'bacon', 'beef', 'duck', 'egg'];
@@ -146,6 +175,7 @@ $settings_file = __DIR__ . '/settings.json';
 $settings = [
     'restaurant_name' => 'Medusa',
     'gst_rate' => 18,
+    'packing_charge' => 0.00,
     'opening_hours' => '11:00 AM - 11:00 PM'
 ];
 if (file_exists($settings_file)) {
@@ -159,7 +189,7 @@ if (isset($_REQUEST['action'])) {
     
     // Search Orders Endpoint
     if ($action === 'search_orders') {
-        $sql = "SELECT * FROM orders WHERE 1=1";
+        $sql = "SELECT *, (SELECT rating FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS rating, (SELECT review FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS review FROM orders WHERE 1=1";
         $params = [];
         
         if (!empty($_POST['search'])) {
@@ -760,6 +790,7 @@ if (isset($_REQUEST['action'])) {
         $settings = [
             'restaurant_name' => $_POST['restaurant_name'],
             'gst_rate' => intval($_POST['gst_rate']),
+            'packing_charge' => floatval($_POST['packing_charge']),
             'opening_hours' => $_POST['opening_hours']
         ];
         file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT));
@@ -859,7 +890,7 @@ if (empty($chart_data)) {
 }
 
 // 10 Recent Orders
-$recent_orders = $pdo->query("SELECT * FROM orders ORDER BY id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+$recent_orders = $pdo->query("SELECT *, (SELECT rating FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS rating, (SELECT review FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS review FROM orders ORDER BY id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
 // Full Menu List
 $menu_list = $pdo->query("SELECT * FROM food_items ORDER BY category, id ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -2234,7 +2265,7 @@ html:not(.light-mode) .form-select:focus{
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $on_stmt = $pdo->query("SELECT * FROM orders WHERE delivery_address NOT LIKE 'Table %' ORDER BY id DESC");
+                                    $on_stmt = $pdo->query("SELECT *, (SELECT rating FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS rating, (SELECT review FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS review FROM orders WHERE delivery_address NOT LIKE 'Table %' ORDER BY id DESC");
                                     $online_orders = $on_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     if (empty($online_orders)): ?>
                                         <tr><td colspan="6" class="text-center text-muted">No online orders found.</td></tr>
@@ -2250,7 +2281,10 @@ html:not(.light-mode) .form-select:focus{
                                         }
                                         ?>
                                         <tr>
-                                            <td><strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong></td>
+                                            <td>
+                                                <strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong>
+                                                <?php echo renderStars($ord['rating'] ?? 0, $ord['review'] ?? ''); ?>
+                                            </td>
                                             <td>
                                                 <strong><?php echo htmlspecialchars($ord['customer_name']); ?></strong><br>
                                                 <small class="text-muted"><i class="fas fa-phone"></i> <?php echo htmlspecialchars($ord['customer_phone']); ?></small><br>
@@ -2367,7 +2401,10 @@ html:not(.light-mode) .form-select:focus{
                                     <?php else: ?>
                                         <?php foreach ($recent_orders as $ord): ?>
                                         <tr>
-                                            <td><strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong></td>
+                                            <td>
+                                                <strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong>
+                                                <?php echo renderStars($ord['rating'] ?? 0, $ord['review'] ?? ''); ?>
+                                            </td>
                                             <td>
                                                 <strong><?php echo htmlspecialchars($ord['customer_name']); ?></strong>
                                                 <?php if (!empty($ord['customer_phone'])): ?>
@@ -3124,6 +3161,11 @@ html:not(.light-mode) .form-select:focus{
                     <div class="mb-3">
                         <label class="form-label text-muted text-uppercase small">GST Surcharge Rate (%)</label>
                         <input type="number" id="set_gst_rate" class="form-control form-control-dashboard" value="<?php echo intval($settings['gst_rate']); ?>" required min="0" max="30">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted text-uppercase small">Packing Charges (₹)</label>
+                        <input type="number" step="0.01" id="set_packing_charge" class="form-control form-control-dashboard" value="<?php echo isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00; ?>" required min="0">
                     </div>
                     
                     <div class="mb-3">
@@ -4072,6 +4114,7 @@ html:not(.light-mode) .form-select:focus{
                     action: 'save_settings',
                     restaurant_name: document.getElementById('set_restaurant_name').value,
                     gst_rate: document.getElementById('set_gst_rate').value,
+                    packing_charge: document.getElementById('set_packing_charge').value,
                     opening_hours: document.getElementById('set_opening_hours').value
                 })
             })
@@ -4165,6 +4208,18 @@ html:not(.light-mode) .form-select:focus{
             .catch(() => showSearchError('orders-search-results-body', 7, 'Network error.'));
         }
 
+        function getStarRatingHtml(rating, review) {
+            rating = parseInt(rating);
+            if (isNaN(rating) || rating < 1 || rating > 5) return '';
+            let title = rating + '/5 Stars' + (review ? ': ' + review.replace(/"/g, '&quot;') : '');
+            let html = `<div class="feedback-stars mt-1" style="color: #dfba86; font-size: 0.85rem;" title="${title}">`;
+            for (let i = 1; i <= 5; i++) {
+                html += (i <= rating) ? '★' : '☆';
+            }
+            html += '</div>';
+            return html;
+        }
+
         function renderOrdersSearchResults(orders) {
             // Show/hide the results card
             const card = document.getElementById('orders-search-results-card');
@@ -4194,7 +4249,10 @@ html:not(.light-mode) .form-select:focus{
                     : '<span class="badge bg-dark border border-secondary text-white">Dine-In</span>';
 
                 return `<tr>
-                    <td><strong class="text-gold">#${ord.order_number || ord.id}</strong></td>
+                    <td>
+                        <strong class="text-gold">#${ord.order_number || ord.id}</strong>
+                        ${getStarRatingHtml(ord.rating, ord.review)}
+                    </td>
                     <td><strong>${ord.customer_name || '—'}</strong><br><small class="text-muted">${ord.customer_phone || ''}</small></td>
                     <td><small class="text-muted">${items}</small></td>
                     <td class="text-gold">${fmtINR(ord.total_amount)}</td>

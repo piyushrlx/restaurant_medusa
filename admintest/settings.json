@@ -1,5 +1,6 @@
 {
     "restaurant_name": "Medusa",
-    "gst_rate": 14,
+    "gst_rate": 16,
+    "packing_charge": 4.06,
     "opening_hours": "11:00 AM - 11:00 PM"
 }

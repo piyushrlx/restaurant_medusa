@@ -19,6 +19,17 @@ try {
 } catch(PDOException $e) {
     $orders = [];
 }
+
+// Fetch user coupons
+require_once __DIR__ . '/api/CouponService.php';
+$userCoupons = [];
+try {
+    $couponService = new CouponService($pdo);
+    $couponService->expireCoupons();
+    $userCoupons = $couponService->getUserCoupons($user_id);
+} catch (Exception $e) {
+    // Ignore error
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -435,6 +446,10 @@ try {
                     <i class="fa-solid fa-utensils"></i>
                     <span>Browse Menu</span>
                 </a>
+                <a href="#my-rewards-section" class="nav-link-custom">
+                    <i class="fa-solid fa-gift"></i>
+                    <span>My Rewards</span>
+                </a>
                 <a href="api/logout.php" class="nav-link-custom text-danger">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     <span>Logout</span>
@@ -494,6 +509,65 @@ try {
                         <i class="fa-solid fa-wallet"></i>
                     </div>
                 </div>
+            </section>
+
+            <!-- My Coupons & Rewards Section -->
+            <section id="my-rewards-section" class="mb-5" style="animation: fadeIn 0.8s ease-out;">
+                <h2 class="orders-section-title"><i class="fa-solid fa-gift me-2 text-gold"></i>My Rewards & Coupons</h2>
+                <?php if (empty($userCoupons)): ?>
+                    <div class="empty-orders" style="padding: 3rem 2rem;">
+                        <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-tag"></i>
+                        </div>
+                        <h4 style="color: var(--gray);">No coupons available yet</h4>
+                        <p class="empty-text" style="font-size: 0.88rem; max-width: 320px; margin-bottom: 0;">Submit a 5-star review after ordering to unlock a special discount coupon!</p>
+                    </div>
+                <?php else: ?>
+                    <div class="row g-4">
+                        <?php foreach ($userCoupons as $coupon): ?>
+                            <?php
+                            $statusBadge = '';
+                            $cardOpacity = '1';
+                            switch (strtolower($coupon->status)) {
+                                case 'active':
+                                    $statusBadge = '<span class="badge bg-success text-white">Active</span>';
+                                    break;
+                                case 'redeemed':
+                                    $statusBadge = '<span class="badge bg-secondary text-white">Redeemed</span>';
+                                    $cardOpacity = '0.6';
+                                    break;
+                                case 'expired':
+                                    $statusBadge = '<span class="badge bg-danger text-white">Expired</span>';
+                                    $cardOpacity = '0.5';
+                                    break;
+                            }
+                            ?>
+                            <div class="col-md-6 col-lg-4" style="opacity: <?php echo $cardOpacity; ?>;">
+                                <div class="status-card" style="flex-direction: column; align-items: stretch; gap: 1rem; border-style: dashed;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-gold" style="font-weight: 700; font-size: 1.2rem;"><?php echo intval($coupon->discount_value); ?>% OFF</span>
+                                        <?php echo $statusBadge; ?>
+                                    </div>
+                                    <p class="text-white-50 m-0" style="font-size: 0.85rem;">Campaign: <?php echo htmlspecialchars($coupon->campaign_code); ?></p>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary" style="margin-top: 0.25rem;">
+                                        <code style="font-family: monospace; font-size: 0.95rem; color: var(--gold); font-weight: bold;"><?php echo htmlspecialchars($coupon->coupon_code); ?></code>
+                                        <?php if ($coupon->status === 'active'): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-light copy-btn-orders" data-code="<?php echo htmlspecialchars($coupon->coupon_code); ?>" style="font-size: 0.72rem; padding: 0.2rem 0.4rem;">Copy</button>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
+                                        <span>Expires: <?php echo date('d M Y', strtotime($coupon->expires_at)); ?></span>
+                                        <?php if ($coupon->redeemed_at): ?>
+                                            <span class="text-white-50">Used: <?php echo date('d M Y', strtotime($coupon->redeemed_at)); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
 
             <!-- Order Cards List -->
@@ -643,6 +717,22 @@ try {
                 }
             }, 8000);
         }
+
+        // Copy coupon code to clipboard from My Rewards section
+        document.querySelectorAll('.copy-btn-orders').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                navigator.clipboard.writeText(code).then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = 'Copied!';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    alert('Coupon Code: ' + code);
+                });
+            });
+        });
     </script>
 </body>
 </html>

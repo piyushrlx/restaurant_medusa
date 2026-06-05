@@ -33,25 +33,21 @@ if (!empty($_SESSION['user_id'])) {
     $saved_addresses = [];
 }
 
-function get_env_var($key, $default = null) {
-    static $env = null;
-    if ($env === null) {
-        $env = [];
-        $path = __DIR__ . '/.env';
-        if (file_exists($path)) {
-            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (strpos($line, '#') === 0 || empty($line)) continue;
-                $parts = explode('=', $line, 2);
-                if (count($parts) === 2) {
-                    $env[trim($parts[0])] = trim($parts[1]);
-                }
-            }
-        }
-    }
-    return $env[$key] ?? $default;
+// Load Settings
+$settings_file = __DIR__ . '/admintest/settings.json';
+$settings = [
+    'restaurant_name' => 'Medusa',
+    'gst_rate' => 18,
+    'packing_charge' => 0.00,
+    'opening_hours' => '11:00 AM - 11:00 PM'
+];
+if (file_exists($settings_file)) {
+    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
 }
+$gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
+$packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
+
+
 
 // require_once 'api/config.php';
 // if (empty($_SESSION['user_id'])) {
@@ -788,12 +784,20 @@ $csrf_token = "dummy_test_token";
                                     <span id="checkout-subtotal">₹0.00</span>
                                 </div>
                                 <div class="summary-totals-row">
+                                    <span>GST (<?php echo $gst_rate; ?>%)</span>
+                                    <span id="checkout-gst">₹0.00</span>
+                                </div>
+                                <div class="summary-totals-row">
+                                    <span>Packing Charges</span>
+                                    <span id="checkout-packing">₹<?php echo number_format($packing_charge, 2); ?></span>
+                                </div>
+                                <div class="summary-totals-row">
                                     <span>Delivery Charge</span>
                                     <span id="checkout-delivery">₹40.00</span>
                                 </div>
-                                <div class="summary-totals-row">
-                                    <span>GST (18%)</span>
-                                    <span id="checkout-gst">₹0.00</span>
+                                <div class="summary-totals-row" id="coupon-discount-row" style="display: none; color: #dfba86;">
+                                    <span>Coupon Discount (<span id="coupon-percent-label">0</span>%)</span>
+                                    <span id="checkout-discount">-₹0.00</span>
                                 </div>
                                 <div class="summary-totals-row grand-total">
                                     <span>Total</span>
@@ -957,6 +961,10 @@ $csrf_token = "dummy_test_token";
     </button>
 
 <script>
+const GST_RATE = <?php echo $gst_rate; ?>;
+const PACKING_CHARGE = <?php echo $packing_charge; ?>;
+const DELIVERY_CHARGE = <?php echo floatval(get_env_var('DELIVERY_CHARGE', '40.00')); ?>;
+
 // Phone number input restriction
 const phoneInput = document.getElementById('billing_phone');
 phoneInput.addEventListener('input', function(e) {
@@ -1026,6 +1034,10 @@ if (savedAddressSelect) {
     handleSavedAddressChange();
 }
 
+// Coupon state variables
+let appliedCouponCode = '';
+let appliedCouponDiscountPercent = 0;
+
 // Coupon input toggle
 const couponToggle = document.getElementById('couponToggle');
 const couponInputGroup = document.getElementById('couponInputGroup');
@@ -1035,11 +1047,37 @@ couponToggle.addEventListener('click', () => {
 
 document.getElementById('applyCouponBtn').addEventListener('click', () => {
     const code = document.getElementById('couponCodeInput').value.trim();
-    if (code) {
-        alert(`Coupon "${code}" applied successfully!`);
-    } else {
+    if (!code) {
         alert('Please enter a coupon code.');
+        return;
     }
+    
+    const applyBtn = document.getElementById('applyCouponBtn');
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Applying...';
+
+    fetch(`api/validate-coupon.php?code=${encodeURIComponent(code)}`)
+        .then(res => res.json())
+        .then(data => {
+            applyBtn.disabled = false;
+            applyBtn.textContent = 'Apply';
+            if (data.success) {
+                appliedCouponCode = data.coupon_code;
+                appliedCouponDiscountPercent = parseFloat(data.discount_value);
+                alert(`Coupon "${data.coupon_code}" applied successfully: ${data.discount_value}% OFF!`);
+                loadCheckoutSummary(); // Refresh UI with discount
+            } else {
+                appliedCouponCode = '';
+                appliedCouponDiscountPercent = 0;
+                alert('Invalid Coupon: ' + data.message);
+                loadCheckoutSummary(); // Refresh UI to remove discount
+            }
+        })
+        .catch(err => {
+            applyBtn.disabled = false;
+            applyBtn.textContent = 'Apply';
+            alert('Failed to validate coupon due to network error.');
+        });
 });
 
 // Interactive payment method selection
@@ -1073,12 +1111,13 @@ async function loadCheckoutSummary() {
         if (result.success && result.items && result.items.length > 0) {
             // Compute subtotal from items — API doesn't return a separate total field
             const subtotal = result.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-            const gst = subtotal * 0.18;
-            const delivery = 40.00;
-            const total = subtotal + gst + delivery;
+            const gst = subtotal * (GST_RATE / 100);
+            const delivery = DELIVERY_CHARGE;
+            const packing = PACKING_CHARGE;
+            const total = subtotal + gst + delivery + packing;
 
             renderOrderItems(result.items);
-            updateSummaryUI(subtotal, delivery, gst, total);
+            updateSummaryUI(subtotal, delivery, gst, total, packing);
             return;
         }
     } catch (error) {
@@ -1092,12 +1131,13 @@ async function loadCheckoutSummary() {
             const items = JSON.parse(savedCart);
             if (items && items.length > 0) {
                 const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-                const gst = subtotal * 0.18;
-                const delivery = 40.00;
-                const total = subtotal + gst + delivery;
+                const gst = subtotal * (GST_RATE / 100);
+                const delivery = DELIVERY_CHARGE;
+                const packing = PACKING_CHARGE;
+                const total = subtotal + gst + delivery + packing;
                 
                 renderOrderItems(items);
-                updateSummaryUI(subtotal, delivery, gst, total);
+                updateSummaryUI(subtotal, delivery, gst, total, packing);
                 return;
             }
         } catch (e) {
@@ -1117,11 +1157,27 @@ function renderOrderItems(items) {
     `).join('');
 }
 
-function updateSummaryUI(subtotal, delivery, gst, total) {
+function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     document.getElementById('checkout-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
     document.getElementById('checkout-delivery').textContent = `₹${delivery.toFixed(2)}`;
     document.getElementById('checkout-gst').textContent = `₹${gst.toFixed(2)}`;
-    document.getElementById('checkout-total').textContent = `₹${total.toFixed(2)}`;
+    if (document.getElementById('checkout-packing')) {
+        document.getElementById('checkout-packing').textContent = `₹${packing.toFixed(2)}`;
+    }
+    
+    // Apply discount if active
+    let discount = 0;
+    if (typeof appliedCouponCode !== 'undefined' && appliedCouponCode && appliedCouponDiscountPercent > 0) {
+        discount = subtotal * (appliedCouponDiscountPercent / 100);
+        document.getElementById('coupon-percent-label').textContent = appliedCouponDiscountPercent;
+        document.getElementById('checkout-discount').textContent = `-₹${discount.toFixed(2)}`;
+        document.getElementById('coupon-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('coupon-discount-row').style.display = 'none';
+    }
+    
+    const finalTotal = Math.max(0, total - discount);
+    document.getElementById('checkout-total').textContent = `₹${finalTotal.toFixed(2)}`;
 }
 
 function useMockSummary() {
@@ -1133,7 +1189,12 @@ function useMockSummary() {
             <td class="product-total">₹15.85</td>
         </tr>
     `;
-    updateSummaryUI(15.85, 2.00, 0.85, 18.70);
+    const subtotal = 15.85;
+    const gst = subtotal * (GST_RATE / 100);
+    const delivery = 2.00;
+    const packing = PACKING_CHARGE;
+    const total = subtotal + gst + delivery + packing;
+    updateSummaryUI(subtotal, delivery, gst, total, packing);
 }
 
 document.addEventListener('DOMContentLoaded', loadCheckoutSummary);
@@ -1265,7 +1326,8 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         apartment: apartment,
         city: city,
         state: state,
-        zip: zip
+        zip: zip,
+        coupon_code: appliedCouponCode
     };
 
     try {
