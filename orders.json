@@ -1100,39 +1100,48 @@
         "sms_response": "{\"message\":\"cURL Error: Failed to connect to 192.168.1.13 port 8080: Timed out\"}",
         "created_at": "2026-05-29 11:03:20"
     },
-    "ORD-D6FBD": {
-        "order_id": "ORD-D6FBD",
-        "customer_name": "Test Customer",
-        "customer_phone": "7814585430",
-        "customer_email": "customer@example.com",
-        "delivery_address": "#1300 morigate manimajra, Chandigarh, Delhi - 160101, India",
+    "ORD-B3D66": {
+        "order_id": "ORD-B3D66",
+        "customer_name": "John Doe Third",
+        "customer_phone": "9876543223",
+        "customer_email": "johndoe_test_7800@gmail.com",
+        "delivery_address": "123 Artisanal Way, Chandigarh, Delhi - 160017, India",
         "message": "",
-        "payment_id": "pay_SxYLfhpAHCt5X4",
+        "payment_id": "pay_SyGGQaurrQzJAL",
         "cart_items": [
             {
-                "id": 8,
-                "food_item_id": 8,
-                "quantity": 1,
-                "name": "Margherita Pizza",
-                "price": 350,
-                "image_url": "https:\/\/images.unsplash.com\/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop"
+                "id": 1,
+                "food_item_id": 1,
+                "quantity": 2,
+                "name": "Butter Chicken",
+                "price": 450,
+                "image_url": "https:\/\/images.unsplash.com\/photo-1603894584373-5ac82b2ae398?w=400&h=300&fit=crop"
             },
             {
-                "id": 25,
-                "food_item_id": 25,
+                "id": 2,
+                "food_item_id": 2,
                 "quantity": 2,
-                "name": "Tiramisu",
-                "price": 320,
-                "image_url": "https:\/\/images.unsplash.com\/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop"
+                "name": "Chicken Biryani",
+                "price": 350,
+                "image_url": "https:\/\/images.unsplash.com\/photo-1563379091339-03b21ab4a4f8?w=400&h=300&fit=crop"
             }
         ],
-        "subtotal": 990,
-        "gst": 178.2,
+        "subtotal": 1600,
+        "gst": 256,
         "delivery": 40,
-        "total": 1208.2,
+        "packing": 4.06,
+        "total": 1900.06,
         "status": "Paid",
-        "sms_status": "error",
-        "sms_response": "{\"message\":\"cURL Error: Failed to connect to 100.118.116.62 port 8080 after 21037 ms: Couldn't connect to server\"}",
-        "created_at": "2026-06-04 14:24:50"
+        "sms_status": "api_error",
+        "sms_response": "HTTP 0",
+        "download_url": "http:\/\/192.168.1.3\/restaurant_medusa\/download_bill.php?order_id=58&token=16da66c39f0b8dc27a3d5bbb2e91b684be69ef67f0004a9c4e9802f6ffa117f0",
+        "created_at": "2026-06-06 09:22:03",
+        "feedback": {
+            "rating": 5,
+            "review": "",
+            "submitted_at": "2026-06-06 09:23:15",
+            "coupon_code": "5STAR-SUMMER2026-BBB96A83",
+            "coupon_discount": "10% OFF"
+        }
     }
 }

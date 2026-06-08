@@ -61,8 +61,13 @@ try {
 
     // Hash password and insert user
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-    $ins_stmt = $pdo->prepare("INSERT INTO users (name, email, password, phone, role) VALUES (?, ?, ?, ?, 'customer')");
+    $ins_stmt = $pdo->prepare("INSERT INTO users (full_name, email, password, phone, role) VALUES (?, ?, ?, ?, 'customer')");
     $ins_stmt->execute([$name, $email, $hashed_password, $phone]);
+
+    $newUserId = $pdo->lastInsertId();
+
+    // Initialize loyalty reward points row for new user
+    $pdo->prepare("INSERT IGNORE INTO reward_points (user_id, points_earned, points_redeemed, points_deducted, current_balance) VALUES (?, 0, 0, 0, 0)")->execute([$newUserId]);
 
     echo json_encode([
         'success' => true,

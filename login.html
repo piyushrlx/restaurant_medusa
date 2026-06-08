@@ -303,6 +303,89 @@
             opacity: 1 !important;
             color: var(--gold) !important;
         }
+
+        /* Forgot Password Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: #111;
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            color: var(--white);
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--gray-light);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+        .modal-close:hover {
+            color: var(--gold);
+        }
+        .modal-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .modal-subtitle {
+            font-size: 0.85rem;
+            color: var(--gray-light);
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .modal-step {
+            display: none;
+        }
+        .modal-step.active {
+            display: block;
+        }
+        .modal-msg {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+        .modal-msg.error {
+            color: #ff4d4d;
+            display: block;
+        }
+        .modal-msg.success {
+            color: #4CAF50;
+            display: block;
+        }
     </style>
 </head>
 
@@ -359,7 +442,7 @@
                         <span class="checkbox-custom"></span>
                         Remember Me
                     </label>
-                    <a href="#" class="forgot-password-link">Forgot Password</a>
+                    <a href="#" class="forgot-password-link" onclick="openForgotModal(event)">Forgot Password</a>
                 </div>
 
                 <!-- Submit Button -->
@@ -367,7 +450,7 @@
 
                 <!-- Not a Member / Join Now -->
                 <div class="member-text">
-                    Not a Member? <a href="register.html">Join Now</a>
+                    Not a Member? <a href="register.php">Join Now</a>
                 </div>
 
                 <!-- Social Links Area -->
@@ -394,6 +477,46 @@
                     </a>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeForgotModal()">&times;</button>
+            <h3 class="modal-title">Reset Password</h3>
+            
+            <!-- Step 1: Request OTP -->
+            <div id="step-request" class="modal-step active">
+                <p class="modal-subtitle">Enter your registered email address to receive a verification code.</p>
+                <div class="input-wrapper">
+                    <input type="email" id="forgotEmail" class="input-field" placeholder="Email Address">
+                </div>
+                <button class="btn-submit" id="btnSendOtp" onclick="sendOtp()">Send OTP</button>
+            </div>
+
+            <!-- Step 2: Verify OTP -->
+            <div id="step-verify" class="modal-step">
+                <p class="modal-subtitle">Enter the 6-digit verification code sent to your email.</p>
+                <div class="input-wrapper">
+                    <input type="text" id="forgotOtp" class="input-field" placeholder="6-Digit OTP" maxlength="6">
+                </div>
+                <button class="btn-submit" id="btnVerifyOtp" onclick="verifyOtp()">Verify Code</button>
+            </div>
+
+            <!-- Step 3: Reset Password -->
+            <div id="step-reset" class="modal-step">
+                <p class="modal-subtitle">Enter your new password.</p>
+                <div class="input-wrapper">
+                    <input type="password" id="newPassword" class="input-field" placeholder="New Password">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm Password">
+                </div>
+                <button class="btn-submit" id="btnResetPwd" onclick="resetPassword()">Reset Password</button>
+            </div>
+
+            <div id="modalMsg" class="modal-msg"></div>
         </div>
     </div>
 
@@ -438,6 +561,10 @@
                             window.location.href = 'menutest.html';
                         }
                     });
+                } else if (result.inactive) {
+                    alert(result.message || 'Please verify your account first.', () => {
+                        window.location.href = 'verify_otp.php';
+                    });
                 } else {
                     alert(result.message || 'Login failed. Please check your credentials.');
                 }
@@ -463,6 +590,126 @@
         togglePassword.addEventListener('mousedown', (e) => {
             e.preventDefault();
         });
+
+        // Forgot Password Logic
+        const modal = document.getElementById('forgotModal');
+        const msgBox = document.getElementById('modalMsg');
+
+        function openForgotModal(e) {
+            e.preventDefault();
+            modal.classList.add('active');
+            showStep('step-request');
+            msgBox.className = 'modal-msg';
+            msgBox.innerHTML = '';
+            document.getElementById('forgotEmail').value = document.getElementById('email').value; // pre-fill
+        }
+
+        function closeForgotModal() {
+            modal.classList.remove('active');
+            // reset inputs
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('forgotOtp').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function showStep(stepId) {
+            document.querySelectorAll('.modal-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+            msgBox.className = 'modal-msg';
+            msgBox.innerHTML = '';
+        }
+
+        function showModalMsg(text, type) {
+            msgBox.innerHTML = text;
+            msgBox.className = 'modal-msg ' + type;
+        }
+
+        async function sendOtp() {
+            const email = document.getElementById('forgotEmail').value;
+            const btn = document.getElementById('btnSendOtp');
+            if(!email) return showModalMsg('Email is required', 'error');
+
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('api/forgot-password.php?action=send_otp', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showModalMsg(data.message, 'success');
+                    setTimeout(() => showStep('step-verify'), 1500);
+                } else {
+                    showModalMsg(data.message, 'error');
+                }
+            } catch (err) {
+                showModalMsg('Network error', 'error');
+            }
+            btn.textContent = 'Send OTP';
+            btn.disabled = false;
+        }
+
+        async function verifyOtp() {
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('forgotOtp').value;
+            const btn = document.getElementById('btnVerifyOtp');
+            if(!otp) return showModalMsg('OTP is required', 'error');
+
+            btn.textContent = 'Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('api/forgot-password.php?action=verify_otp', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showModalMsg(data.message, 'success');
+                    setTimeout(() => showStep('step-reset'), 1000);
+                } else {
+                    showModalMsg(data.message, 'error');
+                }
+            } catch (err) {
+                showModalMsg('Network error', 'error');
+            }
+            btn.textContent = 'Verify Code';
+            btn.disabled = false;
+        }
+
+        async function resetPassword() {
+            const password = document.getElementById('newPassword').value;
+            const confirm_password = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('btnResetPwd');
+            if(!password || !confirm_password) return showModalMsg('Please fill both fields', 'error');
+
+            btn.textContent = 'Resetting...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('api/forgot-password.php?action=reset_password', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password, confirm_password })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showModalMsg(data.message, 'success');
+                    setTimeout(() => {
+                        closeForgotModal();
+                        document.getElementById('password').value = password; // pre-fill login
+                    }, 2000);
+                } else {
+                    showModalMsg(data.message, 'error');
+                }
+            } catch (err) {
+                showModalMsg('Network error', 'error');
+            }
+            btn.textContent = 'Reset Password';
+            btn.disabled = false;
+        }
     </script>
 </body>
 

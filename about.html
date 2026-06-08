@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medusa - About Us</title>
+    <title>Medusa - The Legend of Luxury Gastronomy</title>
+    <meta name="description" content="Discover the legacy of Medusa, Sahibzada Ajit Singh Nagar's premier luxury dining experience at SCO 44,45, District One Market, Sector 68. Culinary philosophy, master chefs, and palatial ambiance.">
 
     <!-- Global Theme Controller -->
     <script src="assets/js/theme-toggle.js"></script>
@@ -13,534 +14,27 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome for professional icons -->
+    <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --gold: #dfba86;
-            --gold-hover: #f3dfc1;
-            --dark: #0b0a09;
-            --dark-card: rgba(255, 255, 255, 0.02);
-            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        body {
-            background: var(--dark);
-            color: #f7f5f2;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-            letter-spacing: 0.2px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* NAVBAR */
-        .navbar {
-            background: rgba(11, 10, 9, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.12);
-            padding: 16px 0;
-            transition: var(--transition-smooth);
-        }
-
-        .navbar-brand {
-            color: var(--gold) !important;
-            font-size: 2rem;
-            font-family: 'Cormorant Garamond', serif;
-            letter-spacing: 2px;
-        }
-
-        .navbar-brand img {
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .navbar-brand:hover img {
-            transform: rotate(360deg) scale(1.08);
-        }
-
-        .nav-link {
-            color: #eae5df !important;
-            margin-left: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            position: relative;
-            transition: var(--transition-smooth);
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 8px;
-            right: 8px;
-            height: 1px;
-            background: var(--gold);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .nav-link:hover {
-            color: var(--gold) !important;
-        }
-
-        .nav-link:hover::after {
-            transform: scaleX(1);
-            transform-origin: left;
-        }
-
-        /* HERO SECTION */
-        .about-hero {
-            position: relative;
-            padding: 180px 0 100px;
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, rgba(11, 10, 9, 0) 70%),
-                        linear-gradient(rgba(11, 10, 9, 0.4), rgba(11, 10, 9, 0.95));
-            text-align: center;
-        }
-
-        .about-title-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: var(--gold);
-            margin-bottom: 20px;
-            display: inline-block;
-            border: 1px solid rgba(223, 186, 134, 0.3);
-            padding: 6px 20px;
-            border-radius: 50px;
-            background: rgba(223, 186, 134, 0.02);
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .about-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4rem;
-            color: #ffffff;
-            font-weight: 600;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .about-subtitle {
-            font-size: 1.1rem;
-            color: #a09a93;
-            max-width: 650px;
-            margin: 0 auto;
-            line-height: 1.8;
-            font-weight: 300;
-            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        /* SECTION STYLING */
-        .section-premium {
-            padding: 80px 0;
-            position: relative;
-        }
-
-        .section-header-gold {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .section-header-gold h2 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.8rem;
-            color: var(--gold);
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            position: relative;
-            display: inline-block;
-            padding-bottom: 15px;
-        }
-
-        .section-header-gold h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 25%;
-            width: 50%;
-            height: 1.5px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        }
-
-        /* HERITAGE GRID */
-        .heritage-content {
-            font-size: 1rem;
-            line-height: 1.9;
-            color: #d1cbc4;
-        }
-
-        .heritage-highlight {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.7rem;
-            color: #ffffff;
-            font-style: italic;
-            border-left: 2.5px solid var(--gold);
-            padding-left: 20px;
-            margin: 30px 0;
-        }
-
-        .heritage-frame {
-            border: 1px solid rgba(223, 186, 134, 0.2);
-            border-radius: 20px;
-            padding: 2.5rem;
-            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.03) 0%, transparent 60%);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .heritage-accent-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: var(--gold);
-            margin-bottom: 1.2rem;
-        }
-
-        /* PHILOSOPHY CARDS */
-        .ph-card {
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(223, 186, 134, 0.12);
-            border-radius: 16px;
-            padding: 40px 30px;
-            text-align: center;
-            height: 100%;
-            transition: var(--transition-smooth);
-        }
-
-        .ph-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--gold);
-            background: rgba(223, 186, 134, 0.03);
-            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.08);
-        }
-
-        .ph-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(223, 186, 134, 0.06);
-            border: 1.5px solid rgba(223, 186, 134, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 25px;
-            color: var(--gold);
-            font-size: 1.6rem;
-            transition: var(--transition-smooth);
-        }
-
-        .ph-card:hover .ph-icon {
-            background: var(--gold);
-            color: #0b0a09;
-            transform: scale(1.08);
-            box-shadow: 0 0 20px rgba(223, 186, 134, 0.4);
-        }
-
-        .ph-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.6rem;
-            color: #ffffff;
-            font-weight: 600;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-        }
-
-        .ph-text {
-            font-size: 0.9rem;
-            color: #a09a93;
-            line-height: 1.7;
-        }
-
-        /* MASTER CHEF */
-        .chef-card {
-            border: 1px solid rgba(223, 186, 134, 0.12);
-            border-radius: 20px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.01);
-            transition: var(--transition-smooth);
-        }
-
-        .chef-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-        }
-
-        .chef-details {
-            padding: 40px;
-        }
-
-        .chef-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: #ffffff;
-            margin-bottom: 5px;
-        }
-
-        .chef-subtitle {
-            font-size: 0.82rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--gold);
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-
-        .chef-text {
-            color: #d1cbc4;
-            line-height: 1.8;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-        }
-
-        .chef-quote {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.4rem;
-            font-style: italic;
-            color: var(--gold);
-            border-left: 2px solid var(--gold);
-            padding-left: 15px;
-            margin: 0;
-        }
-
-        .chef-graphic {
-            background: linear-gradient(135deg, #1c1a17 0%, #0d0c0a 100%);
-            height: 100%;
-            min-height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .chef-graphic::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, transparent 70%);
-        }
-
-        .chef-graphic-crest {
-            font-size: 6rem;
-            color: rgba(223, 186, 134, 0.15);
-            animation: rotateCrest 25s linear infinite;
-        }
-
-        @keyframes rotateCrest {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* GLOBAL MOON THEME ICON SUPPORT */
-        html.light-mode body {
-            background: #f8f9fa;
-            color: #333333;
-        }
-        html.light-mode .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.25);
-        }
-        html.light-mode .nav-link {
-            color: #333333 !important;
-        }
-        html.light-mode .about-hero {
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.15) 0%, rgba(248, 249, 250, 0) 70%);
-        }
-        html.light-mode .about-title {
-            color: #1a1917;
-        }
-        html.light-mode .about-subtitle {
-            color: #555555;
-        }
-        html.light-mode .heritage-highlight {
-            color: #222222;
-        }
-        html.light-mode .heritage-frame {
-            border-color: rgba(223, 186, 134, 0.4);
-            background: #ffffff;
-        }
-        html.light-mode .ph-card {
-            background: #ffffff;
-            border-color: rgba(223, 186, 134, 0.3);
-        }
-        html.light-mode .ph-card:hover {
-            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.18);
-        }
-        html.light-mode .ph-title {
-            color: #1a1917;
-        }
-        html.light-mode .chef-card {
-            background: #ffffff;
-            border-color: rgba(223, 186, 134, 0.3);
-        }
-        html.light-mode .chef-title {
-            color: #1a1917;
-        }
-        html.light-mode .chef-graphic {
-            background: linear-gradient(135deg, #eae5df 0%, #f7f5f2 100%);
-        }
-
-        /* SERVICES & FEATURES */
-        .services-showcase-section {
-            position: relative;
-            padding: 100px 0;
-            background-image: linear-gradient(rgba(11, 10, 9, 0.85), rgba(11, 10, 9, 0.9)), url('assets/images/medusa_outdoor_dining.png');
-            background-attachment: fixed;
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            border-top: 1px solid rgba(223, 186, 134, 0.06);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.06);
-        }
-
-        .features-category {
-            background: rgba(11, 10, 9, 0.78);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(223, 186, 134, 0.18);
-            border-radius: 18px;
-            padding: 28px 24px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: var(--transition-smooth);
-        }
-
-        .features-category:hover {
-            border-color: rgba(223, 186, 134, 0.5);
-            background: rgba(11, 10, 9, 0.88);
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(223, 186, 134, 0.12);
-        }
-
-        .features-cat-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            color: var(--gold);
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        .features-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .feature-tag {
-            font-size: 0.75rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #d1cbc4;
-            padding: 5px 12px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: var(--transition-smooth);
-            font-weight: 500;
-        }
-
-        .feature-tag:hover {
-            border-color: var(--gold);
-            color: #ffffff;
-            background: rgba(223, 186, 134, 0.08);
-            transform: translateY(-1px);
-            box-shadow: 0 0 10px rgba(223, 186, 134, 0.15);
-        }
-
-        .feature-tag i {
-            font-size: 0.75rem;
-            color: var(--gold);
-            opacity: 0.8;
-        }
-
-        /* LIGHT MODE OVERRIDES FOR SERVICES */
-        html.light-mode .services-showcase-section {
-            background-image: linear-gradient(rgba(248, 249, 250, 0.88), rgba(248, 249, 250, 0.92)), url('assets/images/medusa_outdoor_dining.png');
-        }
-        html.light-mode .features-category {
-            background: rgba(255, 255, 255, 0.82);
-            border-color: rgba(223, 186, 134, 0.35);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-        }
-        html.light-mode .feature-tag {
-            background: rgba(0, 0, 0, 0.04);
-            border-color: rgba(0, 0, 0, 0.08);
-            color: #333333;
-        }
-        html.light-mode .feature-tag:hover {
-            color: var(--gold);
-            background: rgba(223, 186, 134, 0.08);
-        }
-
-
-        /* FOOTER */
-        footer {
-            padding: 80px 0 40px;
-            background: #060505;
-            border-top: 1px solid rgba(223, 186, 134, 0.12);
-            color: #a09a93;
-        }
-
-        footer h2 {
-            margin-bottom: 20px;
-        }
-
-        footer h5 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            color: #ffffff;
-            letter-spacing: 1.5px;
-        }
-
-        footer ul li a {
-            font-size: 0.9rem;
-            transition: var(--transition-smooth);
-        }
-
-        footer ul li a:hover {
-            color: var(--gold) !important;
-            padding-left: 5px;
-        }
-    </style>
+    <!-- Global Styles & Transitions -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <!-- Custom Page Styles -->
+    <link rel="stylesheet" href="assets/css/about.css">
 </head>
 
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="indextest.html" style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="indextest.html">
                 <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
-                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold); font-family: 'Playfair Display', serif; letter-spacing: 2px;">Medusa</span>
             </a>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -573,151 +67,97 @@
     </nav>
 
     <!-- HERO SECTION -->
-    <header class="about-hero">
+    <header class="about-hero d-flex align-items-center">
         <div class="container">
             <span class="about-title-badge">Luxury Gastronomy</span>
             <h1 class="about-title">The Legend of Medusa</h1>
-            <p class="about-subtitle">A sanctuary of epicurean luxury, blending timeless theatrical design with state-of-the-art culinary craft.</p>
+            <p class="about-subtitle">A sanctuary of epicurean luxury, blending timeless classical design with state-of-the-art culinary craft.</p>
+            <div class="scroll-down-btn" onclick="scrollToLegacy()">
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
         </div>
     </header>
 
-    <!-- HERITAGE / STORY SECTION -->
-    <main class="flex-grow-1">
-        <section class="section-premium">
+    <main>
+        <!-- LEGACY / STORY SECTION -->
+        <section class="section-premium timeline-section" id="legacySection">
             <div class="container">
-                <div class="row g-5 align-items-center">
-                    <div class="col-lg-6">
-                        <div class="heritage-content">
-                            <h3 style="color:#ffffff; font-family:'Cormorant Garamond', serif; font-size: 2.2rem; margin-bottom: 25px;">A Heritage of Palatial Dining</h3>
-                            <p>Founded with a bold vision to challenge standard fine dining conventions, Medusa Restaurant stands as Chandigarh's most exclusive culinary landmark. Every aspect of our dining spaces is inspired by classical Italian aesthetics, layered with the bold, theatrical energy of modern luxury fashion.</p>
-                            <p class="heritage-highlight">"We believe that a dinner at Medusa is not merely a meal. It is an act of sensory theater, curated to excite every element of your aesthetic sensibilities."</p>
-                            <p>From our custom-cast Versace decorative elements to the precise choice of ambient warm lighting, we have designed a palatial environment where conversations flow as naturally as our premium wines. We invite you to sit back, lose track of time, and immerse yourself in Chandigarh's premier gourmet retreat.</p>
-                        </div>
+                <div class="section-header-gold">
+                    <span>Our Heritage</span>
+                    <h2>The Chronicle of Medusa</h2>
+                </div>
+
+                <!-- Timeline Navigation -->
+                <div class="timeline-nav">
+                    <div class="timeline-progress-bar" id="timelineProgress"></div>
+                    <button class="timeline-node active" data-year="2018" data-index="0" onclick="switchTimeline(0)">
+                        <span>18</span>
+                    </button>
+                    <button class="timeline-node" data-year="2020" data-index="1" onclick="switchTimeline(1)">
+                        <span>20</span>
+                    </button>
+                    <button class="timeline-node" data-year="2023" data-index="2" onclick="switchTimeline(2)">
+                        <span>23</span>
+                    </button>
+                    <button class="timeline-node" data-year="2026" data-index="3" onclick="switchTimeline(3)">
+                        <span>26</span>
+                    </button>
+                </div>
+
+                <!-- Timeline Panels -->
+                <div class="timeline-content-wrapper">
+                    <!-- Panel 2018 -->
+                    <div class="timeline-panel active" id="panel-0">
+                        <h3>2018: The Dream & Conception</h3>
+                        <p>Medusa was born from a visionary dream to challenge standard fine dining conventions. Our founders travelled across Italy, sourcing vintage marble, cast Versace decorative accents, and custom hand-forged lighting templates to prepare the foundation of the region's most exclusive palatial dining experience.</p>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="heritage-frame">
-                            <h4 class="heritage-accent-title">Our Pure Dedication</h4>
-                            <p style="font-size:0.95rem; line-height:1.8; color: #a09a93; margin-bottom: 1.5rem;">To maintain our reputation, we commit unconditionally to two core principles: sourcing only the finest Grade-A ingredients from around the globe, and training our hosts to provide bespoke, intuitive service tailored perfectly to your individual pace.</p>
-                            <div class="row text-center mt-3 g-4">
-                                <div class="col-6">
-                                    <div style="font-family:'Cormorant Garamond', serif; font-size: 2.8rem; color: var(--gold); font-weight: 700;">100%</div>
-                                    <div style="font-size: 0.72rem; letter-spacing:1px; text-transform:uppercase; color:#a09a93;">Artisanal Sourced</div>
-                                </div>
-                                <div class="col-6">
-                                    <div style="font-family:'Cormorant Garamond', serif; font-size: 2.8rem; color: var(--gold); font-weight: 700;">15+</div>
-                                    <div style="font-size: 0.72rem; letter-spacing:1px; text-transform:uppercase; color:#a09a93;">Master Craftsmen</div>
-                                </div>
-                            </div>
-                        </div>
+
+                    <!-- Panel 2020 -->
+                    <div class="timeline-panel" id="panel-1">
+                        <h3>2020: The Grand Opening</h3>
+                        <p>We officially opened our doors in the heart of Chandigarh, establishing a sanctuary of visual and culinary theater. Within months, Medusa became the premier destination for elite events, VIP celebrations, and gastronomic connoisseurs seeking high-society dining.</p>
+                    </div>
+
+                    <!-- Panel 2023 -->
+                    <div class="timeline-panel" id="panel-2">
+                        <h3>2023: Michelin-Class Recognition</h3>
+                        <p>Led by Culinary Director Chef Giovanni Vance, our kitchen brigade was honored with international recognition for their pioneering "contrast and harmony" cooking techniques, elevating regional Indian and Mediterranean ingredients to a premium global stage.</p>
+                    </div>
+
+                    <!-- Panel 2026 -->
+                    <div class="timeline-panel" id="panel-3">
+                        <h3>2026: The Modern Luxury Era</h3>
+                        <p>Embracing state-of-the-art technological details, we introduced virtual interactive table layouts, real-time booking, and a bespoke customer loyalty tier system, ensuring that every guest receives customizable VIP service tailored perfectly to their individual preference.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SERVICES & AMENITIES SECTION -->
-        <section class="services-showcase-section">
+        <!-- PILLARS SECTION -->
+        <section class="section-premium pillars-section">
             <div class="container">
                 <div class="section-header-gold">
-                    <h2>Services & Experience</h2>
-                </div>
-                <div class="row g-4">
-                    <!-- Category 1: Service & Dining -->
-                    <div class="col-xl-3 col-md-6">
-                        <div class="features-category">
-                            <h4 class="features-cat-title"><i class="fas fa-utensils"></i> Service & Dining</h4>
-                            <div class="features-tags">
-                                <span class="feature-tag"><i class="fas fa-check"></i> Dine-in</span>
-                                <span class="feature-tag"><i class="fas fa-bell"></i> Table service</span>
-                                <span class="feature-tag"><i class="fas fa-chair"></i> Seating</span>
-                                <span class="feature-tag"><i class="fas fa-cloud-sun"></i> Outdoor seating</span>
-                                <span class="feature-tag"><i class="fas fa-bag-shopping"></i> Takeaway</span>
-                                <span class="feature-tag"><i class="fas fa-truck"></i> Delivery</span>
-                                <span class="feature-tag"><i class="fas fa-shield-halved"></i> No-contact delivery</span>
-                                <span class="feature-tag"><i class="fas fa-store"></i> Kerbside pickup</span>
-                                <span class="feature-tag"><i class="fas fa-car"></i> Drive-through</span>
-                                <span class="feature-tag"><i class="fas fa-handshake"></i> On-site services</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Category 2: Gastronomy & Drinks -->
-                    <div class="col-xl-3 col-md-6">
-                        <div class="features-category">
-                            <h4 class="features-cat-title"><i class="fas fa-glass-martini-alt"></i> Gastronomy & Drinks</h4>
-                            <div class="features-tags">
-                                <span class="feature-tag"><i class="fas fa-wine-glass"></i> Alcohol</span>
-                                <span class="feature-tag"><i class="fas fa-cocktail"></i> Cocktails</span>
-                                <span class="feature-tag"><i class="fas fa-coffee"></i> Coffee</span>
-                                <span class="feature-tag"><i class="fas fa-plate-wheat"></i> Small plates</span>
-                                <span class="feature-tag"><i class="fas fa-hamburger"></i> Quick bite</span>
-                                <span class="feature-tag"><i class="fas fa-beer-mug-empty"></i> Bar on site</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Category 3: Vibe & Atmosphere -->
-                    <div class="col-xl-3 col-md-6">
-                        <div class="features-category">
-                            <h4 class="features-cat-title"><i class="fas fa-smile"></i> Vibe & Atmosphere</h4>
-                            <div class="features-tags">
-                                <span class="feature-tag"><i class="fas fa-couch"></i> Casual</span>
-                                <span class="feature-tag"><i class="fas fa-music"></i> Live music</span>
-                                <span class="feature-tag"><i class="fas fa-user"></i> Solo dining</span>
-                                <span class="feature-tag"><i class="fas fa-users"></i> Groups</span>
-                                <span class="feature-tag"><i class="fas fa-rainbow"></i> LGBTQ+ friendly</span>
-                                <span class="feature-tag"><i class="fas fa-child"></i> Good for kids</span>
-                                <span class="feature-tag"><i class="fas fa-paw"></i> Dogs allowed outside</span>
-                                <span class="feature-tag"><i class="fas fa-restroom"></i> Restroom</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Category 4: Planning & Payments -->
-                    <div class="col-xl-3 col-md-6">
-                        <div class="features-category">
-                            <h4 class="features-cat-title"><i class="fas fa-calendar-check"></i> Planning & Payments</h4>
-                            <div class="features-tags">
-                                <span class="feature-tag"><i class="fas fa-check-to-slot"></i> Accepts reservations</span>
-                                <span class="feature-tag"><i class="fas fa-exclamation-circle"></i> Reservations required</span>
-                                <span class="feature-tag"><i class="fas fa-square-parking"></i> Free parking lot</span>
-                                <span class="feature-tag"><i class="fas fa-road"></i> Free street parking</span>
-                                <span class="feature-tag"><i class="fas fa-car-side"></i> Plenty of parking</span>
-                                <span class="feature-tag"><i class="fas fa-credit-card"></i> Credit cards</span>
-                                <span class="feature-tag"><i class="fas fa-credit-card"></i> Debit cards</span>
-                                <span class="feature-tag"><i class="fab fa-google-pay"></i> Google Pay</span>
-                                <span class="feature-tag"><i class="fas fa-mobile-screen-button"></i> NFC mobile payments</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- PHILOSOPHY SECTION -->
-        <section class="section-premium" style="background: rgba(255, 255, 255, 0.005); border-top: 1px solid rgba(223, 186, 134, 0.06); border-bottom: 1px solid rgba(223, 186, 134, 0.06);">
-            <div class="container">
-                <div class="section-header-gold">
-                    <h2>Our Three Pillars</h2>
+                    <span>Our Foundation</span>
+                    <h2>The Three Pillars</h2>
                 </div>
                 <div class="row g-4">
                     <div class="col-lg-4">
                         <div class="ph-card">
-                            <div class="ph-icon"><i class="fas fa-utensils"></i></div>
+                            <div class="ph-icon"><i class="fa-solid fa-utensils"></i></div>
                             <h3 class="ph-title">Artisanal Gastronomy</h3>
                             <p class="ph-text">Our menus bridge classic international methods and bold regional spices, resulting in distinct signature dishes that are both comforting and surprising.</p>
                         </div>
                     </div>
                     <div class="col-lg-4">
                         <div class="ph-card">
-                            <div class="ph-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                            <div class="ph-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
                             <h3 class="ph-title">Bespoke Hospitality</h3>
                             <p class="ph-text">At Medusa, service is an art form. Our dining hosts are trained to deliver intuitive, highly personalized service that honors your privacy and sets a perfect pace.</p>
                         </div>
                     </div>
                     <div class="col-lg-4">
                         <div class="ph-card">
-                            <div class="ph-icon"><i class="fas fa-gem"></i></div>
+                            <div class="ph-icon"><i class="fa-solid fa-gem"></i></div>
                             <h3 class="ph-title">Palatial Ambiance</h3>
                             <p class="ph-text">Step into a space styled with hand-finished marble, custom gold trims, and Versace emblems, designed to make every celebratory dinner feel extraordinary.</p>
                         </div>
@@ -726,19 +166,19 @@
             </div>
         </section>
 
-        <!-- CHEF SECTION -->
+        <!-- CHEF & SIGNATURE SHOTLIGHT -->
         <section class="section-premium">
-            <div class="container">
+            <div class="container chef-container">
                 <div class="section-header-gold">
+                    <span>Culinary Leadership</span>
                     <h2>The Culinary Director</h2>
                 </div>
                 <div class="chef-card">
                     <div class="row g-0">
                         <div class="col-lg-5">
-                            <div class="chef-graphic">
-                                <div class="chef-graphic-crest">
-                                    <i class="fas fa-crown"></i>
-                                </div>
+                            <div class="chef-image-wrapper">
+                                <img src="assets/images/chef_portrait.png" alt="Chef Giovanni Vance" class="chef-img">
+                                <div class="chef-image-overlay"></div>
                             </div>
                         </div>
                         <div class="col-lg-7">
@@ -747,10 +187,123 @@
                                 <div class="chef-subtitle">Executive Chef & Culinary Director</div>
                                 <p class="chef-text">With over 18 years of experience leading Michelin-recognized kitchens across Rome, London, and New Delhi, Chef Vance leads the culinary brigade at Medusa with raw artistic focus. His unique style centers on transforming traditional recipes by pairing them with unexpected textures and modern presentations.</p>
                                 <p class="chef-quote">"We do not feed our guests; we choreograph a series of experiences. Each plate leaving our line represents a dedicated, passionate study in contrast, harmony, and sensory delight."</p>
+                                
+                                <div class="signature-dish-box">
+                                    <img src="assets/images/signature_dish.png" alt="Signature Dish" class="signature-dish-thumb">
+                                    <div class="signature-dish-info">
+                                        <h5>The Medusa Gold Cannoli</h5>
+                                        <p>Artisanal cocoa-rolled pastry shell, organic orange blossom sweet ricotta filling, premium dark chocolate chips, and edible 24k gold leaf highlights.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- GALLERY SECTION (LIGHTBOX INTEGRATED) -->
+        <section class="section-premium" style="border-top: 1px solid rgba(223, 186, 134, 0.08); border-bottom: 1px solid rgba(223, 186, 134, 0.08);">
+            <div class="container">
+                <div class="section-header-gold">
+                    <span>Visual Splendor</span>
+                    <h2>The Medusa Experience</h2>
+                </div>
+                <div class="gallery-grid">
+                    <!-- Gallery Item 1 -->
+                    <div class="gallery-item" onclick="openLightbox(0)">
+                        <img src="assets/images/luxury_bg.png" alt="The Grand Dining Hall">
+                        <div class="gallery-overlay">
+                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <h4>The Grand Dining Hall</h4>
+                            <p>Palatial Indoors</p>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 2 -->
+                    <div class="gallery-item" onclick="openLightbox(1)">
+                        <img src="assets/images/medusa_outdoor_dining.png" alt="The Outdoor Piazza">
+                        <div class="gallery-overlay">
+                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <h4>The Outdoor Piazza</h4>
+                            <p>Al Fresco Garden</p>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 3 -->
+                    <div class="gallery-item" onclick="openLightbox(2)">
+                        <img src="assets/images/login_bg.png" alt="The Chef's Lounge">
+                        <div class="gallery-overlay">
+                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <h4>The Chef's Lounge</h4>
+                            <p>Exclusive Dining</p>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 4 -->
+                    <div class="gallery-item" onclick="openLightbox(3)">
+                        <img src="assets/images/checkout_hero.png" alt="The Vault Cellar">
+                        <div class="gallery-overlay">
+                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <h4>The Vault Cellar</h4>
+                            <p>Private Reserve</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DID YOU KNOW (CUSTOM ACCORDION) -->
+        <section class="section-premium">
+            <div class="container">
+                <div class="section-header-gold">
+                    <span>Curiosities</span>
+                    <h2>Secrets of Medusa</h2>
+                </div>
+                <div class="accordion-wrapper">
+                    <!-- Accordion 1 -->
+                    <div class="dyk-card" id="dyk-0">
+                        <div class="dyk-header" onclick="toggleAccordion(0)">
+                            <h3>Why the name "Medusa"?</h3>
+                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+                        </div>
+                        <div class="dyk-content-panel">
+                            <div class="dyk-content-inner">
+                                <p>Inspired by the classical symbol of allure and theatrical beauty in Italian high-fashion and classical mythology. Just as the mythical figure captures absolute attention, we aim to captivate your senses from the moment you step through our golden entrance arches, making the dining experience completely unforgettable.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Accordion 2 -->
+                    <div class="dyk-card" id="dyk-1">
+                        <div class="dyk-header" onclick="toggleAccordion(1)">
+                            <h3>Do you accommodate customized organic dietary requests?</h3>
+                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+                        </div>
+                        <div class="dyk-content-panel">
+                            <div class="dyk-content-inner">
+                                <p>Absolutely. Our culinary brigade, led by Chef Vance, regularly designs custom degustation menus for gluten-free, vegan, kosher, and specific organic preferences. We believe luxury is personal; kindly mention your requests when making your table reservation.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Accordion 3 -->
+                    <div class="dyk-card" id="dyk-2">
+                        <div class="dyk-header" onclick="toggleAccordion(2)">
+                            <h3>Can I host private events in the Vault Cellar?</h3>
+                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+                        </div>
+                        <div class="dyk-content-panel">
+                            <div class="dyk-content-inner">
+                                <p>Yes. The Vault Cellar is available for private bookings of up to 20 guests, offering an exclusive multi-course degustation menu paired with select reserve wines. Please contact our VIP hospitality hosts at least 48 hours in advance for reservations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CALL TO ACTION -->
+        <section class="about-cta-section">
+            <div class="container cta-box">
+                <h2>Choreograph Your Evening</h2>
+                <p>Allow us to curate your perfect gastronomic affair. Table reservations at Medusa are highly exclusive, ensuring an intimate atmosphere and bespoke service for every party.</p>
+                <a href="book-table-test.html" class="cta-btn">Reserve Your Sanctuary</a>
             </div>
         </section>
     </main>
@@ -782,9 +335,12 @@
                 </div>
                 <div class="col-lg-3">
                     <h5 class="mb-4">Contact</h5>
-                    <p class="text-secondary">Elite Avenue<br>Chandigarh, India</p>
-                    <p class="text-secondary">+91 98765 43210</p>
+                    <p class="text-secondary">SCO 44,45, District One Market<br>Sector 68, Sahibzada Ajit Singh Nagar<br>Punjab 140308</p>
+                    <p class="text-secondary">+91 94272 72798</p>
                     <p class="text-secondary">contact@medusa.com</p>
+                    <button class="btn btn-outline-warning btn-sm mt-2" style="border-color: var(--gold); color: var(--gold); border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;" onclick="openMapModal()">
+                        <i class="fas fa-location-dot me-1"></i> View on Map
+                    </button>
                 </div>
                 <div class="col-lg-3">
                     <h5 class="mb-4">Join Our Circle</h5>
@@ -802,12 +358,229 @@
         </div>
     </footer>
 
+    <!-- GOOGLE MAPS LOCATION MODAL -->
+    <div class="lightbox-modal" id="mapModal" style="z-index: 10001;">
+        <button class="lightbox-close" onclick="closeMapModal()">&times;</button>
+        <div class="lightbox-content" style="max-width: 700px; width: 95%;">
+            <div style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(223, 186, 134, 0.2); box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+                <iframe
+                    id="mapIframe"
+                    src=""
+                    width="100%"
+                    height="400"
+                    style="border:0; display:block;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+            <h4 class="lightbox-caption" style="margin-top: 16px; font-size: 1.3rem;">Medusa Restaurant</h4>
+            <p class="lightbox-subcaption">SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308" target="_blank" rel="noopener" style="display: inline-block; margin-top: 12px; color: var(--gold); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; transition: color 0.3s;">Open in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i></a>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX MODAL CONTAINER -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <button class="lightbox-nav-btn lightbox-prev" onclick="navigateLightbox(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="lightbox-nav-btn lightbox-next" onclick="navigateLightbox(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="lightbox-content">
+            <img src="" alt="" class="lightbox-img" id="lightboxImg">
+            <h4 class="lightbox-caption" id="lightboxCaption">Caption</h4>
+            <p class="lightbox-subcaption" id="lightboxSubcaption">Subcaption</p>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Interactive Legacy, Lightbox and FAQ scripts -->
     <script>
+        // Smooth scroll to Legacy Section
+        function scrollToLegacy() {
+            document.getElementById('legacySection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Timeline Logic ---
+        const totalNodes = 4;
+        function switchTimeline(index) {
+            // Update active timeline panel
+            document.querySelectorAll('.timeline-panel').forEach((panel, i) => {
+                if (i === index) {
+                    panel.classList.add('active');
+                } else {
+                    panel.classList.remove('active');
+                }
+            });
+
+            // Update active timeline node
+            document.querySelectorAll('.timeline-node').forEach((node, i) => {
+                if (i === index) {
+                    node.classList.add('active');
+                } else {
+                    node.classList.remove('active');
+                }
+            });
+
+            // Update timeline progress bar width
+            const progressBar = document.getElementById('timelineProgress');
+            const percent = (index / (totalNodes - 1)) * 100;
+            progressBar.style.width = percent + '%';
+        }
+
+        // Set initial timeline state
+        window.addEventListener('DOMContentLoaded', () => {
+            switchTimeline(0);
+        });
+
+        // --- Accordion Logic ---
+        function toggleAccordion(index) {
+            const card = document.getElementById(`dyk-${index}`);
+            const panel = card.querySelector('.dyk-content-panel');
+            
+            // Toggle active card
+            const isActive = card.classList.contains('active');
+            
+            // Collapse all others
+            document.querySelectorAll('.dyk-card').forEach((otherCard) => {
+                otherCard.classList.remove('active');
+                otherCard.querySelector('.dyk-content-panel').style.maxHeight = null;
+            });
+            
+            if (!isActive) {
+                card.classList.add('active');
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        }
+
+        // --- Lightbox Logic ---
+        const galleryData = [
+            { src: 'assets/images/luxury_bg.png', title: 'The Grand Dining Hall', sub: 'Palatial Indoors' },
+            { src: 'assets/images/medusa_outdoor_dining.png', title: 'The Outdoor Piazza', sub: 'Al Fresco Garden' },
+            { src: 'assets/images/login_bg.png', title: 'The Chef\'s Lounge', sub: 'Exclusive Dining' },
+            { src: 'assets/images/checkout_hero.png', title: 'The Vault Cellar', sub: 'Private Reserve' }
+        ];
+        let currentGalleryIndex = 0;
+
+        function openLightbox(index) {
+            currentGalleryIndex = index;
+            const modal = document.getElementById('lightboxModal');
+            const img = document.getElementById('lightboxImg');
+            const caption = document.getElementById('lightboxCaption');
+            const subcaption = document.getElementById('lightboxSubcaption');
+
+            img.src = galleryData[index].src;
+            img.alt = galleryData[index].title;
+            caption.textContent = galleryData[index].title;
+            subcaption.textContent = galleryData[index].sub;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Disable page scrolling
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightboxModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore page scrolling
+        }
+
+        function navigateLightbox(direction) {
+            currentGalleryIndex += direction;
+            if (currentGalleryIndex >= galleryData.length) {
+                currentGalleryIndex = 0;
+            } else if (currentGalleryIndex < 0) {
+                currentGalleryIndex = galleryData.length - 1;
+            }
+            
+            // Fade effect transition
+            const img = document.getElementById('lightboxImg');
+            img.style.opacity = '0';
+            setTimeout(() => {
+                openLightbox(currentGalleryIndex);
+                img.style.opacity = '1';
+            }, 150);
+        }
+
+        // Close lightbox on click outside the image
+        document.getElementById('lightboxModal').addEventListener('click', (e) => {
+            if (e.target.id === 'lightboxModal') {
+                closeLightbox();
+            }
+        });
+
+        // Close/navigate on keyboard keys
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('lightboxModal');
+            if (modal.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                } else if (e.key === 'ArrowRight') {
+                    navigateLightbox(1);
+                } else if (e.key === 'ArrowLeft') {
+                    navigateLightbox(-1);
+                }
+            }
+        });
+
+        // --- Map Modal Logic ---
+        const MAP_EMBED_URL = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2885.413030890794!2d76.71954153075983!3d30.680322781741616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fef0030d303dd%3A0xc81adde575ebd2ce!2sMedusa-bar%20and%20lounge!5e0!3m2!1sen!2sin!4v1780853698088!5m2!1sen!2sin';
+
+        function openMapModal() {
+            const modal = document.getElementById('mapModal');
+            const iframe = document.getElementById('mapIframe');
+            iframe.src = MAP_EMBED_URL;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMapModal() {
+            const modal = document.getElementById('mapModal');
+            const iframe = document.getElementById('mapIframe');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            // Defer clearing src to allow fade-out
+            setTimeout(() => { iframe.src = ''; }, 350);
+        }
+
+        document.getElementById('mapModal').addEventListener('click', (e) => {
+            if (e.target.id === 'mapModal') closeMapModal();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('mapModal').classList.contains('active')) {
+                closeMapModal();
+            }
+        });
+
+        // --- Auto-Hiding Navbar on Scroll ---
+        let lastScrollY = window.scrollY;
+        const mainNavbar = document.getElementById('mainNavbar');
+        const navMenu = document.getElementById('navMenu');
+
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const isMenuOpen = navMenu ? navMenu.classList.contains('show') : false;
+
+            // Ignore scroll if mobile menu is open
+            if (isMenuOpen) return;
+
+            // Ignore small scroll variations
+            if (Math.abs(currentScrollY - lastScrollY) < 10) return;
+
+            if (currentScrollY > lastScrollY && currentScrollY > 150) {
+                // Scrolling down - hide navbar
+                mainNavbar.classList.add('nav-hidden');
+            } else {
+                // Scrolling up - show navbar
+                mainNavbar.classList.remove('nav-hidden');
+            }
+
+            lastScrollY = currentScrollY;
+        });
+
+        // --- Active Session Check ---
         document.addEventListener("DOMContentLoaded", async () => {
-            // Check session to update Login/Logout link
             try {
                 const res = await fetch('api/check-session.php');
                 const data = await res.json();

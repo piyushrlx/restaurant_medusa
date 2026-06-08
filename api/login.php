@@ -18,7 +18,7 @@ if (empty($email) || empty($password)) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
+    $stmt = $pdo->prepare("SELECT id, full_name, email, password, role, is_active FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -26,22 +26,62 @@ try {
         echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
         exit;
     }
+
+    if (!(int)$user['is_active']) {
+        $_SESSION['otp_verify_user_id'] = $user['id'];
+        if (empty($_SESSION['last_otp_sent_time'])) {
+            $_SESSION['last_otp_sent_time'] = time() - 60;
+        }
+        echo json_encode([
+            'success' => false, 
+            'inactive' => true, 
+            'message' => 'Your account is inactive. Please verify your OTP codes first.'
+        ]);
+        exit;
+    }
     
     // Clear existing session variables and regenerate ID to prevent contamination/session fixation
     $_SESSION = array();
     session_regenerate_id(true);
     
+    $session_token = bin2hex(random_bytes(32));
+    
+    // Update database with new session token
+    $update_stmt = $pdo->prepare("UPDATE users SET session_token = ? WHERE id = ?");
+    $update_stmt->execute([$session_token, $user['id']]);
+    
     $_SESSION['user_id'] = $user['id'];
-    $_SESSION['user_name'] = $user['name'];
+    $_SESSION['user_name'] = $user['full_name'];
     $_SESSION['user_email'] = $user['email'];
     $_SESSION['user_role'] = $user['role'];
+    $_SESSION['session_token'] = $session_token;
+    
+    // Insert login activity log
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    $log_stmt = $pdo->prepare("INSERT INTO login_activity_logs (user_id, ip_address, user_agent, status) VALUES (?, ?, ?, 'success')");
+    $log_stmt->execute([$user['id'], $ip, $ua]);
+
+    if ($user['role'] === 'admin') {
+        require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+        addNotification('system', 'Admin Login Detected', "Administrator {$user['full_name']} logged in from IP address {$ip}.");
+    }
+
+    // Trigger loyalty background check for resets and inactivity checks
+    try {
+        ob_start(); // buffer cron output to prevent corruption of login JSON response
+        include __DIR__ . '/loyalty-cron.php';
+        ob_end_clean();
+    } catch (Exception $cron_ex) {
+        // Fail silently to not block login
+    }
     
     echo json_encode([
         'success' => true, 
         'message' => 'Login successful', 
         'user' => [
             'id' => $user['id'], 
-            'name' => $user['name'], 
+            'name' => $user['full_name'], 
             'email' => $user['email'], 
             'role' => $user['role']
         ]
