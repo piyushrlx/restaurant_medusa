@@ -75,6 +75,13 @@ $csrf_token = "dummy_test_token";
     <!-- Razorpay Checkout library -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
+        :root {
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
+            --gold: #dfba86;
+            --gold-hover: #f3dfc1;
+        }
+
         body {
             background-color: var(--bg-dark) !important;
             color: var(--white) !important;
@@ -85,13 +92,13 @@ $csrf_token = "dummy_test_token";
         /* Hero Banner */
         .checkout-hero {
             position: relative;
-            background-image: linear-gradient(rgba(10, 10, 10, 0.65), rgba(10, 10, 10, 0.85)), url('assets/images/checkout_hero.png');
+            background-image: linear-gradient(135deg, rgba(19, 47, 32, 0.75) 0%, rgba(90, 24, 39, 0.75) 100%), url('assets/images/checkout_hero.png');
             background-size: cover;
             background-position: center;
             padding: 8rem 0 6rem 0;
             text-align: center;
             margin-bottom: 4rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.15);
         }
 
         .checkout-hero h1 {
@@ -449,9 +456,9 @@ $csrf_token = "dummy_test_token";
 
         /* Buttons & Center Links */
         .btn-place-order {
-            background-color: var(--gold);
-            color: #0c0a0a;
-            border: none;
+            background-color: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--gold);
             border-radius: 8px;
             padding: 1.1rem;
             font-weight: 700;
@@ -468,9 +475,10 @@ $csrf_token = "dummy_test_token";
         }
 
         .btn-place-order:hover {
-            background-color: var(--gold-light);
+            background-color: var(--rosewood-light);
+            color: #ffffff;
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(223, 186, 134, 0.2);
+            box-shadow: 0 8px 24px rgba(90, 24, 39, 0.4);
         }
 
         .btn-place-order:active {
@@ -603,9 +611,9 @@ $csrf_token = "dummy_test_token";
             right: 2rem;
             width: 45px;
             height: 45px;
-            background-color: var(--gold);
-            color: #0c0a0a;
-            border: none;
+            background-color: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--gold);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -615,7 +623,7 @@ $csrf_token = "dummy_test_token";
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(223, 186, 134, 0.3);
+            box-shadow: 0 4px 10px rgba(90, 24, 39, 0.35);
             z-index: 1000;
         }
 
@@ -625,9 +633,10 @@ $csrf_token = "dummy_test_token";
         }
 
         .scroll-to-top-btn:hover {
-            background-color: var(--gold-light);
+            background-color: var(--rosewood-light);
+            color: #ffffff;
             transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(223, 186, 134, 0.4);
+            box-shadow: 0 6px 15px rgba(90, 24, 39, 0.45);
         }
     </style>
 </head>

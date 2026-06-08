@@ -22,7 +22,13 @@
         :root {
             --gold: #dfba86;
             --gold-hover: #f3dfc1;
-            --dark: #0b0a09;
+            --formal-garden: #132F20;
+            --formal-garden-light: #1C3B2B;
+            --formal-garden-deep: #0D2016;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
+            --warm-ivory: #FAF7F0;
+            --dark: #0D2016;
             --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -267,7 +273,7 @@
 
         /* PREMIUM BUTTON WITH HOVER EFFECT */
         .btn-gold {
-            background: transparent;
+            background: var(--rosewood);
             color: var(--gold) !important;
             border: 2px solid var(--gold);
             font-weight: 700;
@@ -284,16 +290,16 @@
         }
 
         .btn-gold:hover {
-            background: var(--gold);
-            color: #0b0a09 !important;
+            background: var(--rosewood-light);
+            color: #ffffff !important;
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(223, 186, 134, 0.25);
+            box-shadow: 0 10px 30px rgba(90, 24, 39, 0.45);
         }
 
         /* FOOTER */
         footer {
             padding: 80px 0 40px;
-            background: #060505;
+            background: #07120D;
             border-top: 1px solid rgba(223, 186, 134, 0.12);
             color: #a09a93;
         }

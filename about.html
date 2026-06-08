@@ -22,8 +22,15 @@
         :root {
             --gold: #dfba86;
             --gold-hover: #f3dfc1;
-            --dark: #0b0a09;
-            --dark-card: rgba(255, 255, 255, 0.02);
+            --formal-garden: #132F20;
+            --formal-garden-light: #1C3B2B;
+            --formal-garden-deep: #0D2016;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
+            --warm-ivory: #FAF7F0;
+            --warm-ivory-dark: #F0ECE1;
+            --dark: #0D2016;
+            --dark-card: rgba(13, 32, 22, 0.6);
             --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -527,6 +534,72 @@
         footer ul li a:hover {
             color: var(--gold) !important;
             padding-left: 5px;
+        }
+
+        /* BRAND THEME OVERRIDES */
+        .about-hero {
+            background: linear-gradient(135deg, rgba(19, 47, 32, 0.65) 0%, rgba(90, 24, 39, 0.65) 100%),
+                        radial-gradient(circle at center, transparent 0%, rgba(13, 32, 22, 0.95) 90%) !important;
+        }
+        .section-premium {
+            background: var(--formal-garden-deep);
+        }
+        .heritage-frame {
+            border-color: rgba(223, 186, 134, 0.15) !important;
+            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.05) 0%, transparent 60%) !important;
+        }
+        .services-showcase-section {
+            background-image: linear-gradient(rgba(13, 32, 22, 0.85), rgba(90, 24, 39, 0.85)), url('assets/images/medusa_outdoor_dining.png') !important;
+        }
+        .features-category {
+            background: rgba(13, 32, 22, 0.85) !important;
+            border-color: rgba(223, 186, 134, 0.18) !important;
+        }
+        .features-category:hover {
+            border-color: rgba(223, 186, 134, 0.5) !important;
+            background: rgba(13, 32, 22, 0.95) !important;
+        }
+        .ph-card {
+            background: rgba(90, 24, 39, 0.15) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        .ph-card:hover {
+            background: rgba(90, 24, 39, 0.25) !important;
+            border-color: var(--gold) !important;
+        }
+        .chef-card {
+            background: rgba(13, 32, 22, 0.45) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        .chef-card:hover {
+            border-color: var(--gold) !important;
+        }
+        .chef-graphic {
+            background: linear-gradient(135deg, #132F20 0%, #0D2016 100%) !important;
+        }
+        footer {
+            background: #07120D !important;
+            border-top: 1px solid rgba(223, 186, 134, 0.15) !important;
+            color: #A8A196 !important;
+        }
+        footer h5 {
+            color: var(--gold) !important;
+        }
+        footer ul li a {
+            color: #A8A196 !important;
+        }
+        footer ul li a:hover {
+            color: var(--gold) !important;
+        }
+        /* Buttons / Icons overrides */
+        .btn-outline-warning {
+            border-color: var(--rosewood) !important;
+            color: var(--gold) !important;
+        }
+        .btn-outline-warning:hover {
+            background: var(--rosewood) !important;
+            border-color: var(--rosewood-light) !important;
+            color: #ffffff !important;
         }
     </style>
 </head>

@@ -24,45 +24,31 @@ rel="stylesheet">
 
 <style>
 
-:root{
-
-    --gold:#d4af37;
+:root {
+    --gold: #dfba86;
+    --gold-hover: #f3dfc1;
+    --formal-garden: #132F20;
+    --formal-garden-light: #1C3B2B;
+    --formal-garden-deep: #0D2016;
+    --rosewood: #5A1827;
+    --rosewood-light: #7E2638;
+    --warm-ivory: #FAF7F0;
+    --dark: #0D2016;
 }
 
-body{
-
-    background:
-    linear-gradient(
-    135deg,
-    #050505,
-    #0f0f0f,
-    #151515
-    );
-
-    color:white;
-
-    min-height:
-    100vh;
-
-    font-family:
-    Arial,sans-serif;
+body {
+    background: linear-gradient(135deg, var(--formal-garden-deep) 0%, var(--formal-garden) 50%, var(--formal-garden-deep) 100%);
+    color: white;
+    min-height: 100vh;
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
 }
 
 /* NAVBAR */
-
-.navbar{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    backdrop-filter:
-    blur(12px);
-
-    border-bottom:
-    1px solid rgba(255,255,255,0.08);
-
-    padding:
-    18px 0;
+.navbar {
+    background: rgba(13, 32, 22, 0.75) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(223, 186, 134, 0.12);
+    padding: 18px 0;
 }
 
 .navbar-brand{
@@ -76,41 +62,24 @@ body{
 
 /* BUTTON */
 
-.book-btn{
-
-    width:100%;
-
-    margin-top:
-    20px;
-
-    border:none;
-
-    border-radius:
-    16px;
-
-    padding:
-    16px;
-
-    background:
-    var(--gold);
-
-    color:black;
-
-    font-size:
-    1.1rem;
-
-    font-weight:700;
-
-    transition:0.3s;
+.book-btn {
+    width: 100%;
+    margin-top: 20px;
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--rosewood);
+    color: var(--gold);
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: 0.3s;
 }
 
-.book-btn:hover{
-
-    transform:
-    translateY(-3px);
-
-    box-shadow:
-    0 10px 30px rgba(212,175,55,0.3);
+.book-btn:hover {
+    transform: translateY(-3px);
+    background: var(--rosewood-light);
+    color: white;
+    box-shadow: 0 10px 30px rgba(90,24,39,0.45);
 }
 
 </style>
@@ -228,9 +197,9 @@ body{
   border-radius: 50%;
   flex-shrink: 0;
 }
-.tl-dot.av { background: #27ae60; box-shadow: 0 0 6px rgba(39,174,96,0.5); }
-.tl-dot.rs { background: #7f8c8d; }
-.tl-dot.oc { background: #e74c3c; box-shadow: 0 0 6px rgba(231,76,60,0.5); }
+.tl-dot.av { background: #1C3B2B; box-shadow: 0 0 6px rgba(28,59,43,0.5); }
+.tl-dot.rs { background: #5A1827; }
+.tl-dot.oc { background: #7E2638; box-shadow: 0 0 6px rgba(126,38,56,0.5); }
 .tl-refresh-btn {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
@@ -361,11 +330,11 @@ body{
 .tl-face.com { width: 135px; height: 48px;  border-radius: 10px; }
 .tl-face.bnq { width: 195px; height: 48px;  border-radius: 10px; }
 
-.tl-face.available { background: linear-gradient(145deg,#27ae60,#1e8449); color: #fff; border-color: rgba(255,255,255,0.12); }
-.tl-face.reserved  { background: linear-gradient(145deg,#5d6262,#404444); color: #b0b0b0; border-color: rgba(255,255,255,0.07); }
-.tl-face.occupied  { background: linear-gradient(145deg,#c0392b,#8e2219); color: #ddd;   border-color: rgba(255,255,255,0.07); }
+.tl-face.available { background: linear-gradient(145deg, #1C3B2B, #132F20); color: #fff; border-color: rgba(223,186,134,0.25); }
+.tl-face.reserved  { background: linear-gradient(145deg, #4A131E, #3F0F1A); color: #b0b0b0; border-color: rgba(223,186,134,0.1); }
+.tl-face.occupied  { background: linear-gradient(145deg, #7E2638, #5A1827); color: #ddd;   border-color: rgba(223,186,134,0.1); }
 
-.tl-face.gold-rnd.available { background: linear-gradient(145deg,#d4af37,#b8922e); color: #1a1200; }
+.tl-face.gold-rnd.available { background: linear-gradient(145deg,#dfba86,#c89640); color: #1a1200; border-color: rgba(255,255,255,0.2); }
 
 .tl-fid  { font-size: 0.9rem; font-weight: 800; line-height: 1; }
 .tl-fseat{ font-size: 0.58rem; opacity: 0.8; margin-top: 3px; font-weight: 500; }
@@ -384,20 +353,20 @@ body{
 /* ---- PANEL ---- */
 .tl-panel { position: static; }
 .tl-panel-hd {
-  background: #191919;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--rosewood);
+  border: 1px solid rgba(223, 186, 134, 0.25);
   border-bottom: none;
   border-radius: 16px 16px 0 0;
   padding: 14px 20px;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 3px;
-  color: #888;
+  color: var(--gold);
   text-transform: uppercase;
 }
 .tl-panel-body {
-  background: #131313;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--formal-garden-deep);
+  border: 1px solid rgba(223, 186, 134, 0.15);
   border-top: none;
   border-radius: 0 0 16px 16px;
   padding: 22px;

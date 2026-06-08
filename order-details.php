@@ -112,13 +112,15 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
     
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-secondary: #0a0a0a;
+            --bg-dark: #0D2016;
+            --bg-secondary: #132F20;
             --gold: #dfba86;
-            --gold-light: #e6c89f;
-            --white: #f3f3f3;
-            --gray: #a09f9f;
+            --gold-light: #f3dfc1;
+            --white: #FAF7F0;
+            --gray: #A8A196;
             --success-color: #2ec4b6;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             --border-glass: rgba(223, 186, 134, 0.12);
         }
@@ -287,9 +289,9 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
         }
 
         .btn-luxury {
-            background-color: var(--gold);
-            color: #000000;
-            border: none;
+            background-color: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--gold);
             border-radius: 8px;
             padding: 0.8rem 1.8rem;
             font-size: 0.9rem;
@@ -303,8 +305,8 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
         }
 
         .btn-luxury:hover {
-            background-color: var(--gold-light);
-            color: #000000;
+            background-color: var(--rosewood-light);
+            color: #ffffff;
             transform: translateY(-1px);
         }
 

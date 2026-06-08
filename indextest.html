@@ -27,8 +27,15 @@
         :root {
             --gold: #dfba86;
             --gold-hover: #f3dfc1;
-            --dark: #0b0a09;
-            --card-bg: rgba(22, 20, 18, 0.6);
+            --formal-garden: #132F20;
+            --formal-garden-light: #1C3B2B;
+            --formal-garden-deep: #0D2016;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
+            --warm-ivory: #FAF7F0;
+            --warm-ivory-dark: #F0ECE1;
+            --dark: #0D2016;
+            --card-bg: rgba(13, 32, 22, 0.6);
             --border-light: rgba(223, 186, 134, 0.12);
             --border-hover: rgba(223, 186, 134, 0.35);
             --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -145,7 +152,17 @@
         .hero-overlay {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle, rgba(11, 10, 9, 0.2) 0%, rgba(11, 10, 9, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(19, 47, 32, 0.65) 0%, rgba(90, 24, 39, 0.65) 100%);
+            z-index: 1;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(13, 32, 22, 0.95) 90%),
+                        radial-gradient(circle at 75% 25%, rgba(223, 186, 134, 0.12) 0%, transparent 55%);
+            z-index: 1.5;
+            pointer-events: none;
         }
 
         .hero-content {
@@ -193,18 +210,19 @@
         }
 
         .btn-gold {
-            background: var(--gold);
-            color: #0b0a09 !important;
-            border: 1px solid var(--gold);
+            background: var(--rosewood);
+            color: var(--gold) !important;
+            border: 1px solid var(--rosewood);
             transition: var(--transition-smooth);
-            box-shadow: 0 4px 15px rgba(223, 186, 134, 0.15);
+            box-shadow: 0 4px 15px rgba(90, 24, 39, 0.25);
         }
 
         .btn-gold:hover {
-            background: var(--gold-hover);
-            border-color: var(--gold-hover);
+            background: var(--rosewood-light);
+            border-color: var(--rosewood-light);
+            color: #ffffff !important;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(223, 186, 134, 0.3);
+            box-shadow: 0 8px 25px rgba(90, 24, 39, 0.45);
         }
 
         .btn-outline-gold {
@@ -215,7 +233,7 @@
         }
 
         .btn-outline-gold:hover {
-            background: rgba(223, 186, 134, 0.06);
+            background: rgba(90, 24, 39, 0.25);
             border-color: var(--gold-hover);
             color: var(--gold-hover) !important;
             transform: translateY(-2px);
@@ -432,9 +450,9 @@
 
         /* STATS BANNER */
         .stats-banner {
-            background: linear-gradient(90deg, rgba(11,10,9,0.95) 0%, rgba(20,18,16,0.95) 100%);
-            border-top: 1px solid var(--border-light);
-            border-bottom: 1px solid var(--border-light);
+            background: linear-gradient(90deg, #3F0F1A 0%, #5A1827 50%, #3F0F1A 100%);
+            border-top: 1px solid rgba(223, 186, 134, 0.2);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.2);
             padding: 60px 0;
         }
         .stat-item {
@@ -626,6 +644,118 @@
         .faq-item.active .faq-content {
             max-height: 200px;
             transition: max-height 0.4s cubic-bezier(1, 0, 1, 0), padding 0.4s ease;
+        }
+
+        /* BRAND THEME OVERRIDES */
+        #services-section {
+            background: var(--formal-garden-deep);
+        }
+        #services-section .feature-item {
+            background: rgba(28, 59, 43, 0.15);
+            border: 1px solid rgba(223, 186, 134, 0.08);
+        }
+        #services-section .feature-item:hover {
+            background: rgba(90, 24, 39, 0.12);
+            border-color: var(--border-hover);
+        }
+        
+        #featured-dishes {
+            background: var(--warm-ivory);
+            color: var(--formal-garden-deep);
+        }
+        #featured-dishes .section-title {
+            color: var(--formal-garden-deep) !important;
+        }
+        #featured-dishes .section-subtitle {
+            color: var(--rosewood) !important;
+        }
+        #featured-dishes .premium-card {
+            background: #ffffff !important;
+            border-color: rgba(19, 47, 32, 0.1) !important;
+            box-shadow: 0 15px 35px rgba(19, 47, 32, 0.05) !important;
+        }
+        #featured-dishes .premium-card:hover {
+            border-color: var(--rosewood) !important;
+            box-shadow: 0 25px 50px rgba(90, 24, 39, 0.12) !important;
+        }
+        #featured-dishes .card-content h3 {
+            color: var(--formal-garden-deep) !important;
+        }
+        #featured-dishes .card-content p {
+            color: #4A524D !important;
+        }
+        #featured-dishes .card-content h4 {
+            color: var(--rosewood) !important;
+        }
+        #featured-dishes .badge-tag {
+            background: var(--formal-garden);
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+        
+        #about-us {
+            background: var(--formal-garden);
+        }
+        
+        #luxury-story-section {
+            background: var(--formal-garden-deep);
+        }
+        #luxury-story-section .premium-card {
+            background: rgba(90, 24, 39, 0.15) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        #luxury-story-section .premium-card:hover {
+            border-color: var(--border-hover) !important;
+            background: rgba(90, 24, 39, 0.25) !important;
+        }
+        
+        #reviews-section {
+            background: linear-gradient(180deg, #3F0F1A 0%, #5A1827 100%) !important;
+        }
+        #reviews-section .review-card {
+            background: rgba(13, 32, 22, 0.45) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        #reviews-section .review-card:hover {
+            border-color: var(--border-hover) !important;
+            background: rgba(13, 32, 22, 0.65) !important;
+            box-shadow: 0 15px 35px rgba(223, 186, 134, 0.08) !important;
+        }
+        
+        #faqs-section {
+            background: var(--formal-garden-deep);
+        }
+        #faqs-section .faq-item {
+            border-bottom-color: rgba(223, 186, 134, 0.15);
+        }
+        #faqs-section .faq-header:hover h3 {
+            color: var(--gold);
+        }
+        #faqs-section .faq-content p {
+            color: #A8A196;
+        }
+        
+        footer {
+            background: #07120D !important;
+            border-top: 1px solid rgba(223, 186, 134, 0.15) !important;
+            color: #A8A196 !important;
+        }
+        footer h5 {
+            color: var(--gold) !important;
+        }
+        footer ul li a {
+            color: #A8A196 !important;
+        }
+        footer ul li a:hover {
+            color: var(--gold) !important;
+        }
+        footer input.form-control {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        footer input.form-control:focus {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.15) !important;
         }
     </style>
 
@@ -823,7 +953,7 @@
     </section>
 
     <!-- SERVICES & FEATURES GRID -->
-    <section class="section">
+    <section class="section" id="services-section">
         <div class="container">
             <h2 class="section-title reveal">The Medusa Experience</h2>
             <p class="section-subtitle reveal">Every detail curated to perfection</p>
@@ -886,7 +1016,7 @@
     </section>
     <!-- FEATURED DISHES -->
 
-    <section class="section">
+    <section class="section" id="featured-dishes">
 
         <div class="container">
 
@@ -1114,7 +1244,7 @@
     </section>
     <!-- LUXURY STORY SECTION -->
 
-    <section class="section" style="padding-bottom:0;">
+    <section class="section" id="luxury-story-section" style="padding-bottom:0;">
 
         <div class="container">
 
@@ -1179,7 +1309,7 @@
     </section>
 
     <!-- SIGNATURE REVIEWS -->
-    <section class="section" style="background: rgba(11, 10, 9, 0.3);">
+    <section class="section" id="reviews-section" style="background: rgba(11, 10, 9, 0.3);">
         <div class="container">
             <h2 class="section-title reveal">Guest Experiences</h2>
             <p class="section-subtitle reveal">Accolades from our esteemed patrons</p>
@@ -1232,7 +1362,7 @@
     </section>
 
     <!-- FAQS ACCORDION -->
-    <section class="section">
+    <section class="section" id="faqs-section">
         <div class="container">
             <h2 class="section-title reveal">Frequently Asked Questions</h2>
             <p class="section-subtitle reveal">Your inquiries, resolved</p>
