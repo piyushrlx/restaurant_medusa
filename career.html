@@ -319,6 +319,16 @@
             padding-left: 5px;
         }
 
+        footer input.form-control {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(223, 186, 134, 0.2) !important;
+            color: white !important;
+            border-radius: 8px 0 0 8px !important;
+            padding: 12px 18px !important;
+            font-size: 0.9rem !important;
+            transition: var(--transition-smooth);
+        }
+
         /* Spinner */
         .spinner-gold {
             display: inline-block;
@@ -556,8 +566,8 @@
                     <h5 class="mb-4">Join Our Circle</h5>
                     <p class="text-secondary mb-4">Get exclusive offers and premium updates.</p>
                     <div class="d-flex">
-                        <input type="email" class="form-control" placeholder="Email Address" style="border-radius: 8px 0 0 8px;">
-                        <button class="btn btn-gold" style="border-radius: 0 8px 8px 0; width: 60px;">→</button>
+                        <input type="email" class="form-control" placeholder="Email Address" style="border-radius: 8px 0 0 8px; border-color: rgba(223, 186, 134, 0.2); background: transparent; color: white;">
+                        <button class="btn btn-outline-warning" style="border-radius: 0 8px 8px 0; border-color: var(--gold); color: var(--gold); width: 60px; min-width: auto; margin: 0;">→</button>
                     </div>
                 </div>
             </div>
