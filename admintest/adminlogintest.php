@@ -9,6 +9,15 @@ if(isset($_POST['login'])){
     if($username === "admin" && $password === "admin123"){
 
         $_SESSION['admin_logged_in'] = true;
+        $_SESSION['user_id'] = 1; // Default admin user ID matching seed data
+        $_SESSION['user_role'] = 'admin';
+        $_SESSION['user_name'] = 'System Admin';
+        $_SESSION['user_email'] = 'admin@example.com';
+
+        // Trigger notification
+        require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        addNotification('system', 'Admin Login Detected', "System Admin logged in via legacy admin login panel from IP {$ip}.");
 
         header("Location: dashboardtest.php");
         exit;

@@ -9,19 +9,35 @@ $user_details = [
     'phone' => ''
 ];
 
+$user_points_balance = 0;
+$user_tier_discount_percent = 0.00;
+$user_tier_name = 'Silver';
+
 if (!empty($_SESSION['user_id'])) {
     try {
-        $stmt = $pdo->prepare("SELECT name, email, phone FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("
+            SELECT u.full_name, u.email, u.phone, u.current_tier_id, t.tier_name, t.discount_percent 
+            FROM users u
+            LEFT JOIN customer_tiers t ON u.current_tier_id = t.id 
+            WHERE u.id = ?
+        ");
         $stmt->execute([$_SESSION['user_id']]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($user) {
-            $name_parts = explode(' ', trim($user['name']), 2);
+            $name_parts = explode(' ', trim($user['full_name']), 2);
             $user_details['first_name'] = $name_parts[0] ?? '';
             $user_details['last_name'] = $name_parts[1] ?? '';
             $user_details['email'] = $user['email'];
             $user_details['phone'] = $user['phone'] ?? '';
+            $user_tier_name = $user['tier_name'] ?? 'Silver';
+            $user_tier_discount_percent = floatval($user['discount_percent'] ?? 10.00);
         }
         
+        // Fetch points balance
+        $pts_stmt = $pdo->prepare("SELECT current_balance FROM reward_points WHERE user_id = ?");
+        $pts_stmt->execute([$_SESSION['user_id']]);
+        $user_points_balance = intval($pts_stmt->fetchColumn() ?: 0);
+
         // Fetch saved addresses
         $addr_stmt = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC");
         $addr_stmt->execute([$_SESSION['user_id']]);
@@ -624,10 +640,138 @@ $csrf_token = "dummy_test_token";
             visibility: visible;
         }
 
-        .scroll-to-top-btn:hover {
-            background-color: var(--gold-light);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(223, 186, 134, 0.4);
+
+        /* Premium Payment Loader Overlay */
+        .payment-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, rgba(10, 10, 10, 0.98) 0%, rgba(5, 5, 5, 0.99) 100%);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .payment-loader-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .loader-content {
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            padding: 3rem 2.5rem;
+            background: rgba(18, 17, 17, 0.7);
+            border: 1px solid rgba(223, 186, 134, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transform: scale(0.95);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .payment-loader-overlay.active .loader-content {
+            transform: scale(1);
+        }
+
+        .logo-container-loader {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 2.5rem auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid #dfba86;
+            padding: 2px;
+            z-index: 2;
+            animation: pulseLogo 2s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, rgba(223, 186, 134, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 3px solid rgba(223, 186, 134, 0.08);
+            border-top: 3px solid #dfba86;
+            border-radius: 50%;
+            animation: spinLoader 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+            z-index: 3;
+        }
+
+        .loader-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .loader-subtitle {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.95rem;
+            color: #a09f9f;
+            margin-bottom: 2rem;
+            min-height: 1.5rem;
+            font-weight: 500;
+        }
+
+        .loader-progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .loader-progress-fill {
+            width: 5%;
+            height: 100%;
+            background: linear-gradient(90deg, #dfba86 0%, #e6c89f 100%);
+            border-radius: 10px;
+            transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Keyframes */
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulseLogo {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(223, 186, 134, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(223, 186, 134, 0.5); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.85); opacity: 0.5; }
+            50% { transform: scale(1.15); opacity: 0.8; }
         }
     </style>
 </head>
@@ -799,9 +943,20 @@ $csrf_token = "dummy_test_token";
                                     <span>Coupon Discount (<span id="coupon-percent-label">0</span>%)</span>
                                     <span id="checkout-discount">-₹0.00</span>
                                 </div>
+                                <div class="summary-totals-row" id="tier-discount-row" style="display: none; color: #dfba86;">
+                                    <span>Tier Discount (<span id="tier-name-label">Silver</span> <span id="tier-percent-label">10</span>%)</span>
+                                    <span id="checkout-tier-discount">-₹0.00</span>
+                                </div>
+                                <div class="summary-totals-row" id="points-discount-row" style="display: none; color: #dfba86;">
+                                    <span>Points Redeemed (<span id="redeemed-points-label">0</span> pts)</span>
+                                    <span id="checkout-points-discount">-₹0.00</span>
+                                </div>
                                 <div class="summary-totals-row grand-total">
                                     <span>Total</span>
                                     <span id="checkout-total">₹0.00</span>
+                                </div>
+                                <div class="mt-2 text-end text-success small" id="points-earned-tracker" style="display: none; font-weight: 600;">
+                                    <i class="fa-solid fa-gift"></i> You will earn <span id="earned-points-value">0</span> reward points!
                                 </div>
                             </div>
                         </div>
@@ -814,6 +969,19 @@ $csrf_token = "dummy_test_token";
                                 <button type="button" class="btn-premium" style="padding: 0 20px; font-size: 0.9rem;" id="applyCouponBtn">Apply</button>
                             </div>
                         </div>
+
+                        <!-- Loyalty Points Redemption Box -->
+                        <?php if (!empty($_SESSION['user_id']) && $user_points_balance > 0): ?>
+                        <div class="coupon-toggle-box" style="margin-top: 1rem;">
+                            <i class="fa-solid fa-gem text-gold me-2"></i> You have <strong><?php echo $user_points_balance; ?></strong> reward points (Value: ₹<?php echo $user_points_balance; ?>)
+                            <div class="form-check custom-checkout-check d-flex justify-content-center align-items-center gap-2 mt-2">
+                                <input class="form-check-input" type="checkbox" id="redeem_loyalty_points" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--gold);">
+                                <label class="form-check-label text-white-50" for="redeem_loyalty_points" style="cursor: pointer; user-select: none;">
+                                    Redeem all reward points for ₹<?php echo $user_points_balance; ?> discount
+                                </label>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
                         <!-- Payment & Submission Box -->
                         <div class="payment-box">
@@ -964,6 +1132,9 @@ $csrf_token = "dummy_test_token";
 const GST_RATE = <?php echo $gst_rate; ?>;
 const PACKING_CHARGE = <?php echo $packing_charge; ?>;
 const DELIVERY_CHARGE = <?php echo floatval(get_env_var('DELIVERY_CHARGE', '40.00')); ?>;
+const USER_POINTS_BALANCE = <?php echo $user_points_balance; ?>;
+const USER_TIER_DISCOUNT_PERCENT = <?php echo $user_tier_discount_percent; ?>;
+const USER_TIER_NAME = "<?php echo htmlspecialchars($user_tier_name); ?>";
 
 // Phone number input restriction
 const phoneInput = document.getElementById('billing_phone');
@@ -1165,19 +1336,53 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
         document.getElementById('checkout-packing').textContent = `₹${packing.toFixed(2)}`;
     }
     
-    // Apply discount if active
-    let discount = 0;
+    // 1. Coupon Discount
+    let couponDiscount = 0;
     if (typeof appliedCouponCode !== 'undefined' && appliedCouponCode && appliedCouponDiscountPercent > 0) {
-        discount = subtotal * (appliedCouponDiscountPercent / 100);
+        couponDiscount = subtotal * (appliedCouponDiscountPercent / 100);
         document.getElementById('coupon-percent-label').textContent = appliedCouponDiscountPercent;
-        document.getElementById('checkout-discount').textContent = `-₹${discount.toFixed(2)}`;
+        document.getElementById('checkout-discount').textContent = `-₹${couponDiscount.toFixed(2)}`;
         document.getElementById('coupon-discount-row').style.display = 'flex';
     } else {
         document.getElementById('coupon-discount-row').style.display = 'none';
     }
+
+    // 2. Tier Discount
+    let tierDiscount = 0;
+    if (typeof USER_TIER_DISCOUNT_PERCENT !== 'undefined' && USER_TIER_DISCOUNT_PERCENT > 0) {
+        tierDiscount = subtotal * (USER_TIER_DISCOUNT_PERCENT / 100);
+        document.getElementById('tier-name-label').textContent = USER_TIER_NAME;
+        document.getElementById('tier-percent-label').textContent = USER_TIER_DISCOUNT_PERCENT;
+        document.getElementById('checkout-tier-discount').textContent = `-₹${tierDiscount.toFixed(2)}`;
+        document.getElementById('tier-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('tier-discount-row').style.display = 'none';
+    }
+
+    // 3. Points Discount
+    let pointsDiscount = 0;
+    const redeemCheckbox = document.getElementById('redeem_loyalty_points');
+    const baseTotal = subtotal + gst + delivery + packing - couponDiscount - tierDiscount;
+    if (redeemCheckbox && redeemCheckbox.checked && typeof USER_POINTS_BALANCE !== 'undefined') {
+        pointsDiscount = Math.min(USER_POINTS_BALANCE, Math.max(0, baseTotal));
+        document.getElementById('redeemed-points-label').textContent = pointsDiscount;
+        document.getElementById('checkout-points-discount').textContent = `-₹${pointsDiscount.toFixed(2)}`;
+        document.getElementById('points-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('points-discount-row').style.display = 'none';
+    }
     
-    const finalTotal = Math.max(0, total - discount);
+    const finalTotal = Math.max(0, baseTotal - pointsDiscount);
     document.getElementById('checkout-total').textContent = `₹${finalTotal.toFixed(2)}`;
+
+    // 4. Points Earned Tracker (2% of order value)
+    const pointsEarned = Math.round(finalTotal * 0.02);
+    const earnedTracker = document.getElementById('points-earned-tracker');
+    const earnedVal = document.getElementById('earned-points-value');
+    if (earnedTracker && earnedVal) {
+        earnedVal.textContent = pointsEarned;
+        earnedTracker.style.display = 'block';
+    }
 }
 
 function useMockSummary() {
@@ -1197,7 +1402,15 @@ function useMockSummary() {
     updateSummaryUI(subtotal, delivery, gst, total, packing);
 }
 
-document.addEventListener('DOMContentLoaded', loadCheckoutSummary);
+document.addEventListener('DOMContentLoaded', () => {
+    loadCheckoutSummary();
+    const redeemCheckbox = document.getElementById('redeem_loyalty_points');
+    if (redeemCheckbox) {
+        redeemCheckbox.addEventListener('change', () => {
+            loadCheckoutSummary();
+        });
+    }
+});
 
 document.getElementById('orderForm').onsubmit = async (e) => {
     e.preventDefault();
@@ -1251,6 +1464,7 @@ document.getElementById('orderForm').onsubmit = async (e) => {
         "name": "Medusa",
         "description": "Order Payment",
         "handler": function (response) {
+            showLoaderOverlay();
             submitBackendOrder(compiledName, phone, compiledAddress, response.razorpay_payment_id);
         },
         "prefill": {
@@ -1327,11 +1541,12 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         city: city,
         state: state,
         zip: zip,
-        coupon_code: appliedCouponCode
+        coupon_code: appliedCouponCode,
+        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false
     };
 
     try {
-        const response = await fetch('api/place-order.php', {
+        const response = await fetch('order_place.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -1344,16 +1559,69 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
                 // Clear cart on successful order
                 localStorage.removeItem('foodie_cart');
                 localStorage.removeItem('table_number');
-                window.location.href = `order-success.php?order_id=${result.order_id}`;
+                
+                // Animate loader to completion
+                if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
+                const progressFill = document.getElementById('loader-progress-fill');
+                const statusText = document.getElementById('loader-status-text');
+                if (progressFill) progressFill.style.width = '100%';
+                if (statusText) statusText.textContent = "Order secured successfully! Redirecting...";
+                
+                setTimeout(() => {
+                    window.location.href = `order-success.php?order_id=${result.order_id}`;
+                }, 1000);
             } else {
+                if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
+                document.getElementById('payment-loader-overlay').classList.remove('active');
+                document.body.style.overflow = '';
                 alert('Error submitting order details: ' + result.message);
             }
         } catch(e) {
+            if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
+            document.getElementById('payment-loader-overlay').classList.remove('active');
+            document.body.style.overflow = '';
             alert('Invalid JSON response from server: ' + text);
         }
     } catch(err) {
+        if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
+        document.getElementById('payment-loader-overlay').classList.remove('active');
+        document.body.style.overflow = '';
         alert('Server communication error: ' + err.message);
     }
+}
+
+function showLoaderOverlay() {
+    const overlay = document.getElementById('payment-loader-overlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; // prevent scrolling
+    }
+    
+    // Animate loader steps
+    let progress = 5;
+    const progressFill = document.getElementById('loader-progress-fill');
+    const statusText = document.getElementById('loader-status-text');
+    
+    // Interval for simulating progress
+    const steps = [
+        { progress: 20, text: "Verifying transaction with Razorpay secure server..." },
+        { progress: 45, text: "Processing your order in Medusa guest booking..." },
+        { progress: 65, text: "Deducting loyalty rewards & applying campaign codes..." },
+        { progress: 80, text: "Generating digital PDF invoice & receipt..." },
+        { progress: 95, text: "Almost finished! Finalizing order prep dispatch..." }
+    ];
+    
+    let currentStep = 0;
+    if (progressFill) progressFill.style.width = progress + '%';
+    
+    window.paymentLoaderInterval = setInterval(() => {
+        if (currentStep < steps.length) {
+            progress = steps[currentStep].progress;
+            if (statusText) statusText.textContent = steps[currentStep].text;
+            if (progressFill) progressFill.style.width = progress + '%';
+            currentStep++;
+        }
+    }, 1200);
 }
 
 // Scroll to top button logic
@@ -1372,5 +1640,22 @@ scrollToTopBtn.addEventListener('click', () => {
     });
 });
 </script>
+
+<!-- Premium Payment Loading Overlay -->
+<div id="payment-loader-overlay" class="payment-loader-overlay">
+    <div class="loader-content">
+        <div class="logo-container-loader">
+            <img src="assets/images/versace_logo.png" alt="Medusa Logo" class="loader-logo">
+            <div class="logo-glow"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <h2 class="loader-title">Payment Successful</h2>
+        <p class="loader-subtitle" id="loader-status-text">Verifying payment details...</p>
+        <div class="loader-progress-bar">
+            <div class="loader-progress-fill" id="loader-progress-fill"></div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

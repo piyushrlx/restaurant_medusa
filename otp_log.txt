@@ -1,0 +1,208 @@
+[2026-06-06 08:11:08] [EMAIL] OTP for johndoe_test_7788@gmail.com: 985064
+[2026-06-06 08:11:08] [SMS] OTP for 9876543221: 660644
+[2026-06-06 08:13:44] [SMS] OTP for 9876543221: 169880
+[2026-06-06 08:14:59] [SMS] OTP for 9876543221: 473005
+[2026-06-06 08:16:14] [SMS] OTP for 9876543221: 778995
+[2026-06-06 08:17:24] [SMS] OTP for 9876543221: 180617
+[2026-06-06 08:18:46] [SMS] OTP for 9876543221: 318093
+[2026-06-06 08:22:48] [EMAIL] OTP for johndoe_test_7799@gmail.com: 596445
+[2026-06-06 08:22:48] [SMS] OTP for 9876543222: 614024
+[2026-06-06 08:24:33] [SMS] OTP for 9876543222: 775194
+[2026-06-06 08:43:10] [EMAIL] OTP for johndoe_test_7800@gmail.com: 116424
+[2026-06-06 08:43:10] [SMS] OTP for 9876543223: 341207
+[2026-06-06 08:44:40] [WELCOME_EMAIL] Email queued/sent to johndoe_test_7800@gmail.com:
+----------------------------------------
+Name: John Doe Third
+Email: johndoe_test_7800@gmail.com
+Phone: 9876543223
+Status: Activated
+----------------------------------------
+
+[2026-06-06 08:44:40] [ACCOUNT_CONFIRMATION] Email queued/sent to johndoe_test_7800@gmail.com:
+----------------------------------------
+Name: John Doe Third
+Email: johndoe_test_7800@gmail.com
+Phone: 9876543223
+Registration Date: 2026-06-06 08:44:40
+----------------------------------------
+
+[2026-06-06 09:22:06] [SMS_BILL_LINK] Outbox SMS to 9876543223:
+----------------------------------------
+=============================
+      Medusa BILL
+=============================
+Order ID: ORD-B3D66
+Date: 06-Jun-2026 09:22
+Customer: John Doe Third
+-----------------------------
+ITEMS:
+- Butter Chicken (x2): Rs. 900.00
+- Chicken Biryani (x2): Rs. 700.00
+-----------------------------
+Subtotal: Rs. 1,600.00
+GST (16%): Rs. 256.00
+Packing: Rs. 4.06
+Delivery: Rs. 40.00
+-----------------------------
+GRAND TOTAL: Rs. 1,900.06
+-----------------------------
+Payment ID: pay_SyGGQaurrQzJAL
+
+Download PDF Invoice:
+http://192.168.1.3/restaurant_medusa/download_bill.php?order_id=58&token=16da66c39f0b8dc27a3d5bbb2e91b684be69ef67f0004a9c4e9802f6ffa117f0
+=============================
+Thank you for dining with us!
+----------------------------------------
+
+[2026-06-06 09:22:06] [ORDER_BILL_ATTACHMENT] Email queued/sent to johndoe_test_7800@gmail.com:
+----------------------------------------
+Name: John Doe Third
+Email: johndoe_test_7800@gmail.com
+Phone: 9876543223
+Order ID: ORD-B3D66
+PDF Path: bills/order_ORDB3D66_20260606092203.pdf
+Download URL: http://192.168.1.3/restaurant_medusa/download_bill.php?order_id=58&token=16da66c39f0b8dc27a3d5bbb2e91b684be69ef67f0004a9c4e9802f6ffa117f0
+----------------------------------------
+
+[2026-06-06 09:37:10] [EMAIL] OTP for test_guest_123@gmail.com: 262696
+[2026-06-06 09:37:10] [SMS] OTP for 9876543210: 354661
+[2026-06-06 09:46:48] [SMS_INVOICE] SMS sent to 9876543222: Your Medusa order ORD-52804 is placed! Download your PDF bill here: http://192.168.1.3/restaurant_medusa/download_bill.php?order_id=60&token=6acf61b0b453f5d64c03dcdfc47084db055cbcd1d5f067cecb9be7405569e024
+[2026-06-06 09:46:48] [EMAIL_INVOICE] Mock sent to johndoe_test_7799@gmail.com with PDF attached: bills/order_60_20260606_094645.pdf
+[2026-06-06 09:46:48] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543222 with attachment: bills/order_60_20260606_094645.pdf
+[2026-06-06 09:53:40] [SMS_GATEWAY_ERROR] SMS failed for 9876543222: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3012 ms: Timeout was reached
+[2026-06-06 09:54:10] [SMS_GATEWAY_ERROR] SMS failed for 9876543222: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3009 ms: Timeout was reached
+[2026-06-06 09:54:06] [EMAIL_INVOICE] Mock sent to johndoe_test_7799@gmail.com with PDF attached: bills/order_62_20260606_095406.pdf
+[2026-06-06 09:54:06] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543222 with attachment: bills/order_62_20260606_095406.pdf
+[2026-06-06 10:03:50] [SMS_GATEWAY_ERROR] SMS failed for 9876543222: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3013 ms: Timeout was reached
+[2026-06-06 10:03:50] [ORDER_BILL_ATTACHMENT] Email queued/sent to johndoe_test_7799@gmail.com:
+----------------------------------------
+Name: John Doe Second
+Email: johndoe_test_7799@gmail.com
+Phone: 9876543222
+Order ID: ORD-2D80E
+PDF Path: bills/order_63_20260606_100347.pdf
+Download URL: http://192.168.1.3/restaurant_medusa/download_bill.php?id=63&token=baab0296ee17b4bda5a553ff90b4a542215bceb2c7a7d7f9763cd1ec0039a0e5
+----------------------------------------
+
+[2026-06-06 10:03:47] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543222 with attachment: bills/order_63_20260606_100347.pdf
+[2026-06-06 10:10:46] [SMS_GATEWAY_ERROR] SMS failed for 9876543222: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3006 ms: Timeout was reached
+[2026-06-06 10:10:46] [ORDER_BILL_ATTACHMENT] Email queued/sent to johndoe_test_7799@gmail.com:
+----------------------------------------
+Name: John Doe Second
+Email: johndoe_test_7799@gmail.com
+Phone: 9876543222
+Order ID: ORD-31A9C
+PDF Path: bills/order_64_20260606_101043.pdf
+Download URL: http://192.168.1.3/restaurant_medusa/download_bill.php?id=64&token=c92f6712ce9abc56b017a3fe4b20a3525d5c37e2a10898504bddc110eaa6e8df
+----------------------------------------
+
+[2026-06-06 10:10:46] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543222 with attachment: bills/order_64_20260606_101043.pdf
+[2026-06-06 10:17:49] [BOOKING_EMAIL] Email queued/sent to janedoe_test_7799@gmail.com:
+----------------------------------------
+Name: Jane Doe Booking
+Email: janedoe_test_7799@gmail.com
+Phone: 9876543224
+Booking ID: BK-1
+Date: 2026-06-15
+Time: 19:30
+Guests: 4
+Table Number: T05
+Venue: Medusa
+----------------------------------------
+
+[2026-06-06 10:17:52] [BOOKING_SMS_ERROR] SMS failed for 9876543224: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3013 ms: Timeout was reached
+[2026-06-06 12:18:19] [EMAIL] OTP for ashu@gmail.com: 109109
+[2026-06-06 12:18:19] [SMS] OTP for 0123456789: 866841
+[2026-06-06 13:36:01] [EMAIL] OTP for ashu@gmail.com: 134805
+[2026-06-06 13:36:01] [SMS] OTP for 0123456789: 992443
+[2026-06-06 13:36:35] [WELCOME_EMAIL] Email queued/sent to ashu@gmail.com:
+----------------------------------------
+Name: ashu
+Email: ashu@gmail.com
+Phone: 0123456789
+Status: Activated
+----------------------------------------
+
+[2026-06-06 13:36:35] [ACCOUNT_CONFIRMATION] Email queued/sent to ashu@gmail.com:
+----------------------------------------
+Name: ashu
+Email: ashu@gmail.com
+Phone: 0123456789
+Registration Date: 2026-06-06 13:36:35
+----------------------------------------
+
+[2026-06-06 17:05:57] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3007 ms: Timeout was reached
+[2026-06-06 17:05:57] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-2B649
+PDF Path: bills/order_65_20260606_170554.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=65&token=340ef003ace1c1123aefa901f220ec8e2c32dfc3a65c892cad56b0557c5147f5
+----------------------------------------
+
+[2026-06-06 17:05:57] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_65_20260606_170554.pdf
+[2026-06-06 17:09:05] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3017 ms: Timeout was reached
+[2026-06-06 17:09:05] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-E327A
+PDF Path: bills/order_66_20260606_170902.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=66&token=a88caca6cfacce7da4df4cd99ff894e221ce8a1ccfe38a3e72149898d077e550
+----------------------------------------
+
+[2026-06-06 17:09:05] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_66_20260606_170902.pdf
+[2026-06-06 17:16:10] [EMAIL] OTP for customer@example.com: 713379
+[2026-06-08 06:48:17] [EMAIL] OTP for tester1239@gmail.com: 670399
+[2026-06-08 06:48:17] [SMS] OTP for 5478941365: 130301
+[2026-06-08 06:51:37] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3004 ms: Timeout was reached
+[2026-06-08 06:51:37] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-53F74
+PDF Path: bills/order_67_20260608_065134.pdf
+Download URL: http://192.168.1.5/restaurant_medusa/download_bill.php?id=67&token=6958369b08d99af121ca3540e51ca589f1988fc47fbf4897902716abf9a97e6c
+----------------------------------------
+
+[2026-06-08 06:51:37] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_67_20260608_065134.pdf
+[2026-06-08 07:08:27] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3004 ms: Timeout was reached
+[2026-06-08 07:08:27] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-7F03B
+PDF Path: bills/order_68_20260608_070824.pdf
+Download URL: http://192.168.1.5/restaurant_medusa/download_bill.php?id=68&token=3d5eb3fd2113d2177dbf2450ec12c37b3c1ca43ec7b062c096574f0b160024ee
+----------------------------------------
+
+[2026-06-08 07:08:27] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_68_20260608_070824.pdf
+[2026-06-08 07:16:44] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3008 ms: Timeout was reached
+[2026-06-08 07:16:44] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-8E6D0
+PDF Path: bills/order_69_20260608_071641.pdf
+Download URL: http://192.168.1.5/restaurant_medusa/download_bill.php?id=69&token=09237363dbff2d9ae05da663cc54786145f478a058cecf3e7e285e8366077d5b
+----------------------------------------
+
+[2026-06-08 07:16:44] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_69_20260608_071641.pdf
+[2026-06-08 07:18:08] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 100.81.109.141 port 8080 after 3004 ms: Timeout was reached
+[2026-06-08 07:18:08] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-CD4B4
+PDF Path: bills/order_70_20260608_071805.pdf
+Download URL: http://192.168.1.5/restaurant_medusa/download_bill.php?id=70&token=3179bfc929a928c9944d3f2b8d91b1ca4d8e6e8e9eef7cdc8eb436c2950d3a6b
+----------------------------------------
+
+[2026-06-08 07:18:08] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_70_20260608_071805.pdf
