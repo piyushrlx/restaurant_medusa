@@ -20,6 +20,37 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 $profile_pic = !empty($user['profile_pic']) && file_exists(__DIR__ . '/' . $user['profile_pic']) 
     ? htmlspecialchars($user['profile_pic']) 
     : '';
+
+// Ensure user_liquor_quota table exists and fetch user's quotas
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `user_liquor_quota` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT NOT NULL,
+            `food_item_id` INT NOT NULL,
+            `item_name` VARCHAR(255) NOT NULL,
+            `total_pegs` INT DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `user_item` (`user_id`, `food_item_id`),
+            CONSTRAINT `fk_quota_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_quota_items` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+} catch (PDOException $ex) {}
+
+$has_liquor_quota = false;
+$user_liquor_quotas = [];
+if ($user_id) {
+    try {
+        $stmt_quota = $pdo->prepare("SELECT * FROM user_liquor_quota WHERE user_id = ?");
+        $stmt_quota->execute([$user_id]);
+        $user_liquor_quotas = $stmt_quota->fetchAll(PDO::FETCH_ASSOC);
+        if (count($user_liquor_quotas) > 0) {
+            $has_liquor_quota = true;
+        }
+    } catch (PDOException $ex) {}
+}
 $phone = $user['phone'] ?? '';
 $is_email_verified = $user['is_email_verified'] ?? 0;
 $is_phone_verified = $user['is_phone_verified'] ?? 0;
@@ -206,6 +237,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             letter-spacing: 0.5px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        .tier-bronze {
+            background: linear-gradient(135deg, #cd7f32, #8c521f);
+            color: #ffffff;
+            border: 1px solid rgba(205, 127, 50, 0.4);
+        }
         .tier-silver {
             background: linear-gradient(135deg, #bdc3c7, #2c3e50);
             color: #ffffff;
@@ -215,11 +251,6 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             background: linear-gradient(135deg, #f39c12, #d35400);
             color: #ffffff;
             border: 1px solid rgba(243, 156, 18, 0.3);
-        }
-        .tier-platinum {
-            background: linear-gradient(135deg, #8a2be2, #4b0082, #1e293b);
-            color: #ffffff;
-            border: 1px solid rgba(229, 233, 240, 0.4);
         }
 
         /* Loyalty Status Dashboard Layout */
@@ -865,6 +896,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button class="nav-link dashboard-pill-profile" id="pill-coupons-tab" data-bs-toggle="pill" data-bs-target="#pill-coupons" type="button" role="tab">
                         <i class="fa-solid fa-gift"></i> Coupons & Rewards
                     </button>
+                    <?php if ($has_liquor_quota): ?>
+                    <button class="nav-link dashboard-pill-profile" id="pill-quota-tab" data-bs-toggle="pill" data-bs-target="#pill-quota" type="button" role="tab">
+                        <i class="fa-solid fa-wine-bottle"></i> Liquor Quota
+                    </button>
+                    <?php endif; ?>
                     <button class="nav-link dashboard-pill-profile" id="pill-notifications-tab" data-bs-toggle="pill" data-bs-target="#pill-notifications" type="button" role="tab">
                         <i class="fa-solid fa-bell"></i> Notifications Log
                     </button>
@@ -901,7 +937,9 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="mb-4">
                             <label class="form-label-medusa" for="profile_email">
                                 Email Address 
-                                <?php if ($is_email_verified): ?>
+                                <?php if (empty($user_email)): ?>
+                                    <span class="verification-tag tag-pending"><i class="fa-solid fa-circle-info"></i> Not Provided</span>
+                                <?php elseif ($is_email_verified): ?>
                                     <span class="verification-tag tag-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
                                 <?php else: ?>
                                     <span class="verification-tag tag-pending" onclick="sendOTP('email')"><i class="fa-solid fa-triangle-exclamation"></i> Verify email</span>
@@ -1066,12 +1104,12 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     $progress_percent = 100;
                     
                     if ($user_tier_id == 1) {
-                        $next_tier_name = 'Gold';
+                        $next_tier_name = 'Silver';
                         $next_tier_req = 25000;
                         $remaining_spend = max(0, 25000 - $tier_spend);
                         $progress_percent = min(100, round(($tier_spend / 25000) * 100));
                     } elseif ($user_tier_id == 2) {
-                        $next_tier_name = 'Platinum';
+                        $next_tier_name = 'Gold';
                         $next_tier_req = 75000;
                         $remaining_spend = max(0, 75000 - $tier_spend);
                         $progress_percent = min(100, round((($tier_spend - 25000) / (75000 - 25000)) * 100));
@@ -1113,7 +1151,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div class="loyalty-progress-bar-fill" style="width: 100%;"></div>
                             </div>
                             <div class="text-center text-gold" style="font-size: 0.85rem; font-weight: 500;">
-                                You have achieved the ultimate Platinum Tier! Enjoy maximum benefits.
+                                You have achieved the ultimate Gold Tier! Enjoy maximum benefits.
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1198,6 +1236,22 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 ?>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Loyalty Rules Section -->
+                    <h3 class="mb-4 mt-5 text-gold" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-scale-balanced text-gold me-2"></i> Loyalty Rules &amp; Resets</h3>
+                    <div class="card bg-transparent border-glass mb-4">
+                        <div class="card-body">
+                            <h5 class="text-white mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> Points Reset (Inactivity Penalty)</h5>
+                            <p class="text-white-50 mb-4" style="font-size: 0.9rem; line-height: 1.6;">
+                                To encourage regular visits, a <strong>20% deduction</strong> is applied to your reward points balance if you do not place any orders for <strong>3 consecutive months (90 days)</strong>. Don't worry, we will send you a warning email 7 days before any points are deducted!
+                            </p>
+                            
+                            <h5 class="text-white mb-3"><i class="fa-solid fa-calendar-check me-2"></i> Annual Tier Reset</h5>
+                            <p class="text-white-50 mb-0" style="font-size: 0.9rem; line-height: 1.6;">
+                                On <strong>January 1st</strong> of every year, all customers who are in the Silver or Gold tiers are <strong>moved down one tier</strong> (e.g. Gold to Silver, Silver to Bronze). Make sure to enjoy your premium benefits before the end of the year!
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -1310,6 +1364,58 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     <?php endif; ?>
                 </div>
+
+                <!-- ══ TAB: LIQUOR QUOTA ══ -->
+                <?php if ($has_liquor_quota): ?>
+                <div class="tab-pane fade" id="pill-quota" role="tabpanel">
+                    <h2 class="section-title"><i class="fa-solid fa-wine-bottle text-gold"></i> Liquor Quota Balance</h2>
+                    
+                    <div class="row g-4 mb-5">
+                        <?php foreach ($user_liquor_quotas as $quota): 
+                            $total_pegs = intval($quota['total_pegs']);
+                            $bottles_left = floor($total_pegs / 8);
+                            $pegs_left = $total_pegs % 8;
+                        ?>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="bg-black p-4 rounded border border-secondary text-center h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="mb-3" style="font-size: 2.5rem; color: var(--gold);">
+                                        <i class="fa-solid fa-wine-bottle"></i>
+                                    </div>
+                                    <h4 class="text-white font-weight-bold mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem;"><?php echo htmlspecialchars($quota['item_name']); ?></h4>
+                                    <div class="d-flex justify-content-center gap-4 my-3">
+                                        <div>
+                                            <h2 class="text-gold font-weight-bold mb-0" style="font-size: 2rem;"><?php echo $bottles_left; ?></h2>
+                                            <span class="text-white-50" style="font-size: 0.8rem;">bottles left</span>
+                                        </div>
+                                        <div style="border-left: 1px solid rgba(255,255,255,0.15); height: 40px; align-self: center;"></div>
+                                        <div>
+                                            <h2 class="text-gold font-weight-bold mb-0" style="font-size: 2rem;"><?php echo $pegs_left; ?></h2>
+                                            <span class="text-white-50" style="font-size: 0.8rem;">pegs left</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="menutest.html?category=Liquor" class="btn btn-outline-medusa btn-sm w-100">
+                                        <i class="fa-solid fa-cart-plus"></i> Buy Again
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="bg-black p-4 rounded border border-secondary">
+                        <h4 class="text-gold mb-3" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-circle-info text-gold me-2"></i> How the Liquor Quota Works</h4>
+                        <ul class="text-white-50 ms-3" style="font-size: 0.9rem; line-height: 1.6;">
+                            <li>Select your favorite premium brands from our <strong>Liquor</strong> category in the menu.</li>
+                            <li>Order a bottle. Upon payment confirmation, <strong>8 pegs</strong> will be credited to your quota balance per bottle.</li>
+                            <li>You can track and manage your available bottles and pegs from this panel.</li>
+                            <li>To consume a peg during your visit, please request the waiter/admin to record the consumption at the counter.</li>
+                        </ul>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
                 <div class="tab-pane fade" id="pill-settings" role="tabpanel">
@@ -2310,6 +2416,29 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     const settingsTab = document.getElementById('pill-settings-tab');
                     if (settingsTab) settingsTab.click();
                 }
+            }
+        }
+
+        async function consumePeg() {
+            const btn = document.getElementById('btn-consume-peg');
+            if (!btn) return;
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            try {
+                const response = await fetch('api/consume-quota.php', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    document.getElementById('quota-display-pegs').innerHTML = `${result.new_quota} <span style="font-size: 1.5rem; color: #fff;">pegs</span>`;
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch(e) {
+                showToast('Failed to consume peg quota.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origText;
             }
         }
 

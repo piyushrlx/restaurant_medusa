@@ -41,6 +41,7 @@ if (!function_exists('sendWelcomeEmail')) {
                 'phone' => 'N/A'
             ];
         }
+        if (empty($user['email'])) return true;
         $website_name = get_env_var('RESTAURANT_NAME', 'Medusa');
         $smtp_host = get_env_var('SMTP_HOST');
         $smtp_port = get_env_var('SMTP_PORT', 587);
@@ -115,6 +116,7 @@ if (!function_exists('sendConfirmationEmail')) {
                 'phone' => 'N/A'
             ];
         }
+        if (empty($user['email'])) return true;
         $website_name = get_env_var('RESTAURANT_NAME', 'Medusa');
         $smtp_host = get_env_var('SMTP_HOST');
         $smtp_port = get_env_var('SMTP_PORT', 587);

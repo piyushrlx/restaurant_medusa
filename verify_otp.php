@@ -337,6 +337,7 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
         <?php if (!$redirect): ?>
             <form action="verify_otp.php" method="POST">
                 <!-- Email OTP -->
+                <?php if (!empty($user['email'])): ?>
                 <div>
                     <div class="channel-label">
                         <span>Email Code (<?php echo htmlspecialchars(substr($user['email'], 0, 4) . '***' . strstr($user['email'], '@')); ?>)</span>
@@ -349,6 +350,7 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
                         <input type="text" name="email_otp" class="input-field" placeholder="------" maxlength="6" pattern="[0-9]{6}" required <?php echo $isEmailVerified ? 'disabled value="******"' : ''; ?> autocomplete="off">
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- Phone OTP -->
                 <div>

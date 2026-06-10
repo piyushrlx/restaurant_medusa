@@ -30,8 +30,8 @@ $email = trim($data['email'] ?? '');
 $phone = trim($data['phone'] ?? '');
 $password = $data['password'] ?? '';
 
-if (empty($name) || empty($email) || empty($password) || empty($phone)) {
-    echo json_encode(['success' => false, 'message' => 'All fields (first name, last name, email, mobile number, password) are required']);
+if (empty($name) || empty($password) || empty($phone)) {
+    echo json_encode(['success' => false, 'message' => 'Name, mobile number, and password are required']);
     exit;
 }
 
@@ -40,7 +40,7 @@ if (!preg_match('/^[0-9]{10}$/', $phone)) {
     exit;
 }
 
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'message' => 'Invalid email format']);
     exit;
 }
@@ -51,18 +51,22 @@ if (strlen($password) < 6) {
 }
 
 try {
-    // Check if email already exists
-    $check_stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $check_stmt->execute([$email]);
-    if ($check_stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'An account with this email already exists']);
-        exit;
+    if (!empty($email)) {
+        // Check if email already exists
+        $check_stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $check_stmt->execute([$email]);
+        if ($check_stmt->fetch()) {
+            echo json_encode(['success' => false, 'message' => 'An account with this email already exists']);
+            exit;
+        }
     }
+
+    $dbEmail = !empty($email) ? $email : NULL;
 
     // Hash password and insert user
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
     $ins_stmt = $pdo->prepare("INSERT INTO users (full_name, email, password, phone, role) VALUES (?, ?, ?, ?, 'customer')");
-    $ins_stmt->execute([$name, $email, $hashed_password, $phone]);
+    $ins_stmt->execute([$name, $dbEmail, $hashed_password, $phone]);
 
     $newUserId = $pdo->lastInsertId();
 

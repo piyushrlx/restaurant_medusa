@@ -6,9 +6,9 @@ $order = null;
 $error_msg = null;
 
 if (!empty($order_id)) {
-    // 1. Database access control check
+    // 1. Fetch from Database first as primary source of truth
     try {
-        $stmt = $pdo->prepare("SELECT user_id FROM orders WHERE order_number = ?");
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_number = ?");
         $stmt->execute([$order_id]);
         $db_order = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -16,20 +16,79 @@ if (!empty($order_id)) {
             $db_user_id = $db_order['user_id'];
             $session_user_id = $_SESSION['user_id'] ?? null;
             
-            // If the order has an associated user, only that user or an admin can view it
+            // Access control check
             if ($db_user_id !== null) {
                 $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
                 if (!$is_admin && ($session_user_id === null || intval($db_user_id) !== intval($session_user_id))) {
                     $error_msg = "Access Denied: You do not have permission to view this order details.";
                 }
             }
+
+            if (!$error_msg) {
+                // Fetch items
+                $items_stmt = $pdo->prepare("SELECT item_name AS name, price, quantity FROM order_items WHERE order_id = ?");
+                $items_stmt->execute([$db_order['id']]);
+                $db_items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Calculate subtotal
+                $subtotal = 0;
+                foreach ($db_items as $item) {
+                    $subtotal += floatval($item['price']) * intval($item['quantity']);
+                }
+
+                // Try to load email from users table
+                $customer_email = '';
+                if ($db_user_id) {
+                    $u_stmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
+                    $u_stmt->execute([$db_user_id]);
+                    $customer_email = $u_stmt->fetchColumn() ?: '';
+                }
+
+                // If orders.json has more complete metadata (like customer email/order notes), merge it
+                $json_email = '';
+                $json_message = '';
+                $json_payment_id = 'pay_' . substr(md5($order_id), 0, 14);
+                $json_sms_status = 'success';
+                
+                $orders_file = __DIR__ . '/orders.json';
+                if (file_exists($orders_file)) {
+                    $json_orders = json_decode(file_get_contents($orders_file), true);
+                    if (isset($json_orders[$order_id])) {
+                        $json_order = $json_orders[$order_id];
+                        $json_email = $json_order['customer_email'] ?? '';
+                        $json_message = $json_order['message'] ?? '';
+                        $json_payment_id = $json_order['payment_id'] ?? $json_payment_id;
+                        $json_sms_status = $json_order['sms_status'] ?? 'success';
+                    }
+                }
+
+                $order = [
+                    'order_id' => $db_order['order_number'],
+                    'customer_name' => $db_order['customer_name'],
+                    'customer_phone' => $db_order['customer_phone'],
+                    'customer_email' => !empty($json_email) ? $json_email : $customer_email,
+                    'delivery_address' => $db_order['delivery_address'],
+                    'message' => $json_message,
+                    'payment_id' => $json_payment_id,
+                    'cart_items' => $db_items,
+                    'subtotal' => $subtotal,
+                    'gst' => floatval($db_order['tax_amount'] ?? ($subtotal * 0.18)),
+                    'packing' => floatval($db_order['packing_charge'] ?? 0.00),
+                    'delivery' => floatval($db_order['delivery_charge'] ?? 40.00),
+                    'total' => floatval($db_order['total_amount']),
+                    'status' => $db_order['order_status'],
+                    'sms_status' => $json_sms_status,
+                    'sms_response' => '',
+                    'created_at' => $db_order['order_date']
+                ];
+            }
         }
     } catch (PDOException $e) {
-        // ignore or handle database query failure
+        error_log("Database order fetch failed: " . $e->getMessage());
     }
-    
-    // 2. Fetch order details from orders.json if access not denied
-    if (!$error_msg) {
+
+    // 2. Fallback to orders.json if database fetch failed or returned nothing
+    if (!$order && !$error_msg) {
         $orders_file = __DIR__ . '/orders.json';
         if (file_exists($orders_file)) {
             $orders = json_decode(file_get_contents($orders_file), true);
@@ -726,17 +785,10 @@ if (!$order) {
                     <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
                     <span>Bill details sent via SMS to <strong>+91 <?php echo htmlspecialchars(substr($order['customer_phone'], 0, 5) . ' ' . substr($order['customer_phone'], 5)); ?></strong></span>
                 </div>
-            <?php elseif ($sms_status === 'api_error' || $sms_status === 'error'): ?>
+            <?php elseif ($sms_status === 'failed' || $sms_status === 'api_error' || $sms_status === 'error'): ?>
                 <div class="sms-badge" style="background: rgba(230, 57, 70, 0.08); border-color: rgba(230, 57, 70, 0.2); color: #ffb3b8;">
-                    <i class="fas fa-exclamation-triangle" style="color: var(--accent);"></i>
-                    <span>SMS failed: 
-                        <strong>
-                            <?php 
-                            $res_decoded = json_decode($sms_response, true);
-                            echo htmlspecialchars($res_decoded['message'] ?? $sms_response ?? 'API Error');
-                            ?>
-                        </strong>
-                    </span>
+                    <i class="fas fa-exclamation-triangle" style="color: #ff3333; margin-right: 5px;"></i>
+                    <span>SMS delivery failed to <strong>+91 <?php echo htmlspecialchars(substr($order['customer_phone'], 0, 5) . ' ' . substr($order['customer_phone'], 5)); ?></strong> (Gateway Offline/Unreachable)</span>
                 </div>
             <?php else: ?>
                 <div class="sms-badge">

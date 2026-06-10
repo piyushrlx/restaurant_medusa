@@ -1,15 +1,15 @@
-(function() {
+(function () {
     // Run immediately to apply theme on load and prevent flashing
     const theme = localStorage.getItem('medusa_admin_theme');
     if (theme === 'light') {
         document.documentElement.classList.add('light-mode');
     }
-    
+
     // Load CSS
     const isShared = window.location.pathname.includes('/admintest/');
     const cssPath = isShared ? '../assets/css/theme-toggle.css' : 'assets/css/theme-toggle.css';
     const faPath = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-    
+
     // Inject theme CSS link if not exists
     if (!document.querySelector(`link[href$="theme-toggle.css"]`)) {
         const link = document.createElement('link');
@@ -17,7 +17,7 @@
         link.href = cssPath;
         document.head.appendChild(link);
     }
-    
+
     // Inject FontAwesome link if not exists
     if (!document.querySelector(`link[href*="font-awesome"]`) && !document.querySelector(`link[href*="all.min.css"]`)) {
         const fa = document.createElement('link');
@@ -31,7 +31,7 @@ function updateThemeUI() {
     const isLight = document.documentElement.classList.contains('light-mode');
     const icon = document.getElementById('themeIcon');
     const btn = document.getElementById('themeToggleBtn');
-    
+
     if (isLight) {
         if (icon) {
             icon.className = 'fas fa-sun';
@@ -67,7 +67,7 @@ function toggleTheme() {
 }
 
 // Bind load event
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // If button doesn't exist, create it dynamically at the bottom-right corner
     if (!document.getElementById('themeToggleBtn')) {
         const wrapper = document.createElement('div');
@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Global Premium Theme Alert Override
-(function() {
-    window.alert = function(message, callback) {
+(function () {
+    window.alert = function (message, callback) {
         // Discard any existing alert modal
         const existing = document.getElementById('customAlertModal');
         if (existing) {
@@ -147,23 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         box.innerHTML = `
             ${iconHtml}
-            <div style="font-size: 0.95rem; line-height: 1.6; color: ${isLight ? '#1e293b' : '#f0ece4'}; margin-bottom: 1.8rem; font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif;">
+            <div style="font-size: 0.95rem; line-height: 1.6; color: ${isLight ? '#1e293b' : '#f0ece4'}; margin-bottom: 0.5rem; font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif;">
                 ${cleanMessage}
             </div>
-            <button id="customAlertOkBtn" style="
-                background: linear-gradient(135deg, #dfba86 0%, #c89640 100%);
-                color: #0a0a0a;
-                border: none;
-                border-radius: 10px;
-                padding: 0.72rem 2.8rem;
-                font-weight: 700;
-                font-size: 0.88rem;
-                cursor: pointer;
-                transition: all 0.2s;
-                letter-spacing: 0.4px;
-                outline: none;
-                font-family: 'Plus Jakarta Sans', sans-serif;
-            ">OK</button>
         `;
 
         overlay.appendChild(box);
@@ -202,7 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        box.querySelector('#customAlertOkBtn').addEventListener('click', closeAlert);
         window.addEventListener('keydown', handleKeydown);
+
+        // Auto-close after 2 seconds
+        setTimeout(closeAlert, 2000);
     };
 })();

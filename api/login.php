@@ -9,21 +9,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-$email = trim($data['email'] ?? '');
+$login_id = trim($data['email'] ?? '');
 $password = $data['password'] ?? '';
 
-if (empty($email) || empty($password)) {
-    echo json_encode(['success' => false, 'message' => 'Email and password required']);
+if (empty($login_id) || empty($password)) {
+    echo json_encode(['success' => false, 'message' => 'Email/Phone and password required']);
     exit;
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, full_name, email, password, role, is_active FROM users WHERE email = ?");
-    $stmt->execute([$email]);
+    $stmt = $pdo->prepare("SELECT id, full_name, email, password, role, is_active FROM users WHERE email = ? OR phone = ?");
+    $stmt->execute([$login_id, $login_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user || !password_verify($password, $user['password'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
         exit;
     }
 

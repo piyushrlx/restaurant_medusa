@@ -30,21 +30,29 @@ if (!function_exists('addNotification')) {
             // Check & Create Table once per request lifecycle
             static $table_verified = false;
             if (!$table_verified) {
-                $create_sql = "
-                    CREATE TABLE IF NOT EXISTS `notifications` (
-                        `id` INT AUTO_INCREMENT PRIMARY KEY,
-                        `type` ENUM('order', 'payment', 'kitchen', 'reservation', 'staff', 'system') NOT NULL,
-                        `title` VARCHAR(255) NOT NULL,
-                        `body` TEXT NOT NULL,
-                        `is_read` TINYINT(1) DEFAULT 0,
-                        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        INDEX `idx_notif_is_read` (`is_read`),
-                        INDEX `idx_notif_created_at` (`created_at`),
-                        INDEX `idx_notif_type` (`type`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                ";
-                $pdo->exec($create_sql);
-                $table_verified = true;
+                if (!$pdo->inTransaction()) {
+                    $create_sql = "
+                        CREATE TABLE IF NOT EXISTS `notifications` (
+                            `id` INT AUTO_INCREMENT PRIMARY KEY,
+                            `type` ENUM('order', 'payment', 'kitchen', 'reservation', 'staff', 'system') NOT NULL,
+                            `title` VARCHAR(255) NOT NULL,
+                            `body` TEXT NOT NULL,
+                            `is_read` TINYINT(1) DEFAULT 0,
+                            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            INDEX `idx_notif_is_read` (`is_read`),
+                            INDEX `idx_notif_created_at` (`created_at`),
+                            INDEX `idx_notif_type` (`type`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    ";
+                    $pdo->exec($create_sql);
+                    $table_verified = true;
+                } else {
+                    // Check if table exists without causing an implicit commit
+                    $table_exists = $pdo->query("SHOW TABLES LIKE 'notifications'")->fetchColumn();
+                    if ($table_exists) {
+                        $table_verified = true;
+                    }
+                }
             }
 
             // Secure insertion using prepared statement

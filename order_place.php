@@ -144,6 +144,26 @@ if ($db_user_id) {
 $order_number = 'ORD-' . strtoupper(substr(uniqid(), 7, 5));
 $estimated_delivery = date('Y-m-d H:i:s', strtotime('+45 minutes'));
 
+// Ensure user_liquor_quota table exists before starting transaction
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `user_liquor_quota` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT NOT NULL,
+            `food_item_id` INT NOT NULL,
+            `item_name` VARCHAR(255) NOT NULL,
+            `total_pegs` INT DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `user_item` (`user_id`, `food_item_id`),
+            CONSTRAINT `fk_quota_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_quota_items` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+} catch (PDOException $ex) {
+    error_log("Failed to create user_liquor_quota table: " . $ex->getMessage());
+}
+
 try {
     $pdo->beginTransaction();
 
@@ -177,15 +197,32 @@ try {
 
     // 2. Insert order items into order_items table
     $items_for_pdf = [];
+    $pegs_to_add = 0;
     foreach ($cart_items as $item) {
-        $f_stmt = $pdo->prepare("SELECT id FROM food_items WHERE name = ?");
+        $f_stmt = $pdo->prepare("SELECT id, category FROM food_items WHERE name = ?");
         $f_stmt->execute([$item['name']]);
         $f_item = $f_stmt->fetch();
         $food_item_id = $f_item ? $f_item['id'] : null;
+        $category = $f_item ? $f_item['category'] : '';
 
         $item_price = floatval($item['price']);
         $item_qty = intval($item['quantity'] ?? 1);
         $item_subtotal = $item_price * $item_qty;
+
+        if ($category && strtolower(trim($category)) === 'liquor') {
+            $pegs_to_add += 8 * $item_qty;
+            if ($db_user_id && $food_item_id) {
+                $check_q = $pdo->prepare("SELECT id FROM user_liquor_quota WHERE user_id = ? AND food_item_id = ?");
+                $check_q->execute([$db_user_id, $food_item_id]);
+                if ($check_q->fetch()) {
+                    $upd_q = $pdo->prepare("UPDATE user_liquor_quota SET total_pegs = total_pegs + ? WHERE user_id = ? AND food_item_id = ?");
+                    $upd_q->execute([8 * $item_qty, $db_user_id, $food_item_id]);
+                } else {
+                    $ins_q = $pdo->prepare("INSERT INTO user_liquor_quota (user_id, food_item_id, item_name, total_pegs) VALUES (?, ?, ?, ?)");
+                    $ins_q->execute([$db_user_id, $food_item_id, $item['name'], 8 * $item_qty]);
+                }
+            }
+        }
 
         $ins_item = $pdo->prepare("
             INSERT INTO order_items 
@@ -208,6 +245,11 @@ try {
             'unit_price' => $item_price,
             'subtotal' => $item_subtotal
         ];
+    }
+
+    if ($db_user_id && $pegs_to_add > 0) {
+        $upd_quota = $pdo->prepare("UPDATE users SET liquor_quota_pegs = liquor_quota_pegs + ? WHERE id = ?");
+        $upd_quota->execute([$pegs_to_add, $db_user_id]);
     }
 
     // Prepare variables for PDF generation
@@ -327,6 +369,17 @@ try {
             ");
             $ins_notif->execute([$db_user_id, $notif_title, $notif_msg]);
         }
+
+        // Customer notification for Order Placed
+        if ($db_user_id) {
+            $is_delivery = (stripos($delivery_address, 'table') === false);
+            if ($is_delivery) {
+                $cust_notif_title = "Order Placed Successfully";
+                $cust_notif_msg = "Your order #{$order_number} has been placed successfully and is being processed.";
+                $ins_cust_notif = $pdo->prepare("INSERT INTO user_notifications (user_id, title, message) VALUES (?, ?, ?)");
+                $ins_cust_notif->execute([$db_user_id, $cust_notif_title, $cust_notif_msg]);
+            }
+        }
     }
         // Trigger notification triggers for admin panel
         require_once __DIR__ . '/includes/notifications_helper.php';
@@ -395,6 +448,39 @@ if (!empty($customer_email)) {
 
 // 3. Send WhatsApp with PDF attached
 sendWhatsappBill($customer_phone, $order_data, $pdf_relative_path);
+
+// Save order to local JSON file for success page rendering
+try {
+    $orders_json_file = __DIR__ . '/orders.json';
+    $orders_list = [];
+    if (file_exists($orders_json_file)) {
+        $orders_list = json_decode(file_get_contents($orders_json_file), true) ?: [];
+    }
+
+    $orders_list[$order_number] = [
+        'order_id' => $order_number,
+        'customer_name' => $customer_name,
+        'customer_phone' => $customer_phone,
+        'customer_email' => $customer_email,
+        'delivery_address' => $delivery_address,
+        'message' => trim($data['message'] ?? ''),
+        'payment_id' => trim($data['razorpay_payment_id'] ?? 'pay_mock_' . substr(md5(uniqid()), 0, 10)),
+        'cart_items' => $cart_items,
+        'subtotal' => $subtotal,
+        'gst' => $tax_amount,
+        'packing' => $packing_fee,
+        'delivery' => $delivery_charge,
+        'total' => $total,
+        'status' => 'Paid',
+        'sms_status' => ($sms_status === 'sent_gateway') ? 'success' : 'failed',
+        'sms_response' => '',
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    file_put_contents($orders_json_file, json_encode($orders_list, JSON_PRETTY_PRINT));
+} catch (Exception $json_ex) {
+    error_log("Failed to write to orders.json: " . $json_ex->getMessage());
+}
 
 echo json_encode([
     'success' => true,
