@@ -285,12 +285,24 @@
                     <div class="gst-notice">
                         <i class="fas fa-check-circle"></i> Includes government GST charges
                     </div>
-                    <a href="checkouttest.php" class="btn-checkout">Proceed to Checkout</a>
-                    <a href="menutest.html" class="btn-continue">Continue Shopping</a>
+                    <a href="checkouttest.php" id="btnCheckout" class="btn-checkout">Proceed to Checkout</a>
+                    <a href="menutest.html" id="btnContinue" class="btn-continue">Continue Shopping</a>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tableCode = params.get('table');
+            if (tableCode) {
+                document.getElementById('btnCheckout').href = 'qr_checkout.php?table=' + tableCode;
+                document.getElementById('btnContinue').href = 'menutest.html?table=' + tableCode;
+                const backBtn = document.querySelector('.navbar a.btn-outline-light');
+                if (backBtn) backBtn.href = 'menutest.html?table=' + tableCode;
+            }
+        });
+    </script>
 
     <script>
         let localItems = [];
@@ -316,10 +328,14 @@
                 // Fetch cart data from backend
                 const response = await fetch('api/get-cart.php');
                 if (response.status === 401) {
-                    alert('Please login first', () => {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('table')) {
+                        throw new Error('Guest mode, using local cart');
+                    } else {
+                        alert('Please login first');
                         window.location.href = 'login.html';
-                    });
-                    return;
+                        return;
+                    }
                 }
                 const result = await response.json();
                 if (result.success && result.items.length > 0) {

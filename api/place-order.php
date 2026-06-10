@@ -310,11 +310,17 @@ if (isset($pdo)) {
         
         $db_order_id = $pdo->lastInsertId();
         
+        $pegs_to_add = 0;
         foreach ($cart_items as $item) {
-            $f_stmt = $pdo->prepare("SELECT id FROM food_items WHERE name = ?");
+            $f_stmt = $pdo->prepare("SELECT id, category FROM food_items WHERE name = ?");
             $f_stmt->execute([$item['name']]);
             $f_item = $f_stmt->fetch();
             $food_item_id = $f_item ? $f_item['id'] : null;
+            $category = $f_item ? $f_item['category'] : '';
+
+            if ($category && strtolower(trim($category)) === 'liquor') {
+                $pegs_to_add += 8 * intval($item['quantity'] ?? 1);
+            }
             
             $ins_item = $pdo->prepare("INSERT INTO order_items (order_id, food_item_id, item_name, quantity, price) VALUES (?, ?, ?, ?, ?)");
             $ins_item->execute([
@@ -324,6 +330,11 @@ if (isset($pdo)) {
                 $item['quantity'] ?? 1,
                 $item['price'] ?? 0.00
             ]);
+        }
+
+        if ($db_user_id && $pegs_to_add > 0) {
+            $upd_quota = $pdo->prepare("UPDATE users SET liquor_quota_pegs = liquor_quota_pegs + ? WHERE id = ?");
+            $upd_quota->execute([$pegs_to_add, $db_user_id]);
         }
         
         // 3. Save or update customer address if requested

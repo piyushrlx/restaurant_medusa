@@ -195,6 +195,154 @@ if (isset($_REQUEST['action'])) {
     header('Content-Type: application/json');
     $action = $_REQUEST['action'];
     
+    // Get all active user quotas action
+    if ($action === 'load_active_quotas') {
+        try {
+            $stmt = $pdo->query("
+                SELECT q.*, u.full_name as user_name, u.email as user_email, u.phone as user_phone 
+                FROM user_liquor_quota q 
+                JOIN users u ON q.user_id = u.id 
+                ORDER BY u.full_name ASC, q.item_name ASC
+            ");
+            $quotas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'quotas' => $quotas]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Verify customer to load active liquor brands
+    if ($action === 'verify_order_liquor') {
+        $search_term = trim($_POST['search_term'] ?? '');
+        // strip # from search term if they copy-pasted #ORD-XXX
+        $clean_term = ltrim($search_term, '#');
+
+        if (empty($clean_term)) {
+            echo json_encode(['success' => false, 'message' => 'Please provide a search term.']);
+            exit;
+        }
+
+        try {
+            $user_id = null;
+            // 1. Check if it's an order number
+            $stmt = $pdo->prepare("SELECT user_id FROM orders WHERE order_number = ?");
+            $stmt->execute([$clean_term]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($order && !empty($order['user_id'])) {
+                $user_id = $order['user_id'];
+            } else {
+                // 2. Check if it matches phone, email, or exact name
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? OR email = ? OR full_name = ?");
+                $stmt->execute([$clean_term, $clean_term, $clean_term]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($user) {
+                    $user_id = $user['id'];
+                } else {
+                    // 3. Fallback: Check if it's a partial name
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE full_name LIKE ? LIMIT 1");
+                    $stmt->execute(['%' . $clean_term . '%']);
+                    $user_partial = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($user_partial) {
+                        $user_id = $user_partial['id'];
+                    }
+                }
+            }
+
+            if (!$user_id) {
+                echo json_encode(['success' => false, 'message' => 'Customer not found. Please check the spelling or Order ID.']);
+                exit;
+            }
+
+            // Find ALL active liquor quota for this user
+            $stmt_items = $pdo->prepare("
+                SELECT food_item_id, item_name, total_pegs 
+                FROM user_liquor_quota
+                WHERE user_id = ? AND total_pegs > 0
+            ");
+            $stmt_items->execute([$user_id]);
+            $brands = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($brands)) {
+                echo json_encode(['success' => false, 'message' => 'This customer has no active liquor pegs left.']);
+                exit;
+            }
+
+            echo json_encode(['success' => true, 'user_id' => $user_id, 'brands' => $brands]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Admin consume peg action
+    if ($action === 'admin_consume_peg') {
+        $user_id = intval($_POST['user_id'] ?? 0);
+        $food_item_id = intval($_POST['food_item_id'] ?? 0);
+        $search_term = trim($_POST['search_term'] ?? '');
+
+        if ($user_id <= 0 || $food_item_id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid parameters. Please verify first.']);
+            exit;
+        }
+
+        try {
+            // Fetch current quota
+            $stmt = $pdo->prepare("SELECT total_pegs, item_name FROM user_liquor_quota WHERE user_id = ? AND food_item_id = ?");
+            $stmt->execute([$user_id, $food_item_id]);
+            $quota = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$quota) {
+                echo json_encode(['success' => false, 'message' => 'No active quota found for this liquor brand.']);
+                exit;
+            }
+
+            $current_pegs = intval($quota['total_pegs']);
+            if ($current_pegs <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Peg quota is already fully consumed (0 pegs left) for ' . $quota['item_name'] . '.']);
+                exit;
+            }
+
+            $new_pegs = $current_pegs - 1;
+
+            // Fetch user full name for notification
+            $stmt_user = $pdo->prepare("SELECT full_name FROM users WHERE id = ?");
+            $stmt_user->execute([$user_id]);
+            $user_info = $stmt_user->fetch(PDO::FETCH_ASSOC);
+            $user_name = $user_info ? $user_info['full_name'] : 'Customer';
+
+            // Start transaction
+            $pdo->beginTransaction();
+
+            // 1. Decrement user_liquor_quota
+            $upd = $pdo->prepare("UPDATE user_liquor_quota SET total_pegs = ? WHERE user_id = ? AND food_item_id = ?");
+            $upd->execute([$new_pegs, $user_id, $food_item_id]);
+
+            // 2. Decrement general quota in users table
+            $upd_user = $pdo->prepare("UPDATE users SET liquor_quota_pegs = GREATEST(0, liquor_quota_pegs - 1) WHERE id = ?");
+            $upd_user->execute([$user_id]);
+
+            // 3. Add system notification of consumption
+            $notif_title = "Peg Consumed";
+            $notif_body = "1 peg of " . $quota['item_name'] . " logged for " . $user_name . " (Verified via: " . $search_term . "). Remaining brand quota: " . $new_pegs . " pegs.";
+            
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (title, body) VALUES (?, ?)");
+            $stmt_notif->execute([$notif_title, $notif_body]);
+
+            $pdo->commit();
+
+            echo json_encode(['success' => true, 'message' => 'Successfully logged 1 peg for ' . $user_name . '. ' . $new_pegs . ' pegs remaining.']);
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
     // Upload Dish Image Action
     if ($action === 'upload_dish_image') {
         if (!isset($_FILES['dish_image']) || $_FILES['dish_image']['error'] !== UPLOAD_ERR_OK) {
@@ -727,17 +875,41 @@ if (isset($_REQUEST['action'])) {
         $stmt->execute([$status, $order_id]);
         
         // Fetch order details for notification
-        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount FROM orders WHERE id = ?");
+        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address FROM orders WHERE id = ?");
         $o_stmt->execute([$order_id]);
         $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
         if ($ord_info) {
             require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+            
+            // Admin Notifications
             if ($status === 'completed') {
                 addNotification('order', 'Order Completed', "Order {$ord_info['order_number']} for {$ord_info['customer_name']} (₹" . number_format($ord_info['total_amount'], 2) . ") is completed.");
             } elseif ($status === 'cancelled') {
                 addNotification('order', 'Order Cancelled', "Order {$ord_info['order_number']} for {$ord_info['customer_name']} has been cancelled.");
             } elseif ($status === 'preparing') {
                 addNotification('kitchen', 'Order In Prep', "Order {$ord_info['order_number']} is now being prepared in the kitchen.");
+            }
+            
+            // Customer Notifications
+            $c_user_id = $ord_info['user_id'];
+            if ($c_user_id) {
+                $is_delivery = (stripos($ord_info['delivery_address'] ?? '', 'table') === false);
+                if ($is_delivery) {
+                    $cust_title = '';
+                    $cust_msg = '';
+                    if ($status === 'ready') {
+                        $cust_title = 'Order Arriving';
+                        $cust_msg = "Your order #{$ord_info['order_number']} is out for delivery and arriving soon.";
+                    } elseif ($status === 'completed') {
+                        $cust_title = 'Order Delivered';
+                        $cust_msg = "Your order #{$ord_info['order_number']} has been successfully delivered. Enjoy your meal!";
+                    }
+                    
+                    if ($cust_title) {
+                        $ins_cust_notif = $pdo->prepare("INSERT INTO user_notifications (user_id, title, message) VALUES (?, ?, ?)");
+                        $ins_cust_notif->execute([$c_user_id, $cust_title, $cust_msg]);
+                    }
+                }
             }
         }
         
@@ -2611,6 +2783,12 @@ html:not(.light-mode) .form-select:focus{
                 </a>
             </li>
             <li>
+                <a class="sidebar-link" onclick="switchTab('liquor-tab', this); loadActiveQuotas();">
+                    <i class="fas fa-wine-bottle"></i>
+                    <span>Liquor Quota</span>
+                </a>
+            </li>
+            <li>
                 <a class="sidebar-link" onclick="switchTab('payments-tab', this)">
                     <i class="fas fa-wallet"></i>
                     <span>Payments</span>
@@ -3911,6 +4089,71 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- ==================== LIQUOR QUOTA TAB ==================== -->
+        <div id="liquor-tab" class="tab-panel">
+            <div class="page-header">
+                <h1 class="page-title">Liquor Quota & Peg Consumption</h1>
+                <p class="page-subtitle">Track customer liquor quotas and record peg consumption</p>
+            </div>
+
+            <div class="row">
+                <!-- Consume Peg Form -->
+                <div class="col-lg-5 mb-4">
+                    <div class="content-card h-100">
+                        <div class="card-header-premium">Record Peg Consumption</div>
+                        <form id="consumePegForm" onsubmit="adminConsumePeg(event)">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small text-uppercase">Search Customer</label>
+                                <input type="text" id="consume_search_term" class="form-control form-control-dashboard" placeholder="Enter Name, Phone, or Order ID..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
+                                <select id="consume_brand_id" class="form-select form-control-dashboard" required>
+                                    <option value="">-- Click Verify to load brands --</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-light btn-sm mb-3" onclick="loadCustomerBrands()">
+                                    <i class="fas fa-check-circle me-1"></i> Verify & Load Brands
+                                </button>
+                            </div>
+                            <hr style="border-color: rgba(255,255,255,0.08);">
+                            <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
+                                <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Active Quotas List -->
+                <div class="col-lg-7 mb-4">
+                    <div class="content-card h-100">
+                        <div class="card-header-premium">Active Customer Quotas</div>
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table premium-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Liquor Brand</th>
+                                        <th class="text-center">Bottles Left</th>
+                                        <th class="text-center">Pegs Left</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activeQuotasTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-spinner fa-spin me-2"></i> Loading active quotas...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ==================== MODALS ==================== -->
@@ -3932,9 +4175,10 @@ html:not(.light-mode) .form-select:focus{
                             <!-- QR code generated here -->
                         </div>
                         
-                        <div class="d-flex justify-content-center gap-2">
+                        <div class="d-flex justify-content-center gap-2 mt-2">
                             <a id="qrOpenLink" href="#" target="_blank" class="btn btn-sm btn-outline-light"><i class="fas fa-external-link-alt"></i> Open Menu</a>
                             <button id="btnDineInAct" class="btn btn-sm btn-gold-action"><i class="fas fa-plus"></i> Open Dine-In Bill</button>
+                            <button onclick="printTableQR()" class="btn btn-sm btn-outline-secondary text-white"><i class="fas fa-print"></i> Print</button>
                         </div>
                     </div>
                 </div>
@@ -4267,14 +4511,20 @@ html:not(.light-mode) .form-select:focus{
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
             
             // Add active class
-            el.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            if (el) el.classList.add('active');
+            const panel = document.getElementById(tabId);
+            if (panel) panel.classList.add('active');
             
             // If kitchen panel is active, start live polling
             if (tabId === 'kitchen-tab') {
                 startKitchenPolling();
             } else {
                 stopKitchenPolling();
+            }
+
+            // If liquor quota panel is active, reload active quotas list
+            if (tabId === 'liquor-tab') {
+                loadActiveQuotas();
             }
         }
 
@@ -4477,9 +4727,13 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('qrTableLabel').textContent = 'Table ' + tableCode;
             
             // Generate QR Code targeting the menu page with this table number prefilled
-            // Get local IP address (or fallback to localhost)
-            const localHost = window.location.host;
-            const menuUrl = `http://${localHost}/test/menutest.html?table=${tableCode}`;
+            // Use PHP to inject the real local Wi-Fi IP address so smartphones can reach it instead of looking for 'localhost'
+            const networkIp = '<?php echo gethostbyname(gethostname()); ?>';
+            const serverPort = window.location.port ? ':' + window.location.port : '';
+            
+            // Extract the path by removing /admintest/dashboardtest.php from current pathname
+            const basePath = window.location.pathname.replace('/admintest/dashboardtest.php', '');
+            const menuUrl = `http://${networkIp}${serverPort}${basePath}/menutest.html?table=${tableCode}`;
             
             const qrContainer = document.getElementById('qrCodeContainer');
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(menuUrl)}" alt="QR Code" style="width: 150px; height: 150px;">`;
@@ -5427,6 +5681,16 @@ html:not(.light-mode) .form-select:focus{
         let repPaymentChartInst = null;
         let repCategoryChartInst = null;
         let _lastReportData = null;
+
+        function fmtINR(val) {
+            return '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function growthBadge(val) {
+            const num = parseFloat(val || 0);
+            const icon = num >= 0 ? 'fa-caret-up' : 'fa-caret-down';
+            return `<i class="fas ${icon}"></i> ${Math.abs(num)}% vs last period`;
+        }
 
         function loadReportsData(event) {
             if (event) event.preventDefault();
@@ -6633,6 +6897,166 @@ html:not(.light-mode) .form-select:focus{
             });
         }
 
+        // Liquor Quota functions
+        let verifiedUserId = null;
+
+        function showToast(message, type = 'success') {
+            showToastNotification({
+                type: type === 'success' ? 'payment' : (type === 'error' ? 'system' : 'staff'),
+                title: type.charAt(0).toUpperCase() + type.slice(1),
+                body: message
+            });
+        }
+
+        function loadActiveQuotas() {
+            const body = document.getElementById('activeQuotasTableBody');
+            if (!body) return;
+            body.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Loading...</td></tr>`;
+
+            fetch('dashboardtest.php?action=load_active_quotas')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.quotas.length === 0) {
+                            body.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No active customer quotas found.</td></tr>`;
+                            return;
+                        }
+                        let html = '';
+                        data.quotas.forEach(q => {
+                            const total_pegs = parseInt(q.total_pegs);
+                            const bottles = Math.floor(total_pegs / 8);
+                            const pegs = total_pegs % 8;
+                            html += `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(q.user_name)}</strong><br>
+                                        <small class="text-muted">${escapeHtml(q.user_phone || q.user_email)}</small>
+                                    </td>
+                                    <td><span class="text-gold font-weight-bold">${escapeHtml(q.item_name)}</span></td>
+                                    <td class="text-center"><strong>${bottles}</strong></td>
+                                    <td class="text-center"><strong>${pegs}</strong></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0})">
+                                            <i class="fas fa-glass-water me-1"></i> Log Consume
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        body.innerHTML = html;
+                    } else {
+                        body.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">${escapeHtml(data.message)}</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    body.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Network error loading quotas.</td></tr>`;
+                });
+        }
+
+        function selectQuotaForConsume(customerName, hasQuota) {
+            document.getElementById('consume_search_term').value = customerName;
+            document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Verifying... --</option>';
+            document.getElementById('btn-admin-consume').disabled = true;
+            verifiedUserId = null;
+            
+            showToast(`Selected ${customerName}. Verifying active quota...`, 'info');
+            loadCustomerBrands(); // Auto load it!
+        }
+
+        function loadCustomerBrands() {
+            const searchTerm = document.getElementById('consume_search_term').value.trim();
+            const brandSelect = document.getElementById('consume_brand_id');
+
+            if (!searchTerm) {
+                showToast('Please enter a search term.', 'error');
+                return;
+            }
+
+            brandSelect.innerHTML = '<option value="">Verifying...</option>';
+            document.getElementById('btn-admin-consume').disabled = true;
+            verifiedUserId = null;
+
+            const formData = new FormData();
+            formData.append('search_term', searchTerm);
+
+            fetch('dashboardtest.php?action=verify_order_liquor', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    verifiedUserId = data.user_id;
+                    let html = '<option value="">-- Choose Brand --</option>';
+                    data.brands.forEach(b => {
+                        const total_pegs = parseInt(b.total_pegs || 0);
+                        html += `<option value="${b.food_item_id}">${escapeHtml(b.item_name)} (${total_pegs} pegs left)</option>`;
+                    });
+                    brandSelect.innerHTML = html;
+                    document.getElementById('btn-admin-consume').disabled = false;
+                    showToast('Customer verified successfully! Please select a brand to log peg consumption.', 'success');
+                } else {
+                    brandSelect.innerHTML = '<option value="">Verification Failed</option>';
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                brandSelect.innerHTML = '<option value="">Error verifying customer</option>';
+                showToast('Network error verifying customer.', 'error');
+            });
+        }
+
+        function adminConsumePeg(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('consume_search_term').value.trim();
+            const brandId = document.getElementById('consume_brand_id').value;
+            const btn = document.getElementById('btn-admin-consume');
+
+            if (!verifiedUserId || !brandId || !searchTerm) {
+                showToast('Please verify customer first.', 'error');
+                return;
+            }
+
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            const formData = new FormData();
+            formData.append('user_id', verifiedUserId);
+            formData.append('food_item_id', brandId);
+            formData.append('search_term', searchTerm);
+
+            fetch('dashboardtest.php?action=admin_consume_peg', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Reset form select & verify state
+                    document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Click Verify to load brands --</option>';
+                    document.getElementById('btn-admin-consume').disabled = true;
+                    verifiedUserId = null;
+                    document.getElementById('consumePegForm').reset();
+                    // Reload quotas list
+                    loadActiveQuotas();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Network error logging peg.', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            });
+        }
+
         // Initialize notification elements on DOM load
         document.addEventListener('DOMContentLoaded', () => {
             // Set sound switch state and icons
@@ -6677,6 +7101,54 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.body.classList.add('sidebar-collapsed');
  }
 });
+
+function printTableQR() {
+    const tableLabel = document.getElementById('qrTableLabel').innerText;
+    const qrContainer = document.getElementById('qrCodeContainer');
+    
+    // Some QR libraries generate a canvas, some generate an img, some generate both.
+    let imgSrc = '';
+    const canvasEl = qrContainer.querySelector('canvas');
+    const imgEl = qrContainer.querySelector('img');
+    
+    if (canvasEl) {
+        imgSrc = canvasEl.toDataURL("image/png");
+    } else if (imgEl && imgEl.src) {
+        imgSrc = imgEl.src;
+    }
+    
+    if (!imgSrc) {
+        alert("Please wait for the QR code to generate before printing.");
+        return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print QR - ${tableLabel}</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; text-align: center; margin-top: 50px; }
+                .title { font-size: 32px; font-weight: bold; margin-bottom: 5px; color: #161412; }
+                .subtitle { font-size: 16px; margin-bottom: 20px; color: #666; }
+                img { max-width: 350px; height: auto; }
+            </style>
+        </head>
+        <body>
+            <div class="title">${tableLabel}</div>
+            <div class="subtitle">Scan to land automatically on ordering menu</div>
+            <img src="${imgSrc}" />
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
 </script>
 </body>
 </html>

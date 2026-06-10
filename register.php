@@ -33,9 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'phone'      => $phone,
     ];
 
-    if (empty($firstName) || empty($email) || empty($phone) || empty($password) || empty($confirmPw)) {
+    if (empty($firstName) || empty($phone) || empty($password) || empty($confirmPw)) {
         $error = 'All required fields must be filled.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address format.';
     } elseif (!preg_match('/^[0-9]{10}$/', $phone)) {
         $error = 'Mobile number must be exactly 10 digits.';
@@ -48,17 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $goToStep2 = true;   // keep step 2 open on DB errors
         try {
-            $stmt = $pdo->prepare("SELECT id, is_active FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $existing_user = $stmt->fetch();
+            if (!empty($email)) {
+                $stmt = $pdo->prepare("SELECT id, is_active FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                $existing_user = $stmt->fetch();
 
-            if ($existing_user) {
-                if ($existing_user['is_active']) {
-                    $error     = 'An account with this email already exists. Please login.';
-                    $goToStep2 = false;
-                } else {
-                    $del = $pdo->prepare("DELETE FROM users WHERE id = ?");
-                    $del->execute([$existing_user['id']]);
+                if ($existing_user) {
+                    if ($existing_user['is_active']) {
+                        $error     = 'An account with this email already exists. Please login.';
+                        $goToStep2 = false;
+                    } else {
+                        $del = $pdo->prepare("DELETE FROM users WHERE id = ?");
+                        $del->execute([$existing_user['id']]);
+                    }
                 }
             }
 
@@ -72,20 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($error)) {
-                $emailOtp       = generateOTP();
+                $emailOtp       = !empty($email) ? generateOTP() : NULL;
                 $phoneOtp       = generateOTP();
                 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
                 $otpExpiresAt   = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                
+                $dbEmail = !empty($email) ? $email : NULL;
+                $isEmailVerified = empty($email) ? 1 : 0; // if no email, mark verified to bypass
 
                 $ins = $pdo->prepare("
                     INSERT INTO users
                     (full_name, email, phone, password, address, city, state, pincode,
                      email_otp, phone_otp, otp_expires_at,
                      is_email_verified, is_phone_verified, is_active, role)
-                    VALUES (?, ?, ?, ?, '', '', '', '', ?, ?, ?, 0, 0, 0, 'customer')
+                    VALUES (?, ?, ?, ?, '', '', '', '', ?, ?, ?, ?, 0, 0, 'customer')
                 ");
-                $ins->execute([$fullName, $email, $phone, $hashedPassword,
-                               $emailOtp, $phoneOtp, $otpExpiresAt]);
+                $ins->execute([$fullName, $dbEmail, $phone, $hashedPassword,
+                               $emailOtp, $phoneOtp, $otpExpiresAt, $isEmailVerified]);
 
                 $newUserId = $pdo->lastInsertId();
 
@@ -95,7 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['otp_verify_user_id'] = $newUserId;
                 $_SESSION['last_otp_sent_time']  = time();
 
-                sendOTPEmail($email, $fullName, $emailOtp);
+                if (!empty($email)) {
+                    sendOTPEmail($email, $fullName, $emailOtp);
+                }
                 sendOTPSMS($phone, $phoneOtp);
 
                 header('Location: verify_otp.php');
@@ -500,7 +507,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas fa-envelope input-icon"></i>
                         <input type="email" id="email" name="email"
                                class="input-field"
-                               placeholder="EMAIL ADDRESS"
+                               placeholder="EMAIL ADDRESS (Optional)"
                                value="<?php echo htmlspecialchars($form_data['email']); ?>"
                                autocomplete="email">
                     </div>
@@ -642,7 +649,7 @@ document.getElementById('nextBtn').addEventListener('click', () => {
 
     mark('w-first', !first);
     // last name is optional — no validation needed
-    mark('w-email', !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    mark('w-email', email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
     mark('w-phone', !phone || !/^[0-9]{10}$/.test(phone));
 
     if (!ok) {

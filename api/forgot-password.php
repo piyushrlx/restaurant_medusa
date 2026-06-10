@@ -13,21 +13,31 @@ $action = $_GET['action'] ?? '';
 try {
     // ── 1. SEND OTP ──
     if ($action === 'send_otp') {
-        $email = trim($data['email'] ?? '');
-        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode(['success' => false, 'message' => 'Please enter a valid email address.']);
+        $identifier = trim($data['email'] ?? '');
+        if (empty($identifier)) {
+            echo json_encode(['success' => false, 'message' => 'Please enter a valid email address or phone number.']);
+            exit;
+        }
+
+        $is_email = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+        $is_phone = preg_match('/^[0-9]{10,15}$/', preg_replace('/[^0-9]/', '', $identifier));
+
+        if (!$is_email && !$is_phone) {
+            echo json_encode(['success' => false, 'message' => 'Please enter a valid email address or phone number.']);
             exit;
         }
 
         // Check if user exists
-        $stmt = $pdo->prepare("SELECT id, full_name, is_active FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        if ($is_email) {
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, is_active FROM users WHERE email = ?");
+        } else {
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, is_active FROM users WHERE phone = ?");
+        }
+        $stmt->execute([$identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
-            // Return success anyway to prevent email enumeration attacks, but don't actually send
-            // Actually, for better UX, we can just say if it exists or not. Let's return error.
-            echo json_encode(['success' => false, 'message' => 'No account found with this email address.']);
+            echo json_encode(['success' => false, 'message' => 'No account found with this email or phone number.']);
             exit;
         }
         
@@ -52,26 +62,46 @@ try {
         $upd = $pdo->prepare("UPDATE users SET email_otp = ?, otp_expires_at = ? WHERE id = ?");
         $upd->execute([$otp, $expires, $user['id']]);
 
-        if (sendOTPEmail($email, $user['full_name'], $otp)) {
-            echo json_encode(['success' => true, 'message' => 'A 6-digit OTP has been sent to your email.']);
+        $sent_email = false;
+        $sent_sms = false;
+
+        if ($is_email || !empty($user['email'])) {
+            $sent_email = sendOTPEmail($user['email'], $user['full_name'], $otp);
+        }
+        if ($is_phone || !empty($user['phone'])) {
+            $sent_sms = sendOTPSMS($user['phone'], $otp);
+        }
+
+        if ($sent_email || $sent_sms) {
+            $msg = 'A 6-digit OTP has been sent to your ';
+            if ($sent_email && $sent_sms) $msg .= 'email and phone.';
+            else if ($sent_email) $msg .= 'email.';
+            else $msg .= 'phone.';
+            echo json_encode(['success' => true, 'message' => $msg]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to send OTP email. Please try again later.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to send OTP. Please try again later.']);
         }
         exit;
     }
 
     // ── 2. VERIFY OTP ──
     if ($action === 'verify_otp') {
-        $email = trim($data['email'] ?? '');
+        $identifier = trim($data['email'] ?? '');
         $otp = trim($data['otp'] ?? '');
 
-        if (empty($email) || empty($otp)) {
-            echo json_encode(['success' => false, 'message' => 'Email and OTP are required.']);
+        if (empty($identifier) || empty($otp)) {
+            echo json_encode(['success' => false, 'message' => 'Email/Phone and OTP are required.']);
             exit;
         }
 
-        $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        $is_email = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+
+        if ($is_email) {
+            $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE email = ?");
+        } else {
+            $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE phone = ?");
+        }
+        $stmt->execute([$identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user || empty($user['email_otp'])) {
@@ -90,7 +120,7 @@ try {
         }
 
         // OTP is valid. Set session token to allow password reset.
-        $_SESSION['password_reset_authorized_email'] = $email;
+        $_SESSION['password_reset_authorized_user'] = $user['id'];
 
         echo json_encode(['success' => true, 'message' => 'OTP verified successfully. You may now reset your password.']);
         exit;
@@ -100,9 +130,9 @@ try {
     if ($action === 'reset_password') {
         $password = $data['password'] ?? '';
         $confirm = $data['confirm_password'] ?? '';
-        $email = $_SESSION['password_reset_authorized_email'] ?? '';
+        $user_id = $_SESSION['password_reset_authorized_user'] ?? '';
 
-        if (empty($email)) {
+        if (empty($user_id)) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized request. Please verify your OTP first.']);
             exit;
         }
@@ -124,16 +154,16 @@ try {
 
         // Hash new password and update
         $hashed_pw = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare("UPDATE users SET password = ?, email_otp = NULL, otp_expires_at = NULL WHERE email = ?");
-        $stmt->execute([$hashed_pw, $email]);
+        $stmt = $pdo->prepare("UPDATE users SET password = ?, email_otp = NULL, otp_expires_at = NULL WHERE id = ?");
+        $stmt->execute([$hashed_pw, $user_id]);
 
         // Invalidate all other sessions (optional but good practice)
         $new_token = bin2hex(random_bytes(32));
-        $tok_stmt = $pdo->prepare("UPDATE users SET session_token = ? WHERE email = ?");
-        $tok_stmt->execute([$new_token, $email]);
+        $tok_stmt = $pdo->prepare("UPDATE users SET session_token = ? WHERE id = ?");
+        $tok_stmt->execute([$new_token, $user_id]);
 
         // Clear auth token
-        unset($_SESSION['password_reset_authorized_email']);
+        unset($_SESSION['password_reset_authorized_user']);
 
         echo json_encode(['success' => true, 'message' => 'Your password has been reset successfully! You can now log in.']);
         exit;
