@@ -174,6 +174,8 @@ if ($sms_provider === 'twilio') {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));
             curl_setopt($ch, CURLOPT_USERPWD, $twilio_sid . ':' . $twilio_token);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 
             $response = curl_exec($ch);
             $err = curl_error($ch);
@@ -226,9 +228,12 @@ if ($sms_provider === 'twilio') {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         
         $response = curl_exec($ch);
         $err = curl_error($ch);
+
         $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
@@ -305,11 +310,17 @@ if (isset($pdo)) {
         
         $db_order_id = $pdo->lastInsertId();
         
+        $pegs_to_add = 0;
         foreach ($cart_items as $item) {
-            $f_stmt = $pdo->prepare("SELECT id FROM food_items WHERE name = ?");
+            $f_stmt = $pdo->prepare("SELECT id, category FROM food_items WHERE name = ?");
             $f_stmt->execute([$item['name']]);
             $f_item = $f_stmt->fetch();
             $food_item_id = $f_item ? $f_item['id'] : null;
+            $category = $f_item ? $f_item['category'] : '';
+
+            if ($category && strtolower(trim($category)) === 'liquor') {
+                $pegs_to_add += 8 * intval($item['quantity'] ?? 1);
+            }
             
             $ins_item = $pdo->prepare("INSERT INTO order_items (order_id, food_item_id, item_name, quantity, price) VALUES (?, ?, ?, ?, ?)");
             $ins_item->execute([
@@ -319,6 +330,11 @@ if (isset($pdo)) {
                 $item['quantity'] ?? 1,
                 $item['price'] ?? 0.00
             ]);
+        }
+
+        if ($db_user_id && $pegs_to_add > 0) {
+            $upd_quota = $pdo->prepare("UPDATE users SET liquor_quota_pegs = liquor_quota_pegs + ? WHERE id = ?");
+            $upd_quota->execute([$pegs_to_add, $db_user_id]);
         }
         
         // 3. Save or update customer address if requested
@@ -377,6 +393,24 @@ if (isset($pdo)) {
         // If coupon is valid, redeem it inside the transaction!
         if ($coupon_valid && $coupon_entity) {
             $couponService->redeemCoupon($coupon_code, $db_order_id);
+        }
+
+        // Trigger notification triggers for admin panel
+        require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+        
+        // 1. Order notification
+        $order_notif_body = "Order {$order_id} has been placed by {$customer_name} via {$payment_method}. Total amount: ₹" . number_format($total, 2);
+        addNotification('order', 'New Order Received', $order_notif_body);
+
+        // 2. Payment notification
+        $payment_notif_body = "Payment of ₹" . number_format($total, 2) . " processed successfully for order {$order_id}.";
+        addNotification('payment', 'Payment Successful', $payment_notif_body);
+
+        // 3. Kitchen notification (special requests)
+        $special_req = trim($message ?? '');
+        if (!empty($special_req)) {
+            $kitchen_notif_body = "Special request added for order {$order_id}: \"{$special_req}\"";
+            addNotification('kitchen', 'Special Request Added', $kitchen_notif_body);
         }
 
         $pdo->commit();

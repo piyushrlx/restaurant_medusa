@@ -1099,40 +1099,5 @@
         "sms_status": "error",
         "sms_response": "{\"message\":\"cURL Error: Failed to connect to 192.168.1.13 port 8080: Timed out\"}",
         "created_at": "2026-05-29 11:03:20"
-    },
-    "ORD-D6FBD": {
-        "order_id": "ORD-D6FBD",
-        "customer_name": "Test Customer",
-        "customer_phone": "7814585430",
-        "customer_email": "customer@example.com",
-        "delivery_address": "#1300 morigate manimajra, Chandigarh, Delhi - 160101, India",
-        "message": "",
-        "payment_id": "pay_SxYLfhpAHCt5X4",
-        "cart_items": [
-            {
-                "id": 8,
-                "food_item_id": 8,
-                "quantity": 1,
-                "name": "Margherita Pizza",
-                "price": 350,
-                "image_url": "https:\/\/images.unsplash.com\/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop"
-            },
-            {
-                "id": 25,
-                "food_item_id": 25,
-                "quantity": 2,
-                "name": "Tiramisu",
-                "price": 320,
-                "image_url": "https:\/\/images.unsplash.com\/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop"
-            }
-        ],
-        "subtotal": 990,
-        "gst": 178.2,
-        "delivery": 40,
-        "total": 1208.2,
-        "status": "Paid",
-        "sms_status": "error",
-        "sms_response": "{\"message\":\"cURL Error: Failed to connect to 100.118.116.62 port 8080 after 21037 ms: Couldn't connect to server\"}",
-        "created_at": "2026-06-04 14:24:50"
     }
 }

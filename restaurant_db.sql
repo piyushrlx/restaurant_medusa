@@ -14,12 +14,20 @@ USE `restaurant_db`;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `phone` varchar(15) DEFAULT NULL,
   `role` enum('customer','admin') DEFAULT 'customer',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `session_token` varchar(64) NULL DEFAULT NULL,
+  `current_tier_id` int(11) NULL DEFAULT NULL,
+  `address` text NULL DEFAULT NULL,
+  `city` varchar(100) NULL DEFAULT NULL,
+  `state` varchar(100) NULL DEFAULT NULL,
+  `pincode` varchar(20) NULL DEFAULT NULL,
+  `last_inactivity_email_sent` date NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -31,7 +39,7 @@ CREATE TABLE `users` (
 -- Customer: customer@example.com / customer123
 -- Piyush: piyush@example.com / customer123
 -- --------------------------------------------------------
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `phone`, `role`) VALUES
+INSERT INTO `users` (`id`, `full_name`, `email`, `password`, `phone`, `role`) VALUES
 (1, 'System Admin', 'admin@example.com', '$2y$10$rRRN5vJIWZltYTywQAgxReBWCWazX1HeadB7ktTjAdxGceY8QJQoG', '9876543210', 'admin'),
 (2, 'Test Customer', 'customer@example.com', '$2y$10$hdslkG6tN7/j4ja6N63Js.3ImHeNwDwYZ0T5eAhBiqIq7MrGVWHYa', '9876543211', 'customer'),
 (3, 'Piyush Sharma', 'piyush@example.com', '$2y$10$hdslkG6tN7/j4ja6N63Js.3ImHeNwDwYZ0T5eAhBiqIq7MrGVWHYa', '9876543212', 'customer');

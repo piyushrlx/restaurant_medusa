@@ -226,6 +226,67 @@
             border: 1px solid rgba(223,186,134,0.22);
             margin-bottom: 0.4rem;
         }
+
+        /* ============================================================
+           CATEGORY PILLS STYLES
+        ============================================================ */
+        .category-selector-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 10px 0;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+        .category-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 20px;
+            justify-content: flex-start;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(223, 186, 134, 0.2) transparent;
+        }
+        .category-scroll::-webkit-scrollbar {
+            height: 5px;
+        }
+        .category-scroll::-webkit-scrollbar-thumb {
+            background: rgba(223, 186, 134, 0.25);
+            border-radius: 10px;
+        }
+        .category-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(223, 186, 134, 0.45);
+        }
+        .category-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+        .category-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(223, 186, 134, 0.18);
+            color: var(--gray);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            user-select: none;
+            backdrop-filter: blur(5px);
+        }
+        .category-pill:hover {
+            border-color: var(--gold);
+            color: #ffffff;
+            background: rgba(223, 186, 134, 0.05);
+            transform: translateY(-2px);
+        }
+        .category-pill.active {
+            background: linear-gradient(135deg, var(--gold) 0%, #c89640 100%);
+            color: #0c0a0a;
+            border-color: var(--gold);
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(223, 186, 134, 0.25);
+        }
     </style>
 </head>
 
@@ -234,25 +295,80 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="indextest.html" style="display:flex;align-items:center;gap:8px;">
+            <a class="navbar-brand" id="navBrand" href="indextest.html" style="display:flex;align-items:center;gap:8px;">
                 <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height:32px;border-radius:50%;border:1px solid var(--gold);padding:1px;">
                 Medusa
             </a>
-            <div class="d-flex gap-2">
-                <a href="#" onclick="history.back(); return false;" class="btn btn-outline-light btn-sm" title="Back"><i class="fas fa-arrow-left"></i></a>
-                <a href="menutest.html" class="btn btn-outline-light btn-sm">Menu</a>
-                <a href="carttest.html" class="btn btn-outline-light btn-sm">Cart (<span id="cartCount">0</span>)</a>
-                <a href="my-orders.php" class="btn btn-outline-light btn-sm">My Orders</a>
-                <a href="api/logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+            <div class="d-flex gap-2" id="navLinksContainer">
+                <a href="#" id="navBack" onclick="history.back(); return false;" class="btn btn-outline-light btn-sm" title="Back"><i class="fas fa-arrow-left"></i></a>
+                <a href="menutest.html" id="navMenu" class="btn btn-outline-light btn-sm">Menu</a>
+                <a href="carttest.html" id="navCart" class="btn btn-outline-light btn-sm">Cart (<span id="cartCount">0</span>)</a>
+                <a href="#" id="navBill" class="btn btn-gold-action btn-sm" style="display:none;"><i class="fas fa-receipt"></i> View Bill</a>
+                <a href="my-account.php" id="navAccount" class="btn btn-outline-light btn-sm">My Account</a>
+                <a href="api/logout.php" id="navLogout" class="btn btn-outline-light btn-sm">Logout</a>
             </div>
         </div>
     </nav>
+    <script>
+        // QR Code Dine-In Mode Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tableCode = params.get('table');
+            if (tableCode) {
+                // We are in QR Code Mode!
+                document.getElementById('navBrand').href = '#';
+                document.getElementById('navBack').style.display = 'none';
+                document.getElementById('navAccount').style.display = 'none';
+                document.getElementById('navLogout').style.display = 'none';
+                
+                // Append table parameter to Menu and Cart links
+                document.getElementById('navMenu').href = 'menutest.html?table=' + tableCode;
+                document.getElementById('navCart').href = 'carttest.html?table=' + tableCode;
+                
+                // Show 'View Bill' which links to the cart or checkout where table bill is shown
+                const navBill = document.getElementById('navBill');
+                navBill.style.display = 'inline-block';
+                // Assuming carttest handles table bills or you can direct them to checkout
+                navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
+                
+                // Add a welcome message
+                const titleEl = document.querySelector('.section-title');
+                if (titleEl) {
+                    titleEl.innerHTML = `Welcome to Medusa <br><small class="text-gold" style="font-size:0.5em;">Table ${tableCode} Menu</small>`;
+                }
+            }
+        });
+    </script>
 
 
     <!-- PAGE TITLE -->
     <section class="py-5">
         <div class="container">
             <h1 class="section-title fade-up">Explore Our Premium Menu</h1>
+
+            <!-- CATEGORY FILTER -->
+            <div class="category-selector-container fade-up">
+                <div class="category-scroll">
+                    <button class="category-pill active" onclick="filterCategory('All')">All</button>
+                    <button class="category-pill" onclick="filterCategory('Liquor')">Liquor</button>
+                    <button class="category-pill" onclick="filterCategory('Soups')">Soups</button>
+                    <button class="category-pill" onclick="filterCategory('Salad')">Salad</button>
+                    <button class="category-pill" onclick="filterCategory('Bread Basket')">Bread Basket</button>
+                    <button class="category-pill" onclick="filterCategory('Sides')">Sides</button>
+                    <button class="category-pill" onclick="filterCategory('Meals in the Bowl')">Meals in the Bowl</button>
+                    <button class="category-pill" onclick="filterCategory('Main Course')">Main Course</button>
+                    <button class="category-pill" onclick="filterCategory('Choice of Noodle')">Choice of Noodle</button>
+                    <button class="category-pill" onclick="filterCategory('Choice of Rice')">Choice of Rice</button>
+                    <button class="category-pill" onclick="filterCategory('Choice of Gravy')">Choice of Gravy</button>
+                    <button class="category-pill" onclick="filterCategory('Dim Sum Cart')">Dim Sum Cart</button>
+                    <button class="category-pill" onclick="filterCategory('Sushi Rolls')">Sushi Rolls</button>
+                    <button class="category-pill" onclick="filterCategory('Burgers & Sandwiches')">Burgers & Sandwiches</button>
+                    <button class="category-pill" onclick="filterCategory('Sharing Boards')">Sharing Boards</button>
+                    <button class="category-pill" onclick="filterCategory('Brick Oven Pizza')">Brick Oven Pizza</button>
+                    <button class="category-pill" onclick="filterCategory('Non-Veg Appetizer')">Non-Veg Appetizer</button>
+                </div>
+            </div>
+
             <div class="row" id="menuContainer">
                 <div class="col-12 text-center">
                     <div class="spinner-border text-light"></div>
@@ -329,11 +445,11 @@
             } catch (err) {
                 console.warn('API failed, using fallback mock data.', err);
                 allMenuItems = [
-                    { id:1, name:'Margherita Pizza',  description:'Fresh mozzarella, tomato sauce, basil',           price:'299.00', image_url:'', customizations:[] },
-                    { id:2, name:'Butter Chicken',    description:'Creamy tomato curry with tender chicken',          price:'349.00', image_url:'', customizations:[] },
-                    { id:3, name:'Veg Biryani',        description:'Aromatic rice with vegetables and spices',         price:'249.00', image_url:'', customizations:[] },
-                    { id:4, name:'Gulab Jamun',        description:'Sweet milk dumplings in warm cardamom syrup',      price:'129.00', image_url:'', customizations:[] },
-                    { id:5, name:'Paneer Tikka',       description:'Marinated cottage cheese grilled to perfection',   price:'279.00', image_url:'', customizations:[] }
+                    { id:1, name:'Margherita Pizza',  description:'Fresh mozzarella, tomato sauce, basil',           price:'299.00', image_url:'', category:'Brick Oven Pizza', customizations:[] },
+                    { id:2, name:'Butter Chicken',    description:'Creamy tomato curry with tender chicken',          price:'349.00', image_url:'', category:'Main Course', customizations:[] },
+                    { id:3, name:'Veg Biryani',        description:'Aromatic rice with vegetables and spices',         price:'249.00', image_url:'', category:'Main Course', customizations:[] },
+                    { id:4, name:'Gulab Jamun',        description:'Sweet milk dumplings in warm cardamom syrup',      price:'129.00', image_url:'', category:'Sides', customizations:[] },
+                    { id:5, name:'Paneer Tikka',       description:'Marinated cottage cheese grilled to perfection',   price:'279.00', image_url:'', category:'Non-Veg Appetizer', customizations:[] }
                 ];
                 displayMenuItems(allMenuItems);
                 updateCartCount();
@@ -345,6 +461,14 @@
         ============================================================ */
         function displayMenuItems(items) {
             const container = document.getElementById('menuContainer');
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                <div class="col-12 text-center py-5 fade-up">
+                    <i class="fas fa-utensils text-muted mb-3" style="font-size: 3rem; color: var(--gold) !important; opacity: 0.6;"></i>
+                    <p class="text-muted" style="font-size: 1.1rem; font-family: 'Playfair Display', serif;">No dishes available in this category.</p>
+                </div>`;
+                return;
+            }
             container.innerHTML = items.map(item => {
                 let imgSrc = item.image_url || '';
                 if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
@@ -580,10 +704,15 @@
                     body: JSON.stringify({ food_item_id: id, quantity: 1, customizations, custom_price: finalPrice })
                 });
                 if (res.status === 401) {
-                    alert('Please login first to add items to cart.', () => {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('table')) {
+                        // In QR Code Mode, bypass login and throw an error to use local cart fallback
+                        throw new Error('Guest mode, using local cart');
+                    } else {
+                        alert('Please login first to add items to cart.');
                         window.location.href = 'login.html';
-                    });
-                    return;
+                        return;
+                    }
                 }
                 const result = await res.json();
                 if (result.success) {
@@ -703,12 +832,48 @@
         }
 
         /* ============================================================
+           FILTER BY CATEGORY
+        ============================================================ */
+        let activeCategory = 'All';
+        function filterCategory(categoryName) {
+            activeCategory = categoryName;
+            
+            // Update active pill styling
+            const pills = document.querySelectorAll('.category-pill');
+            pills.forEach(pill => {
+                const text = pill.textContent.trim();
+                if (text.toLowerCase() === categoryName.toLowerCase()) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+
+            // Filter menu items
+            if (categoryName === 'All') {
+                displayMenuItems(allMenuItems);
+            } else {
+                const filtered = allMenuItems.filter(item => {
+                    const itemCat = item.category ? item.category.trim().toLowerCase() : '';
+                    const filterCat = categoryName.trim().toLowerCase();
+                    return itemCat === filterCat;
+                });
+                displayMenuItems(filtered);
+            }
+        }
+
+        /* ============================================================
            INIT
         ============================================================ */
         const urlParams = new URLSearchParams(window.location.search);
         const tableNum  = urlParams.get('table');
         if (tableNum) localStorage.setItem('table_number', tableNum);
-        loadMenu();
+        loadMenu().then(() => {
+            const cat = urlParams.get('category');
+            if (cat) {
+                filterCategory(cat);
+            }
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

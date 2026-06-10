@@ -176,10 +176,18 @@ $settings = [
     'restaurant_name' => 'Medusa',
     'gst_rate' => 18,
     'packing_charge' => 0.00,
-    'opening_hours' => '11:00 AM - 11:00 PM'
+    'opening_hours' => '11:00 AM - 11:00 PM',
+    'silver_discount' => 10.00,
+    'gold_discount' => 15.00,
+    'platinum_discount' => 20.00,
+    'gold_threshold' => 25000.00,
+    'platinum_threshold' => 75000.00,
+    'points_earning_percent' => 2.00,
+    'inactivity_months' => 3,
+    'inactivity_deduction_percent' => 20.00,
 ];
 if (file_exists($settings_file)) {
-    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
+    $settings = array_merge($settings, json_decode(file_get_contents($settings_file), true) ?: []);
 }
 
 // 3. API Handlers
@@ -187,6 +195,195 @@ if (isset($_REQUEST['action'])) {
     header('Content-Type: application/json');
     $action = $_REQUEST['action'];
     
+    // Get all active user quotas action
+    if ($action === 'load_active_quotas') {
+        try {
+            $stmt = $pdo->query("
+                SELECT q.*, u.full_name as user_name, u.email as user_email, u.phone as user_phone 
+                FROM user_liquor_quota q 
+                JOIN users u ON q.user_id = u.id 
+                ORDER BY u.full_name ASC, q.item_name ASC
+            ");
+            $quotas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'quotas' => $quotas]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Verify customer to load active liquor brands
+    if ($action === 'verify_order_liquor') {
+        $search_term = trim($_POST['search_term'] ?? '');
+        // strip # from search term if they copy-pasted #ORD-XXX
+        $clean_term = ltrim($search_term, '#');
+
+        if (empty($clean_term)) {
+            echo json_encode(['success' => false, 'message' => 'Please provide a search term.']);
+            exit;
+        }
+
+        try {
+            $user_id = null;
+            // 1. Check if it's an order number
+            $stmt = $pdo->prepare("SELECT user_id FROM orders WHERE order_number = ?");
+            $stmt->execute([$clean_term]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($order && !empty($order['user_id'])) {
+                $user_id = $order['user_id'];
+            } else {
+                // 2. Check if it matches phone, email, or exact name
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? OR email = ? OR full_name = ?");
+                $stmt->execute([$clean_term, $clean_term, $clean_term]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($user) {
+                    $user_id = $user['id'];
+                } else {
+                    // 3. Fallback: Check if it's a partial name
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE full_name LIKE ? LIMIT 1");
+                    $stmt->execute(['%' . $clean_term . '%']);
+                    $user_partial = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($user_partial) {
+                        $user_id = $user_partial['id'];
+                    }
+                }
+            }
+
+            if (!$user_id) {
+                echo json_encode(['success' => false, 'message' => 'Customer not found. Please check the spelling or Order ID.']);
+                exit;
+            }
+
+            // Find ALL active liquor quota for this user
+            $stmt_items = $pdo->prepare("
+                SELECT food_item_id, item_name, total_pegs 
+                FROM user_liquor_quota
+                WHERE user_id = ? AND total_pegs > 0
+            ");
+            $stmt_items->execute([$user_id]);
+            $brands = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($brands)) {
+                echo json_encode(['success' => false, 'message' => 'This customer has no active liquor pegs left.']);
+                exit;
+            }
+
+            echo json_encode(['success' => true, 'user_id' => $user_id, 'brands' => $brands]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Admin consume peg action
+    if ($action === 'admin_consume_peg') {
+        $user_id = intval($_POST['user_id'] ?? 0);
+        $food_item_id = intval($_POST['food_item_id'] ?? 0);
+        $search_term = trim($_POST['search_term'] ?? '');
+
+        if ($user_id <= 0 || $food_item_id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid parameters. Please verify first.']);
+            exit;
+        }
+
+        try {
+            // Fetch current quota
+            $stmt = $pdo->prepare("SELECT total_pegs, item_name FROM user_liquor_quota WHERE user_id = ? AND food_item_id = ?");
+            $stmt->execute([$user_id, $food_item_id]);
+            $quota = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$quota) {
+                echo json_encode(['success' => false, 'message' => 'No active quota found for this liquor brand.']);
+                exit;
+            }
+
+            $current_pegs = intval($quota['total_pegs']);
+            if ($current_pegs <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Peg quota is already fully consumed (0 pegs left) for ' . $quota['item_name'] . '.']);
+                exit;
+            }
+
+            $new_pegs = $current_pegs - 1;
+
+            // Fetch user full name for notification
+            $stmt_user = $pdo->prepare("SELECT full_name FROM users WHERE id = ?");
+            $stmt_user->execute([$user_id]);
+            $user_info = $stmt_user->fetch(PDO::FETCH_ASSOC);
+            $user_name = $user_info ? $user_info['full_name'] : 'Customer';
+
+            // Start transaction
+            $pdo->beginTransaction();
+
+            // 1. Decrement user_liquor_quota
+            $upd = $pdo->prepare("UPDATE user_liquor_quota SET total_pegs = ? WHERE user_id = ? AND food_item_id = ?");
+            $upd->execute([$new_pegs, $user_id, $food_item_id]);
+
+            // 2. Decrement general quota in users table
+            $upd_user = $pdo->prepare("UPDATE users SET liquor_quota_pegs = GREATEST(0, liquor_quota_pegs - 1) WHERE id = ?");
+            $upd_user->execute([$user_id]);
+
+            // 3. Add system notification of consumption
+            $notif_title = "Peg Consumed";
+            $notif_body = "1 peg of " . $quota['item_name'] . " logged for " . $user_name . " (Verified via: " . $search_term . "). Remaining brand quota: " . $new_pegs . " pegs.";
+            
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (title, body) VALUES (?, ?)");
+            $stmt_notif->execute([$notif_title, $notif_body]);
+
+            $pdo->commit();
+
+            echo json_encode(['success' => true, 'message' => 'Successfully logged 1 peg for ' . $user_name . '. ' . $new_pegs . ' pegs remaining.']);
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    // Upload Dish Image Action
+    if ($action === 'upload_dish_image') {
+        if (!isset($_FILES['dish_image']) || $_FILES['dish_image']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'message' => 'No file uploaded or error during upload. Code: ' . ($_FILES['dish_image']['error'] ?? 'none')]);
+            exit;
+        }
+        
+        $file = $_FILES['dish_image'];
+        $fileName = $file['name'];
+        $fileTmpName = $file['tmp_name'];
+        $fileSize = $file['size'];
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed_extensions)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid file extension. Only JPG, JPEG, PNG, WEBP, and GIF are allowed.']);
+            exit;
+        }
+        
+        if ($fileSize > 5 * 1024 * 1024) {
+            echo json_encode(['success' => false, 'message' => 'File size is too large (maximum 5MB).']);
+            exit;
+        }
+        
+        $uploadDir = dirname(__DIR__) . '/uploads/menu/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $newFileName = uniqid('dish_', true) . '.' . $ext;
+        $destPath = $uploadDir . $newFileName;
+        
+        if (move_uploaded_file($fileTmpName, $destPath)) {
+            $relativeUrl = 'uploads/menu/' . $newFileName;
+            echo json_encode(['success' => true, 'image_url' => $relativeUrl]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to write file to disk. Check directory permissions.']);
+        }
+        exit;
+    }
+
     // Search Orders Endpoint
     if ($action === 'search_orders') {
         $sql = "SELECT *, (SELECT rating FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS rating, (SELECT review FROM feedback WHERE order_number = orders.order_number LIMIT 1) AS review FROM orders WHERE 1=1";
@@ -268,6 +465,11 @@ if (isset($_REQUEST['action'])) {
             $sql .= " AND (name LIKE ? OR category LIKE ? OR description LIKE ?)";
             $wildcard = "%" . $_POST['search'] . "%";
             $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard;
+        }
+        
+        if (!empty($_POST['category']) && $_POST['category'] !== 'all') {
+            $sql .= " AND category = ?";
+            $params[] = $_POST['category'];
         }
         
         if (isset($_POST['availability']) && $_POST['availability'] !== 'all') {
@@ -672,6 +874,45 @@ if (isset($_REQUEST['action'])) {
         $stmt = $pdo->prepare("UPDATE orders SET order_status = ? WHERE id = ?");
         $stmt->execute([$status, $order_id]);
         
+        // Fetch order details for notification
+        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address FROM orders WHERE id = ?");
+        $o_stmt->execute([$order_id]);
+        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
+        if ($ord_info) {
+            require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+            
+            // Admin Notifications
+            if ($status === 'completed') {
+                addNotification('order', 'Order Completed', "Order {$ord_info['order_number']} for {$ord_info['customer_name']} (₹" . number_format($ord_info['total_amount'], 2) . ") is completed.");
+            } elseif ($status === 'cancelled') {
+                addNotification('order', 'Order Cancelled', "Order {$ord_info['order_number']} for {$ord_info['customer_name']} has been cancelled.");
+            } elseif ($status === 'preparing') {
+                addNotification('kitchen', 'Order In Prep', "Order {$ord_info['order_number']} is now being prepared in the kitchen.");
+            }
+            
+            // Customer Notifications
+            $c_user_id = $ord_info['user_id'];
+            if ($c_user_id) {
+                $is_delivery = (stripos($ord_info['delivery_address'] ?? '', 'table') === false);
+                if ($is_delivery) {
+                    $cust_title = '';
+                    $cust_msg = '';
+                    if ($status === 'ready') {
+                        $cust_title = 'Order Arriving';
+                        $cust_msg = "Your order #{$ord_info['order_number']} is out for delivery and arriving soon.";
+                    } elseif ($status === 'completed') {
+                        $cust_title = 'Order Delivered';
+                        $cust_msg = "Your order #{$ord_info['order_number']} has been successfully delivered. Enjoy your meal!";
+                    }
+                    
+                    if ($cust_title) {
+                        $ins_cust_notif = $pdo->prepare("INSERT INTO user_notifications (user_id, title, message) VALUES (?, ?, ?)");
+                        $ins_cust_notif->execute([$c_user_id, $cust_title, $cust_msg]);
+                    }
+                }
+            }
+        }
+        
         echo json_encode(['success' => true]);
         exit;
     }
@@ -679,10 +920,20 @@ if (isset($_REQUEST['action'])) {
     // Toggle Menu Item Availability
     if ($action === 'toggle_menu_item') {
         $item_id = $_POST['id'];
-        $val = $_POST['val'];
+        $val = intval($_POST['val']);
         
         $stmt = $pdo->prepare("UPDATE food_items SET is_available = ? WHERE id = ?");
         $stmt->execute([$val, $item_id]);
+        
+        if ($val === 0) {
+            $f_stmt = $pdo->prepare("SELECT name FROM food_items WHERE id = ?");
+            $f_stmt->execute([$item_id]);
+            $item_name = $f_stmt->fetchColumn();
+            if ($item_name) {
+                require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+                addNotification('kitchen', 'Item Out of Stock', "Food item \"{$item_name}\" has been marked as Out of Stock.");
+            }
+        }
         
         echo json_encode(['success' => true]);
         exit;
@@ -738,6 +989,18 @@ if (isset($_REQUEST['action'])) {
         $stmt = $pdo->prepare("UPDATE orders SET order_status = 'completed', delivery_address = CONCAT(delivery_address, ' [Paid via ', ?, ']') WHERE id = ?");
         $stmt->execute([strtoupper($payment_method), $order_id]);
         
+        // Fetch order details for notification
+        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount FROM orders WHERE id = ?");
+        $o_stmt->execute([$order_id]);
+        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
+        if ($ord_info) {
+            require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+            // Order completed notification
+            addNotification('order', 'Order Completed', "Dine-in order {$ord_info['order_number']} for {$ord_info['customer_name']} is settled.");
+            // Payment notification
+            addNotification('payment', 'Payment Successful', "Payment of ₹" . number_format($ord_info['total_amount'], 2) . " received via " . strtoupper($payment_method) . " for order {$ord_info['order_number']}.");
+        }
+        
         echo json_encode(['success' => true]);
         exit;
     }
@@ -788,12 +1051,38 @@ if (isset($_REQUEST['action'])) {
     // Save Settings
     if ($action === 'save_settings') {
         $settings = [
-            'restaurant_name' => $_POST['restaurant_name'],
-            'gst_rate' => intval($_POST['gst_rate']),
-            'packing_charge' => floatval($_POST['packing_charge']),
-            'opening_hours' => $_POST['opening_hours']
+            'restaurant_name' => $_POST['restaurant_name'] ?? 'Medusa',
+            'gst_rate' => intval($_POST['gst_rate'] ?? 18),
+            'packing_charge' => floatval($_POST['packing_charge'] ?? 0.00),
+            'opening_hours' => $_POST['opening_hours'] ?? '11:00 AM - 11:00 PM',
+            'silver_discount' => floatval($_POST['silver_discount'] ?? 10.00),
+            'gold_discount' => floatval($_POST['gold_discount'] ?? 15.00),
+            'platinum_discount' => floatval($_POST['platinum_discount'] ?? 20.00),
+            'gold_threshold' => floatval($_POST['gold_threshold'] ?? 25000.00),
+            'platinum_threshold' => floatval($_POST['platinum_threshold'] ?? 75000.00),
+            'points_earning_percent' => floatval($_POST['points_earning_percent'] ?? 2.00),
+            'inactivity_months' => intval($_POST['inactivity_months'] ?? 3),
+            'inactivity_deduction_percent' => floatval($_POST['inactivity_deduction_percent'] ?? 20.00),
         ];
         file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT));
+
+        // Sync to customer_tiers table
+        try {
+            // Update Silver (ID 1)
+            $stmt1 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, points_earning_percent = ? WHERE id = 1");
+            $stmt1->execute([$settings['silver_discount'], $settings['points_earning_percent']]);
+
+            // Update Gold (ID 2)
+            $stmt2 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 2");
+            $stmt2->execute([$settings['gold_discount'], $settings['gold_threshold'], $settings['points_earning_percent']]);
+
+            // Update Platinum (ID 3)
+            $stmt3 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 3");
+            $stmt3->execute([$settings['platinum_discount'], $settings['platinum_threshold'], $settings['points_earning_percent']]);
+        } catch (PDOException $db_err) {
+            // Fail silently or log
+        }
+
         echo json_encode(['success' => true]);
         exit;
     }
@@ -1962,20 +2251,489 @@ html:not(.light-mode) .form-select:focus{
     border-color: rgba(223, 186, 134, 0.2);
     background: rgba(223, 186, 134, 0.05);
 }
-.btn-action-circle-light:hover {
-    background: var(--gold);
-    color: #0b0a09 !important;
-    box-shadow: 0 4px 12px rgba(223, 186, 134, 0.25);
-}
 
+        /* --- Notification Bell & Badge --- */
+        .notification-dropdown-wrapper {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ef4444;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid var(--bg-secondary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: pulseBadge 2s infinite;
+        }
+
+        @keyframes pulseBadge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+        }
+
+        .bell-bounce {
+            animation: bellRing 0.8s ease-in-out;
+        }
+
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0); }
+            15% { transform: rotate(25deg); }
+            30% { transform: rotate(-20deg); }
+            45% { transform: rotate(15deg); }
+            60% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        /* --- Dropdown Menu --- */
+        .notification-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 360px;
+            background: rgba(18, 17, 17, 0.95);
+            border: 1px solid rgba(223, 186, 134, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1100;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transform-origin: top right;
+            animation: dropdownScale 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        .notification-dropdown-menu.show {
+            display: flex;
+        }
+
+        @keyframes dropdownScale {
+            from { transform: scale(0.9) translateY(-10px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .dropdown-header-premium {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.15rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        .mark-all-read-btn {
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mark-all-read-btn:hover {
+            color: var(--gold-light);
+            text-decoration: underline;
+        }
+
+        .dropdown-notification-list {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .dropdown-footer-premium {
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .dropdown-footer-premium a {
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dropdown-footer-premium a:hover {
+            color: var(--gold-light);
+            text-decoration: underline;
+        }
+
+        /* --- Notification Item --- */
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .notification-item.unread {
+            background: rgba(223, 186, 134, 0.03);
+            border-left: 3px solid var(--gold);
+        }
+
+        .notif-icon-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* Type Colors */
+        .notif-order { background: rgba(223, 186, 134, 0.1); color: var(--gold); border: 1px solid rgba(223, 186, 134, 0.2); }
+        .notif-payment { background: rgba(46, 196, 182, 0.1); color: #2ec4b6; border: 1px solid rgba(46, 196, 182, 0.2); }
+        .notif-kitchen { background: rgba(253, 150, 68, 0.1); color: #fd9644; border: 1px solid rgba(253, 150, 68, 0.2); }
+        .notif-reservation { background: rgba(0, 210, 211, 0.1); color: #00d2d3; border: 1px solid rgba(0, 210, 211, 0.2); }
+        .notif-staff { background: rgba(165, 94, 234, 0.1); color: #a55eea; border: 1px solid rgba(165, 94, 234, 0.2); }
+        .notif-system { background: rgba(235, 94, 85, 0.1); color: #eb5e55; border: 1px solid rgba(235, 94, 85, 0.2); }
+
+        .notif-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-grow: 1;
+        }
+
+        .notif-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .notif-title-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #ffffff;
+        }
+
+        .notif-time {
+            font-size: 0.72rem;
+            color: var(--gray);
+        }
+
+        .notif-body-text {
+            font-size: 0.78rem;
+            color: var(--gray);
+            line-height: 1.4;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notif-unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            position: absolute;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            box-shadow: 0 0 6px var(--gold);
+        }
+
+        /* --- Toasts System --- */
+        .toast-container-medusa {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 360px;
+            width: 90%;
+            pointer-events: none;
+        }
+
+        .toast-medusa {
+            background: rgba(18, 17, 17, 0.95);
+            border: 1px solid rgba(223, 186, 134, 0.15);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            pointer-events: auto;
+            transform: translateY(30px);
+            opacity: 0;
+            animation: slideInToast 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        @keyframes slideInToast {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .toast-medusa.fade-out {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        .toast-medusa-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .toast-medusa-content {
+            flex-grow: 1;
+        }
+
+        .toast-medusa-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .toast-medusa-body {
+            font-size: 0.78rem;
+            color: var(--gray);
+            margin: 0;
+            line-height: 1.35;
+        }
+
+        .toast-medusa-close {
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .toast-medusa-close:hover {
+            color: #ffffff;
+        }
+
+        /* --- Empty State Styles --- */
+        .notif-empty-state {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            color: var(--gray);
+        }
+
+        .notif-empty-icon {
+            font-size: 2.5rem;
+            color: rgba(223, 186, 134, 0.15);
+            margin-bottom: 1rem;
+        }
+
+        .notif-empty-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .notif-empty-desc {
+            font-size: 0.78rem;
+            margin: 0;
+        }
+
+        /* --- Filters & Badges on Center Page --- */
+        .notif-filter-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--gray);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .notif-filter-btn:hover {
+            border-color: rgba(223, 186, 134, 0.3);
+            color: #ffffff;
+        }
+
+        .notif-filter-btn.active {
+            background: rgba(223, 186, 134, 0.08);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Read state for row */
+        .notif-row.read-row {
+            opacity: 0.72;
+        }
+        .notif-row.unread-row {
+            background: rgba(223, 186, 134, 0.015);
+        }
+
+        /* Sound Control Switch */
+        .sound-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--gray);
+        }
+
+        /* Light Mode Visible Overrides */
+        html.light-mode .notification-dropdown-menu {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(223, 186, 134, 0.35);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        html.light-mode .dropdown-header-premium, 
+        html.light-mode .notif-title-text,
+        html.light-mode .notif-empty-title {
+            color: #0f172a;
+        }
+        html.light-mode .toast-medusa {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(223, 186, 134, 0.35);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        html.light-mode .toast-medusa-title {
+            color: #0f172a;
+        }
+        html.light-mode .notification-item.unread {
+            background: rgba(223, 186, 134, 0.05);
+        }
+        html.light-mode .notif-filter-btn {
+            background: rgba(0,0,0,0.02);
+            border-color: rgba(0,0,0,0.08);
+        }
+        html.light-mode .notif-filter-btn.active {
+            background: rgba(223, 186, 134, 0.1);
+            color: #b89225;
+        }
+        html.light-mode .notif-row-title {
+            color: #0f172a !important;
+        }
+
+        /* --- Image Dropzone & Selector --- */
+        .image-dropzone-premium {
+            border: 2px dashed rgba(223, 186, 134, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .image-dropzone-premium:hover, 
+        .image-dropzone-premium.dragover {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.04);
+        }
+        .dropzone-icon {
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+            opacity: 0.8;
+            transition: var(--transition);
+        }
+        .image-dropzone-premium:hover .dropzone-icon {
+            transform: translateY(-2px);
+            opacity: 1;
+        }
+        .dropzone-text {
+            font-size: 0.82rem;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .dropzone-text span {
+            color: var(--gold);
+            text-decoration: underline;
+        }
+        .dropzone-subtext {
+            font-size: 0.72rem;
+            color: var(--gray);
+        }
+        .btn-outline-gold {
+            border: 1px solid rgba(223, 186, 134, 0.4);
+            color: var(--gold);
+            background: transparent;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            transition: var(--transition);
+        }
+        .btn-outline-gold:hover,
+        .btn-outline-gold.active {
+            background: var(--gold) !important;
+            color: #000000 !important;
+            border-color: var(--gold) !important;
+        }
+        html.light-mode .dropzone-text {
+            color: #0f172a;
+        }
 </style>
 </head>
 <body>
 <button id="sidebarToggle" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar"><i class="fas fa-bars"></i></button>
 
 
-    <!-- GLOBAL THEME TOGGLE BUTTON -->
-    <div style="position: fixed; top: 2rem; right: 2.5rem; z-index: 1050;">
+    <!-- GLOBAL HEADER ACTIONS (THEME & NOTIFICATIONS) -->
+    <div style="position: fixed; top: 2rem; right: 2.5rem; z-index: 1050; display: flex; align-items: center; gap: 12px;">
+        <!-- Notification Bell Dropdown -->
+        <div class="notification-dropdown-wrapper">
+            <button id="notificationBellBtn" class="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: var(--transition); position: relative;" onclick="toggleNotificationDropdown(event)" title="Notifications">
+                <i class="fas fa-bell" style="color: var(--gold); font-size: 1.2rem;"></i>
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </button>
+            <div id="notificationDropdownMenu" class="notification-dropdown-menu">
+                <div class="dropdown-header-premium">
+                    <span>Notifications</span>
+                    <button class="mark-all-read-btn" onclick="markAllNotificationsRead(event)">Mark all read</button>
+                </div>
+                <div id="dropdownNotificationList" class="dropdown-notification-list">
+                    <!-- Loaded dynamically via polling -->
+                </div>
+                <div class="dropdown-footer-premium">
+                    <a href="javascript:void(0)" onclick="goToNotificationsTab(event)">View All Notifications</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme Toggle -->
         <button id="themeToggleBtn" class="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: var(--transition);" onclick="toggleTheme()" title="Toggle Theme">
             <i class="fas fa-moon" id="themeIcon" style="color: var(--gold); font-size: 1.2rem;"></i>
         </button>
@@ -2025,6 +2783,12 @@ html:not(.light-mode) .form-select:focus{
                 </a>
             </li>
             <li>
+                <a class="sidebar-link" onclick="switchTab('liquor-tab', this); loadActiveQuotas();">
+                    <i class="fas fa-wine-bottle"></i>
+                    <span>Liquor Quota</span>
+                </a>
+            </li>
+            <li>
                 <a class="sidebar-link" onclick="switchTab('payments-tab', this)">
                     <i class="fas fa-wallet"></i>
                     <span>Payments</span>
@@ -2040,6 +2804,12 @@ html:not(.light-mode) .form-select:focus{
                 <a class="sidebar-link" onclick="switchTab('reports-tab', this)">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Reports</span>
+                </a>
+            </li>
+            <li>
+                <a class="sidebar-link" onclick="switchTab('notifications-tab', this); fetchNotificationsPage(0);">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
                 </a>
             </li>
             <li>
@@ -2539,11 +3309,21 @@ html:not(.light-mode) .form-select:focus{
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
-                                <option value="indian">Indian</option>
-                                <option value="italian">Italian</option>
-                                <option value="asian">Asian</option>
-                                <option value="american">American</option>
-                                <option value="desserts">Desserts</option>
+                                <option value="Soups">Soups</option>
+                                <option value="Salad">Salad</option>
+                                <option value="Bread Basket">Bread Basket</option>
+                                <option value="Sides">Sides</option>
+                                <option value="Meals in the Bowl">Meals in the Bowl</option>
+                                <option value="Main Course">Main Course</option>
+                                <option value="Choice of Noodle">Choice of Noodle</option>
+                                <option value="Choice of Rice">Choice of Rice</option>
+                                <option value="Choice of Gravy">Choice of Gravy</option>
+                                <option value="Dim Sum Cart">Dim Sum Cart</option>
+                                <option value="Sushi Rolls">Sushi Rolls</option>
+                                <option value="Burgers & Sandwiches">Burgers & Sandwiches</option>
+                                <option value="Sharing Boards">Sharing Boards</option>
+                                <option value="Brick Oven Pizza">Brick Oven Pizza</option>
+                                <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -3143,6 +3923,94 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- ==================== NOTIFICATIONS TAB ==================== -->
+        <div id="notifications-tab" class="tab-panel">
+            <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="page-title">Notification Center</h1>
+                    <p class="page-subtitle">Track payments, reservations, kitchen status, orders, and system logs in real-time</p>
+                </div>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="sound-toggle-container">
+                        <i class="fas fa-volume-up" id="soundToggleIcon" style="color: var(--gold); font-size: 1.1rem;"></i>
+                        <span>Order Sound Chime:</span>
+                        <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
+                            <input class="form-check-input" type="checkbox" id="notificationSoundToggle" checked style="cursor: pointer; width: 2.5em; height: 1.25em;" onchange="toggleSoundPreference(this.checked)">
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" style="border-color: rgba(255,255,255,0.08); background: var(--bg-secondary); color: var(--gold);" onclick="fetchNotificationsPage(0)" title="Refresh Notifications">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn btn-gold-action btn-sm d-flex align-items-center gap-1" onclick="markAllNotificationsRead(event)" title="Mark all read">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters & Search Box -->
+            <div class="content-card mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-5">
+                        <div class="premium-search-group m-0">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="notif_search_input" class="form-control form-control-dashboard" placeholder="Search notification title or details..." oninput="handleNotifSearchInput(event)">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end" id="notif_filter_buttons_container">
+                            <button class="notif-filter-btn active" data-filter="all" onclick="setNotifFilter('all')">All</button>
+                            <button class="notif-filter-btn" data-filter="order" onclick="setNotifFilter('order')"><i class="fas fa-receipt me-1"></i>Orders</button>
+                            <button class="notif-filter-btn" data-filter="payment" onclick="setNotifFilter('payment')"><i class="fas fa-wallet me-1"></i>Payments</button>
+                            <button class="notif-filter-btn" data-filter="kitchen" onclick="setNotifFilter('kitchen')"><i class="fas fa-fire-burner me-1"></i>Kitchen</button>
+                            <button class="notif-filter-btn" data-filter="reservation" onclick="setNotifFilter('reservation')"><i class="fas fa-chair me-1"></i>Reservations</button>
+                            <button class="notif-filter-btn" data-filter="staff" onclick="setNotifFilter('staff')"><i class="fas fa-user-tie me-1"></i>Staff</button>
+                            <button class="notif-filter-btn" data-filter="system" onclick="setNotifFilter('system')"><i class="fas fa-cogs me-1"></i>System</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Table List -->
+            <div class="content-card">
+                <div class="card-header-premium d-flex justify-content-between align-items-center">
+                    <span>Notifications Log</span>
+                    <span id="notif_total_badge" class="badge" style="font-size: 0.8rem; background: rgba(223, 186, 134, 0.15); color: var(--gold); border: 1px solid rgba(223, 186, 134, 0.2); font-weight: 700;">0 total</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table premium-table align-middle" id="notifications-center-table" style="margin-bottom: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Type</th>
+                                <th>Details</th>
+                                <th style="width: 180px;">Received At</th>
+                                <th style="width: 150px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notifications-table-body">
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="spinner-border text-gold" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination Footer -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary flex-wrap gap-2" id="notif_pagination_container" style="border-top-color: rgba(255,255,255,0.06) !important;">
+                    <div class="text-muted small" id="notif_pagination_info">
+                        Showing 0 to 0 of 0 entries
+                    </div>
+                    <nav aria-label="Page navigation" id="notif_pagination_nav">
+                        <ul class="pagination pagination-sm m-0" id="notif_pagination_list">
+                            <!-- Dynamically populated -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== SETTINGS TAB ==================== -->
         <div id="settings-tab" class="tab-panel">
             <div class="page-header">
@@ -3173,8 +4041,116 @@ html:not(.light-mode) .form-select:focus{
                         <input type="text" id="set_opening_hours" class="form-control form-control-dashboard" value="<?php echo htmlspecialchars($settings['opening_hours']); ?>" required>
                     </div>
 
+                    <div class="card-header-premium mt-4 pt-4 border-top border-secondary">Loyalty & Tier Configurations</div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Silver Discount (%)</label>
+                            <input type="number" step="0.1" id="set_silver_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['silver_discount']); ?>" required min="0" max="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Gold Discount (%)</label>
+                            <input type="number" step="0.1" id="set_gold_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_discount']); ?>" required min="0" max="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Platinum Discount (%)</label>
+                            <input type="number" step="0.1" id="set_platinum_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_discount']); ?>" required min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Gold Spending Requirement (₹)</label>
+                            <input type="number" step="0.01" id="set_gold_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_threshold']); ?>" required min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Platinum Spending Requirement (₹)</label>
+                            <input type="number" step="0.01" id="set_platinum_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_threshold']); ?>" required min="0">
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Points Earning Rate (%)</label>
+                            <input type="number" step="0.1" id="set_points_earning_percent" class="form-control form-control-dashboard" value="<?php echo floatval($settings['points_earning_percent']); ?>" required min="0" max="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Inactivity Period (Months)</label>
+                            <input type="number" id="set_inactivity_months" class="form-control form-control-dashboard" value="<?php echo intval($settings['inactivity_months']); ?>" required min="1">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Inactivity Penalty (%)</label>
+                            <input type="number" step="0.1" id="set_inactivity_deduction_percent" class="form-control form-control-dashboard" value="<?php echo floatval($settings['inactivity_deduction_percent']); ?>" required min="0" max="100">
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-gold-action mt-3 btn-action-wide">Save Server Config</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- ==================== LIQUOR QUOTA TAB ==================== -->
+        <div id="liquor-tab" class="tab-panel">
+            <div class="page-header">
+                <h1 class="page-title">Liquor Quota & Peg Consumption</h1>
+                <p class="page-subtitle">Track customer liquor quotas and record peg consumption</p>
+            </div>
+
+            <div class="row">
+                <!-- Consume Peg Form -->
+                <div class="col-lg-5 mb-4">
+                    <div class="content-card h-100">
+                        <div class="card-header-premium">Record Peg Consumption</div>
+                        <form id="consumePegForm" onsubmit="adminConsumePeg(event)">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small text-uppercase">Search Customer</label>
+                                <input type="text" id="consume_search_term" class="form-control form-control-dashboard" placeholder="Enter Name, Phone, or Order ID..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
+                                <select id="consume_brand_id" class="form-select form-control-dashboard" required>
+                                    <option value="">-- Click Verify to load brands --</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-light btn-sm mb-3" onclick="loadCustomerBrands()">
+                                    <i class="fas fa-check-circle me-1"></i> Verify & Load Brands
+                                </button>
+                            </div>
+                            <hr style="border-color: rgba(255,255,255,0.08);">
+                            <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
+                                <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Active Quotas List -->
+                <div class="col-lg-7 mb-4">
+                    <div class="content-card h-100">
+                        <div class="card-header-premium">Active Customer Quotas</div>
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table premium-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Liquor Brand</th>
+                                        <th class="text-center">Bottles Left</th>
+                                        <th class="text-center">Pegs Left</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activeQuotasTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-spinner fa-spin me-2"></i> Loading active quotas...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3199,9 +4175,10 @@ html:not(.light-mode) .form-select:focus{
                             <!-- QR code generated here -->
                         </div>
                         
-                        <div class="d-flex justify-content-center gap-2">
+                        <div class="d-flex justify-content-center gap-2 mt-2">
                             <a id="qrOpenLink" href="#" target="_blank" class="btn btn-sm btn-outline-light"><i class="fas fa-external-link-alt"></i> Open Menu</a>
                             <button id="btnDineInAct" class="btn btn-sm btn-gold-action"><i class="fas fa-plus"></i> Open Dine-In Bill</button>
+                            <button onclick="printTableQR()" class="btn btn-sm btn-outline-secondary text-white"><i class="fas fa-print"></i> Print</button>
                         </div>
                     </div>
                 </div>
@@ -3394,11 +4371,21 @@ html:not(.light-mode) .form-select:focus{
                         <div class="mb-3">
                             <label class="form-label text-muted">Category</label>
                             <select id="menu_category" class="form-select bg-dark text-white border-secondary" required>
-                                <option value="indian">Indian Specialties</option>
-                                <option value="italian">Italian</option>
-                                <option value="asian">Asian</option>
-                                <option value="american">American</option>
-                                <option value="desserts">Desserts</option>
+                                <option value="Soups">Soups</option>
+                                <option value="Salad">Salad</option>
+                                <option value="Bread Basket">Bread Basket</option>
+                                <option value="Sides">Sides</option>
+                                <option value="Meals in the Bowl">Meals in the Bowl</option>
+                                <option value="Main Course">Main Course</option>
+                                <option value="Choice of Noodle">Choice of Noodle</option>
+                                <option value="Choice of Rice">Choice of Rice</option>
+                                <option value="Choice of Gravy">Choice of Gravy</option>
+                                <option value="Dim Sum Cart">Dim Sum Cart</option>
+                                <option value="Sushi Rolls">Sushi Rolls</option>
+                                <option value="Burgers & Sandwiches">Burgers & Sandwiches</option>
+                                <option value="Sharing Boards">Sharing Boards</option>
+                                <option value="Brick Oven Pizza">Brick Oven Pizza</option>
+                                <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
                             </select>
                         </div>
 
@@ -3413,8 +4400,38 @@ html:not(.light-mode) .form-select:focus{
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label text-muted">Image URL (Optional)</label>
-                            <input type="text" id="menu_image_url" class="form-control bg-dark text-white border-secondary">
+                            <label class="form-label text-muted">Dish Image</label>
+                            
+                            <!-- Source Selector Tab Buttons -->
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn-outline-gold active" id="btn_notif_img_upload" onclick="switchImageSource('upload')">
+                                    <i class="fas fa-upload me-1"></i>Upload File
+                                </button>
+                                <button type="button" class="btn-outline-gold" id="btn_notif_img_url" onclick="switchImageSource('url')">
+                                    <i class="fas fa-link me-1"></i>Image URL
+                                </button>
+                            </div>
+                            
+                            <!-- File Drag & Drop Zone -->
+                            <div id="image_upload_container" class="image-dropzone-premium" onclick="document.getElementById('dish_image_file').click()">
+                                <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
+                                <div class="dropzone-text">Drag & drop image here, or <span>browse</span></div>
+                                <div class="dropzone-subtext">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</div>
+                                <input type="file" id="dish_image_file" accept="image/*" style="display: none;" onchange="handleImageFileSelect(this)">
+                            </div>
+                            
+                            <!-- Text Input for URL -->
+                            <div id="image_url_container" style="display: none;">
+                                <input type="text" id="menu_image_url" class="form-control bg-dark text-white border-secondary" placeholder="https://example.com/image.jpg" oninput="updateImagePreview(this.value)">
+                            </div>
+                            
+                            <!-- Dynamic Preview Thumbnail -->
+                            <div id="image_preview_wrapper" style="display: none; margin-top: 10px; position: relative; width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(223, 186, 134, 0.2);">
+                                <img id="dish_image_preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                                <button type="button" class="btn btn-sm btn-danger d-flex align-items-center justify-content-center" style="position: absolute; top: 5px; right: 5px; width: 25px; height: 25px; border-radius: 50%; padding: 0; border: none;" onclick="removeDishImage(event)" title="Remove Image">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
@@ -3494,14 +4511,20 @@ html:not(.light-mode) .form-select:focus{
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
             
             // Add active class
-            el.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            if (el) el.classList.add('active');
+            const panel = document.getElementById(tabId);
+            if (panel) panel.classList.add('active');
             
             // If kitchen panel is active, start live polling
             if (tabId === 'kitchen-tab') {
                 startKitchenPolling();
             } else {
                 stopKitchenPolling();
+            }
+
+            // If liquor quota panel is active, reload active quotas list
+            if (tabId === 'liquor-tab') {
+                loadActiveQuotas();
             }
         }
 
@@ -3704,9 +4727,13 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('qrTableLabel').textContent = 'Table ' + tableCode;
             
             // Generate QR Code targeting the menu page with this table number prefilled
-            // Get local IP address (or fallback to localhost)
-            const localHost = window.location.host;
-            const menuUrl = `http://${localHost}/test/menutest.html?table=${tableCode}`;
+            // Use PHP to inject the real local Wi-Fi IP address so smartphones can reach it instead of looking for 'localhost'
+            const networkIp = '<?php echo gethostbyname(gethostname()); ?>';
+            const serverPort = window.location.port ? ':' + window.location.port : '';
+            
+            // Extract the path by removing /admintest/dashboardtest.php from current pathname
+            const basePath = window.location.pathname.replace('/admintest/dashboardtest.php', '');
+            const menuUrl = `http://${networkIp}${serverPort}${basePath}/menutest.html?table=${tableCode}`;
             
             const qrContainer = document.getElementById('qrCodeContainer');
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(menuUrl)}" alt="QR Code" style="width: 150px; height: 150px;">`;
@@ -4025,11 +5052,141 @@ html:not(.light-mode) .form-select:focus{
             });
         }
 
+        function switchImageSource(source) {
+            const uploadBtn = document.getElementById('btn_notif_img_upload');
+            const urlBtn = document.getElementById('btn_notif_img_url');
+            const uploadContainer = document.getElementById('image_upload_container');
+            const urlContainer = document.getElementById('image_url_container');
+            
+            if (source === 'upload') {
+                if (uploadBtn) uploadBtn.classList.add('active');
+                if (urlBtn) urlBtn.classList.remove('active');
+                if (uploadContainer) uploadContainer.style.display = 'block';
+                if (urlContainer) urlContainer.style.display = 'none';
+            } else {
+                if (uploadBtn) uploadBtn.classList.remove('active');
+                if (urlBtn) urlBtn.classList.add('active');
+                if (uploadContainer) uploadContainer.style.display = 'none';
+                if (urlContainer) urlContainer.style.display = 'block';
+            }
+        }
+
+        function handleImageFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const dropzone = document.getElementById('image_upload_container');
+            const originalHTML = dropzone.innerHTML;
+            dropzone.innerHTML = `
+                <div class="spinner-border text-gold my-2" role="status" style="width: 1.5rem; height: 1.5rem;">
+                    <span class="visually-hidden">Uploading...</span>
+                </div>
+                <div class="dropzone-text text-gold">Uploading image...</div>
+            `;
+
+            const formData = new FormData();
+            formData.append('action', 'upload_dish_image');
+            formData.append('dish_image', file);
+
+            fetch('dashboardtest.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('menu_image_url').value = data.image_url;
+                    updateImagePreview(data.image_url);
+                } else {
+                    alert(data.message || 'Upload failed');
+                    dropzone.innerHTML = originalHTML;
+                }
+            })
+            .catch(err => {
+                console.error("Error uploading image:", err);
+                alert("An error occurred during file upload.");
+                dropzone.innerHTML = originalHTML;
+            });
+        }
+
+        function updateImagePreview(url) {
+            const previewWrapper = document.getElementById('image_preview_wrapper');
+            const previewImg = document.getElementById('dish_image_preview');
+            const dropzone = document.getElementById('image_upload_container');
+            
+            if (!url) {
+                if (previewWrapper) previewWrapper.style.display = 'none';
+                return;
+            }
+            
+            let displayUrl = url;
+            if (url.startsWith('uploads/')) {
+                displayUrl = '../' + url;
+            }
+
+            if (previewImg) previewImg.src = displayUrl;
+            if (previewWrapper) previewWrapper.style.display = 'block';
+            
+            if (dropzone) {
+                dropzone.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
+                    <div class="dropzone-text">Drag & drop image here, or <span>browse</span></div>
+                    <div class="dropzone-subtext">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</div>
+                `;
+            }
+        }
+
+        function removeDishImage(event) {
+            if (event) event.stopPropagation();
+            const urlInput = document.getElementById('menu_image_url');
+            if (urlInput) urlInput.value = '';
+            const fileInput = document.getElementById('dish_image_file');
+            if (fileInput) fileInput.value = '';
+            const previewWrapper = document.getElementById('image_preview_wrapper');
+            if (previewWrapper) previewWrapper.style.display = 'none';
+        }
+
+        function setupImageDragAndDrop() {
+            const dropzone = document.getElementById('image_upload_container');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    const fileInput = document.getElementById('dish_image_file');
+                    if (fileInput) {
+                        fileInput.files = files;
+                        handleImageFileSelect(fileInput);
+                    }
+                }
+            }, false);
+        }
+
         function openAddMenuModal() {
             document.getElementById('menuCrudForm').reset();
             document.getElementById('menu_item_id').value = '';
             document.getElementById('menuModalTitle').textContent = 'Add New Dish';
             document.getElementById('btnMenuSubmit').textContent = 'Save Dish';
+            
+            removeDishImage();
+            switchImageSource('upload');
             
             const modal = new bootstrap.Modal(document.getElementById('menuCrudModal'));
             modal.show();
@@ -4042,6 +5199,21 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('menu_price').value = dish.price;
             document.getElementById('menu_description').value = dish.description;
             document.getElementById('menu_image_url').value = dish.image_url;
+            
+            const fileInput = document.getElementById('dish_image_file');
+            if (fileInput) fileInput.value = '';
+            
+            if (dish.image_url) {
+                updateImagePreview(dish.image_url);
+                if (dish.image_url.startsWith('uploads/')) {
+                    switchImageSource('upload');
+                } else {
+                    switchImageSource('url');
+                }
+            } else {
+                removeDishImage();
+                switchImageSource('upload');
+            }
             
             document.getElementById('menuModalTitle').textContent = 'Edit Dish Details';
             document.getElementById('btnMenuSubmit').textContent = 'Update Dish';
@@ -4115,7 +5287,15 @@ html:not(.light-mode) .form-select:focus{
                     restaurant_name: document.getElementById('set_restaurant_name').value,
                     gst_rate: document.getElementById('set_gst_rate').value,
                     packing_charge: document.getElementById('set_packing_charge').value,
-                    opening_hours: document.getElementById('set_opening_hours').value
+                    opening_hours: document.getElementById('set_opening_hours').value,
+                    silver_discount: document.getElementById('set_silver_discount').value,
+                    gold_discount: document.getElementById('set_gold_discount').value,
+                    platinum_discount: document.getElementById('set_platinum_discount').value,
+                    gold_threshold: document.getElementById('set_gold_threshold').value,
+                    platinum_threshold: document.getElementById('set_platinum_threshold').value,
+                    points_earning_percent: document.getElementById('set_points_earning_percent').value,
+                    inactivity_months: document.getElementById('set_inactivity_months').value,
+                    inactivity_deduction_percent: document.getElementById('set_inactivity_deduction_percent').value
                 })
             })
             .then(res => res.json())
@@ -4313,6 +5493,7 @@ html:not(.light-mode) .form-select:focus{
             const params = new URLSearchParams({
                 action: 'search_menu',
                 search: document.getElementById('menu_search_input')?.value || '',
+                category: document.getElementById('menu_category_select')?.value || 'all',
                 availability: document.getElementById('menu_availability_select')?.value || 'all',
                 diet_type: document.getElementById('menu_diet_select')?.value || 'all',
                 min_price: document.getElementById('menu_price_min')?.value || '',
@@ -4500,6 +5681,16 @@ html:not(.light-mode) .form-select:focus{
         let repPaymentChartInst = null;
         let repCategoryChartInst = null;
         let _lastReportData = null;
+
+        function fmtINR(val) {
+            return '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function growthBadge(val) {
+            const num = parseFloat(val || 0);
+            const icon = num >= 0 ? 'fa-caret-up' : 'fa-caret-down';
+            return `<i class="fas ${icon}"></i> ${Math.abs(num)}% vs last period`;
+        }
 
         function loadReportsData(event) {
             if (event) event.preventDefault();
@@ -5142,6 +6333,746 @@ html:not(.light-mode) .form-select:focus{
                 window.addEventListener('keydown', handleKeydown);
             };
         })();
+
+        // ==========================================
+        // MEDUSA NOTIFICATION SYSTEM CLIENT CONTROLLERS
+        // ==========================================
+        let notifActiveFilter = 'all';
+        let notifSearchTerm = '';
+        let notifCurrentPage = 0;
+        const notifPageLimit = 15;
+        let soundEnabled = localStorage.getItem('medusa_sound_enabled') !== 'false';
+        let lastFetchedNotifId = 0;
+        let isInitialLoad = true;
+
+        // Custom chime/bell sound synth fallback using Web Audio API
+        function playChimeSound() {
+            if (!soundEnabled) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Play first tone (A5)
+                playTone(audioCtx, 880, 0.1, 0.4);
+                // Play second tone (C6) slightly delayed and higher
+                setTimeout(() => {
+                    playTone(audioCtx, 1046.5, 0.1, 0.4);
+                }, 120);
+            } catch (e) {
+                console.warn("Web Audio API not supported or blocked by browser policies: ", e);
+            }
+        }
+
+        function playTone(ctx, freq, startTime, duration) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+            // Exponential decay to avoid clicking pops
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        }
+
+        // Toggle sound preference dynamically
+        function toggleSoundPreference(enabled) {
+            soundEnabled = enabled;
+            localStorage.setItem('medusa_sound_enabled', enabled ? 'true' : 'false');
+            const icon = document.getElementById('soundToggleIcon');
+            if (icon) {
+                icon.className = enabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+                icon.style.color = enabled ? 'var(--gold)' : 'var(--gray)';
+            }
+        }
+
+        // Toggle notification bell dropdown
+        function toggleNotificationDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('notificationDropdownMenu');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        // Close dropdown on click outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdownMenu');
+            const bellBtn = document.getElementById('notificationBellBtn');
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!dropdown.contains(e.target) && (!bellBtn || !bellBtn.contains(e.target))) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
+        // Navigate to notification center tab
+        function goToNotificationsTab(event) {
+            if (event) event.stopPropagation();
+            // Find notifications sidebar tab button
+            const sidebarBtn = document.querySelector('.sidebar-link[onclick*="notifications-tab"]');
+            if (sidebarBtn) {
+                sidebarBtn.click();
+            }
+            // Close dropdown
+            const dropdown = document.getElementById('notificationDropdownMenu');
+            if (dropdown) dropdown.classList.remove('show');
+        }
+
+        // Toast notifications stacking system
+        function showToastNotification(notif) {
+            let toastContainer = document.getElementById('toastContainerMedusa');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainerMedusa';
+                toastContainer.className = 'toast-container-medusa';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-medusa';
+            
+            const iconClass = getNotifIcon(notif.type);
+            const colorClass = getNotifClass(notif.type);
+
+            toast.innerHTML = `
+                <div class="notif-icon-circle ${colorClass}" style="width: 34px; height: 34px; font-size: 0.95rem;">
+                    <i class="${iconClass}"></i>
+                </div>
+                <div class="toast-medusa-content">
+                    <div class="toast-medusa-title">${escapeHtml(notif.title)}</div>
+                    <div class="toast-medusa-body">${escapeHtml(notif.body)}</div>
+                </div>
+                <button class="toast-medusa-close" onclick="this.parentElement.classList.add('fade-out'); setTimeout(() => this.parentElement.remove(), 300);">&times;</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Auto dismiss after 4 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        // Fetch paginated history for center page tab
+        function fetchNotificationsPage(page) {
+            notifCurrentPage = page;
+            const offset = page * notifPageLimit;
+            
+            const tableBody = document.getElementById('notifications-table-body');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="spinner-border text-gold" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            const url = `../notifications_api.php?action=fetch&filter=${notifActiveFilter}&search=${encodeURIComponent(notifSearchTerm)}&limit=${notifPageLimit}&offset=${offset}`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const totalBadge = document.getElementById('notif_total_badge');
+                        if (totalBadge) {
+                            totalBadge.innerText = `${data.total_count} total`;
+                        }
+                        
+                        renderNotificationsTable(data.notifications);
+                        renderNotificationsPagination(data.total_count, page);
+                    } else {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-danger">
+                                    Error loading notifications: ${escapeHtml(data.message)}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching notifications page:", err);
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-danger">
+                                Failed to fetch notifications history from server.
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        // Render notifications inside center page table
+        function renderNotificationsTable(notifications) {
+            const tableBody = document.getElementById('notifications-table-body');
+            if (!tableBody) return;
+            
+            if (notifications.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="notif-empty-state">
+                                <div class="notif-empty-icon"><i class="fas fa-bell-slash"></i></div>
+                                <div class="notif-empty-title">No notifications found</div>
+                                <div class="notif-empty-desc">No events match your search or filter options.</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            notifications.forEach(n => {
+                const iconClass = getNotifIcon(n.type);
+                const colorClass = getNotifClass(n.type);
+                const rowClass = n.is_read == 1 ? 'read-row' : 'unread-row';
+                const formattedTime = formatDateTime(n.created_at);
+                
+                html += `
+                    <tr class="notif-row ${rowClass}" data-id="${n.id}">
+                        <td>
+                            <div class="notif-icon-circle ${colorClass}">
+                                <i class="${iconClass}"></i>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold notif-row-title">${escapeHtml(n.title)}</div>
+                            <div class="text-muted small">${escapeHtml(n.body)}</div>
+                        </td>
+                        <td>
+                            <span class="text-muted small">${formattedTime}</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                ${n.is_read == 0 ? `
+                                <button class="btn btn-sm btn-outline-success p-1 px-2" onclick="markNotifRead(${n.id}, event)" title="Mark as Read" style="border-color: rgba(46, 196, 182, 0.4); color: #2ec4b6; background: transparent;">
+                                    <i class="fas fa-check"></i>
+                                </button>` : ''}
+                                <button class="btn btn-sm btn-outline-danger p-1 px-2" onclick="deleteNotification(${n.id}, event)" title="Delete" style="border-color: rgba(235, 94, 85, 0.4); color: #eb5e55; background: transparent;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        // Render pagination links for center page tab
+        function renderNotificationsPagination(totalCount, currentPage) {
+            const paginationInfo = document.getElementById('notif_pagination_info');
+            const paginationList = document.getElementById('notif_pagination_list');
+            
+            if (!paginationInfo || !paginationList) return;
+            
+            const startIdx = totalCount === 0 ? 0 : currentPage * notifPageLimit + 1;
+            const endIdx = Math.min((currentPage + 1) * notifPageLimit, totalCount);
+            
+            paginationInfo.innerText = `Showing ${startIdx} to ${endIdx} of ${totalCount} entries`;
+            
+            const totalPages = Math.ceil(totalCount / notifPageLimit);
+            
+            if (totalPages <= 1) {
+                paginationList.innerHTML = '';
+                return;
+            }
+            
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const pageLinkClass = isLight ? 'bg-light text-dark border-secondary' : 'bg-dark text-white border-secondary';
+            
+            let html = '';
+            
+            // Previous link
+            const prevDisabled = currentPage === 0 ? 'disabled' : '';
+            html += `
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link ${pageLinkClass}" href="javascript:void(0)" onclick="${currentPage > 0 ? `fetchNotificationsPage(${currentPage - 1})` : ''}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            // Page numbers link
+            for (let i = 0; i < totalPages; i++) {
+                const activeClass = i === currentPage ? 'active' : '';
+                const linkStyle = i === currentPage ? 'background-color: var(--gold) !important; border-color: var(--gold) !important; color: #000 !important; font-weight: bold;' : '';
+                const currentLinkClass = i === currentPage ? '' : pageLinkClass;
+                
+                html += `
+                    <li class="page-item ${activeClass}">
+                        <a class="page-link ${currentLinkClass}" style="${linkStyle}" href="javascript:void(0)" onclick="fetchNotificationsPage(${i})">${i + 1}</a>
+                    </li>
+                `;
+            }
+            
+            // Next link
+            const nextDisabled = currentPage === totalPages - 1 ? 'disabled' : '';
+            html += `
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link ${pageLinkClass}" href="javascript:void(0)" onclick="${currentPage < totalPages - 1 ? `fetchNotificationsPage(${currentPage + 1})` : ''}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            paginationList.innerHTML = html;
+        }
+
+        // Set active filters on click
+        function setNotifFilter(filter) {
+            notifActiveFilter = filter;
+            const buttons = document.querySelectorAll('#notif_filter_buttons_container .notif-filter-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            fetchNotificationsPage(0);
+        }
+
+        // Debounced search keyup
+        let notifSearchTimeout = null;
+        function handleNotifSearchInput(event) {
+            notifSearchTerm = event.target.value;
+            clearTimeout(notifSearchTimeout);
+            notifSearchTimeout = setTimeout(() => {
+                fetchNotificationsPage(0);
+            }, 300);
+        }
+
+        // Action: Mark single read
+        function markNotifRead(id, event) {
+            if (event) event.stopPropagation();
+            fetch(`../notifications_api.php?action=mark_read&id=${id}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        pollNotifications();
+                        // If notifications-tab is active, reload current page
+                        const notifTab = document.getElementById('notifications-tab');
+                        if (notifTab && notifTab.classList.contains('active')) {
+                            fetchNotificationsPage(notifCurrentPage);
+                        }
+                    }
+                })
+                .catch(err => console.error("Error marking read:", err));
+        }
+
+        // Action: Mark all read
+        function markAllNotificationsRead(event) {
+            if (event) event.stopPropagation();
+            fetch(`../notifications_api.php?action=mark_all_read`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        pollNotifications();
+                        const notifTab = document.getElementById('notifications-tab');
+                        if (notifTab && notifTab.classList.contains('active')) {
+                            fetchNotificationsPage(notifCurrentPage);
+                        }
+                    }
+                })
+                .catch(err => console.error("Error marking all read:", err));
+        }
+
+        // Action: Delete notification
+        function deleteNotification(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm("Are you sure you want to delete this notification?")) {
+                fetch(`../notifications_api.php?action=delete&id=${id}`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            pollNotifications();
+                            const notifTab = document.getElementById('notifications-tab');
+                            if (notifTab && notifTab.classList.contains('active')) {
+                                fetchNotificationsPage(notifCurrentPage);
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Error deleting notification:", err));
+            }
+        }
+
+        // Handle dropdown item action routing based on type
+        function handleDropdownItemClick(id, type, event) {
+            if (event) event.stopPropagation();
+            
+            // Mark read immediately
+            fetch(`../notifications_api.php?action=mark_read&id=${id}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    pollNotifications();
+                    
+                    // Route to correct tab
+                    if (type === 'order') {
+                        const tabBtn = document.querySelector('.sidebar-link[onclick*="orders-tab"]');
+                        if (tabBtn) tabBtn.click();
+                    } else if (type === 'reservation') {
+                        const tabBtn = document.querySelector('.sidebar-link[onclick*="tables-tab"]');
+                        if (tabBtn) tabBtn.click();
+                    } else {
+                        // Default to notification center
+                        goToNotificationsTab();
+                    }
+                })
+                .catch(err => console.error("Error clicking dropdown item:", err));
+
+            // Hide dropdown menu
+            const dropdown = document.getElementById('notificationDropdownMenu');
+            if (dropdown) dropdown.classList.remove('show');
+        }
+
+        // Populate badges and bell dropdown content
+        function updateNotificationsDropdown(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
+                    badge.style.display = 'flex';
+                    // Trigger dynamic bounce animation on bell
+                    const bellIcon = document.querySelector('#notificationBellBtn i');
+                    if (bellIcon) {
+                        bellIcon.classList.add('fa-bounce');
+                        setTimeout(() => bellIcon.classList.remove('fa-bounce'), 1000);
+                    }
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            const dropdownList = document.getElementById('dropdownNotificationList');
+            if (!dropdownList) return;
+
+            if (notifications.length === 0) {
+                dropdownList.innerHTML = `
+                    <div class="notif-empty-state">
+                        <div class="notif-empty-icon"><i class="fas fa-bell-slash"></i></div>
+                        <div class="notif-empty-title">All caught up!</div>
+                        <div class="notif-empty-desc">No new notifications.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            notifications.forEach(n => {
+                const iconClass = getNotifIcon(n.type);
+                const colorClass = getNotifClass(n.type);
+                const unreadClass = n.is_read == 0 ? 'unread' : '';
+                const timeStr = formatRelativeTime(n.created_at);
+
+                html += `
+                    <div class="notification-item ${unreadClass}" onclick="handleDropdownItemClick(${n.id}, '${n.type}', event)">
+                        <div class="notif-icon-circle ${colorClass}">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="notif-details">
+                            <div class="notif-title-row">
+                                <span class="notif-title-text">${escapeHtml(n.title)}</span>
+                                <span class="notif-time">${timeStr}</span>
+                            </div>
+                            <p class="notif-body-text">${escapeHtml(n.body)}</p>
+                        </div>
+                        ${n.is_read == 0 ? '<span class="notif-unread-dot"></span>' : ''}
+                    </div>
+                `;
+            });
+            dropdownList.innerHTML = html;
+        }
+
+        // Polling controller
+        function pollNotifications() {
+            fetch(`../notifications_api.php?action=fetch&limit=6`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Handle sound chime and toasts for new arrivals
+                        if (!isInitialLoad) {
+                            const newNotifs = data.notifications.filter(n => n.id > lastFetchedNotifId);
+                            if (newNotifs.length > 0) {
+                                // Sound chime trigger (orders category only)
+                                const hasOrder = newNotifs.some(n => n.type === 'order');
+                                if (hasOrder) {
+                                    playChimeSound();
+                                }
+                                
+                                // Slide-in toast notifications
+                                newNotifs.forEach(n => {
+                                    showToastNotification(n);
+                                });
+
+                                // Reload page history in case center tab is actively shown
+                                const notifTab = document.getElementById('notifications-tab');
+                                if (notifTab && notifTab.classList.contains('active')) {
+                                    fetchNotificationsPage(notifCurrentPage);
+                                }
+                            }
+                        }
+
+                        // Maintain max tracked ID
+                        if (data.notifications.length > 0) {
+                            const maxId = Math.max(...data.notifications.map(n => n.id));
+                            lastFetchedNotifId = Math.max(lastFetchedNotifId, maxId);
+                        }
+                        
+                        isInitialLoad = false;
+                        
+                        // Populate badges and bell dropdown content
+                        updateNotificationsDropdown(data.notifications, data.unread_count);
+                    }
+                })
+                .catch(err => console.error("Error polling notifications:", err));
+        }
+
+        // Helper formatting functions
+        function getNotifIcon(type) {
+            switch (type) {
+                case 'order': return 'fas fa-receipt';
+                case 'payment': return 'fas fa-wallet';
+                case 'kitchen': return 'fas fa-fire-burner';
+                case 'reservation': return 'fas fa-chair';
+                case 'staff': return 'fas fa-user-tie';
+                case 'system': return 'fas fa-cogs';
+                default: return 'fas fa-bell';
+            }
+        }
+
+        function getNotifClass(type) {
+            return 'notif-' + type;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+
+        function formatRelativeTime(dateStr) {
+            const date = new Date(dateStr.replace(/-/g, '/'));
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return diffMins + 'm ago';
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return diffHours + 'h ago';
+            
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return diffDays + 'd ago';
+            
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr.replace(/-/g, '/'));
+            return date.toLocaleString(undefined, { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // Liquor Quota functions
+        let verifiedUserId = null;
+
+        function showToast(message, type = 'success') {
+            showToastNotification({
+                type: type === 'success' ? 'payment' : (type === 'error' ? 'system' : 'staff'),
+                title: type.charAt(0).toUpperCase() + type.slice(1),
+                body: message
+            });
+        }
+
+        function loadActiveQuotas() {
+            const body = document.getElementById('activeQuotasTableBody');
+            if (!body) return;
+            body.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Loading...</td></tr>`;
+
+            fetch('dashboardtest.php?action=load_active_quotas')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.quotas.length === 0) {
+                            body.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No active customer quotas found.</td></tr>`;
+                            return;
+                        }
+                        let html = '';
+                        data.quotas.forEach(q => {
+                            const total_pegs = parseInt(q.total_pegs);
+                            const bottles = Math.floor(total_pegs / 8);
+                            const pegs = total_pegs % 8;
+                            html += `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(q.user_name)}</strong><br>
+                                        <small class="text-muted">${escapeHtml(q.user_phone || q.user_email)}</small>
+                                    </td>
+                                    <td><span class="text-gold font-weight-bold">${escapeHtml(q.item_name)}</span></td>
+                                    <td class="text-center"><strong>${bottles}</strong></td>
+                                    <td class="text-center"><strong>${pegs}</strong></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0})">
+                                            <i class="fas fa-glass-water me-1"></i> Log Consume
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        body.innerHTML = html;
+                    } else {
+                        body.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">${escapeHtml(data.message)}</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    body.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Network error loading quotas.</td></tr>`;
+                });
+        }
+
+        function selectQuotaForConsume(customerName, hasQuota) {
+            document.getElementById('consume_search_term').value = customerName;
+            document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Verifying... --</option>';
+            document.getElementById('btn-admin-consume').disabled = true;
+            verifiedUserId = null;
+            
+            showToast(`Selected ${customerName}. Verifying active quota...`, 'info');
+            loadCustomerBrands(); // Auto load it!
+        }
+
+        function loadCustomerBrands() {
+            const searchTerm = document.getElementById('consume_search_term').value.trim();
+            const brandSelect = document.getElementById('consume_brand_id');
+
+            if (!searchTerm) {
+                showToast('Please enter a search term.', 'error');
+                return;
+            }
+
+            brandSelect.innerHTML = '<option value="">Verifying...</option>';
+            document.getElementById('btn-admin-consume').disabled = true;
+            verifiedUserId = null;
+
+            const formData = new FormData();
+            formData.append('search_term', searchTerm);
+
+            fetch('dashboardtest.php?action=verify_order_liquor', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    verifiedUserId = data.user_id;
+                    let html = '<option value="">-- Choose Brand --</option>';
+                    data.brands.forEach(b => {
+                        const total_pegs = parseInt(b.total_pegs || 0);
+                        html += `<option value="${b.food_item_id}">${escapeHtml(b.item_name)} (${total_pegs} pegs left)</option>`;
+                    });
+                    brandSelect.innerHTML = html;
+                    document.getElementById('btn-admin-consume').disabled = false;
+                    showToast('Customer verified successfully! Please select a brand to log peg consumption.', 'success');
+                } else {
+                    brandSelect.innerHTML = '<option value="">Verification Failed</option>';
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                brandSelect.innerHTML = '<option value="">Error verifying customer</option>';
+                showToast('Network error verifying customer.', 'error');
+            });
+        }
+
+        function adminConsumePeg(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('consume_search_term').value.trim();
+            const brandId = document.getElementById('consume_brand_id').value;
+            const btn = document.getElementById('btn-admin-consume');
+
+            if (!verifiedUserId || !brandId || !searchTerm) {
+                showToast('Please verify customer first.', 'error');
+                return;
+            }
+
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            const formData = new FormData();
+            formData.append('user_id', verifiedUserId);
+            formData.append('food_item_id', brandId);
+            formData.append('search_term', searchTerm);
+
+            fetch('dashboardtest.php?action=admin_consume_peg', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Reset form select & verify state
+                    document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Click Verify to load brands --</option>';
+                    document.getElementById('btn-admin-consume').disabled = true;
+                    verifiedUserId = null;
+                    document.getElementById('consumePegForm').reset();
+                    // Reload quotas list
+                    loadActiveQuotas();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Network error logging peg.', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            });
+        }
+
+        // Initialize notification elements on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set sound switch state and icons
+            const toggleInput = document.getElementById('notificationSoundToggle');
+            if (toggleInput) {
+                toggleInput.checked = soundEnabled;
+                toggleSoundPreference(soundEnabled);
+            }
+            
+            // Start AJAX Polling
+            pollNotifications();
+            setInterval(pollNotifications, 15000);
+
+            // Set up image dropzone drag & drop events
+            setupImageDragAndDrop();
+        });
     </script>
 
 <script>
@@ -5170,6 +7101,54 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.body.classList.add('sidebar-collapsed');
  }
 });
+
+function printTableQR() {
+    const tableLabel = document.getElementById('qrTableLabel').innerText;
+    const qrContainer = document.getElementById('qrCodeContainer');
+    
+    // Some QR libraries generate a canvas, some generate an img, some generate both.
+    let imgSrc = '';
+    const canvasEl = qrContainer.querySelector('canvas');
+    const imgEl = qrContainer.querySelector('img');
+    
+    if (canvasEl) {
+        imgSrc = canvasEl.toDataURL("image/png");
+    } else if (imgEl && imgEl.src) {
+        imgSrc = imgEl.src;
+    }
+    
+    if (!imgSrc) {
+        alert("Please wait for the QR code to generate before printing.");
+        return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print QR - ${tableLabel}</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; text-align: center; margin-top: 50px; }
+                .title { font-size: 32px; font-weight: bold; margin-bottom: 5px; color: #161412; }
+                .subtitle { font-size: 16px; margin-bottom: 20px; color: #666; }
+                img { max-width: 350px; height: auto; }
+            </style>
+        </head>
+        <body>
+            <div class="title">${tableLabel}</div>
+            <div class="subtitle">Scan to land automatically on ordering menu</div>
+            <img src="${imgSrc}" />
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
 </script>
 </body>
 </html>

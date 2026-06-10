@@ -58,7 +58,7 @@ if (!$order) {
         <div class="error-card">
             <h2 class="text-danger mb-3">Error</h2>
             <p><?php echo htmlspecialchars($error_msg ?? 'An unknown error occurred.'); ?></p>
-            <a href="my-orders.php" class="btn-back">Return to Dashboard</a>
+            <a href="my-account.php" class="btn-back">Return to Dashboard</a>
         </div>
     </body>
     </html>
@@ -490,7 +490,7 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
                 <i class="fa-solid fa-print"></i>
                 <span>Print Bill</span>
             </button>
-            <a href="my-orders.php" class="btn-luxury-outline">
+            <a href="my-account.php" class="btn-luxury-outline">
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>My Dashboard</span>
             </a>
