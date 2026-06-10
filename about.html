@@ -23,6 +23,596 @@
     <link rel="stylesheet" href="assets/css/main.css">
     <!-- Custom Page Styles -->
     <link rel="stylesheet" href="assets/css/about.css">
+
+    <style>
+        :root {
+            --gold: #dfba86;
+            --gold-hover: #f3dfc1;
+            --formal-garden: #132F20;
+            --formal-garden-light: #1C3B2B;
+            --formal-garden-deep: #0D2016;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
+            --warm-ivory: #FAF7F0;
+            --warm-ivory-dark: #F0ECE1;
+            --dark: #0D2016;
+            --dark-card: rgba(13, 32, 22, 0.6);
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            background: var(--dark);
+            color: #f7f5f2;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            letter-spacing: 0.2px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(11, 10, 9, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.12);
+            padding: 16px 0;
+            transition: var(--transition-smooth);
+        }
+
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-size: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 2px;
+        }
+
+        .navbar-brand img {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navbar-brand:hover img {
+            transform: rotate(360deg) scale(1.08);
+        }
+
+        .nav-link {
+            color: #eae5df !important;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 8px;
+            right: 8px;
+            height: 1px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* HERO SECTION */
+        .about-hero {
+            position: relative;
+            padding: 180px 0 100px;
+            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, rgba(11, 10, 9, 0) 70%),
+                        linear-gradient(rgba(11, 10, 9, 0.4), rgba(11, 10, 9, 0.95));
+            text-align: center;
+        }
+
+        .about-title-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: inline-block;
+            border: 1px solid rgba(223, 186, 134, 0.3);
+            padding: 6px 20px;
+            border-radius: 50px;
+            background: rgba(223, 186, 134, 0.02);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .about-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .about-subtitle {
+            font-size: 1.1rem;
+            color: #a09a93;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-weight: 300;
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* SECTION STYLING */
+        .section-premium {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .section-header-gold {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header-gold h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.8rem;
+            color: var(--gold);
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 15px;
+        }
+
+        .section-header-gold h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        /* HERITAGE GRID */
+        .heritage-content {
+            font-size: 1rem;
+            line-height: 1.9;
+            color: #d1cbc4;
+        }
+
+        .heritage-highlight {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.7rem;
+            color: #ffffff;
+            font-style: italic;
+            border-left: 2.5px solid var(--gold);
+            padding-left: 20px;
+            margin: 30px 0;
+        }
+
+        .heritage-frame {
+            border: 1px solid rgba(223, 186, 134, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.03) 0%, transparent 60%);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .heritage-accent-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 1.2rem;
+        }
+
+        /* PHILOSOPHY CARDS */
+        .ph-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(223, 186, 134, 0.12);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            height: 100%;
+            transition: var(--transition-smooth);
+        }
+
+        .ph-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.03);
+            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.08);
+        }
+
+        .ph-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(223, 186, 134, 0.06);
+            border: 1.5px solid rgba(223, 186, 134, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            color: var(--gold);
+            font-size: 1.6rem;
+            transition: var(--transition-smooth);
+        }
+
+        .ph-card:hover .ph-icon {
+            background: var(--gold);
+            color: #0b0a09;
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(223, 186, 134, 0.4);
+        }
+
+        .ph-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .ph-text {
+            font-size: 0.9rem;
+            color: #a09a93;
+            line-height: 1.7;
+        }
+
+        /* MASTER CHEF */
+        .chef-card {
+            border: 1px solid rgba(223, 186, 134, 0.12);
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            transition: var(--transition-smooth);
+        }
+
+        .chef-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .chef-details {
+            padding: 40px;
+        }
+
+        .chef-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .chef-subtitle {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--gold);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .chef-text {
+            color: #d1cbc4;
+            line-height: 1.8;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        .chef-quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-style: italic;
+            color: var(--gold);
+            border-left: 2px solid var(--gold);
+            padding-left: 15px;
+            margin: 0;
+        }
+
+        .chef-graphic {
+            background: linear-gradient(135deg, #1c1a17 0%, #0d0c0a 100%);
+            height: 100%;
+            min-height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .chef-graphic::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, transparent 70%);
+        }
+
+        .chef-graphic-crest {
+            font-size: 6rem;
+            color: rgba(223, 186, 134, 0.15);
+            animation: rotateCrest 25s linear infinite;
+        }
+
+        @keyframes rotateCrest {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* GLOBAL MOON THEME ICON SUPPORT */
+        html.light-mode body {
+            background: #f8f9fa;
+            color: #333333;
+        }
+        html.light-mode .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.25);
+        }
+        html.light-mode .nav-link {
+            color: #333333 !important;
+        }
+        html.light-mode .about-hero {
+            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.15) 0%, rgba(248, 249, 250, 0) 70%);
+        }
+        html.light-mode .about-title {
+            color: #1a1917;
+        }
+        html.light-mode .about-subtitle {
+            color: #555555;
+        }
+        html.light-mode .heritage-highlight {
+            color: #222222;
+        }
+        html.light-mode .heritage-frame {
+            border-color: rgba(223, 186, 134, 0.4);
+            background: #ffffff;
+        }
+        html.light-mode .ph-card {
+            background: #ffffff;
+            border-color: rgba(223, 186, 134, 0.3);
+        }
+        html.light-mode .ph-card:hover {
+            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.18);
+        }
+        html.light-mode .ph-title {
+            color: #1a1917;
+        }
+        html.light-mode .chef-card {
+            background: #ffffff;
+            border-color: rgba(223, 186, 134, 0.3);
+        }
+        html.light-mode .chef-title {
+            color: #1a1917;
+        }
+        html.light-mode .chef-graphic {
+            background: linear-gradient(135deg, #eae5df 0%, #f7f5f2 100%);
+        }
+
+        /* SERVICES & FEATURES */
+        .services-showcase-section {
+            position: relative;
+            padding: 100px 0;
+            background-image: linear-gradient(rgba(11, 10, 9, 0.85), rgba(11, 10, 9, 0.9)), url('assets/images/medusa_outdoor_dining.png');
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-top: 1px solid rgba(223, 186, 134, 0.06);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.06);
+        }
+
+        .features-category {
+            background: rgba(11, 10, 9, 0.78);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(223, 186, 134, 0.18);
+            border-radius: 18px;
+            padding: 28px 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-smooth);
+        }
+
+        .features-category:hover {
+            border-color: rgba(223, 186, 134, 0.5);
+            background: rgba(11, 10, 9, 0.88);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(223, 186, 134, 0.12);
+        }
+
+        .features-cat-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: var(--gold);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .features-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feature-tag {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #d1cbc4;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition-smooth);
+            font-weight: 500;
+        }
+
+        .feature-tag:hover {
+            border-color: var(--gold);
+            color: #ffffff;
+            background: rgba(223, 186, 134, 0.08);
+            transform: translateY(-1px);
+            box-shadow: 0 0 10px rgba(223, 186, 134, 0.15);
+        }
+
+        .feature-tag i {
+            font-size: 0.75rem;
+            color: var(--gold);
+            opacity: 0.8;
+        }
+
+        /* LIGHT MODE OVERRIDES FOR SERVICES */
+        html.light-mode .services-showcase-section {
+            background-image: linear-gradient(rgba(248, 249, 250, 0.88), rgba(248, 249, 250, 0.92)), url('assets/images/medusa_outdoor_dining.png');
+        }
+        html.light-mode .features-category {
+            background: rgba(255, 255, 255, 0.82);
+            border-color: rgba(223, 186, 134, 0.35);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        }
+        html.light-mode .feature-tag {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #333333;
+        }
+        html.light-mode .feature-tag:hover {
+            color: var(--gold);
+            background: rgba(223, 186, 134, 0.08);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 80px 0 40px;
+            background: #060505;
+            border-top: 1px solid rgba(223, 186, 134, 0.12);
+            color: #a09a93;
+        }
+
+        footer h2 {
+            margin-bottom: 20px;
+        }
+
+        footer h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+        }
+
+        footer ul li a {
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer ul li a:hover {
+            color: var(--gold) !important;
+            padding-left: 5px;
+        }
+
+        /* BRAND THEME OVERRIDES */
+        .about-hero {
+            background: linear-gradient(135deg, rgba(19, 47, 32, 0.65) 0%, rgba(90, 24, 39, 0.65) 100%),
+                        radial-gradient(circle at center, transparent 0%, rgba(13, 32, 22, 0.95) 90%) !important;
+        }
+        .section-premium {
+            background: var(--formal-garden-deep);
+        }
+        .heritage-frame {
+            border-color: rgba(223, 186, 134, 0.15) !important;
+            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.05) 0%, transparent 60%) !important;
+        }
+        .services-showcase-section {
+            background-image: linear-gradient(rgba(13, 32, 22, 0.85), rgba(90, 24, 39, 0.85)), url('assets/images/medusa_outdoor_dining.png') !important;
+        }
+        .features-category {
+            background: rgba(13, 32, 22, 0.85) !important;
+            border-color: rgba(223, 186, 134, 0.18) !important;
+        }
+        .features-category:hover {
+            border-color: rgba(223, 186, 134, 0.5) !important;
+            background: rgba(13, 32, 22, 0.95) !important;
+        }
+        .ph-card {
+            background: rgba(90, 24, 39, 0.15) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        .ph-card:hover {
+            background: rgba(90, 24, 39, 0.25) !important;
+            border-color: var(--gold) !important;
+        }
+        .chef-card {
+            background: rgba(13, 32, 22, 0.45) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        .chef-card:hover {
+            border-color: var(--gold) !important;
+        }
+        .chef-graphic {
+            background: linear-gradient(135deg, #132F20 0%, #0D2016 100%) !important;
+        }
+        footer {
+            background: #07120D !important;
+            border-top: 1px solid rgba(223, 186, 134, 0.15) !important;
+            color: #A8A196 !important;
+        }
+        footer h5 {
+            color: var(--gold) !important;
+        }
+        footer ul li a {
+            color: #A8A196 !important;
+        }
+        footer ul li a:hover {
+            color: var(--gold) !important;
+        }
+        /* Buttons / Icons overrides */
+        .btn-outline-warning {
+            border-color: var(--rosewood) !important;
+            color: var(--gold) !important;
+        }
+        .btn-outline-warning:hover {
+            background: var(--rosewood) !important;
+            border-color: var(--rosewood-light) !important;
+            color: #ffffff !important;
+        }
+    </style>
+=======
+    <!-- Global Styles & Transitions -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <!-- Custom Page Styles -->
+    <link rel="stylesheet" href="assets/css/about.css">
+>>>>>>> 4f77db645dbed00b7fda972c3da5939df0aaf384
 </head>
 
 <body>
@@ -56,7 +646,10 @@
                         <a class="nav-link" href="register.html">Create Account</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="career.html">Career</a>
+                        <a class="nav-link" href="career.html#ambitions-section">Ambitions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="career.html#career-form">Career</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="login.html" id="authLink">Login</a>
@@ -329,7 +922,8 @@
                         <li class="mb-3"><a href="book-table-test.html" class="text-secondary text-decoration-none">Reservations</a></li>
                         <li class="mb-3"><a href="about.html" class="text-secondary text-decoration-none text-gold">About Us</a></li>
                         <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create Account</a></li>
-                        <li class="mb-3"><a href="career.html" class="text-secondary text-decoration-none">Career</a></li>
+                        <li class="mb-3"><a href="career.html#ambitions-section" class="text-secondary text-decoration-none">Ambitions</a></li>
+                        <li class="mb-3"><a href="career.html#career-form" class="text-secondary text-decoration-none">Career</a></li>
                         <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none" id="footerAuthLink">Login</a></li>
                     </ul>
                 </div>

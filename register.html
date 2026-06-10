@@ -19,12 +19,14 @@
     <style>
         /* Modern Reset and Design Tokens */
         :root {
-            --gold: #d4af37;      /* Matte luxury gold */
-            --white: #ffffff;
-            --gray-light: rgba(255, 255, 255, 0.6);
-            --bg-glass: rgba(15, 15, 15, 0.55);
-            --border-glass: rgba(212, 175, 55, 0.12);
+            --gold: #dfba86;      /* Accent Soft Gold */
+            --white: #FAF7F0;     /* Warm Ivory text */
+            --gray-light: rgba(250, 247, 240, 0.6);
+            --bg-glass: rgba(13, 32, 22, 0.65); /* Translucent Forest Green */
+            --border-glass: rgba(223, 186, 134, 0.2);
             --transition: all 0.25s ease;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
         }
 
         * {
@@ -41,7 +43,7 @@
             align-items: center;
             padding: 20px;
             overflow-x: hidden;
-            background-color: #000000; /* Pure matte black background */
+            background-color: #0D2016; /* Deep Forest Green background */
             position: relative;
         }
 
@@ -145,7 +147,7 @@
         .input-field:-webkit-autofill:hover,
         .input-field:-webkit-autofill:focus,
         .input-field:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+            -webkit-box-shadow: 0 0 0 30px #0D2016 inset !important;
             -webkit-text-fill-color: var(--white) !important;
             border-radius: 4px;
         }
@@ -153,9 +155,9 @@
         /* Submit Button - Minimal Matte Gold */
         .btn-submit {
             width: 100%;
-            background-color: var(--gold);
-            color: #000000;
-            border: none;
+            background-color: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--gold);
             padding: 12px;
             border-radius: 6px;
             font-size: 0.92rem;
@@ -167,7 +169,8 @@
         }
 
         .btn-submit:hover {
-            background-color: #e5c158;
+            background-color: var(--rosewood-light);
+            color: #ffffff !important;
             transform: translateY(-1px);
         }
 

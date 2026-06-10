@@ -34,7 +34,7 @@
             display: flex;
         }
         .cust-modal-box {
-            background: linear-gradient(150deg, #1c1a17 0%, #0d0c0a 100%);
+            background: linear-gradient(150deg, var(--formal-garden) 0%, var(--formal-garden-deep) 100%);
             border: 1px solid rgba(223, 186, 134, 0.28);
             border-radius: 22px;
             width: 100%;
@@ -196,9 +196,9 @@
         }
         .cust-add-btn {
             width: 100%;
-            background: linear-gradient(135deg, #dfba86 0%, #c89640 100%);
-            color: #0a0a0a;
-            border: none;
+            background: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--gold);
             border-radius: 13px;
             padding: 0.88rem 1rem;
             font-weight: 700;
@@ -209,7 +209,9 @@
         }
         .cust-add-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(223,186,134,0.32);
+            background: var(--rosewood-light);
+            color: #ffffff;
+            box-shadow: 0 10px 28px rgba(90,24,39,0.32);
         }
         .cust-add-btn:active { transform: translateY(0); }
 

@@ -48,13 +48,15 @@ try {
     
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-secondary: #0a0a0a;
-            --bg-card: rgba(18, 17, 17, 0.65);
+            --bg-dark: #0D2016;
+            --bg-secondary: #132F20;
+            --bg-card: rgba(19, 47, 32, 0.65);
             --gold: #dfba86;
-            --gold-light: #e6c89f;
-            --white: #ffffff;
-            --gray: #a09f9f;
+            --gold-light: #f3dfc1;
+            --white: #FAF7F0;
+            --gray: #A8A196;
+            --rosewood: #5A1827;
+            --rosewood-light: #7E2638;
             --border-glass: rgba(223, 186, 134, 0.12);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
@@ -330,8 +332,8 @@ try {
         }
 
         .btn-view-invoice {
-            background-color: transparent;
-            border: 1px solid var(--gold);
+            background-color: var(--rosewood);
+            border: 1px solid var(--rosewood);
             color: var(--gold);
             border-radius: 8px;
             padding: 0.6rem 1.2rem;
@@ -346,8 +348,9 @@ try {
         }
 
         .btn-view-invoice:hover {
-            background-color: var(--gold);
-            color: #000000;
+            background-color: var(--rosewood-light);
+            border-color: var(--rosewood-light);
+            color: var(--gold-light);
             transform: translateY(-1px);
         }
 
@@ -382,9 +385,9 @@ try {
         }
 
         .btn-order-now {
-            background-color: var(--gold);
-            color: #000000;
-            border: none;
+            background-color: var(--rosewood);
+            color: var(--gold);
+            border: 1px solid var(--rosewood);
             border-radius: 8px;
             padding: 0.8rem 2rem;
             font-weight: 700;
@@ -396,8 +399,9 @@ try {
         }
 
         .btn-order-now:hover {
-            background-color: var(--gold-light);
-            color: #000000;
+            background-color: var(--rosewood-light);
+            border-color: var(--rosewood-light);
+            color: var(--gold-light);
             transform: translateY(-2px);
         }
 
