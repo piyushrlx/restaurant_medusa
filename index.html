@@ -713,22 +713,28 @@
             transform: translateY(30px);
             transition: opacity 0.8s ease, transform 0.8s ease;
         }
+
         .reveal.active {
             opacity: 1;
             transform: translateY(0);
         }
 
         /* ----- BOOTSTRAP UTILITIES RE-IMPLEMENTATION ----- */
-        #luxury-story-section, #reviews-section, #faqs-section {
+        #luxury-story-section,
+        #reviews-section,
+        #faqs-section {
             font-family: var(--font-sans);
         }
+
         #reviews-section .stars {
             font-family: var(--font-sans) !important;
         }
+
         .section {
             padding: 120px 0;
             position: relative;
         }
+
         .section-title {
             font-size: 3.4rem;
             font-family: 'Cormorant Garamond', serif;
@@ -737,6 +743,7 @@
             text-align: center;
             color: #ffffff;
         }
+
         .section-subtitle {
             text-align: center;
             color: var(--gold);
@@ -746,101 +753,127 @@
             font-weight: 600;
             margin-bottom: 70px;
         }
+
         .row {
             display: flex;
             flex-wrap: wrap;
             margin-left: -15px;
             margin-right: -15px;
         }
-        .row > [class*="col-"] {
+
+        .row>[class*="col-"] {
             padding-left: 15px;
             padding-right: 15px;
             width: 100%;
         }
+
         .align-items-center {
             align-items: center;
         }
+
         .g-4 {
             margin-left: -12px;
             margin-right: -12px;
         }
-        .g-4 > [class*="col-"] {
+
+        .g-4>[class*="col-"] {
             padding-left: 12px;
             padding-right: 12px;
         }
+
         .g-5 {
             margin-left: -24px;
             margin-right: -24px;
         }
-        .g-5 > [class*="col-"] {
+
+        .g-5>[class*="col-"] {
             padding-left: 24px;
             padding-right: 24px;
         }
+
         @media (min-width: 768px) {
             .col-md-6 {
                 flex: 0 0 50%;
                 max-width: 50%;
             }
         }
+
         @media (min-width: 992px) {
             .col-lg-4 {
                 flex: 0 0 33.33333%;
                 max-width: 33.33333%;
             }
+
             .col-lg-5 {
                 flex: 0 0 41.66667%;
                 max-width: 41.66667%;
             }
+
             .col-lg-7 {
                 flex: 0 0 58.33333%;
                 max-width: 58.33333%;
             }
+
             .d-lg-block {
                 display: block !important;
             }
         }
+
         .img-fluid {
             max-width: 100%;
             height: auto;
         }
+
         .rounded-4 {
             border-radius: 1rem !important;
         }
+
         .shadow-lg {
             box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
         }
+
         .text-start {
             text-align: left !important;
         }
+
         .mb-4 {
             margin-bottom: 1.5rem !important;
         }
+
         .mb-5 {
             margin-bottom: 3rem !important;
         }
+
         .fs-5 {
             font-size: 1.25rem !important;
         }
+
         .text-secondary {
             color: #a09a93 !important;
         }
+
         .px-5 {
             padding-left: 3rem !important;
             padding-right: 3rem !important;
         }
+
         .py-3 {
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
         }
+
         .p-4 {
             padding: 1.5rem !important;
         }
+
         .w-100 {
             width: 100% !important;
         }
+
         .mt-3 {
             margin-top: 1rem !important;
         }
+
         @media (min-width: 992px) {
             .p-lg-5 {
                 padding: 3rem !important;
@@ -858,34 +891,41 @@
             transition: var(--transition-smooth);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
         }
+
         .premium-card:hover {
             transform: translateY(-8px);
             border-color: var(--border-hover);
             box-shadow: 0 25px 50px rgba(223, 186, 134, 0.08);
         }
+
         .premium-card .img-wrapper {
             overflow: hidden;
             position: relative;
         }
+
         .premium-card img {
             width: 100%;
             height: 290px;
             object-fit: cover;
             transition: var(--transition-smooth);
         }
+
         .premium-card:hover img {
             transform: scale(1.05);
         }
+
         .floating-img {
             animation: float 6s ease-in-out infinite;
             border: 1px solid var(--border-light);
-            box-shadow: 0 20px 45px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
             transition: var(--transition-smooth);
         }
+
         .floating-img:hover {
             border-color: var(--border-hover);
             transform: scale(1.02);
         }
+
         .btn-gold {
             background: var(--rosewood);
             color: var(--gold) !important;
@@ -901,6 +941,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
         .btn-gold:hover {
             background: var(--rosewood-light);
             border-color: var(--rosewood-light);
@@ -908,6 +949,7 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(90, 24, 39, 0.45);
         }
+
         .btn-outline-gold {
             border: 1px solid var(--gold);
             color: var(--gold) !important;
@@ -921,6 +963,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
         .btn-outline-gold:hover {
             background: rgba(90, 24, 39, 0.25);
             border-color: var(--gold-hover);
@@ -939,16 +982,19 @@
             -webkit-backdrop-filter: blur(10px);
             transition: var(--transition-smooth);
         }
+
         .review-card:hover {
             border-color: var(--border-hover);
             box-shadow: 0 15px 35px rgba(223, 186, 134, 0.05);
         }
+
         .stars {
             color: var(--gold);
             margin-bottom: 20px;
             font-size: 0.9rem;
             letter-spacing: 2px;
         }
+
         .review-text {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.35rem;
@@ -957,11 +1003,13 @@
             line-height: 1.5;
             margin-bottom: 25px;
         }
+
         .reviewer-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
+
         .reviewer-avatar {
             width: 48px;
             height: 48px;
@@ -969,11 +1017,13 @@
             border: 1px solid var(--gold);
             object-fit: cover;
         }
+
         .reviewer-name {
             font-size: 0.9rem;
             font-weight: 600;
             color: #ffffff;
         }
+
         .reviewer-title {
             font-size: 0.75rem;
             color: var(--gold);
@@ -986,10 +1036,12 @@
             max-width: 800px;
             margin: 0 auto;
         }
+
         .faq-item {
             border-bottom: 1px solid var(--border-light);
             padding: 24px 0;
         }
+
         .faq-header {
             display: flex;
             justify-content: space-between;
@@ -998,9 +1050,11 @@
             user-select: none;
             transition: var(--transition-smooth);
         }
+
         .faq-header:hover h3 {
             color: var(--gold);
         }
+
         .faq-header h3 {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.5rem;
@@ -1009,16 +1063,19 @@
             margin: 0;
             transition: var(--transition-smooth);
         }
+
         .faq-icon {
             color: var(--gold);
             font-size: 1rem;
             transition: transform 0.4s ease;
         }
+
         .faq-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), padding 0.4s ease;
         }
+
         .faq-content p {
             font-size: 0.9rem;
             line-height: 1.6;
@@ -1026,9 +1083,11 @@
             margin: 0;
             padding-top: 15px;
         }
+
         .faq-item.active .faq-icon {
             transform: rotate(45deg);
         }
+
         .faq-item.active .faq-content {
             max-height: 200px;
             transition: max-height 0.4s cubic-bezier(1, 0, 1, 0), padding 0.4s ease;
@@ -1038,42 +1097,53 @@
         #luxury-story-section {
             background: var(--formal-garden-deep);
         }
+
         #luxury-story-section .premium-card {
             background: rgba(90, 24, 39, 0.15) !important;
             border-color: rgba(223, 186, 134, 0.15) !important;
             padding-bottom: 80px !important;
         }
+
         #luxury-story-section .premium-card:hover {
             border-color: var(--border-hover) !important;
             background: rgba(90, 24, 39, 0.25) !important;
         }
+
         #reviews-section {
             background: #ffffff !important;
         }
+
         #reviews-section .section-title {
             color: var(--formal-garden-deep) !important;
         }
+
         #reviews-section .section-subtitle {
             color: var(--rosewood) !important;
         }
+
         #reviews-section .review-card {
             background: #5a1827 !important;
             border-color: rgba(223, 186, 134, 0.15) !important;
         }
+
         #reviews-section .review-card:hover {
             border-color: var(--border-hover) !important;
             background: #7E2638 !important;
             box-shadow: 0 15px 35px rgba(90, 24, 39, 0.15) !important;
         }
+
         #faqs-section {
             background: var(--formal-garden-deep);
         }
+
         #faqs-section .faq-item {
             border-bottom-color: rgba(223, 186, 134, 0.15);
         }
+
         #faqs-section .faq-header:hover h3 {
             color: var(--gold);
         }
+
         #faqs-section .faq-content p {
             color: #A8A196;
         }
@@ -1098,10 +1168,10 @@
                 <!-- <a href="register.html">CREATE ACCOUNT</a>
                 <a href="ambitions.html">AMBITIONS</a> -->
                 <a href="career.html">CAREER</a>
-                <a href="login.html">LOGIN</a>
+                <!-- <a href="login.html">LOGIN</a> -->
             </nav>
 
-            <a href="book-table-test.html" class="btn-outline">MY ACCOUNT</a>
+            <a href="login.html" class="btn-outline">MY ACCOUNT</a>
         </div>
     </header>
 
@@ -1237,7 +1307,8 @@
                             A Culinary Experience Beyond Taste
                         </h2>
                         <p class="text-secondary fs-5 mb-4">
-                            Medusa combines premium ingredients, luxury atmosphere, and culinary artistry to create unforgettable dining.
+                            Medusa combines premium ingredients, luxury atmosphere, and culinary artistry to create
+                            unforgettable dining.
                         </p>
                         <p class="text-secondary fs-5 mb-5">
                             Every dish is carefully crafted to deliver elegance, emotion, and exceptional flavor.
@@ -1256,15 +1327,18 @@
         <div class="container">
             <h2 class="section-title reveal">Guest Experiences</h2>
             <p class="section-subtitle reveal">Accolades from our esteemed patrons</p>
-            
+
             <div class="row g-4">
                 <!-- REVIEW 1 -->
                 <div class="col-md-6 col-lg-4 reveal">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"Medusa is not merely a restaurant; it's a sensory performance. The butter chicken customizations are absolutely exquisite. A truly majestic fine dining encounter."</div>
+                        <div class="review-text">"Medusa is not merely a restaurant; it's a sensory performance. The
+                            butter chicken customizations are absolutely exquisite. A truly majestic fine dining
+                            encounter."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"
+                                class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Vikram Malhotra</div>
                                 <div class="reviewer-title">Elite Member</div>
@@ -1276,9 +1350,12 @@
                 <div class="col-md-6 col-lg-4 reveal">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"The private cellar wine options paired with the custom pizza was incredibly divine. The candlelit atmosphere creates a level of elegance unmatched in the city."</div>
+                        <div class="review-text">"The private cellar wine options paired with the custom pizza was
+                            incredibly divine. The candlelit atmosphere creates a level of elegance unmatched in the
+                            city."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"
+                                class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Ananya Sen</div>
                                 <div class="reviewer-title">Food Critic</div>
@@ -1290,9 +1367,11 @@
                 <div class="col-md-6 col-lg-4 reveal d-md-none d-lg-block">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"Flawless reservation system and outstanding service. The dessert list is a masterpiece of flavors. Easily the finest dining establishment in the region."</div>
+                        <div class="review-text">"Flawless reservation system and outstanding service. The dessert list
+                            is a masterpiece of flavors. Easily the finest dining establishment in the region."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop"
+                                class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Rohan Verma</div>
                                 <div class="reviewer-title">Gourmand</div>
@@ -1309,36 +1388,55 @@
         <div class="container">
             <h2 class="section-title reveal">Frequently Asked Questions</h2>
             <p class="section-subtitle reveal">Your inquiries, resolved</p>
-            
+
             <div class="faq-accordion reveal">
                 <!-- FAQ 1 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>What is the dress code at Medusa?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>We maintain a smart casual to formal dress code to preserve the elegant atmosphere of our dining rooms. Sportswear, sandals, and sleeveless shirts are discouraged.</p>
+                        <p>We maintain a smart casual to formal dress code to preserve the elegant atmosphere of our
+                            dining rooms. Sportswear, sandals, and sleeveless shirts are discouraged.</p>
                     </div>
                 </div>
                 <!-- FAQ 2 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>Do I need to reserve a table in advance?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>While walk-ins are welcome if space allows, we highly recommend booking a table via our online system to ensure availability, especially for weekend dinner reservations.</p>
+                        <p>While walk-ins are welcome if space allows, we highly recommend booking a table via our
+                            online system to ensure availability, especially for weekend dinner reservations.</p>
                     </div>
                 </div>
                 <!-- FAQ 3 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>Can you accommodate specific dietary restrictions?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>Yes, absolutely. Our culinary team is highly experienced in preparing custom options for gluten-free, vegan, nut allergies, and other dietary preferences. Simply specify when reserving or ordering.</p>
+                        <p>Yes, absolutely. Our culinary team is highly experienced in preparing custom options for
+                            gluten-free, vegan, nut allergies, and other dietary preferences. Simply specify when
+                            reserving or ordering.</p>
                     </div>
                 </div>
             </div>
@@ -1439,10 +1537,10 @@
         function toggleFaq(headerElement) {
             const item = headerElement.closest('.faq-item');
             const isActive = item.classList.contains('active');
-            
+
             // Close other items
             document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-            
+
             if (!isActive) {
                 item.classList.add('active');
             }

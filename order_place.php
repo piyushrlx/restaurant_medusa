@@ -298,6 +298,10 @@ try {
 
     // Process Loyalty points & Tier progression
     if ($db_user_id) {
+        // Clear database cart for this user upon successful order placement
+        $clear_cart = $pdo->prepare("DELETE FROM cart WHERE user_id = ?");
+        $clear_cart->execute([$db_user_id]);
+
         // Deduct points
         if ($points_redeemed > 0) {
             $upd_pts = $pdo->prepare("
