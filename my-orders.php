@@ -848,11 +848,8 @@ try {
             });
         });
     </script>
-<?php
-if (!empty($_SESSION['active_order_token'])) {
-    include __DIR__ . '/includes/active_order_bar.php';
-    include __DIR__ . '/includes/order_toast.php';
-}
-?>
+
+<?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
+<?php require_once __DIR__ . '/includes/order_toast.php'; ?>
 </body>
 </html>

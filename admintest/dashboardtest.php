@@ -871,8 +871,20 @@ if (isset($_REQUEST['action'])) {
         $order_id = $_POST['order_id'];
         $status = $_POST['status'];
         
-        $stmt = $pdo->prepare("UPDATE orders SET order_status = ? WHERE id = ?");
-        $stmt->execute([$status, $order_id]);
+        // Map order_status to tracking_status to keep customer live tracking updated
+        $tracking_status = 'placed';
+        if ($status === 'preparing') {
+            $tracking_status = 'preparing';
+        } elseif ($status === 'ready') {
+            $tracking_status = 'out_for_delivery';
+        } elseif ($status === 'completed') {
+            $tracking_status = 'delivered';
+        } elseif ($status === 'cancelled') {
+            $tracking_status = 'cancelled';
+        }
+        
+        $stmt = $pdo->prepare("UPDATE orders SET order_status = ?, tracking_status = ? WHERE id = ?");
+        $stmt->execute([$status, $tracking_status, $order_id]);
         
         // Fetch order details for notification
         $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address FROM orders WHERE id = ?");
@@ -985,8 +997,8 @@ if (isset($_REQUEST['action'])) {
         $order_id = $_POST['order_id'];
         $payment_method = $_POST['payment_method']; // cash, upi, card
         
-        // Append payment method details in the database order status or message
-        $stmt = $pdo->prepare("UPDATE orders SET order_status = 'completed', delivery_address = CONCAT(delivery_address, ' [Paid via ', ?, ']') WHERE id = ?");
+        // Append payment method details in the database order status or message and set tracking_status to delivered
+        $stmt = $pdo->prepare("UPDATE orders SET order_status = 'completed', tracking_status = 'delivered', delivery_address = CONCAT(delivery_address, ' [Paid via ', ?, ']') WHERE id = ?");
         $stmt->execute([strtoupper($payment_method), $order_id]);
         
         // Fetch order details for notification

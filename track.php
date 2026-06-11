@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * track.php — Public live order tracking page
+ * track.php â€” Public live order tracking page
  * Token-based auth: ?token=<64-char hex>
  */
 require_once __DIR__ . '/api/config.php';
@@ -9,7 +9,7 @@ $token = trim($_GET['token'] ?? $_SESSION['active_order_token'] ?? '');
 
 // Validate token format
 if (strlen($token) !== 64 || !ctype_xdigit($token)) {
-    header('Location: menutest.html');
+    header('Location: menutest.php');
     exit;
 }
 
@@ -35,7 +35,7 @@ try {
 } catch (PDOException $e) { /* silent */ }
 
 if (!$order) {
-    header('Location: menutest.html');
+    header('Location: menutest.php');
     exit;
 }
 
@@ -61,8 +61,8 @@ $current_step = $step_order[$tracking_status] ?? 1;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Track your Medusa order live — real-time status updates.">
-    <title>Track Order <?php echo htmlspecialchars($order['order_number']); ?> — LA-MEDUSAA</title>
+    <meta name="description" content="Track your Medusa order live â€” real-time status updates.">
+    <title>Track Order <?php echo htmlspecialchars($order['order_number']); ?> â€” LA-MEDUSAA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -94,7 +94,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
             flex-direction: column;
         }
 
-        /* ── NAV ── */
+        /* â”€â”€ NAV â”€â”€ */
         .top-nav {
             position: sticky;
             top: 0;
@@ -129,7 +129,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         }
         .nav-link:hover { color: var(--gold); }
 
-        /* ── MAIN ── */
+        /* â”€â”€ MAIN â”€â”€ */
         main {
             flex: 1;
             display: flex;
@@ -142,7 +142,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
             width: 100%;
         }
 
-        /* ── ORDER HEADER ── */
+        /* â”€â”€ ORDER HEADER â”€â”€ */
         .order-header { text-align: center; }
         .order-number-label {
             font-size: 0.72rem;
@@ -160,7 +160,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         }
         .order-date-label { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
 
-        /* ── STATUS CARD ── */
+        /* â”€â”€ STATUS CARD â”€â”€ */
         .status-card {
             width: 100%;
             background: var(--card);
@@ -211,7 +211,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
             white-space: nowrap;
         }
 
-        /* ── STEPPER ── */
+        /* â”€â”€ STEPPER â”€â”€ */
         .stepper {
             display: flex;
             align-items: flex-start;
@@ -284,7 +284,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         .step-label.active { color: var(--gold); }
         .step-label.done { color: rgba(245,240,232,0.75); }
 
-        /* ── DETAILS CARD ── */
+        /* â”€â”€ DETAILS CARD â”€â”€ */
         .details-card {
             width: 100%;
             background: var(--card);
@@ -330,7 +330,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         .total-value { color: var(--gold); font-size: 1.2rem; font-weight: 700; }
         .address-text { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
 
-        /* ── CTA ── */
+        /* â”€â”€ CTA â”€â”€ */
         .cta-row {
             display: flex;
             gap: 14px;
@@ -376,7 +376,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         }
         .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); transform: translateY(-1px); }
 
-        /* ── FOOTER ── */
+        /* â”€â”€ FOOTER â”€â”€ */
         footer {
             text-align: center;
             padding: 24px;
@@ -404,7 +404,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         <span class="nav-brand">La-Medusaa</span>
     </a>
     <div class="nav-actions">
-        <a href="menutest.html" class="nav-link">Menu</a>
+        <a href="menutest.php" class="nav-link">Menu</a>
         <?php if (!empty($_SESSION['user_id'])): ?>
             <a href="my-orders.php" class="nav-link">My Orders</a>
         <?php endif; ?>
@@ -418,7 +418,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         <h1 class="order-number-value"><?php echo htmlspecialchars($order['order_number']); ?></h1>
         <p class="order-date-label">
             Placed on <?php echo date('j F Y, g:i A', strtotime($order['order_date'])); ?>
-            &nbsp;·&nbsp;
+            &nbsp;Â·&nbsp;
             For <?php echo htmlspecialchars($order['customer_name']); ?>
         </p>
     </div>
@@ -480,15 +480,15 @@ $current_step = $step_order[$tracking_status] ?? 1;
                 <div class="item-row">
                     <span class="item-name">
                         <?php echo htmlspecialchars($item['item_name']); ?>
-                        <span class="item-qty">× <?php echo intval($item['quantity']); ?></span>
+                        <span class="item-qty">Ã— <?php echo intval($item['quantity']); ?></span>
                     </span>
-                    <span class="item-price">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
+                    <span class="item-price">â‚¹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
                 </div>
                 <?php endforeach; ?>
             </div>
             <div class="total-row">
                 <span class="total-label">Grand Total</span>
-                <span class="total-value">₹<?php echo number_format($order['total_amount'], 2); ?></span>
+                <span class="total-value">â‚¹<?php echo number_format($order['total_amount'], 2); ?></span>
             </div>
         </div>
 
@@ -501,7 +501,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
 
     <!-- CTA -->
     <div class="cta-row">
-        <a href="menutest.html" class="btn-ghost"><i class="fas fa-utensils"></i> Browse Menu</a>
+        <a href="menutest.php" class="btn-ghost"><i class="fas fa-utensils"></i> Browse Menu</a>
         <?php if (!empty($_SESSION['user_id'])): ?>
         <a href="my-orders.php" class="btn-gold"><i class="fas fa-receipt"></i> All My Orders</a>
         <?php endif; ?>
@@ -509,7 +509,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
 </main>
 
 <footer>
-    LA-MEDUSAA Bar &amp; Lounge, Sector 68, Mohali &nbsp;·&nbsp; Live tracking updates every 15 seconds
+    LA-MEDUSAA Bar &amp; Lounge, Sector 68, Mohali &nbsp;Â·&nbsp; Live tracking updates every 15 seconds
 </footer>
 
 <script>
@@ -575,7 +575,7 @@ async function poll() {
         const res  = await fetch(`api/track-status.php?token=${TOKEN}`);
         const data = await res.json();
         if (data.success) updateUI(data);
-    } catch(e) { /* silent — user still sees last known state */ }
+    } catch(e) { /* silent â€” user still sees last known state */ }
 }
 
 // Only poll if order is not already in a terminal state
