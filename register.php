@@ -120,550 +120,315 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Medusa – Create your account">
-    <title>MEDUSA – Register</title>
+    <title>LA-MEDUSAA – Register</title>
     <script src="assets/js/theme-toggle.js"></script>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cream: '#f0ebe1',
+              'cream-dark': '#e6dfd3',
+              maroon: '#5c1a1a',
+              'maroon-dark': '#3e0f0f',
+              gold: '#b8973a',
+              'gold-light': '#d4af5a',
+              'text-dark': '#2a1a0e',
+              'text-mid': '#5a4533',
+              'text-muted': '#8a7260',
+              border: 'rgba(90, 69, 51, 0.15)',
+            },
+            fontFamily: {
+              serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+              sans: ['Jost', 'sans-serif'],
+            },
+            keyframes: {
+              shake: {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '18%': { transform: 'translateX(-6px)' },
+                '36%': { transform: 'translateX(6px)' },
+                '54%': { transform: 'translateX(-4px)' },
+                '72%': { transform: 'translateX(4px)' },
+                '90%': { transform: 'translateX(-2px)' },
+              }
+            },
+            animation: {
+              shake: 'shake 0.38s ease',
+            }
+          }
+        }
+      }
+    </script>
     <style>
-        /* ── Back to Home button ── */
-        .back-home {
-            position: fixed;
-            top: 18px;
-            left: 18px;
-            z-index: 100;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 8px 16px;
-            background: rgba(15,15,15,0.65);
-            border: 1px solid rgba(212,175,55,0.22);
-            border-radius: 50px;
-            color: rgba(255,255,255,0.65);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            text-decoration: none;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: all 0.25s ease;
-        }
-        .back-home i {
-            font-size: 0.75rem;
-            transition: transform 0.25s ease;
-        }
-        .back-home:hover {
-            background: rgba(212,175,55,0.12);
-            border-color: rgba(212,175,55,0.55);
-            color: var(--gold);
-            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
-        }
-        .back-home:hover i {
-            transform: translateX(-3px);
-        }
-
-        /* ── Design tokens ── */
-        :root {
-            --gold:         #d4af37;
-            --gold-hover:   #e5c158;
-            --white:        #ffffff;
-            --gray-light:   rgba(255,255,255,0.6);
-            --bg-glass:     rgba(15,15,15,0.55);
-            --border-glass: rgba(212,175,55,0.12);
-            --red:          #e74c3c;
-            --green:        #2ecc71;
-            --orange:       #f39c12;
-            --ease:         cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
+        /* Custom styles that are harder to replicate with pure tailwind config without plugins */
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-            background: #000;
+            background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&h=1080&fit=crop&q=85');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
-
-        /* ── Card ── */
-        .card {
-            position: relative;
-            width: 100%;
-            max-width: 440px;
-            padding: 30px 26px 26px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            box-shadow: 0 28px 64px rgba(0,0,0,.92),
-                        inset 0 1px 0 rgba(255,255,255,.02);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
-            overflow: hidden;          /* clips the sliding panels */
-            transition: border-color .3s, box-shadow .3s;
+        .input-field:-webkit-autofill,
+        .input-field:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #f0ebe1 inset;
+            -webkit-text-fill-color: #2a1a0e;
         }
-        .card:hover {
-            border-color: rgba(212,175,55,.22);
-            box-shadow: 0 34px 72px rgba(0,0,0,.96);
-        }
-
-        /* ── Logo ── */
-        .brand { text-align:center; margin-bottom:22px; }
-        .brand-logo {
-            width:80px; height:80px;
-            object-fit:contain;
-            border-radius:50%;
-            border:1.5px solid var(--gold);
-            padding:2px;
-            background:rgba(0,0,0,.5);
-        }
-
-        /* ── Step progress dots ── */
-        .step-dots {
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            gap:8px;
-            margin-bottom:24px;
-        }
-        .dot {
-            width:8px; height:8px;
-            border-radius:50%;
-            background:rgba(255,255,255,.18);
-            transition:background .4s var(--ease), transform .4s var(--ease), width .4s var(--ease);
-        }
-        .dot.active {
-            background:var(--gold);
-            width:22px;
-            border-radius:4px;
-            transform:scaleY(1.1);
-        }
-        .dot-label {
-            font-size:.7rem;
-            font-weight:600;
-            letter-spacing:1.2px;
-            color:rgba(255,255,255,.35);
-            text-transform:uppercase;
-            transition:color .3s;
-        }
-        .dot-label.active { color:var(--gold); }
-
-        /* ── Sliding viewport ── */
-        .steps-viewport {
-            overflow: hidden;
-            position: relative;
-        }
-        .steps-track {
-            display: flex;
-            width: 200%;
-            transition: transform .48s var(--ease);
-            will-change: transform;
-        }
-        .steps-track.show-step2 { transform: translateX(-50%); }
-
-        .step-panel {
-            width: 50%;
-            flex-shrink: 0;
-            /* so each panel uses card's horizontal space */
-        }
-
-        /* ── Error / success banners ── */
-        .alert-box {
-            padding:10px 12px;
-            border-radius:8px;
-            font-size:.84rem;
-            margin-bottom:18px;
-            text-align:center;
-            display:flex;
-            align-items:center;
-            gap:8px;
-            justify-content:center;
-        }
-        .alert-error {
-            background:rgba(231,76,60,.1);
-            color:#ff6b6b;
-            border:1px solid rgba(231,76,60,.22);
-        }
-
-        /* ── Section label ── */
-        .section-divider {
-            display:flex;
-            align-items:center;
-            gap:10px;
-            margin:0 0 18px;
-        }
-        .section-divider span {
-            color:var(--gold);
-            font-size:.7rem;
-            font-weight:700;
-            letter-spacing:1.8px;
-            text-transform:uppercase;
-            white-space:nowrap;
-        }
-        .section-divider::before,
-        .section-divider::after {
-            content:''; flex:1;
-            height:1px;
-            background:rgba(212,175,55,.16);
-        }
-
-        /* ── Input row (side-by-side) ── */
-        .field-row { display:flex; gap:12px; }
-        .field-row .input-wrap { flex:1; min-width:0; }
-
-        /* ── Input wrapper ── */
-        .input-wrap {
-            display:flex;
-            align-items:center;
-            border-bottom:1px solid rgba(255,255,255,.15);
-            margin-bottom:16px;
-            padding:7px 0;
-            transition:border-color .25s;
-        }
-        .input-wrap.focused { border-bottom-color:var(--gold); }
-        .input-wrap.err     { border-bottom-color:var(--red) !important; }
-
-        .input-icon {
-            color:rgba(255,255,255,.55);
-            flex-shrink:0;
-            transition:color .25s;
-            font-size:.88rem;
-        }
-        .input-wrap.focused .input-icon { color:var(--gold); }
-
-        .input-field {
-            flex:1;
-            background:transparent;
-            border:none; outline:none;
-            color:#fff;
-            font-size:.9rem;
-            padding-left:11px;
-            font-family:'Plus Jakarta Sans',sans-serif;
-            font-weight:500;
-        }
-        .input-field::placeholder { color:rgba(255,255,255,.35); font-size:.8rem; }
-
-        /* ── Eye toggle ── */
-        .eye-btn {
-            background:none; border:none;
-            color:rgba(255,255,255,.35);
-            cursor:pointer; padding:0 4px;
-            line-height:1; flex-shrink:0;
-            transition:color .25s;
-            font-size:.9rem;
-        }
-        .eye-btn:hover { color:var(--gold); }
-
-        /* ── Password strength ── */
-        .strength-bar {
-            display:flex; gap:4px;
-            margin:-6px 0 12px;
-        }
-        .seg {
-            flex:1; height:3px; border-radius:2px;
-            background:rgba(255,255,255,.1);
-            transition:background .35s;
-        }
-        .seg.weak   { background:var(--red); }
-        .seg.fair   { background:var(--orange); }
-        .seg.good   { background:var(--green); }
-        .seg.strong { background:var(--gold); }
-
-        .strength-text {
-            font-size:.7rem;
-            text-align:right;
-            margin:-8px 0 14px;
-            color:rgba(255,255,255,.4);
-            letter-spacing:.3px;
-            min-height:14px;
-        }
-
-        /* ── Buttons ── */
-        .btn-row {
-            display:flex;
-            gap:10px;
-            margin-top:12px;
-            margin-bottom:20px;
-        }
-        .btn {
-            flex:1;
-            padding:12px;
-            border-radius:8px;
-            font-size:.92rem;
-            font-weight:700;
-            cursor:pointer;
-            letter-spacing:.5px;
-            transition:transform .2s, background .25s, color .25s;
-            border:none;
-        }
-        .btn:active { transform:translateY(1px) !important; }
-
-        .btn-gold {
-            background:var(--gold);
-            color:#000;
-        }
-        .btn-gold:hover { background:var(--gold-hover); transform:translateY(-1px); }
-
-        .btn-ghost {
-            background:transparent;
-            color:rgba(255,255,255,.7);
-            border:1px solid rgba(255,255,255,.18);
-        }
-        .btn-ghost:hover {
-            background:rgba(255,255,255,.06);
-            color:#fff;
-            transform:translateY(-1px);
-        }
-
-        /* single-button row (step 1) */
-        .btn-solo {
-            width:100%;
-            margin-top:12px;
-            margin-bottom:20px;
-        }
-
-        /* ── Login link ── */
-        .login-link {
-            text-align:center;
-            font-size:.83rem;
-            color:rgba(255,255,255,.6);
-        }
-        .login-link a {
-            color:var(--gold);
-            font-weight:700;
-            text-decoration:none;
-            margin-left:4px;
-            transition:color .25s;
-        }
-        .login-link a:hover { color:#fff; }
     </style>
 </head>
-<body>
+<body class="font-sans min-h-screen flex flex-col relative overflow-x-hidden">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-[#0f0703]/65 z-0 pointer-events-none"></div>
 
-<!-- ← HOME button -->
-<a href="indextest.html" class="back-home">
-    <i class="fas fa-arrow-left"></i> HOME
-</a>
-<div class="card">
+    <!-- TOP NAV -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-12 h-20 bg-[#2f1317]">
+        <a href="index.html" class="flex items-center gap-3 no-underline">
+            <img src="assets/images/medusaa 2 ( only logo).png" alt="Logo" class="w-10 h-10 object-contain brightness-110" onerror="this.src='assets/images/versace_logo.png'">
+            <div class="font-serif text-[1.15rem] font-semibold text-gold-light tracking-[2px] uppercase leading-tight">
+                LA-MEDUSAA
+                <small class="block text-[0.58rem] tracking-[4px] font-normal text-gold-light/65">Bar & Lounge</small>
+            </div>
+        </a>
+        <ul class="flex items-center gap-9 list-none">
+            <li><a href="index.html" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Home</a></li>
+            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Menu</a></li>
+            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Events</a></li>
+            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Contact</a></li>
+            <li><a href="#" class="text-[0.72rem] font-medium tracking-[2px] uppercase text-gold-light border border-[#b8973a]/60 px-[18px] py-2 hover:bg-[#b8973a]/10 transition-all">Reservation</a></li>
+        </ul>
+    </nav>
 
-    <!-- Logo -->
-    <div class="brand">
-        <img class="brand-logo" src="assets/images/versace_logo.png" alt="Medusa Logo">
-    </div>
-
-    <!-- Step progress dots -->
-    <div class="step-dots">
-        <span class="dot-label" id="lbl1">Info</span>
-        <div class="dot active" id="dot1"></div>
-        <div class="dot"        id="dot2"></div>
-        <span class="dot-label" id="lbl2">Password</span>
-    </div>
-
-    <!-- Error banner (shown on PHP validation fail) -->
-    <?php if (!empty($error)): ?>
-    <div class="alert-box alert-error" id="php-error">
-        <i class="fas fa-exclamation-circle"></i>
-        <?php echo htmlspecialchars($error); ?>
-    </div>
-    <?php endif; ?>
-
-    <!-- ══ Single form – two sliding panels ══ -->
-    <form action="register.php" method="POST" id="regForm" novalidate>
-        <div class="steps-viewport">
-            <div class="steps-track <?php echo $goToStep2 ? 'show-step2' : ''; ?>" id="track">
-
-                <!-- ══ STEP 1 — Personal Info ══ -->
-                <div class="step-panel" id="step1">
-
-                    <div class="section-divider"><span>Personal Info</span></div>
-
-                    <!-- First + Last -->
-                    <div class="field-row">
-                        <div class="input-wrap" id="w-first">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" id="first_name" name="first_name"
-                                   class="input-field"
-                                   placeholder="FIRST NAME *"
-                                   value="<?php echo htmlspecialchars($form_data['first_name']); ?>"
-                                   autocomplete="given-name"
-                                   required>
-                        </div>
-                        <div class="input-wrap" id="w-last">
-                            <input type="text" id="last_name" name="last_name"
-                                   class="input-field"
-                                   placeholder="LAST NAME (Optional)"
-                                   value="<?php echo htmlspecialchars($form_data['last_name']); ?>"
-                                   autocomplete="family-name">
-                        </div>
-                    </div>
-
-                    <!-- Email -->
-                    <div class="input-wrap" id="w-email">
-                        <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" id="email" name="email"
-                               class="input-field"
-                               placeholder="EMAIL ADDRESS (Optional)"
-                               value="<?php echo htmlspecialchars($form_data['email']); ?>"
-                               autocomplete="email">
-                    </div>
-
-                    <!-- Phone -->
-                    <div class="input-wrap" id="w-phone">
-                        <i class="fas fa-phone input-icon"></i>
-                        <input type="tel" id="phone" name="phone"
-                               class="input-field"
-                               placeholder="MOBILE NUMBER"
-                               value="<?php echo htmlspecialchars($form_data['phone']); ?>"
-                               autocomplete="tel" maxlength="10">
-                    </div>
-
-                    <button type="button" class="btn btn-gold btn-solo" id="nextBtn">
-                        Continue &nbsp;<i class="fas fa-arrow-right"></i>
-                    </button>
-
-                    <div class="login-link">
-                        Already a Member? <a href="login.html">Login Now</a>
-                    </div>
+    <!-- MAIN LAYOUT -->
+    <div class="relative z-10 flex-1 flex flex-col min-h-screen">
+        <main class="flex-1 flex items-center justify-center px-[8%] pt-[108px] pb-16 min-h-screen">
+            
+            <!-- RIGHT PANEL (FLOATING CARD) -->
+            <div id="card" class="bg-cream w-full max-w-[580px] rounded-2xl shadow-[0_25px_50px_rgba(0,0,0,0.5)] px-10 py-[30px] flex flex-col items-center overflow-hidden transition-all duration-300">
+                
+                <div class="text-center mb-7 w-full">
+                    <i class="fas fa-crown text-[2.2rem] text-text-dark mb-2.5 block"></i>
+                    <span class="font-serif text-[1.2rem] font-semibold tracking-[4px] uppercase text-text-dark block">Medusa Club</span>
+                    <span class="text-[0.65rem] tracking-[5px] text-text-muted font-medium uppercase block mt-1">Join the Elite</span>
                 </div>
-                <!-- /step1 -->
 
-                <!-- ══ STEP 2 — Set Password ══ -->
-                <div class="step-panel" id="step2">
-
-                    <div class="section-divider"><span>Set Password</span></div>
-
-                    <!-- New Password -->
-                    <div class="input-wrap" id="w-pw">
-                        <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password"
-                               class="input-field"
-                               placeholder="NEW PASSWORD"
-                               autocomplete="new-password">
-                        <button type="button" class="eye-btn" id="toggle-pw" aria-label="Toggle password">
-                            <i class="fas fa-eye" id="eye-pw"></i>
-                        </button>
-                    </div>
-
-                    <!-- Strength bar -->
-                    <div class="strength-bar">
-                        <div class="seg" id="seg1"></div>
-                        <div class="seg" id="seg2"></div>
-                        <div class="seg" id="seg3"></div>
-                        <div class="seg" id="seg4"></div>
-                    </div>
-                    <div class="strength-text" id="stext"></div>
-
-                    <!-- Confirm Password -->
-                    <div class="input-wrap" id="w-cpw">
-                        <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="confirm_password" name="confirm_password"
-                               class="input-field"
-                               placeholder="CONFIRM PASSWORD"
-                               autocomplete="new-password">
-                        <button type="button" class="eye-btn" id="toggle-cpw" aria-label="Toggle confirm">
-                            <i class="fas fa-eye" id="eye-cpw"></i>
-                        </button>
-                    </div>
-
-                    <!-- Two buttons -->
-                    <div class="btn-row">
-                        <button type="button" class="btn btn-ghost" id="backBtn">
-                            <i class="fas fa-arrow-left"></i> &nbsp;Back
-                        </button>
-                        <button type="submit" class="btn btn-gold" id="submitBtn">
-                            Register &nbsp;<i class="fas fa-check"></i>
-                        </button>
-                    </div>
-
-                    <div class="login-link">
-                        Already a Member? <a href="login.html">Login Now</a>
-                    </div>
+                <h1 class="font-serif text-[2.2rem] font-normal text-text-dark text-center mb-2">Create Account</h1>
+                <div class="text-center mb-[26px]">
+                    <svg width="40" height="12" viewBox="0 0 40 12" fill="currentColor" class="text-gold inline-block">
+                        <path d="M20 0L24 6L20 12L16 6L20 0Z" />
+                        <path d="M8 4L10 6L8 8L6 6L8 4Z" />
+                        <path d="M32 4L34 6L32 8L30 6L32 4Z" />
+                        <rect x="0" y="5.5" width="4" height="1" />
+                        <rect x="36" y="5.5" width="4" height="1" />
+                    </svg>
                 </div>
-                <!-- /step2 -->
 
-            </div><!-- /track -->
-        </div><!-- /viewport -->
-    </form>
-</div><!-- /card -->
+                <!-- Error banner (shown on PHP validation fail) -->
+                <?php if (!empty($error)): ?>
+                <div class="bg-red-50 text-red-500 border border-red-200 px-3 py-2.5 rounded-lg text-sm mb-4 text-center flex items-center gap-2 justify-center w-full">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- Step progress dots -->
+                <div class="flex justify-center items-center gap-2 mb-6 w-full">
+                    <span id="lbl1" class="text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted">Info</span>
+                    <div id="dot1" class="h-2 rounded-full transition-all duration-400 ease-in-out bg-gold w-[22px] transform scale-y-110"></div>
+                    <div id="dot2" class="w-2 h-2 rounded-full transition-all duration-400 ease-in-out bg-text-muted/30"></div>
+                    <span id="lbl2" class="text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted/50">Password</span>
+                </div>
+
+                <!-- ══ Single form – two sliding panels ══ -->
+                <form action="register.php" method="POST" id="regForm" class="w-full relative overflow-hidden" novalidate>
+                    <div id="track" class="flex w-[200%] transition-transform duration-[480ms] ease-[cubic-bezier(0.4,0,0.2,1)] <?php echo $goToStep2 ? '-translate-x-1/2' : ''; ?>">
+                        
+                        <!-- ══ STEP 1 — Personal Info ══ -->
+                        <div class="w-1/2 shrink-0 px-1" id="step1">
+
+                            <div class="flex items-center gap-2.5 mb-4 w-full">
+                                <div class="flex-1 h-px bg-gold/20"></div>
+                                <span class="text-gold text-[0.7rem] font-bold tracking-[1.8px] uppercase whitespace-nowrap">Personal Info</span>
+                                <div class="flex-1 h-px bg-gold/20"></div>
+                            </div>
+
+                            <div class="flex gap-3 w-full">
+                                <div class="flex-1 min-w-0">
+                                    <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">FIRST NAME *</label>
+                                    <div id="w-first" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-4 transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                        <i class="fas fa-user text-text-muted mr-3 text-[0.9rem]"></i>
+                                        <input type="text" id="first_name" name="first_name" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="John" value="<?php echo htmlspecialchars($form_data['first_name']); ?>" autocomplete="given-name" required>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">LAST NAME</label>
+                                    <div id="w-last" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-4 transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                        <input type="text" id="last_name" name="last_name" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="Doe (Optional)" value="<?php echo htmlspecialchars($form_data['last_name']); ?>" autocomplete="family-name">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full">
+                                <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">EMAIL ADDRESS</label>
+                                <div id="w-email" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-4 transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                    <i class="fas fa-envelope text-text-muted mr-3 text-[0.9rem]"></i>
+                                    <input type="email" id="email" name="email" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="john@example.com (Optional)" value="<?php echo htmlspecialchars($form_data['email']); ?>" autocomplete="email">
+                                </div>
+                            </div>
+
+                            <div class="w-full">
+                                <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">MOBILE NUMBER *</label>
+                                <div id="w-phone" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-4 transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                    <i class="fas fa-phone text-text-muted mr-3 text-[0.9rem]"></i>
+                                    <input type="tel" id="phone" name="phone" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="10-digit number" value="<?php echo htmlspecialchars($form_data['phone']); ?>" autocomplete="tel" maxlength="10">
+                                </div>
+                            </div>
+
+                            <button type="button" id="nextBtn" class="w-full bg-maroon text-white border-none py-3.5 rounded font-sans text-[0.85rem] font-semibold tracking-[2px] uppercase cursor-pointer transition-all duration-250 hover:bg-maroon-dark hover:-translate-y-px active:translate-y-0 mt-2 mb-5">
+                                Continue <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+
+                            <div class="text-center text-[0.83rem] text-text-mid">
+                                Already a Member? <a href="login.html" class="text-maroon font-semibold no-underline ml-1 transition-colors hover:text-gold">Login Now</a>
+                            </div>
+
+                        </div>
+                        <!-- /step1 -->
+
+                        <!-- ══ STEP 2 — Set Password ══ -->
+                        <div class="w-1/2 shrink-0 px-1" id="step2">
+
+                            <div class="flex items-center gap-2.5 mb-4 w-full">
+                                <div class="flex-1 h-px bg-gold/20"></div>
+                                <span class="text-gold text-[0.7rem] font-bold tracking-[1.8px] uppercase whitespace-nowrap">Set Password</span>
+                                <div class="flex-1 h-px bg-gold/20"></div>
+                            </div>
+
+                            <div class="w-full">
+                                <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">NEW PASSWORD *</label>
+                                <div id="w-pw" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-[18px] transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                    <i class="fas fa-lock text-text-muted mr-3 text-[0.9rem]"></i>
+                                    <input type="password" id="password" name="password" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="Enter new password" autocomplete="new-password">
+                                    <button type="button" id="toggle-pw" class="bg-none border-none cursor-pointer text-text-muted text-[0.9rem] px-1 hover:text-text-dark transition-colors" aria-label="Toggle password">
+                                        <i class="fas fa-eye" id="eye-pw"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Strength bar -->
+                            <div class="flex gap-1 -mt-1.5 mb-3 w-full">
+                                <div id="seg1" class="flex-1 h-[3px] rounded-sm bg-border transition-colors duration-350"></div>
+                                <div id="seg2" class="flex-1 h-[3px] rounded-sm bg-border transition-colors duration-350"></div>
+                                <div id="seg3" class="flex-1 h-[3px] rounded-sm bg-border transition-colors duration-350"></div>
+                                <div id="seg4" class="flex-1 h-[3px] rounded-sm bg-border transition-colors duration-350"></div>
+                            </div>
+                            <div id="stext" class="text-[0.7rem] text-right -mt-2 mb-3.5 text-text-muted tracking-[0.3px] min-h-[14px] w-full"></div>
+
+                            <div class="w-full">
+                                <label class="block text-[0.72rem] font-medium tracking-[0.5px] text-text-mid mb-[7px]">CONFIRM PASSWORD *</label>
+                                <div id="w-cpw" class="flex items-center border border-border rounded bg-transparent px-3.5 py-3 mb-4 transition-all duration-200 focus-within:border-gold/55 focus-within:ring-2 focus-within:ring-gold/10">
+                                    <i class="fas fa-lock text-text-muted mr-3 text-[0.9rem]"></i>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="input-field flex-1 bg-transparent border-none outline-none font-sans text-[0.9rem] text-text-dark placeholder-text-muted/70" placeholder="Confirm new password" autocomplete="new-password">
+                                    <button type="button" id="toggle-cpw" class="bg-none border-none cursor-pointer text-text-muted text-[0.9rem] px-1 hover:text-text-dark transition-colors" aria-label="Toggle confirm">
+                                        <i class="fas fa-eye" id="eye-cpw"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2.5 mt-3 mb-5 w-full">
+                                <button type="button" id="backBtn" class="flex-1 bg-transparent text-text-mid border border-border py-3.5 rounded font-sans text-[0.85rem] font-semibold tracking-[1px] uppercase cursor-pointer transition-all duration-250 hover:bg-black/5 hover:text-text-dark hover:-translate-y-px active:translate-y-0">
+                                    <i class="fas fa-arrow-left mr-1"></i> Back
+                                </button>
+                                <button type="submit" id="submitBtn" class="flex-1 bg-maroon text-white border-none py-3.5 rounded font-sans text-[0.85rem] font-semibold tracking-[1px] uppercase cursor-pointer transition-all duration-250 hover:bg-maroon-dark hover:-translate-y-px active:translate-y-0">
+                                    Register <i class="fas fa-check ml-1"></i>
+                                </button>
+                            </div>
+
+                            <div class="text-center text-[0.83rem] text-text-mid">
+                                Already a Member? <a href="login.html" class="text-maroon font-semibold no-underline ml-1 transition-colors hover:text-gold">Login Now</a>
+                            </div>
+
+                        </div>
+                        <!-- /step2 -->
+
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
 
 <script>
-/* ════════════════════════════════════════════
-   MULTI-STEP ANIMATION CONTROLLER
-════════════════════════════════════════════ */
 const track   = document.getElementById('track');
 const dot1    = document.getElementById('dot1');
 const dot2    = document.getElementById('dot2');
 const lbl1    = document.getElementById('lbl1');
 const lbl2    = document.getElementById('lbl2');
+const card    = document.getElementById('card');
 
 let currentStep = <?php echo $goToStep2 ? 2 : 1; ?>;
+
+function updateDots() {
+    if (currentStep === 2) {
+        dot1.className = "w-2 h-2 rounded-full transition-all duration-400 ease-in-out bg-text-muted/30";
+        dot2.className = "h-2 rounded-full transition-all duration-400 ease-in-out bg-gold w-[22px] transform scale-y-110";
+        lbl1.className = "text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted/50";
+        lbl2.className = "text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted";
+    } else {
+        dot2.className = "w-2 h-2 rounded-full transition-all duration-400 ease-in-out bg-text-muted/30";
+        dot1.className = "h-2 rounded-full transition-all duration-400 ease-in-out bg-gold w-[22px] transform scale-y-110";
+        lbl2.className = "text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted/50";
+        lbl1.className = "text-[0.7rem] font-semibold tracking-[1.2px] uppercase transition-colors text-text-muted";
+    }
+}
+updateDots();
 
 function goToStep(n) {
     currentStep = n;
     if (n === 2) {
-        track.classList.add('show-step2');
-        dot1.classList.remove('active');
-        dot2.classList.add('active');
-        lbl1.classList.remove('active');
-        lbl2.classList.add('active');
+        track.classList.add('-translate-x-1/2');
     } else {
-        track.classList.remove('show-step2');
-        dot2.classList.remove('active');
-        dot1.classList.add('active');
-        lbl2.classList.remove('active');
-        lbl1.classList.add('active');
+        track.classList.remove('-translate-x-1/2');
     }
+    updateDots();
 }
-
-// Init dots label colours
-if (currentStep === 2) {
-    lbl2.classList.add('active');
-} else {
-    lbl1.classList.add('active');
-}
-
-/* ── Focus highlight ── */
-document.querySelectorAll('.input-field').forEach(inp => {
-    const wrap = inp.closest('.input-wrap');
-    inp.addEventListener('focus', () => wrap.classList.add('focused'));
-    inp.addEventListener('blur',  () => wrap.classList.remove('focused'));
-});
 
 /* ── Step 1 validation → Next ── */
 document.getElementById('nextBtn').addEventListener('click', () => {
     const first = document.getElementById('first_name').value.trim();
-    const last  = document.getElementById('last_name').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
     let ok = true;
 
     const mark = (id, bad) => {
-        document.getElementById(id).classList.toggle('err', bad);
-        if (bad) ok = false;
+        const el = document.getElementById(id);
+        if (bad) {
+            el.classList.add('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+            el.classList.remove('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
+            ok = false;
+        } else {
+            el.classList.remove('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+            el.classList.add('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
+        }
     };
 
     mark('w-first', !first);
-    // last name is optional — no validation needed
     mark('w-email', email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
     mark('w-phone', !phone || !/^[0-9]{10}$/.test(phone));
 
     if (!ok) {
-        // shake the card
-        const card = document.querySelector('.card');
-        card.style.animation = 'none';
-        requestAnimationFrame(() => {
-            card.style.animation = 'shake .38s ease';
-        });
+        card.classList.remove('animate-shake');
+        void card.offsetWidth; // trigger reflow
+        card.classList.add('animate-shake');
         return;
     }
 
     goToStep(2);
-    // focus first password field after animation
     setTimeout(() => document.getElementById('password').focus(), 480);
 });
 
@@ -677,8 +442,8 @@ function makeEye(btnId, inpId, icoId) {
         const ico  = document.getElementById(icoId);
         const show = inp.type === 'password';
         inp.type = show ? 'text' : 'password';
-        ico.classList.toggle('fa-eye',       !show);
-        ico.classList.toggle('fa-eye-slash',  show);
+        ico.classList.toggle('fa-eye', !show);
+        ico.classList.toggle('fa-eye-slash', show);
     });
 }
 makeEye('toggle-pw',  'password',         'eye-pw');
@@ -688,10 +453,10 @@ makeEye('toggle-cpw', 'confirm_password', 'eye-cpw');
 const segs   = ['seg1','seg2','seg3','seg4'].map(id => document.getElementById(id));
 const stext  = document.getElementById('stext');
 const LEVELS = [
-    { label:'Weak',   cls:'weak',   fill:1, color:'#e74c3c' },
-    { label:'Fair',   cls:'fair',   fill:2, color:'#f39c12' },
-    { label:'Good',   cls:'good',   fill:3, color:'#2ecc71' },
-    { label:'Strong', cls:'strong', fill:4, color:'var(--gold)' },
+    { label:'Weak',   cls:'bg-red-500',   fill:1, color:'#ef4444' },
+    { label:'Fair',   cls:'bg-orange-500',fill:2, color:'#f97316' },
+    { label:'Good',   cls:'bg-green-500', fill:3, color:'#22c55e' },
+    { label:'Strong', cls:'bg-[#b8973a]', fill:4, color:'#b8973a' },
 ];
 
 function scorePassword(pw) {
@@ -706,10 +471,13 @@ function scorePassword(pw) {
 
 document.getElementById('password').addEventListener('input', function () {
     const score = scorePassword(this.value);
-    segs.forEach(s => { s.className = 'seg'; });
+    segs.forEach(s => { s.className = 'flex-1 h-[3px] rounded-sm bg-border transition-colors duration-350'; });
     if (score < 0) { stext.textContent = ''; return; }
     const lvl = LEVELS[Math.min(score, 3)];
-    for (let i = 0; i < lvl.fill; i++) segs[i].classList.add(lvl.cls);
+    for (let i = 0; i < lvl.fill; i++) {
+        segs[i].classList.remove('bg-border');
+        segs[i].classList.add(lvl.cls.split('-')[0]+'-'+lvl.cls.split('-')[1]+(lvl.cls.split('-')[2]?'-'+lvl.cls.split('-')[2]:''), lvl.cls);
+    }
     stext.textContent  = lvl.label;
     stext.style.color  = lvl.color;
 });
@@ -719,9 +487,11 @@ document.getElementById('confirm_password').addEventListener('input', function (
     const pw   = document.getElementById('password').value;
     const wrap = document.getElementById('w-cpw');
     if (this.value && this.value !== pw) {
-        wrap.classList.add('err');
+        wrap.classList.add('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+        wrap.classList.remove('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
     } else {
-        wrap.classList.remove('err');
+        wrap.classList.remove('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+        wrap.classList.add('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
     }
 });
 
@@ -729,24 +499,28 @@ document.getElementById('confirm_password').addEventListener('input', function (
 document.getElementById('regForm').addEventListener('submit', function (e) {
     const pw  = document.getElementById('password').value;
     const cpw = document.getElementById('confirm_password').value;
-    if (pw.length < 6 || pw !== cpw) {
+    let err = false;
+    
+    if (pw.length < 6) {
+        const wpw = document.getElementById('w-pw');
+        wpw.classList.add('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+        wpw.classList.remove('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
+        err = true;
+    }
+    if (pw !== cpw) {
+        const wcpw = document.getElementById('w-cpw');
+        wcpw.classList.add('border-red-500', 'focus-within:border-red-500', 'focus-within:ring-red-500/20');
+        wcpw.classList.remove('border-border', 'focus-within:border-gold/55', 'focus-within:ring-gold/10');
+        err = true;
+    }
+    
+    if (err) {
         e.preventDefault();
-        document.getElementById('w-pw').classList.toggle('err',  pw.length < 6);
-        document.getElementById('w-cpw').classList.toggle('err', pw !== cpw);
+        card.classList.remove('animate-shake');
+        void card.offsetWidth;
+        card.classList.add('animate-shake');
     }
 });
 </script>
-
-<style>
-/* shake keyframe (no JS lib needed) */
-@keyframes shake {
-    0%,100% { transform: translateX(0);   }
-    18%     { transform: translateX(-6px);}
-    36%     { transform: translateX( 6px);}
-    54%     { transform: translateX(-4px);}
-    72%     { transform: translateX( 4px);}
-    90%     { transform: translateX(-2px);}
-}
-</style>
 </body>
 </html>

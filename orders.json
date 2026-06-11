@@ -1099,5 +1099,33 @@
         "sms_status": "error",
         "sms_response": "{\"message\":\"cURL Error: Failed to connect to 192.168.1.13 port 8080: Timed out\"}",
         "created_at": "2026-05-29 11:03:20"
+    },
+    "ORD-1994B": {
+        "order_id": "ORD-1994B",
+        "customer_name": "Rahul Dhiman",
+        "customer_phone": "8124735499",
+        "customer_email": "rahuldhiman2080@gmail.com",
+        "delivery_address": "GAYA BHA, CHDh, Delhi - 134109, India",
+        "message": "",
+        "payment_id": "pay_T01lUmri7BRqVb",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": ""
+            }
+        ],
+        "subtotal": 425,
+        "gst": 68,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 494.55999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-10 20:29:16"
     }
 }

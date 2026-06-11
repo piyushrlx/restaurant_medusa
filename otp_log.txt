@@ -426,3 +426,37 @@ Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=93&token
 ----------------------------------------
 
 [2026-06-09 14:53:00] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_93_20260609_145253.pdf
+[2026-06-10 19:58:59] [EMAIL] OTP for rahuldhiman2080@gmail.com: 981053
+[2026-06-10 19:59:05] [SMS] OTP for 8124735499: 194400
+[2026-06-10 20:00:15] [EMAIL] OTP for rahuldhiman2080@gmail.com: 315549
+[2026-06-10 20:00:20] [SMS] OTP for 8124735499: 860431
+[2026-06-10 20:01:19] [EMAIL] OTP for rahuldhiman2080@gmail.com: 158578
+[2026-06-10 20:01:25] [SMS] OTP for 8124735499: 696583
+[2026-06-10 20:02:26] [WELCOME_EMAIL] Email queued/sent to rahuldhiman2080@gmail.com:
+----------------------------------------
+Name: Rahul Dhiman
+Email: rahuldhiman2080@gmail.com
+Phone: 8124735499
+Status: Activated
+----------------------------------------
+
+[2026-06-10 20:02:32] [ACCOUNT_CONFIRMATION] Email queued/sent to rahuldhiman2080@gmail.com:
+----------------------------------------
+Name: Rahul Dhiman
+Email: rahuldhiman2080@gmail.com
+Phone: 8124735499
+Registration Date: 2026-06-10 20:02:32
+----------------------------------------
+
+[2026-06-10 20:29:07] [SMS_GATEWAY_ERROR] SMS failed for 8124735499: cURL Error: Failed to connect to 192.168.1.2 port 8080 after 3009 ms: Timeout was reached
+[2026-06-10 20:29:10] [ORDER_BILL_ATTACHMENT] Email queued/sent to rahuldhiman2080@gmail.com:
+----------------------------------------
+Name: Rahul Dhiman
+Email: rahuldhiman2080@gmail.com
+Phone: 8124735499
+Order ID: ORD-1994B
+PDF Path: bills/order_66_20260610_202907.pdf
+Download URL: http://192.168.1.3/restaurant_medusa/download_bill.php?id=66&token=a88caca6cfacce7da4df4cd99ff894e221ce8a1ccfe38a3e72149898d077e550
+----------------------------------------
+
+[2026-06-10 20:29:16] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 8124735499 with attachment: bills/order_66_20260610_202907.pdf

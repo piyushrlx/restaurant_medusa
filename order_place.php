@@ -195,6 +195,14 @@ try {
 
     $db_order_id = $pdo->lastInsertId();
 
+    // Generate tracking token and store in session
+    $tracking_token = bin2hex(random_bytes(32));
+    $upd_token = $pdo->prepare("UPDATE orders SET tracking_token = ?, tracking_status = 'placed', estimated_delivery = ? WHERE id = ?");
+    $upd_token->execute([$tracking_token, $estimated_delivery, $db_order_id]);
+    $_SESSION['active_order_token'] = $tracking_token;
+    $_SESSION['active_order_id']    = $db_order_id;
+    $_SESSION['order_placed_at']    = time();
+
     // 2. Insert order items into order_items table
     $items_for_pdf = [];
     $pegs_to_add = 0;
@@ -483,8 +491,10 @@ try {
 }
 
 echo json_encode([
-    'success' => true,
-    'order_id' => $order_number, // return ORD-XXXXX as order_id for success page routing
-    'sms_status' => $sms_status
+    'success'        => true,
+    'order_id'       => $order_number,
+    'sms_status'     => $sms_status,
+    'tracking_token' => $tracking_token ?? null,
+    'redirect_url'   => ($tracking_token ?? null) ? 'order_confirmed.php' : ('order-success.php?order_id=' . $order_number),
 ]);
 exit;
