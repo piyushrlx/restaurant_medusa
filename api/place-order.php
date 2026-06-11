@@ -309,6 +309,16 @@ if (isset($pdo)) {
         ]);
         
         $db_order_id = $pdo->lastInsertId();
+
+        // Generate a unique 64-char hex tracking token
+        $tracking_token = bin2hex(random_bytes(32));
+        $upd_token = $pdo->prepare("UPDATE orders SET tracking_token = ?, tracking_status = 'placed' WHERE id = ?");
+        $upd_token->execute([$tracking_token, $db_order_id]);
+
+        // Store in session so customer can track on all pages
+        $_SESSION['active_order_token'] = $tracking_token;
+        $_SESSION['active_order_id']    = $db_order_id;
+        $_SESSION['order_placed_at']    = time();
         
         $pegs_to_add = 0;
         foreach ($cart_items as $item) {
@@ -424,9 +434,11 @@ if (isset($pdo)) {
 }
 
 echo json_encode([
-    'success' => true,
-    'order_id' => $order_id,
-    'sms_status' => $sms_status,
-    'sms_response' => $sms_response
+    'success'        => true,
+    'order_id'       => $order_id,
+    'sms_status'     => $sms_status,
+    'sms_response'   => $sms_response,
+    'tracking_token' => $tracking_token ?? null,
+    'redirect_url'   => ($tracking_token ?? null) ? 'order_confirmed.php' : ('order-success.php?order_id=' . $order_id),
 ]);
 exit;

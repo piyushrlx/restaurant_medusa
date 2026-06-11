@@ -7,7 +7,7 @@ $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
 
 try {
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+    $stmt = $pdo->prepare("SELECT *, tracking_token, tracking_status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
     $stmt->execute([$user_id]);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -419,6 +419,80 @@ try {
             to { opacity: 1; }
         }
         
+        /* ── Mini Tracker ── */
+        .mini-track {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+            margin: 16px 0 4px;
+        }
+        .mini-track::before {
+            content: '';
+            position: absolute;
+            top: 14px; left: 14px; right: 14px;
+            height: 2px;
+            background: rgba(255,255,255,0.06);
+            z-index: 0;
+        }
+        .mini-track-fill {
+            position: absolute;
+            top: 14px; left: 14px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), rgba(223,186,134,0.4));
+            z-index: 1;
+            transition: width 0.6s ease;
+        }
+        .mts {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 6px;
+            z-index: 2; flex: 1;
+        }
+        .mts-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.08);
+            background: var(--bg-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.18);
+            transition: all 0.4s ease;
+        }
+        .mts-dot.done { border-color: var(--gold); background: rgba(223,186,134,0.12); color: var(--gold); }
+        .mts-dot.active { border-color: var(--gold); background: var(--gold); color: #000; box-shadow: 0 0 12px rgba(223,186,134,0.35); }
+        .mts-lbl { font-size: 0.58rem; font-weight: 500; color: rgba(168,161,150,0.7); text-align: center; text-transform: uppercase; max-width: 48px; }
+        .mts-lbl.active { color: var(--gold); }
+        .mts-lbl.done { color: rgba(250,247,240,0.6); }
+
+        /* Track live button */
+        .btn-track-live {
+            background: transparent;
+            border: 1px solid rgba(223,186,134,0.35);
+            color: var(--gold);
+            border-radius: 8px;
+            padding: 0.5rem 1.1rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: var(--transition);
+            margin-top: 0.8rem;
+        }
+        .btn-track-live:hover {
+            background: rgba(223,186,134,0.08);
+            border-color: var(--gold);
+            color: var(--gold-light);
+            transform: translateY(-1px);
+        }
+        .live-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--gold);
+            animation: livePulse 1.8s ease-in-out infinite;
+        }
+        @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
         @media (max-width: 768px) {
             .order-header {
                 flex-direction: column;
@@ -644,6 +718,42 @@ try {
                                         <span class="text-white-50">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
                                     </div>
                                 <?php endforeach; ?>
+
+                                <?php
+                                // ── Mini Tracker (active orders with tracking token) ──
+                                $ts = $order['tracking_status'] ?? 'placed';
+                                $tk = $order['tracking_token'] ?? null;
+                                $isActive = !in_array($order['order_status'], ['completed','cancelled']);
+                                $tsStepMap = ['placed'=>1,'confirmed'=>2,'preparing'=>3,'out_for_delivery'=>4,'delivered'=>5,'cancelled'=>0];
+                                $tsCurStep = $tsStepMap[$ts] ?? 1;
+                                $tsSteps = [
+                                    ['label'=>'Placed',    'icon'=>'fa-receipt'],
+                                    ['label'=>'Confirmed', 'icon'=>'fa-circle-check'],
+                                    ['label'=>'Preparing', 'icon'=>'fa-fire-burner'],
+                                    ['label'=>'On Way',    'icon'=>'fa-motorcycle'],
+                                    ['label'=>'Done',      'icon'=>'fa-house'],
+                                ];
+                                if ($isActive && $tk):
+                                    $fillPct = $tsCurStep <= 1 ? 0 : (($tsCurStep-1)/4)*100;
+                                ?>
+                                <div class="mini-track" data-token="<?php echo htmlspecialchars($tk); ?>" data-step="<?php echo $tsCurStep; ?>">
+                                    <div class="mini-track-fill" style="width:<?php echo $fillPct; ?>%;"></div>
+                                    <?php foreach ($tsSteps as $si => $ss):
+                                        $sn = $si+1;
+                                        $sc = $sn < $tsCurStep ? 'done' : ($sn === $tsCurStep ? 'active' : '');
+                                    ?>
+                                    <div class="mts">
+                                        <div class="mts-dot <?php echo $sc; ?>"><i class="fas <?php echo $ss['icon']; ?>"></i></div>
+                                        <div class="mts-lbl <?php echo $sc; ?>"><?php echo $ss['label']; ?></div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <a href="track.php?token=<?php echo htmlspecialchars($tk); ?>" class="btn-track-live">
+                                    <span class="live-dot"></span> Track Live
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                                <?php endif; ?>
                             </div>
                             <div class="order-financials">
                                 <span class="total-label">Grand Total</span>
@@ -738,5 +848,11 @@ try {
             });
         });
     </script>
+<?php
+if (!empty($_SESSION['active_order_token'])) {
+    include __DIR__ . '/includes/active_order_bar.php';
+    include __DIR__ . '/includes/order_toast.php';
+}
+?>
 </body>
 </html>

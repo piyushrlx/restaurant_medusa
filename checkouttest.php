@@ -1556,7 +1556,11 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         state: state,
         zip: zip,
         coupon_code: appliedCouponCode,
-        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false
+        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false,
+        delivery_city: city,
+        delivery_state: state,
+        delivery_pincode: zip,
+        payment_method: document.querySelector('input[name="payment_method"]:checked')?.value || 'Online'
     };
 
     try {
@@ -1582,7 +1586,8 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
                 if (statusText) statusText.textContent = "Order secured successfully! Redirecting...";
                 
                 setTimeout(() => {
-                    window.location.href = `order-success.php?order_id=${result.order_id}`;
+                    // Use server-provided redirect URL (order_confirmed.php or order-success.php)
+                    window.location.href = result.redirect_url || `order-success.php?order_id=${result.order_id}`;
                 }, 1000);
             } else {
                 if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
@@ -1718,5 +1723,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+<?php
+require_once __DIR__ . '/api/config.php';
+if (!empty($_SESSION['active_order_token'])) {
+    include __DIR__ . '/includes/active_order_bar.php';
+    include __DIR__ . '/includes/order_toast.php';
+}
+?>
 </body>
 </html>
