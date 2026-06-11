@@ -30,9 +30,11 @@
             justify-content: center;
             padding: 1rem;
         }
+
         .cust-modal-overlay.show {
             display: flex;
         }
+
         .cust-modal-box {
             background: linear-gradient(150deg, var(--formal-garden) 0%, var(--formal-garden-deep) 100%);
             border: 1px solid rgba(223, 186, 134, 0.28);
@@ -41,12 +43,20 @@
             max-width: 550px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(223,186,134,0.08);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(223, 186, 134, 0.08);
             animation: custSlideIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
+
         @keyframes custSlideIn {
-            from { transform: scale(0.82) translateY(28px); opacity: 0; }
-            to   { transform: scale(1) translateY(0); opacity: 1; }
+            from {
+                transform: scale(0.82) translateY(28px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
         }
 
         /* ---- Header ---- */
@@ -58,15 +68,20 @@
             padding: 1.5rem 1.6rem 1.1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
+
         .cust-dish-img {
             width: 62px;
             height: 62px;
             border-radius: 12px;
             object-fit: cover;
-            border: 1px solid rgba(223,186,134,0.2);
+            border: 1px solid rgba(223, 186, 134, 0.2);
             flex-shrink: 0;
         }
-        .cust-dish-info { flex: 1; }
+
+        .cust-dish-info {
+            flex: 1;
+        }
+
         .cust-dish-name {
             font-family: 'Playfair Display', 'Georgia', serif;
             font-size: 1.25rem;
@@ -74,13 +89,15 @@
             margin-bottom: 0.2rem;
             line-height: 1.3;
         }
+
         .cust-base-price {
             color: #dfba86;
             font-size: 0.95rem;
             font-weight: 600;
         }
+
         .cust-close-btn {
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
             border: none;
             color: #a09f9f;
             width: 34px;
@@ -94,12 +111,20 @@
             font-size: 0.9rem;
             transition: all 0.2s;
         }
-        .cust-close-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        .cust-close-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
 
         /* ---- Body / Groups ---- */
-        .cust-modal-body { padding: 1.2rem 1.6rem; }
+        .cust-modal-body {
+            padding: 1.2rem 1.6rem;
+        }
 
-        .cust-group { margin-bottom: 1.4rem; }
+        .cust-group {
+            margin-bottom: 1.4rem;
+        }
 
         .cust-group-label {
             font-size: 0.75rem;
@@ -111,22 +136,24 @@
             align-items: center;
             gap: 8px;
         }
+
         .badge-required {
-            background: rgba(255,107,107,0.13);
+            background: rgba(255, 107, 107, 0.13);
             color: #ff6b6b;
             font-size: 0.63rem;
             padding: 2px 8px;
             border-radius: 20px;
-            border: 1px solid rgba(255,107,107,0.22);
+            border: 1px solid rgba(255, 107, 107, 0.22);
             text-transform: uppercase;
         }
+
         .badge-optional {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             color: #a09f9f;
             font-size: 0.63rem;
             padding: 2px 8px;
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             text-transform: uppercase;
         }
 
@@ -135,22 +162,25 @@
             align-items: center;
             gap: 10px;
             padding: 0.65rem 1rem;
-            border: 1px solid rgba(255,255,255,0.07);
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 10px;
             margin-bottom: 0.45rem;
             cursor: pointer;
             transition: all 0.2s;
-            background: rgba(255,255,255,0.025);
+            background: rgba(255, 255, 255, 0.025);
             user-select: none;
         }
+
         .cust-option:hover {
-            border-color: rgba(223,186,134,0.35);
-            background: rgba(223,186,134,0.05);
+            border-color: rgba(223, 186, 134, 0.35);
+            background: rgba(223, 186, 134, 0.05);
         }
+
         .cust-option.selected {
             border-color: #dfba86;
-            background: rgba(223,186,134,0.1);
+            background: rgba(223, 186, 134, 0.1);
         }
+
         .cust-option input[type="radio"],
         .cust-option input[type="checkbox"] {
             accent-color: #dfba86;
@@ -159,17 +189,37 @@
             flex-shrink: 0;
             cursor: pointer;
         }
-        .cust-option-label { flex: 1; color: #f0ece4; font-size: 0.88rem; }
-        .cust-option-price { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
-        .price-plus  { color: #2ec4b6; }
-        .price-minus { color: #ff7675; }
-        .price-free  { color: #6c757d; }
+
+        .cust-option-label {
+            flex: 1;
+            color: #f0ece4;
+            font-size: 0.88rem;
+        }
+
+        .cust-option-price {
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .price-plus {
+            color: #2ec4b6;
+        }
+
+        .price-minus {
+            color: #ff7675;
+        }
+
+        .price-free {
+            color: #6c757d;
+        }
 
         /* ---- Footer ---- */
         .cust-modal-footer {
             padding: 1rem 1.6rem 1.6rem;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
+
         .cust-error-msg {
             color: #ff6b6b;
             font-size: 0.8rem;
@@ -177,23 +227,30 @@
             margin-bottom: 0.6rem;
             display: none;
             padding: 0.5rem;
-            background: rgba(255,107,107,0.08);
+            background: rgba(255, 107, 107, 0.08);
             border-radius: 8px;
-            border: 1px solid rgba(255,107,107,0.15);
+            border: 1px solid rgba(255, 107, 107, 0.15);
         }
+
         .cust-total-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
         }
-        .cust-total-lbl { color: #a09f9f; font-size: 0.88rem; }
+
+        .cust-total-lbl {
+            color: #a09f9f;
+            font-size: 0.88rem;
+        }
+
         .cust-total-val {
             font-size: 1.5rem;
             font-weight: 700;
             color: #dfba86;
             font-family: 'Playfair Display', serif;
         }
+
         .cust-add-btn {
             width: 100%;
             background: var(--rosewood);
@@ -207,23 +264,27 @@
             transition: all 0.25s;
             letter-spacing: 0.2px;
         }
+
         .cust-add-btn:hover {
             transform: translateY(-2px);
             background: var(--rosewood-light);
             color: #ffffff;
-            box-shadow: 0 10px 28px rgba(90,24,39,0.32);
+            box-shadow: 0 10px 28px rgba(90, 24, 39, 0.32);
         }
-        .cust-add-btn:active { transform: translateY(0); }
+
+        .cust-add-btn:active {
+            transform: translateY(0);
+        }
 
         /* ---- Customizable badge on card ---- */
         .cust-badge {
             display: inline-block;
-            background: rgba(223,186,134,0.1);
+            background: rgba(223, 186, 134, 0.1);
             color: #dfba86;
             font-size: 0.7rem;
             padding: 2px 9px;
             border-radius: 20px;
-            border: 1px solid rgba(223,186,134,0.22);
+            border: 1px solid rgba(223, 186, 134, 0.22);
             margin-bottom: 0.4rem;
         }
 
@@ -237,6 +298,7 @@
             margin-bottom: 2.5rem;
             position: relative;
         }
+
         .category-scroll {
             display: flex;
             gap: 12px;
@@ -247,20 +309,25 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(223, 186, 134, 0.2) transparent;
         }
+
         .category-scroll::-webkit-scrollbar {
             height: 5px;
         }
+
         .category-scroll::-webkit-scrollbar-thumb {
             background: rgba(223, 186, 134, 0.25);
             border-radius: 10px;
         }
+
         .category-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(223, 186, 134, 0.45);
         }
+
         .category-scroll::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 10px;
         }
+
         .category-pill {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(223, 186, 134, 0.18);
@@ -274,12 +341,14 @@
             user-select: none;
             backdrop-filter: blur(5px);
         }
+
         .category-pill:hover {
             border-color: var(--gold);
             color: #ffffff;
             background: rgba(223, 186, 134, 0.05);
             transform: translateY(-2px);
         }
+
         .category-pill.active {
             background: linear-gradient(135deg, var(--gold) 0%, #c89640 100%);
             color: #0c0a0a;
@@ -295,15 +364,19 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" id="navBrand" href="indextest.html" style="display:flex;align-items:center;gap:8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height:32px;border-radius:50%;border:1px solid var(--gold);padding:1px;">
+            <a class="navbar-brand" id="navBrand" href="index.html" style="display:flex;align-items:center;gap:8px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo"
+                    style="height:32px;border-radius:50%;border:1px solid var(--gold);padding:1px;">
                 Medusa
             </a>
             <div class="d-flex gap-2" id="navLinksContainer">
-                <a href="#" id="navBack" onclick="history.back(); return false;" class="btn btn-outline-light btn-sm" title="Back"><i class="fas fa-arrow-left"></i></a>
+                <a href="#" id="navBack" onclick="history.back(); return false;" class="btn btn-outline-light btn-sm"
+                    title="Back"><i class="fas fa-arrow-left"></i></a>
                 <a href="menutest.html" id="navMenu" class="btn btn-outline-light btn-sm">Menu</a>
-                <a href="carttest.html" id="navCart" class="btn btn-outline-light btn-sm">Cart (<span id="cartCount">0</span>)</a>
-                <a href="#" id="navBill" class="btn btn-gold-action btn-sm" style="display:none;"><i class="fas fa-receipt"></i> View Bill</a>
+                <a href="carttest.html" id="navCart" class="btn btn-outline-light btn-sm">Cart (<span
+                        id="cartCount">0</span>)</a>
+                <a href="#" id="navBill" class="btn btn-gold-action btn-sm" style="display:none;"><i
+                        class="fas fa-receipt"></i> View Bill</a>
                 <a href="my-account.php" id="navAccount" class="btn btn-outline-light btn-sm">My Account</a>
                 <a href="api/logout.php" id="navLogout" class="btn btn-outline-light btn-sm">Logout</a>
             </div>
@@ -320,17 +393,17 @@
                 document.getElementById('navBack').style.display = 'none';
                 document.getElementById('navAccount').style.display = 'none';
                 document.getElementById('navLogout').style.display = 'none';
-                
+
                 // Append table parameter to Menu and Cart links
                 document.getElementById('navMenu').href = 'menutest.html?table=' + tableCode;
                 document.getElementById('navCart').href = 'carttest.html?table=' + tableCode;
-                
+
                 // Show 'View Bill' which links to the cart or checkout where table bill is shown
                 const navBill = document.getElementById('navBill');
                 navBill.style.display = 'inline-block';
                 // Assuming carttest handles table bills or you can direct them to checkout
                 navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
-                
+
                 // Add a welcome message
                 const titleEl = document.querySelector('.section-title');
                 if (titleEl) {
@@ -355,17 +428,20 @@
                     <button class="category-pill" onclick="filterCategory('Salad')">Salad</button>
                     <button class="category-pill" onclick="filterCategory('Bread Basket')">Bread Basket</button>
                     <button class="category-pill" onclick="filterCategory('Sides')">Sides</button>
-                    <button class="category-pill" onclick="filterCategory('Meals in the Bowl')">Meals in the Bowl</button>
+                    <button class="category-pill" onclick="filterCategory('Meals in the Bowl')">Meals in the
+                        Bowl</button>
                     <button class="category-pill" onclick="filterCategory('Main Course')">Main Course</button>
                     <button class="category-pill" onclick="filterCategory('Choice of Noodle')">Choice of Noodle</button>
                     <button class="category-pill" onclick="filterCategory('Choice of Rice')">Choice of Rice</button>
                     <button class="category-pill" onclick="filterCategory('Choice of Gravy')">Choice of Gravy</button>
                     <button class="category-pill" onclick="filterCategory('Dim Sum Cart')">Dim Sum Cart</button>
                     <button class="category-pill" onclick="filterCategory('Sushi Rolls')">Sushi Rolls</button>
-                    <button class="category-pill" onclick="filterCategory('Burgers & Sandwiches')">Burgers & Sandwiches</button>
+                    <button class="category-pill" onclick="filterCategory('Burgers & Sandwiches')">Burgers &
+                        Sandwiches</button>
                     <button class="category-pill" onclick="filterCategory('Sharing Boards')">Sharing Boards</button>
                     <button class="category-pill" onclick="filterCategory('Brick Oven Pizza')">Brick Oven Pizza</button>
-                    <button class="category-pill" onclick="filterCategory('Non-Veg Appetizer')">Non-Veg Appetizer</button>
+                    <button class="category-pill" onclick="filterCategory('Non-Veg Appetizer')">Non-Veg
+                        Appetizer</button>
                 </div>
             </div>
 
@@ -424,7 +500,7 @@
 
     <script>
         let allMenuItems = [];
-        let localCart    = {};
+        let localCart = {};
         let custCurrentItem = null; // item currently open in customization modal
 
         /* ============================================================
@@ -445,11 +521,11 @@
             } catch (err) {
                 console.warn('API failed, using fallback mock data.', err);
                 allMenuItems = [
-                    { id:1, name:'Margherita Pizza',  description:'Fresh mozzarella, tomato sauce, basil',           price:'299.00', image_url:'', category:'Brick Oven Pizza', customizations:[] },
-                    { id:2, name:'Butter Chicken',    description:'Creamy tomato curry with tender chicken',          price:'349.00', image_url:'', category:'Main Course', customizations:[] },
-                    { id:3, name:'Veg Biryani',        description:'Aromatic rice with vegetables and spices',         price:'249.00', image_url:'', category:'Main Course', customizations:[] },
-                    { id:4, name:'Gulab Jamun',        description:'Sweet milk dumplings in warm cardamom syrup',      price:'129.00', image_url:'', category:'Sides', customizations:[] },
-                    { id:5, name:'Paneer Tikka',       description:'Marinated cottage cheese grilled to perfection',   price:'279.00', image_url:'', category:'Non-Veg Appetizer', customizations:[] }
+                    { id: 1, name: 'Margherita Pizza', description: 'Fresh mozzarella, tomato sauce, basil', price: '299.00', image_url: '', category: 'Brick Oven Pizza', customizations: [] },
+                    { id: 2, name: 'Butter Chicken', description: 'Creamy tomato curry with tender chicken', price: '349.00', image_url: '', category: 'Main Course', customizations: [] },
+                    { id: 3, name: 'Veg Biryani', description: 'Aromatic rice with vegetables and spices', price: '249.00', image_url: '', category: 'Main Course', customizations: [] },
+                    { id: 4, name: 'Gulab Jamun', description: 'Sweet milk dumplings in warm cardamom syrup', price: '129.00', image_url: '', category: 'Sides', customizations: [] },
+                    { id: 5, name: 'Paneer Tikka', description: 'Marinated cottage cheese grilled to perfection', price: '279.00', image_url: '', category: 'Non-Veg Appetizer', customizations: [] }
                 ];
                 displayMenuItems(allMenuItems);
                 updateCartCount();
@@ -532,8 +608,8 @@
             let imgSrc = item.image_url || '';
             if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) imgSrc = 'uploads/' + imgSrc;
             if (!imgSrc) imgSrc = 'uploads/default.jpg';
-            document.getElementById('custDishImg').src      = imgSrc;
-            document.getElementById('custDishImg').alt      = item.name;
+            document.getElementById('custDishImg').src = imgSrc;
+            document.getElementById('custDishImg').alt = item.name;
             document.getElementById('custDishName').textContent = item.name;
             document.getElementById('custBasePrice').textContent = basePrice.toFixed(0);
             document.getElementById('custTotalDisplay').textContent = basePrice.toFixed(0);
@@ -560,13 +636,13 @@
                 options.forEach((opt, oi) => {
                     const inputType = isMultiple ? 'checkbox' : 'radio';
                     const inputName = `cust_g${gi}`;
-                    const inputId   = `cust_g${gi}_o${oi}`;
-                    const priceAdd  = parseFloat(opt.price_add) || 0;
+                    const inputId = `cust_g${gi}_o${oi}`;
+                    const priceAdd = parseFloat(opt.price_add) || 0;
 
                     let priceLabel = '', priceClass = 'price-free';
-                    if (priceAdd > 0)      { priceLabel = `+₹${priceAdd}`; priceClass = 'price-plus'; }
+                    if (priceAdd > 0) { priceLabel = `+₹${priceAdd}`; priceClass = 'price-plus'; }
                     else if (priceAdd < 0) { priceLabel = `-₹${Math.abs(priceAdd)}`; priceClass = 'price-minus'; }
-                    else                   { priceLabel = 'Included'; }
+                    else { priceLabel = 'Included'; }
 
                     const label = document.createElement('label');
                     label.className = 'cust-option';
@@ -608,7 +684,7 @@
         }
 
         // Close on overlay background click
-        document.getElementById('custModalOverlay').addEventListener('click', function(e) {
+        document.getElementById('custModalOverlay').addEventListener('click', function (e) {
             if (e.target === this) closeCustModal();
         });
 
@@ -670,17 +746,17 @@
            CART UI HELPERS
         ============================================================ */
         function toggleCartUI(id, isAdded) {
-            const addBtn  = document.getElementById(`add-btn-${id}`);
+            const addBtn = document.getElementById(`add-btn-${id}`);
             const qtyCtrl = document.getElementById(`qty-controller-${id}`);
             if (addBtn && qtyCtrl) {
-                addBtn.style.display  = isAdded ? 'none' : 'block';
-                qtyCtrl.style.display = isAdded ? 'flex'  : 'none';
+                addBtn.style.display = isAdded ? 'none' : 'block';
+                qtyCtrl.style.display = isAdded ? 'flex' : 'none';
             }
         }
 
         function renderCartUI(items) {
             const count = items.reduce((s, i) => s + i.quantity, 0);
-            document.getElementById('cartCount').textContent        = count;
+            document.getElementById('cartCount').textContent = count;
             document.getElementById('floatingCartCount').textContent = `${count} Items`;
             const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
             document.getElementById('floatingCartPrice').textContent = total.toFixed(0);
@@ -731,7 +807,7 @@
         ============================================================ */
         async function changeQuantity(id, change) {
             const el = document.getElementById(`qty-${id}`);
-            let qty  = parseInt(el.textContent) || 1;
+            let qty = parseInt(el.textContent) || 1;
             qty += change;
 
             if (qty <= 0) {
@@ -741,7 +817,7 @@
                     let saved = JSON.parse(localStorage.getItem('foodie_cart') || '[]');
                     saved = saved.filter(i => i.id != id);
                     localStorage.setItem('foodie_cart', JSON.stringify(saved));
-                } catch (e) {}
+                } catch (e) { }
 
                 // Remove from in-memory cart
                 delete localCart[id];
@@ -758,7 +834,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ food_item_id: id })
-                }).catch(() => {});
+                }).catch(() => { });
                 return;
             }
 
@@ -813,17 +889,17 @@
                     try {
                         const saved = JSON.parse(localStorage.getItem('foodie_cart') || '[]');
                         saved.forEach(i => { localCart[i.id] = i.quantity; });
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 const formatted = Object.keys(localCart).map(k => {
-                    const itemId   = parseInt(k);
+                    const itemId = parseInt(k);
                     const itemData = allMenuItems.find(i => i.id == itemId);
                     return {
                         id: itemId,
-                        name:      itemData ? itemData.name      : 'Item',
-                        price:     itemData ? parseFloat(itemData.price) : 0,
+                        name: itemData ? itemData.name : 'Item',
+                        price: itemData ? parseFloat(itemData.price) : 0,
                         image_url: itemData ? itemData.image_url : '',
-                        quantity:  localCart[k]
+                        quantity: localCart[k]
                     };
                 }).filter(i => i.quantity > 0);
                 renderCartUI(formatted);
@@ -837,7 +913,7 @@
         let activeCategory = 'All';
         function filterCategory(categoryName) {
             activeCategory = categoryName;
-            
+
             // Update active pill styling
             const pills = document.querySelectorAll('.category-pill');
             pills.forEach(pill => {
@@ -866,7 +942,7 @@
            INIT
         ============================================================ */
         const urlParams = new URLSearchParams(window.location.search);
-        const tableNum  = urlParams.get('table');
+        const tableNum = urlParams.get('table');
         if (tableNum) localStorage.setItem('table_number', tableNum);
         loadMenu().then(() => {
             const cat = urlParams.get('category');
@@ -878,4 +954,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

@@ -405,6 +405,12 @@ if (isset($pdo)) {
             $couponService->redeemCoupon($coupon_code, $db_order_id);
         }
 
+        // Clear database cart for this user upon successful order placement
+        if ($db_user_id) {
+            $clear_cart = $pdo->prepare("DELETE FROM cart WHERE user_id = ?");
+            $clear_cart->execute([$db_user_id]);
+        }
+
         // Trigger notification triggers for admin panel
         require_once dirname(__DIR__) . '/includes/notifications_helper.php';
         

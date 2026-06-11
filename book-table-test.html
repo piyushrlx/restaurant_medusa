@@ -3,738 +3,953 @@
 
 <head>
 
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>
+  <title>
 
-Book Table - Medusa
+    Book Table - Medusa
 
-</title>
+  </title>
 
-<!-- Global Theme Controller -->
-<script src="assets/js/theme-toggle.js"></script>
+  <!-- Global Theme Controller -->
+  <script src="assets/js/theme-toggle.js"></script>
 
-<link
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<style>
+  <style>
+    :root {
+      --gold: #dfba86;
+      --gold-hover: #f3dfc1;
+      --formal-garden: #132F20;
+      --formal-garden-light: #1C3B2B;
+      --formal-garden-deep: #0D2016;
+      --rosewood: #5A1827;
+      --rosewood-light: #7E2638;
+      --warm-ivory: #FAF7F0;
+      --dark: #0D2016;
+    }
 
-:root {
-    --gold: #dfba86;
-    --gold-hover: #f3dfc1;
-    --formal-garden: #132F20;
-    --formal-garden-light: #1C3B2B;
-    --formal-garden-deep: #0D2016;
-    --rosewood: #5A1827;
-    --rosewood-light: #7E2638;
-    --warm-ivory: #FAF7F0;
-    --dark: #0D2016;
-}
+    body {
+      background: linear-gradient(135deg, var(--formal-garden-deep) 0%, var(--formal-garden) 50%, var(--formal-garden-deep) 100%);
+      color: white;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    }
 
-body {
-    background: linear-gradient(135deg, var(--formal-garden-deep) 0%, var(--formal-garden) 50%, var(--formal-garden-deep) 100%);
-    color: white;
-    min-height: 100vh;
-    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-}
+    /* NAVBAR */
+    .navbar {
+      background: rgba(13, 32, 22, 0.75) !important;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(223, 186, 134, 0.12);
+      padding: 18px 0;
+    }
 
-/* NAVBAR */
-.navbar {
-    background: rgba(13, 32, 22, 0.75) !important;
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(223, 186, 134, 0.12);
-    padding: 18px 0;
-}
+    .navbar-brand {
 
-.navbar-brand{
+      color: var(--gold) !important;
 
-    color:var(--gold)!important;
+      font-size: 2rem;
 
-    font-size:2rem;
+      font-weight: 700;
+    }
 
-    font-weight:700;
-}
+    /* BUTTON */
 
-/* BUTTON */
+    .book-btn {
+      width: 100%;
+      margin-top: 20px;
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--rosewood);
+      color: var(--gold);
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: 0.3s;
+    }
 
-.book-btn {
-    width: 100%;
-    margin-top: 20px;
-    border: 1px solid var(--gold);
-    border-radius: 16px;
-    padding: 16px;
-    background: var(--rosewood);
-    color: var(--gold);
-    font-size: 1.1rem;
-    font-weight: 700;
-    transition: 0.3s;
-}
-
-.book-btn:hover {
-    transform: translateY(-3px);
-    background: var(--rosewood-light);
-    color: white;
-    box-shadow: 0 10px 30px rgba(90,24,39,0.45);
-}
-
-</style>
+    .book-btn:hover {
+      transform: translateY(-3px);
+      background: var(--rosewood-light);
+      color: white;
+      box-shadow: 0 10px 30px rgba(90, 24, 39, 0.45);
+    }
+  </style>
 
 </head>
 
 <body>
 
-<!-- NAVBAR -->
+  <!-- NAVBAR -->
 
-<nav class="navbar navbar-expand-lg navbar-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
 
-<div class="container">
+    <div class="container">
 
-        <a class="navbar-brand" href="indextest.html" style="display: flex; align-items: center; gap: 8px;">
-            <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-            Medusa
-        </a>
-        <div class="d-flex gap-2">
-            <a href="#" onclick="history.back(); return false;" class="btn btn-outline-light" title="Back"><i class="fas fa-arrow-left"></i></a>
-        </div>
+      <a class="navbar-brand" href="index.html" style="display: flex; align-items: center; gap: 8px;">
+        <img src="assets/images/versace_logo.png" alt="Medusa Logo"
+          style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
+        Medusa
+      </a>
+      <div class="d-flex gap-2">
+        <a href="#" onclick="history.back(); return false;" class="btn btn-outline-light" title="Back"><i
+            class="fas fa-arrow-left"></i></a>
+      </div>
 
-</div>
+    </div>
 
-</nav>
+  </nav>
 
 
-<!-- ========================================
+  <!-- ========================================
      TABLE LAYOUT — Visual Floor Plan
 ======================================== -->
-<style>
-/* ---- DIVIDER ---- */
-.tl-section-divider {
-  text-align: center;
-  padding: 60px 0 50px;
-  position: relative;
-}
-.tl-section-divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 5%;
-  right: 5%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
-}
-.tl-divider-badge {
-  display: inline-block;
-  position: relative;
-  background: #0f0f0f;
-  color: var(--gold);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  padding: 10px 28px;
-  border: 1px solid rgba(212,175,55,0.3);
-  border-radius: 50px;
-}
+  <style>
+    /* ---- DIVIDER ---- */
+    .tl-section-divider {
+      text-align: center;
+      padding: 60px 0 50px;
+      position: relative;
+    }
 
-/* ---- MAIN SECTION ---- */
-.tl-section {
-  padding: 0 0 100px;
-}
+    .tl-section-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.35), transparent);
+    }
 
-.tl-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 24px;
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 0 24px;
-  align-items: start;
-}
+    .tl-divider-badge {
+      display: inline-block;
+      position: relative;
+      background: #0f0f0f;
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 50px;
+    }
 
-/* ---- HEADER ---- */
-.tl-main-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-.tl-main-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #fff;
-  margin: 0 0 6px;
-  letter-spacing: -0.5px;
-}
-.tl-main-sub {
-  color: #777;
-  font-size: 0.88rem;
-  margin: 0;
-}
-.tl-legend {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-.tl-legend > span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #aaa;
-  font-size: 0.82rem;
-  font-weight: 500;
-}
-.tl-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.tl-dot.av { background: #1C3B2B; box-shadow: 0 0 6px rgba(28,59,43,0.5); }
-.tl-dot.rs { background: #5A1827; }
-.tl-dot.oc { background: #7E2638; box-shadow: 0 0 6px rgba(126,38,56,0.5); }
-.tl-refresh-btn {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #bbb;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.35s;
-  flex-shrink: 0;
-}
-.tl-refresh-btn:hover {
-  background: rgba(212,175,55,0.15);
-  border-color: rgba(212,175,55,0.5);
-  color: var(--gold);
-  transform: rotate(180deg);
-}
+    /* ---- MAIN SECTION ---- */
+    .tl-section {
+      padding: 0 0 100px;
+    }
 
-/* ---- ZONE ---- */
-.tl-zone {
-  border-radius: 20px;
-  padding: 22px 22px 18px;
-  margin-bottom: 18px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.025);
-  transition: border-color 0.3s;
-}
-.tl-zone.vip-zone   { border-color: rgba(212,175,55,0.2); background: rgba(212,175,55,0.03); }
-.tl-zone.outdoor-zone{ border-color: rgba(39,174,96,0.18); background: rgba(39,174,96,0.03); }
-.tl-zone.booth-zone  { border-color: rgba(155,89,182,0.2); background: rgba(155,89,182,0.03); }
-.tl-zone.banquet-zone{ border-color: rgba(230,126,34,0.2); background: rgba(230,126,34,0.03); }
+    .tl-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 24px;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 24px;
+      align-items: start;
+    }
 
-.tl-zone-hd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-}
-.tl-zone-icon { font-size: 1.2rem; }
-.tl-zone-name {
-  font-weight: 800;
-  font-size: 0.88rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #e0e0e0;
-}
-.tl-zone-desc { font-size: 0.75rem; color: #555; margin-left: 2px; }
+    /* ---- HEADER ---- */
+    .tl-main-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
 
-/* ---- TABLE GROUPS ---- */
-.tl-groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.tl-group {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 14px;
-  padding: 16px 16px 14px;
-  flex: 1;
-  min-width: 160px;
-}
-.tl-grp-label {
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #999;
-  margin-bottom: 3px;
-}
-.tl-grp-sub {
-  font-size: 0.68rem;
-  color: #4a4a4a;
-  margin-bottom: 14px;
-}
-.tl-tables-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: flex-end;
-}
+    .tl-main-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 6px;
+      letter-spacing: -0.5px;
+    }
 
-/* ---- TABLE ITEM ---- */
-.tl-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.2s;
-  outline: none;
-}
-.tl-item:hover:not(.tl-occupied) { transform: translateY(-4px); }
-.tl-item.tl-occupied { cursor: not-allowed; opacity: 0.75; }
-.tl-item.tl-selected .tl-face {
-  box-shadow: 0 0 0 3px var(--gold), 0 8px 28px rgba(212,175,55,0.45) !important;
-}
+    .tl-main-sub {
+      color: #777;
+      font-size: 0.88rem;
+      margin: 0;
+    }
 
-/* Chairs */
-.tl-cr { display: flex; gap: 4px; justify-content: center; margin: 3px 0; }
-.tl-cs { display: flex; align-items: center; gap: 4px; }
-.tl-c  { background: #4a4a4a; border-radius: 3px; flex-shrink: 0; }
-.tl-c.h { width: 15px; height: 7px; }
-.tl-c.v { width: 7px;  height: 15px; }
-.tl-c.r { width: 9px;  height: 9px; border-radius: 50%; }
+    .tl-legend {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
 
-/* Table face */
-.tl-face {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  transition: all 0.25s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.45);
-  border: 2px solid rgba(255,255,255,0.08);
-  position: relative;
-}
-.tl-face.sq  { width: 70px;  height: 70px;  border-radius: 12px; }
-.tl-face.rnd { width: 74px;  height: 74px;  border-radius: 50%;  }
-.tl-face.bth { width: 88px;  height: 52px;  border-radius: 8px 8px 18px 18px; }
-.tl-face.com { width: 135px; height: 48px;  border-radius: 10px; }
-.tl-face.bnq { width: 195px; height: 48px;  border-radius: 10px; }
+    .tl-legend>span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #aaa;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
 
-.tl-face.available { background: linear-gradient(145deg, #1C3B2B, #132F20); color: #fff; border-color: rgba(223,186,134,0.25); }
-.tl-face.reserved  { background: linear-gradient(145deg, #4A131E, #3F0F1A); color: #b0b0b0; border-color: rgba(223,186,134,0.1); }
-.tl-face.occupied  { background: linear-gradient(145deg, #7E2638, #5A1827); color: #ddd;   border-color: rgba(223,186,134,0.1); }
+    .tl-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
 
-.tl-face.gold-rnd.available { background: linear-gradient(145deg,#dfba86,#c89640); color: #1a1200; border-color: rgba(255,255,255,0.2); }
+    .tl-dot.av {
+      background: #1C3B2B;
+      box-shadow: 0 0 6px rgba(28, 59, 43, 0.5);
+    }
 
-.tl-fid  { font-size: 0.9rem; font-weight: 800; line-height: 1; }
-.tl-fseat{ font-size: 0.58rem; opacity: 0.8; margin-top: 3px; font-weight: 500; }
+    .tl-dot.rs {
+      background: #5A1827;
+    }
 
-/* Booth back-rest */
-.tl-booth-back {
-  width: 88px;
-  height: 12px;
-  background: rgba(155,89,182,0.35);
-  border: 1px solid rgba(155,89,182,0.45);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  margin-bottom: -2px;
-}
+    .tl-dot.oc {
+      background: #7E2638;
+      box-shadow: 0 0 6px rgba(126, 38, 56, 0.5);
+    }
 
-/* ---- PANEL ---- */
-.tl-panel { position: static; }
-.tl-panel-hd {
-  background: var(--rosewood);
-  border: 1px solid rgba(223, 186, 134, 0.25);
-  border-bottom: none;
-  border-radius: 16px 16px 0 0;
-  padding: 14px 20px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--gold);
-  text-transform: uppercase;
-}
-.tl-panel-body {
-  background: var(--formal-garden-deep);
-  border: 1px solid rgba(223, 186, 134, 0.15);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
-  padding: 22px;
-  min-height: 280px;
-}
-.tl-no-sel {
-  text-align: center;
-  padding: 44px 16px;
-  color: #4a4a4a;
-}
-.tl-no-sel-icon { font-size: 3rem; margin-bottom: 14px; }
-.tl-no-sel p { font-size: 0.82rem; line-height: 1.7; color: #555; margin: 0; }
+    .tl-refresh-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #bbb;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.35s;
+      flex-shrink: 0;
+    }
 
-.tl-preview { display: flex; justify-content: center; margin-bottom: 18px; }
-.tl-info-title { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 4px; }
-.tl-info-sub   { font-size: 0.78rem; color: #777; margin-bottom: 18px; }
-.tl-badges     { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.tl-badge {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 8px;
-  padding: 7px 13px;
-  font-size: 0.78rem;
-  color: #ccc;
-}
-.tl-badge.av-badge { background: rgba(39,174,96,0.1); border-color: rgba(39,174,96,0.3); color: #27ae60; font-weight: 600; }
-.tl-book-this {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #27ae60, #1a9152);
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 13px;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 6px 20px rgba(39,174,96,0.28);
-  letter-spacing: 0.5px;
-}
-.tl-book-this:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(39,174,96,0.4);
-}
+    .tl-refresh-btn:hover {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: rgba(212, 175, 55, 0.5);
+      color: var(--gold);
+      transform: rotate(180deg);
+    }
 
-/* Summary */
-.tl-summary {
-  background: #131313;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-top: 14px;
-}
-.tl-sum-title {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: #555;
-  margin-bottom: 14px;
-}
-.tl-sum-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 0.82rem;
-}
-.tl-sum-row:last-child { border-bottom: none; }
-.tl-sum-lbl { color: #666; }
-.tl-sum-val { font-weight: 700; color: #fff; }
-.tl-sum-val.av { color: #27ae60; }
-.tl-sum-val.rs { color: #7f8c8d; }
-.tl-sum-val.oc { color: #e74c3c; }
+    /* ---- ZONE ---- */
+    .tl-zone {
+      border-radius: 20px;
+      padding: 22px 22px 18px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.025);
+      transition: border-color 0.3s;
+    }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .tl-wrapper { grid-template-columns: 1fr; }
-  .tl-panel { position: static; }
-}
-@media (max-width: 640px) {
-  .tl-main-title { font-size: 1.8rem; }
-  .tl-groups { flex-direction: column; }
-  .tl-face.bnq { width: 160px; }
-}
-</style>
+    .tl-zone.vip-zone {
+      border-color: rgba(212, 175, 55, 0.2);
+      background: rgba(212, 175, 55, 0.03);
+    }
 
-<!-- Section Divider -->
-<div class="tl-section-divider">
-  <span class="tl-divider-badge">Explore Our Dining Spaces</span>
-</div>
+    .tl-zone.outdoor-zone {
+      border-color: rgba(39, 174, 96, 0.18);
+      background: rgba(39, 174, 96, 0.03);
+    }
 
-<!-- Table Layout Section -->
-<section class="tl-section">
-  <div class="tl-wrapper">
+    .tl-zone.booth-zone {
+      border-color: rgba(155, 89, 182, 0.2);
+      background: rgba(155, 89, 182, 0.03);
+    }
 
-    <!-- LEFT: Floor Plan -->
-    <div class="tl-floor">
-      <div class="tl-main-header">
-        <div>
-          <h2 class="tl-main-title">Table Layout</h2>
-          <p class="tl-main-sub">Live view of restaurant table status — click any available table to reserve it</p>
-        </div>
-        <div class="tl-legend">
-          <span><span class="tl-dot av"></span>Available</span>
-          <span><span class="tl-dot rs"></span>Reserved</span>
-          <span><span class="tl-dot oc"></span>Occupied</span>
-          <button class="tl-refresh-btn" onclick="tlRefresh()" title="Refresh layout">↻</button>
-        </div>
-      </div>
-      <div id="tlZones"></div>
-    </div>
+    .tl-zone.banquet-zone {
+      border-color: rgba(230, 126, 34, 0.2);
+      background: rgba(230, 126, 34, 0.03);
+    }
 
-    <!-- RIGHT: Side Panel -->
-    <div class="tl-panel">
-      <div class="tl-panel-hd">Selected Table</div>
-      <div class="tl-panel-body" id="tlPanelBody">
-        <div class="tl-no-sel">
-          <div class="tl-no-sel-icon">🪑</div>
-          <p>Click on any <strong style="color:#27ae60">available</strong> table on the floor plan to see its details and book it instantly.</p>
-        </div>
-      </div>
+    .tl-zone-hd {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
 
-      <!-- Summary -->
-      <div class="tl-summary" id="tlSummaryBlock">
-        <div class="tl-sum-title">Today's Summary</div>
-        <div class="tl-sum-row">
-          <span class="tl-sum-lbl">Total Tables</span>
-          <span class="tl-sum-val" id="tlSumTotal">—</span>
-        </div>
-        <div class="tl-sum-row">
-          <span class="tl-sum-lbl">Available</span>
-          <span class="tl-sum-val av" id="tlSumAv">—</span>
-        </div>
-        <div class="tl-sum-row">
-          <span class="tl-sum-lbl">Reserved</span>
-          <span class="tl-sum-val rs" id="tlSumRs">—</span>
-        </div>
-        <div class="tl-sum-row">
-          <span class="tl-sum-lbl">Occupied</span>
-          <span class="tl-sum-val oc" id="tlSumOc">—</span>
-        </div>
-      </div>
-    </div>
+    .tl-zone-icon {
+      font-size: 1.2rem;
+    }
 
+    .tl-zone-name {
+      font-weight: 800;
+      font-size: 0.88rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #e0e0e0;
+    }
+
+    .tl-zone-desc {
+      font-size: 0.75rem;
+      color: #555;
+      margin-left: 2px;
+    }
+
+    /* ---- TABLE GROUPS ---- */
+    .tl-groups {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .tl-group {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 16px 16px 14px;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .tl-grp-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #999;
+      margin-bottom: 3px;
+    }
+
+    .tl-grp-sub {
+      font-size: 0.68rem;
+      color: #4a4a4a;
+      margin-bottom: 14px;
+    }
+
+    .tl-tables-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-end;
+    }
+
+    /* ---- TABLE ITEM ---- */
+    .tl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s;
+      outline: none;
+    }
+
+    .tl-item:hover:not(.tl-occupied) {
+      transform: translateY(-4px);
+    }
+
+    .tl-item.tl-occupied {
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .tl-item.tl-selected .tl-face {
+      box-shadow: 0 0 0 3px var(--gold), 0 8px 28px rgba(212, 175, 55, 0.45) !important;
+    }
+
+    /* Chairs */
+    .tl-cr {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      margin: 3px 0;
+    }
+
+    .tl-cs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tl-c {
+      background: #4a4a4a;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .tl-c.h {
+      width: 15px;
+      height: 7px;
+    }
+
+    .tl-c.v {
+      width: 7px;
+      height: 15px;
+    }
+
+    .tl-c.r {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    /* Table face */
+    .tl-face {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      transition: all 0.25s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .tl-face.sq {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+    }
+
+    .tl-face.rnd {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+    }
+
+    .tl-face.bth {
+      width: 88px;
+      height: 52px;
+      border-radius: 8px 8px 18px 18px;
+    }
+
+    .tl-face.com {
+      width: 135px;
+      height: 48px;
+      border-radius: 10px;
+    }
+
+    .tl-face.bnq {
+      width: 195px;
+      height: 48px;
+      border-radius: 10px;
+    }
+
+    .tl-face.available {
+      background: linear-gradient(145deg, #1C3B2B, #132F20);
+      color: #fff;
+      border-color: rgba(223, 186, 134, 0.25);
+    }
+
+    .tl-face.reserved {
+      background: linear-gradient(145deg, #4A131E, #3F0F1A);
+      color: #b0b0b0;
+      border-color: rgba(223, 186, 134, 0.1);
+    }
+
+    .tl-face.occupied {
+      background: linear-gradient(145deg, #7E2638, #5A1827);
+      color: #ddd;
+      border-color: rgba(223, 186, 134, 0.1);
+    }
+
+    .tl-face.gold-rnd.available {
+      background: linear-gradient(145deg, #dfba86, #c89640);
+      color: #1a1200;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .tl-fid {
+      font-size: 0.9rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .tl-fseat {
+      font-size: 0.58rem;
+      opacity: 0.8;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* Booth back-rest */
+    .tl-booth-back {
+      width: 88px;
+      height: 12px;
+      background: rgba(155, 89, 182, 0.35);
+      border: 1px solid rgba(155, 89, 182, 0.45);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: -2px;
+    }
+
+    /* ---- PANEL ---- */
+    .tl-panel {
+      position: static;
+    }
+
+    .tl-panel-hd {
+      background: var(--rosewood);
+      border: 1px solid rgba(223, 186, 134, 0.25);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 20px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .tl-panel-body {
+      background: var(--formal-garden-deep);
+      border: 1px solid rgba(223, 186, 134, 0.15);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      padding: 22px;
+      min-height: 280px;
+    }
+
+    .tl-no-sel {
+      text-align: center;
+      padding: 44px 16px;
+      color: #4a4a4a;
+    }
+
+    .tl-no-sel-icon {
+      font-size: 3rem;
+      margin-bottom: 14px;
+    }
+
+    .tl-no-sel p {
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #555;
+      margin: 0;
+    }
+
+    .tl-preview {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .tl-info-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 4px;
+    }
+
+    .tl-info-sub {
+      font-size: 0.78rem;
+      color: #777;
+      margin-bottom: 18px;
+    }
+
+    .tl-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tl-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      padding: 7px 13px;
+      font-size: 0.78rem;
+      color: #ccc;
+    }
+
+    .tl-badge.av-badge {
+      background: rgba(39, 174, 96, 0.1);
+      border-color: rgba(39, 174, 96, 0.3);
+      color: #27ae60;
+      font-weight: 600;
+    }
+
+    .tl-book-this {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #27ae60, #1a9152);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.28);
+      letter-spacing: 0.5px;
+    }
+
+    .tl-book-this:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+    }
+
+    /* Summary */
+    .tl-summary {
+      background: #131313;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-top: 14px;
+    }
+
+    .tl-sum-title {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 14px;
+    }
+
+    .tl-sum-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.82rem;
+    }
+
+    .tl-sum-row:last-child {
+      border-bottom: none;
+    }
+
+    .tl-sum-lbl {
+      color: #666;
+    }
+
+    .tl-sum-val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .tl-sum-val.av {
+      color: #27ae60;
+    }
+
+    .tl-sum-val.rs {
+      color: #7f8c8d;
+    }
+
+    .tl-sum-val.oc {
+      color: #e74c3c;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .tl-wrapper {
+        grid-template-columns: 1fr;
+      }
+
+      .tl-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .tl-main-title {
+        font-size: 1.8rem;
+      }
+
+      .tl-groups {
+        flex-direction: column;
+      }
+
+      .tl-face.bnq {
+        width: 160px;
+      }
+    }
+  </style>
+
+  <!-- Section Divider -->
+  <div class="tl-section-divider">
+    <span class="tl-divider-badge">Explore Our Dining Spaces</span>
   </div>
-</section>
 
-<script>
-// ============================================================
-//  TABLE LAYOUT ENGINE
-// ============================================================
+  <!-- Table Layout Section -->
+  <section class="tl-section">
+    <div class="tl-wrapper">
 
-const TL_ZONES = [
-  {
-    id:'vip', cls:'vip-zone', icon:'👑',
-    name:'VIP AREA', desc:'Premium Dining',
-    groups:[{
-      label:null, sub:null,
-      tables:[
-        {id:'T01',lbl:'01',seats:4,type:'sq',status:'available'},
-        {id:'T02',lbl:'02',seats:4,type:'sq',status:'reserved'},
-        {id:'T03',lbl:'03',seats:4,type:'sq',status:'available'},
-        {id:'T04',lbl:'04',seats:4,type:'sq',status:'available'},
-        {id:'T05',lbl:'05',seats:4,type:'sq',status:'available'},
-        {id:'T06',lbl:'06',seats:4,type:'sq',status:'reserved'},
-        {id:'T07',lbl:'07',seats:4,type:'sq',status:'available'},
-        {id:'T08',lbl:'08',seats:4,type:'sq',status:'available'},
-        {id:'R1', lbl:'R1',seats:8,type:'rnd',status:'available',gold:true},
-        {id:'R2', lbl:'R2',seats:8,type:'rnd',status:'occupied', gold:true},
-      ]
-    }]
-  },
-  {
-    id:'indoor', cls:'indoor-zone', icon:'🍽️',
-    name:'INDOOR DINING', desc:'Main Dining Area',
-    groups:[
+      <!-- LEFT: Floor Plan -->
+      <div class="tl-floor">
+        <div class="tl-main-header">
+          <div>
+            <h2 class="tl-main-title">Table Layout</h2>
+            <p class="tl-main-sub">Live view of restaurant table status — click any available table to reserve it</p>
+          </div>
+          <div class="tl-legend">
+            <span><span class="tl-dot av"></span>Available</span>
+            <span><span class="tl-dot rs"></span>Reserved</span>
+            <span><span class="tl-dot oc"></span>Occupied</span>
+            <button class="tl-refresh-btn" onclick="tlRefresh()" title="Refresh layout">↻</button>
+          </div>
+        </div>
+        <div id="tlZones"></div>
+      </div>
+
+      <!-- RIGHT: Side Panel -->
+      <div class="tl-panel">
+        <div class="tl-panel-hd">Selected Table</div>
+        <div class="tl-panel-body" id="tlPanelBody">
+          <div class="tl-no-sel">
+            <div class="tl-no-sel-icon">🪑</div>
+            <p>Click on any <strong style="color:#27ae60">available</strong> table on the floor plan to see its details
+              and book it instantly.</p>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="tl-summary" id="tlSummaryBlock">
+          <div class="tl-sum-title">Today's Summary</div>
+          <div class="tl-sum-row">
+            <span class="tl-sum-lbl">Total Tables</span>
+            <span class="tl-sum-val" id="tlSumTotal">—</span>
+          </div>
+          <div class="tl-sum-row">
+            <span class="tl-sum-lbl">Available</span>
+            <span class="tl-sum-val av" id="tlSumAv">—</span>
+          </div>
+          <div class="tl-sum-row">
+            <span class="tl-sum-lbl">Reserved</span>
+            <span class="tl-sum-val rs" id="tlSumRs">—</span>
+          </div>
+          <div class="tl-sum-row">
+            <span class="tl-sum-lbl">Occupied</span>
+            <span class="tl-sum-val oc" id="tlSumOc">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // ============================================================
+    //  TABLE LAYOUT ENGINE
+    // ============================================================
+
+    const TL_ZONES = [
       {
-        label:'TABLE FOR 2', sub:'Cozy for Couples',
-        tables:[
-          {id:'A01',lbl:'A01',seats:2,type:'rnd',status:'available'},
-          {id:'A02',lbl:'A02',seats:2,type:'rnd',status:'available'},
-          {id:'A03',lbl:'A03',seats:2,type:'rnd',status:'reserved'},
-          {id:'A04',lbl:'A04',seats:2,type:'rnd',status:'available'},
+        id: 'vip', cls: 'vip-zone', icon: '👑',
+        name: 'VIP AREA', desc: 'Premium Dining',
+        groups: [{
+          label: null, sub: null,
+          tables: [
+            { id: 'T01', lbl: '01', seats: 4, type: 'sq', status: 'available' },
+            { id: 'T02', lbl: '02', seats: 4, type: 'sq', status: 'reserved' },
+            { id: 'T03', lbl: '03', seats: 4, type: 'sq', status: 'available' },
+            { id: 'T04', lbl: '04', seats: 4, type: 'sq', status: 'available' },
+            { id: 'T05', lbl: '05', seats: 4, type: 'sq', status: 'available' },
+            { id: 'T06', lbl: '06', seats: 4, type: 'sq', status: 'reserved' },
+            { id: 'T07', lbl: '07', seats: 4, type: 'sq', status: 'available' },
+            { id: 'T08', lbl: '08', seats: 4, type: 'sq', status: 'available' },
+            { id: 'R1', lbl: 'R1', seats: 8, type: 'rnd', status: 'available', gold: true },
+            { id: 'R2', lbl: 'R2', seats: 8, type: 'rnd', status: 'occupied', gold: true },
+          ]
+        }]
+      },
+      {
+        id: 'indoor', cls: 'indoor-zone', icon: '🍽️',
+        name: 'INDOOR DINING', desc: 'Main Dining Area',
+        groups: [
+          {
+            label: 'TABLE FOR 2', sub: 'Cozy for Couples',
+            tables: [
+              { id: 'A01', lbl: 'A01', seats: 2, type: 'rnd', status: 'available' },
+              { id: 'A02', lbl: 'A02', seats: 2, type: 'rnd', status: 'available' },
+              { id: 'A03', lbl: 'A03', seats: 2, type: 'rnd', status: 'reserved' },
+              { id: 'A04', lbl: 'A04', seats: 2, type: 'rnd', status: 'available' },
+            ]
+          },
+          {
+            label: 'TABLE FOR 4', sub: 'Perfect for Small Groups',
+            tables: [
+              { id: 'B01', lbl: 'B01', seats: 4, type: 'sq', status: 'available' },
+              { id: 'B02', lbl: 'B02', seats: 4, type: 'sq', status: 'available' },
+              { id: 'B03', lbl: 'B03', seats: 4, type: 'sq', status: 'occupied' },
+              { id: 'B04', lbl: 'B04', seats: 4, type: 'sq', status: 'available' },
+            ]
+          },
+          {
+            label: 'ROUND TABLES', sub: 'Everyone Faces Each Other',
+            tables: [
+              { id: 'RD1', lbl: 'RD1', seats: 6, type: 'rnd', status: 'available' },
+              { id: 'RD2', lbl: 'RD2', seats: 6, type: 'rnd', status: 'reserved' },
+              { id: 'RD3', lbl: 'RD3', seats: 8, type: 'rnd', status: 'available' },
+            ]
+          },
+          {
+            label: 'TABLE FOR 6', sub: 'Great for Families',
+            tables: [
+              { id: 'C01', lbl: 'C01', seats: 6, type: 'sq', status: 'available' },
+              { id: 'C02', lbl: 'C02', seats: 6, type: 'sq', status: 'reserved' },
+              { id: 'C03', lbl: 'C03', seats: 6, type: 'sq', status: 'available' },
+              { id: 'C04', lbl: 'C04', seats: 6, type: 'sq', status: 'available' },
+            ]
+          }
         ]
       },
       {
-        label:'TABLE FOR 4', sub:'Perfect for Small Groups',
-        tables:[
-          {id:'B01',lbl:'B01',seats:4,type:'sq',status:'available'},
-          {id:'B02',lbl:'B02',seats:4,type:'sq',status:'available'},
-          {id:'B03',lbl:'B03',seats:4,type:'sq',status:'occupied'},
-          {id:'B04',lbl:'B04',seats:4,type:'sq',status:'available'},
+        id: 'outdoor', cls: 'outdoor-zone', icon: '🌿',
+        name: 'OUTDOOR / GARDEN', desc: 'Open Air Experience',
+        groups: [
+          {
+            label: 'COUPLE TABLES', sub: 'Romantic Garden Setting',
+            tables: [
+              { id: 'G01', lbl: 'G01', seats: 2, type: 'rnd', status: 'available' },
+              { id: 'G02', lbl: 'G02', seats: 2, type: 'rnd', status: 'available' },
+              { id: 'G03', lbl: 'G03', seats: 2, type: 'rnd', status: 'reserved' },
+              { id: 'G04', lbl: 'G04', seats: 2, type: 'rnd', status: 'available' },
+            ]
+          },
+          {
+            label: 'GROUP TABLES', sub: 'Open Air Gatherings',
+            tables: [
+              { id: 'G05', lbl: 'G05', seats: 6, type: 'sq', status: 'available' },
+              { id: 'G06', lbl: 'G06', seats: 6, type: 'sq', status: 'reserved' },
+              { id: 'G07', lbl: 'G07', seats: 6, type: 'sq', status: 'available' },
+              { id: 'G08', lbl: 'G08', seats: 6, type: 'sq', status: 'available' },
+            ]
+          }
         ]
       },
       {
-        label:'ROUND TABLES', sub:'Everyone Faces Each Other',
-        tables:[
-          {id:'RD1',lbl:'RD1',seats:6,type:'rnd',status:'available'},
-          {id:'RD2',lbl:'RD2',seats:6,type:'rnd',status:'reserved'},
-          {id:'RD3',lbl:'RD3',seats:8,type:'rnd',status:'available'},
-        ]
+        id: 'booth', cls: 'booth-zone', icon: '🛋️',
+        name: 'BOOTH SEATING', desc: 'Fixed Sofa-Style Wall Seating',
+        groups: [{
+          label: null, sub: null,
+          tables: [
+            { id: 'F01', lbl: 'F01', seats: 4, type: 'bth', status: 'available' },
+            { id: 'F02', lbl: 'F02', seats: 4, type: 'bth', status: 'reserved' },
+            { id: 'F03', lbl: 'F03', seats: 4, type: 'bth', status: 'available' },
+            { id: 'F04', lbl: 'F04', seats: 4, type: 'bth', status: 'available' },
+            { id: 'F05', lbl: 'F05', seats: 6, type: 'bth', status: 'occupied' },
+            { id: 'F06', lbl: 'F06', seats: 6, type: 'bth', status: 'available' },
+          ]
+        }]
       },
       {
-        label:'TABLE FOR 6', sub:'Great for Families',
-        tables:[
-          {id:'C01',lbl:'C01',seats:6,type:'sq',status:'available'},
-          {id:'C02',lbl:'C02',seats:6,type:'sq',status:'reserved'},
-          {id:'C03',lbl:'C03',seats:6,type:'sq',status:'available'},
-          {id:'C04',lbl:'C04',seats:6,type:'sq',status:'available'},
+        id: 'banquet', cls: 'banquet-zone', icon: '🎉',
+        name: 'BANQUET & COMMUNAL', desc: 'Large Groups, Events & Conferences',
+        groups: [
+          {
+            label: 'COMMUNAL TABLES', sub: 'Long Shared Tables for Many Guests',
+            tables: [
+              { id: 'L01', lbl: 'L01', seats: 12, type: 'com', status: 'available' },
+              { id: 'L02', lbl: 'L02', seats: 12, type: 'com', status: 'reserved' },
+            ]
+          },
+          {
+            label: 'BANQUET TABLES', sub: 'Events, Weddings & Celebrations',
+            tables: [
+              { id: 'BQ1', lbl: 'BQ1', seats: 20, type: 'bnq', status: 'available' },
+              { id: 'BQ2', lbl: 'BQ2', seats: 30, type: 'bnq', status: 'available' },
+            ]
+          }
         ]
       }
-    ]
-  },
-  {
-    id:'outdoor', cls:'outdoor-zone', icon:'🌿',
-    name:'OUTDOOR / GARDEN', desc:'Open Air Experience',
-    groups:[
-      {
-        label:'COUPLE TABLES', sub:'Romantic Garden Setting',
-        tables:[
-          {id:'G01',lbl:'G01',seats:2,type:'rnd',status:'available'},
-          {id:'G02',lbl:'G02',seats:2,type:'rnd',status:'available'},
-          {id:'G03',lbl:'G03',seats:2,type:'rnd',status:'reserved'},
-          {id:'G04',lbl:'G04',seats:2,type:'rnd',status:'available'},
-        ]
-      },
-      {
-        label:'GROUP TABLES', sub:'Open Air Gatherings',
-        tables:[
-          {id:'G05',lbl:'G05',seats:6,type:'sq',status:'available'},
-          {id:'G06',lbl:'G06',seats:6,type:'sq',status:'reserved'},
-          {id:'G07',lbl:'G07',seats:6,type:'sq',status:'available'},
-          {id:'G08',lbl:'G08',seats:6,type:'sq',status:'available'},
-        ]
-      }
-    ]
-  },
-  {
-    id:'booth', cls:'booth-zone', icon:'🛋️',
-    name:'BOOTH SEATING', desc:'Fixed Sofa-Style Wall Seating',
-    groups:[{
-      label:null, sub:null,
-      tables:[
-        {id:'F01',lbl:'F01',seats:4,type:'bth',status:'available'},
-        {id:'F02',lbl:'F02',seats:4,type:'bth',status:'reserved'},
-        {id:'F03',lbl:'F03',seats:4,type:'bth',status:'available'},
-        {id:'F04',lbl:'F04',seats:4,type:'bth',status:'available'},
-        {id:'F05',lbl:'F05',seats:6,type:'bth',status:'occupied'},
-        {id:'F06',lbl:'F06',seats:6,type:'bth',status:'available'},
-      ]
-    }]
-  },
-  {
-    id:'banquet', cls:'banquet-zone', icon:'🎉',
-    name:'BANQUET & COMMUNAL', desc:'Large Groups, Events & Conferences',
-    groups:[
-      {
-        label:'COMMUNAL TABLES', sub:'Long Shared Tables for Many Guests',
-        tables:[
-          {id:'L01',lbl:'L01',seats:12,type:'com',status:'available'},
-          {id:'L02',lbl:'L02',seats:12,type:'com',status:'reserved'},
-        ]
-      },
-      {
-        label:'BANQUET TABLES', sub:'Events, Weddings & Celebrations',
-        tables:[
-          {id:'BQ1',lbl:'BQ1',seats:20,type:'bnq',status:'available'},
-          {id:'BQ2',lbl:'BQ2',seats:30,type:'bnq',status:'available'},
-        ]
-      }
-    ]
-  }
-];
+    ];
 
-// Type labels for the panel
-const TL_TYPE_LABELS = {
-  sq:'Square Table', rnd:'Round Table',
-  bth:'Booth Seating', com:'Communal Table', bnq:'Banquet Table'
-};
+    // Type labels for the panel
+    const TL_TYPE_LABELS = {
+      sq: 'Square Table', rnd: 'Round Table',
+      bth: 'Booth Seating', com: 'Communal Table', bnq: 'Banquet Table'
+    };
 
-const TL_ZONE_LABELS = {
-  vip:'VIP Area · Premium Dining',
-  indoor:'Indoor Dining · Main Area',
-  outdoor:'Outdoor / Garden · Open Air',
-  booth:'Booth Seating · Wall Side',
-  banquet:'Banquet & Communal · Events'
-};
+    const TL_ZONE_LABELS = {
+      vip: 'VIP Area · Premium Dining',
+      indoor: 'Indoor Dining · Main Area',
+      outdoor: 'Outdoor / Garden · Open Air',
+      booth: 'Booth Seating · Wall Side',
+      banquet: 'Banquet & Communal · Events'
+    };
 
-// Build flat lookup map
-let tlAllTables = {};
-TL_ZONES.forEach(z => z.groups.forEach(g => g.tables.forEach(t => {
-  tlAllTables[t.id] = {...t, zoneId: z.id};
-})));
+    // Build flat lookup map
+    let tlAllTables = {};
+    TL_ZONES.forEach(z => z.groups.forEach(g => g.tables.forEach(t => {
+      tlAllTables[t.id] = { ...t, zoneId: z.id };
+    })));
 
-let tlSelected = null;
+    let tlSelected = null;
 
-// ---- Chair helpers ----
-function tlH(n=1){ return Array(n).fill('<span class="tl-c h"></span>').join(''); }
-function tlV(n=1){ return Array(n).fill('<span class="tl-c v"></span>').join(''); }
-function tlR(n=1){ return Array(n).fill('<span class="tl-c r"></span>').join(''); }
+    // ---- Chair helpers ----
+    function tlH(n = 1) { return Array(n).fill('<span class="tl-c h"></span>').join(''); }
+    function tlV(n = 1) { return Array(n).fill('<span class="tl-c v"></span>').join(''); }
+    function tlR(n = 1) { return Array(n).fill('<span class="tl-c r"></span>').join(''); }
 
-// ---- Render a single table element ----
-function tlRenderItem(t) {
-  const isOcc = t.status === 'occupied';
-  const isSel = tlSelected === t.id;
-  const faceClass = `tl-face ${t.type} ${t.status} ${t.gold ? 'gold-rnd' : ''} ${isSel ? 'tl-face-sel' : ''}`;
+    // ---- Render a single table element ----
+    function tlRenderItem(t) {
+      const isOcc = t.status === 'occupied';
+      const isSel = tlSelected === t.id;
+      const faceClass = `tl-face ${t.type} ${t.status} ${t.gold ? 'gold-rnd' : ''} ${isSel ? 'tl-face-sel' : ''}`;
 
-  let inner = '';
-  const face = `<div class="${faceClass}"><div class="tl-fid">${t.lbl}</div><div class="tl-fseat">${t.seats} Seats</div></div>`;
+      let inner = '';
+      const face = `<div class="${faceClass}"><div class="tl-fid">${t.lbl}</div><div class="tl-fseat">${t.seats} Seats</div></div>`;
 
-  if (t.type === 'bth') {
-    // Booth: back-rest + face + chairs at front
-    const fc = t.seats >= 6 ? 3 : 2;
-    inner = `
+      if (t.type === 'bth') {
+        // Booth: back-rest + face + chairs at front
+        const fc = t.seats >= 6 ? 3 : 2;
+        inner = `
       <div class="tl-booth-back"></div>
       ${face}
       <div class="tl-cr">${tlH(fc)}</div>`;
 
-  } else if (t.type === 'com' || t.type === 'bnq') {
-    // Long tables: chairs top & bottom
-    const fc = t.type === 'bnq' ? 5 : 4;
-    inner = `
+      } else if (t.type === 'com' || t.type === 'bnq') {
+        // Long tables: chairs top & bottom
+        const fc = t.type === 'bnq' ? 5 : 4;
+        inner = `
       <div class="tl-cr">${tlH(fc)}</div>
       ${face}
       <div class="tl-cr">${tlH(fc)}</div>`;
 
-  } else if (t.type === 'rnd') {
-    // Round table: chairs around
-    const fc = t.seats <= 2 ? 1 : t.seats <= 6 ? 2 : 3;
-    const sv = t.seats >= 4 ? tlV() : '';
-    inner = `
+      } else if (t.type === 'rnd') {
+        // Round table: chairs around
+        const fc = t.seats <= 2 ? 1 : t.seats <= 6 ? 2 : 3;
+        const sv = t.seats >= 4 ? tlV() : '';
+        inner = `
       <div class="tl-cr">${tlR(fc)}</div>
       <div class="tl-cs">${sv}${face}${sv}</div>
       <div class="tl-cr">${tlR(fc)}</div>`;
 
-  } else {
-    // Square table
-    const tc = t.seats >= 6 ? 2 : 1;
-    const sv = t.seats >= 4 ? tlV() : '';
-    inner = `
+      } else {
+        // Square table
+        const tc = t.seats >= 6 ? 2 : 1;
+        const sv = t.seats >= 4 ? tlV() : '';
+        inner = `
       <div class="tl-cr">${tlH(tc)}</div>
       <div class="tl-cs">${sv}${face}${sv}</div>
       <div class="tl-cr">${tlH(tc)}</div>`;
-  }
+      }
 
-  const clickAttr = isOcc ? '' : `onclick="tlSelect('${t.id}')"`;
-  const selCls = isSel ? ' tl-selected' : '';
-  const occCls = isOcc ? ' tl-occupied' : '';
-  const titleAttr = isOcc ? 'This table is currently occupied' : `Click to select table ${t.lbl}`;
+      const clickAttr = isOcc ? '' : `onclick="tlSelect('${t.id}')"`;
+      const selCls = isSel ? ' tl-selected' : '';
+      const occCls = isOcc ? ' tl-occupied' : '';
+      const titleAttr = isOcc ? 'This table is currently occupied' : `Click to select table ${t.lbl}`;
 
-  return `<div class="tl-item${selCls}${occCls}" id="tl-item-${t.id}" ${clickAttr} title="${titleAttr}">${inner}</div>`;
-}
+      return `<div class="tl-item${selCls}${occCls}" id="tl-item-${t.id}" ${clickAttr} title="${titleAttr}">${inner}</div>`;
+    }
 
-// ---- Render a Zone ----
-function tlRenderZone(zone) {
-  const groups = zone.groups.map(g => {
-    const labelHtml = g.label
-      ? `<div class="tl-grp-label">${g.label}</div><div class="tl-grp-sub">${g.sub || ''}</div>`
-      : '';
-    const tables = g.tables.map(t => tlRenderItem(t)).join('');
-    return `<div class="tl-group">${labelHtml}<div class="tl-tables-wrap">${tables}</div></div>`;
-  }).join('');
+    // ---- Render a Zone ----
+    function tlRenderZone(zone) {
+      const groups = zone.groups.map(g => {
+        const labelHtml = g.label
+          ? `<div class="tl-grp-label">${g.label}</div><div class="tl-grp-sub">${g.sub || ''}</div>`
+          : '';
+        const tables = g.tables.map(t => tlRenderItem(t)).join('');
+        return `<div class="tl-group">${labelHtml}<div class="tl-tables-wrap">${tables}</div></div>`;
+      }).join('');
 
-  return `
+      return `
     <div class="tl-zone ${zone.cls}">
       <div class="tl-zone-hd">
         <span class="tl-zone-icon">${zone.icon}</span>
@@ -743,68 +958,68 @@ function tlRenderZone(zone) {
       </div>
       <div class="tl-groups">${groups}</div>
     </div>`;
-}
+    }
 
-// ---- Render everything ----
-function tlRender() {
-  document.getElementById('tlZones').innerHTML = TL_ZONES.map(tlRenderZone).join('');
-  tlUpdateSummary();
-}
+    // ---- Render everything ----
+    function tlRender() {
+      document.getElementById('tlZones').innerHTML = TL_ZONES.map(tlRenderZone).join('');
+      tlUpdateSummary();
+    }
 
-// ---- Update summary counters ----
-function tlUpdateSummary() {
-  const all = Object.values(tlAllTables);
-  document.getElementById('tlSumTotal').textContent = all.length;
-  document.getElementById('tlSumAv').textContent = all.filter(t => t.status==='available').length;
-  document.getElementById('tlSumRs').textContent = all.filter(t => t.status==='reserved').length;
-  document.getElementById('tlSumOc').textContent = all.filter(t => t.status==='occupied').length;
-}
+    // ---- Update summary counters ----
+    function tlUpdateSummary() {
+      const all = Object.values(tlAllTables);
+      document.getElementById('tlSumTotal').textContent = all.length;
+      document.getElementById('tlSumAv').textContent = all.filter(t => t.status === 'available').length;
+      document.getElementById('tlSumRs').textContent = all.filter(t => t.status === 'reserved').length;
+      document.getElementById('tlSumOc').textContent = all.filter(t => t.status === 'occupied').length;
+    }
 
-// ---- Select a table ----
-function tlSelect(id) {
-  const t = tlAllTables[id];
-  if (!t || t.status === 'occupied') return;
+    // ---- Select a table ----
+    function tlSelect(id) {
+      const t = tlAllTables[id];
+      if (!t || t.status === 'occupied') return;
 
-  // Clear previous selection
-  if (tlSelected) {
-    const prev = document.getElementById('tl-item-' + tlSelected);
-    if (prev) { prev.classList.remove('tl-selected'); prev.querySelector('.tl-face').classList.remove('tl-face-sel'); }
-  }
+      // Clear previous selection
+      if (tlSelected) {
+        const prev = document.getElementById('tl-item-' + tlSelected);
+        if (prev) { prev.classList.remove('tl-selected'); prev.querySelector('.tl-face').classList.remove('tl-face-sel'); }
+      }
 
-  tlSelected = id;
-  const el = document.getElementById('tl-item-' + id);
-  if (el) { el.classList.add('tl-selected'); el.querySelector('.tl-face').classList.add('tl-face-sel'); }
+      tlSelected = id;
+      const el = document.getElementById('tl-item-' + id);
+      if (el) { el.classList.add('tl-selected'); el.querySelector('.tl-face').classList.add('tl-face-sel'); }
 
-  const summaryBlock = document.getElementById('tlSummaryBlock');
-  if (summaryBlock) summaryBlock.style.display = 'none';
+      const summaryBlock = document.getElementById('tlSummaryBlock');
+      if (summaryBlock) summaryBlock.style.display = 'none';
 
-  tlUpdatePanel(t);
-}
+      tlUpdatePanel(t);
+    }
 
-// ---- Update side panel ----
-function tlUpdatePanel(t) {
-  const typeLabel = TL_TYPE_LABELS[t.type] || 'Table';
-  const zoneLabel = TL_ZONE_LABELS[t.zoneId] || '';
+    // ---- Update side panel ----
+    function tlUpdatePanel(t) {
+      const typeLabel = TL_TYPE_LABELS[t.type] || 'Table';
+      const zoneLabel = TL_ZONE_LABELS[t.zoneId] || '';
 
-  // Video view / embed for the table
-  let embed = '';
-  if (t.zoneId === 'vip') {
-      embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=34480753393132055" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
-  } else if (t.zoneId === 'indoor') {
-      embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=908882768546447305" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
-  } else if (t.zoneId === 'outdoor') {
-      embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=1027876314958687866" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
-  } else {
-      embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=934567360177123359" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
-  }
+      // Video view / embed for the table
+      let embed = '';
+      if (t.zoneId === 'vip') {
+        embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=34480753393132055" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
+      } else if (t.zoneId === 'indoor') {
+        embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=908882768546447305" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
+      } else if (t.zoneId === 'outdoor') {
+        embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=1027876314958687866" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
+      } else {
+        embed = `<iframe src="https://assets.pinterest.com/ext/embed.html?id=934567360177123359" height="400" width="100%" frameborder="0" scrolling="no" style="border-radius:12px;"></iframe>`;
+      }
 
-  const preview = `<div style="width:100%; border-radius:14px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.35); margin-bottom:15px;">
+      const preview = `<div style="width:100%; border-radius:14px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.35); margin-bottom:15px;">
     ${embed}
   </div>`;
 
-  const forLabel = t.seats <= 2 ? '2' : t.seats <= 4 ? '4' : t.seats <= 6 ? '6' : t.seats <= 12 ? '12' : t.seats;
+      const forLabel = t.seats <= 2 ? '2' : t.seats <= 4 ? '4' : t.seats <= 6 ? '6' : t.seats <= 12 ? '12' : t.seats;
 
-  document.getElementById('tlPanelBody').innerHTML = `
+      document.getElementById('tlPanelBody').innerHTML = `
     <div class="tl-preview">${preview}</div>
     <div class="tl-info-title">Table for ${forLabel}</div>
     <div class="tl-info-sub">${zoneLabel} · ${typeLabel}</div>
@@ -818,191 +1033,216 @@ function tlUpdatePanel(t) {
     <button class="tl-book-this" onclick="tlBookNow('${t.id}','${t.lbl}',${t.seats},'${t.type}')">
       Book This Table
     </button>`;
-}
+    }
 
-// ---- Book Now: open modal ----
-function tlBookNow(id, lbl, seats, type) {
-  if (!loggedIn) {
-    alert('Login first', () => {
-        window.location.href = 'login.html';
-    });
-    return;
-  }
-  const typeLabel = TL_TYPE_LABELS[type] || 'Table';
-  document.getElementById('modalTableTitle').innerText = `Book ${lbl} (${typeLabel})`;
-  document.getElementById('m_seats').value = seats;
-  
-  const sr = document.getElementById('m_request');
-  if (sr) {
-    sr.value = `Preferred table: ${lbl} (${typeLabel}, ${seats} seats)`;
-  }
-  
-  document.getElementById('bookingModal').style.display = 'flex';
-}
+    // ---- Book Now: open modal ----
+    function tlBookNow(id, lbl, seats, type) {
+      if (!loggedIn) {
+        alert('Login first', () => {
+          window.location.href = 'login.html';
+        });
+        return;
+      }
+      const typeLabel = TL_TYPE_LABELS[type] || 'Table';
+      document.getElementById('modalTableTitle').innerText = `Book ${lbl} (${typeLabel})`;
+      document.getElementById('m_seats').value = seats;
 
-// ---- Refresh layout ----
-function tlRefresh() {
-  tlSelected = null;
-  document.getElementById('tlPanelBody').innerHTML = `
+      const sr = document.getElementById('m_request');
+      if (sr) {
+        sr.value = `Preferred table: ${lbl} (${typeLabel}, ${seats} seats)`;
+      }
+
+      document.getElementById('bookingModal').style.display = 'flex';
+    }
+
+    // ---- Refresh layout ----
+    function tlRefresh() {
+      tlSelected = null;
+      document.getElementById('tlPanelBody').innerHTML = `
     <div class="tl-no-sel">
       <div class="tl-no-sel-icon">🪑</div>
       <p>Click on any <strong style="color:#27ae60">available</strong> table on the floor plan to see its details and book it instantly.</p>
     </div>`;
-  const summaryBlock = document.getElementById('tlSummaryBlock');
-  if (summaryBlock) summaryBlock.style.display = 'block';
-  tlRender();
-}
-
-// Also add the selected face highlight style dynamically
-const tlStyle = document.createElement('style');
-tlStyle.textContent = `.tl-face-sel { box-shadow: 0 0 0 3px var(--gold), 0 8px 28px rgba(212,175,55,0.4) !important; }`;
-document.head.appendChild(tlStyle);
-
-// Initialize
-tlRender();
-</script>
-
-<!-- MODAL OVERLAY -->
-<div class="tl-modal-overlay" id="bookingModal">
-  <div class="tl-modal">
-    <div class="tl-modal-header">
-      <h3 id="modalTableTitle">Book Table</h3>
-      <button class="tl-modal-close" onclick="closeModal()">×</button>
-    </div>
-    <form id="modalBookingForm" onsubmit="submitBooking(event)">
-      <div class="tl-modal-body">
-        <div style="margin-bottom: 12px;">
-          <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Full Name</label>
-          <input type="text" id="m_name" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Phone Number</label>
-          <input type="text" id="m_phone" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
-        </div>
-        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-          <div style="flex: 1;">
-            <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Date</label>
-            <input type="date" id="m_date" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
-          </div>
-          <div style="flex: 1;">
-            <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Time</label>
-            <input type="time" id="m_time" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
-          </div>
-        </div>
-        <div style="margin-bottom: 15px;">
-          <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Special Request</label>
-          <textarea id="m_request" rows="2" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;"></textarea>
-        </div>
-        <input type="hidden" id="m_seats">
-        <button type="submit" class="tl-book-this" style="width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--gold); color: black; font-weight: bold; cursor: pointer;">Confirm Booking</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<style>
-.tl-modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.tl-modal {
-  background: #111;
-  border: 1px solid rgba(212,175,55,0.3);
-  border-radius: 16px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-  animation: slideUp 0.3s ease-out;
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.tl-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.tl-modal-header h3 {
-  margin: 0;
-  color: var(--gold);
-  font-size: 1.2rem;
-}
-.tl-modal-close {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.tl-modal-close:hover {
-  color: #fff;
-}
-.tl-modal-body {
-  padding: 20px;
-}
-</style>
-
-<script>
-let loggedIn = false;
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const res = await fetch('api/check-session.php');
-    const data = await res.json();
-    if (data.success && data.logged_in) {
-      loggedIn = true;
+      const summaryBlock = document.getElementById('tlSummaryBlock');
+      if (summaryBlock) summaryBlock.style.display = 'block';
+      tlRender();
     }
-  } catch (e) {
-    console.error("Session check failed:", e);
-  }
-});
 
-function closeModal() {
-  document.getElementById('bookingModal').style.display = 'none';
-}
-function submitBooking(e) {
-  e.preventDefault();
-  
-  const data = {
-      customer_name: document.getElementById('m_name').value,
-      customer_phone: document.getElementById('m_phone').value,
-      guests: document.getElementById('m_seats').value,
-      reservation_date: document.getElementById('m_date').value,
-      reservation_time: document.getElementById('m_time').value,
-      special_request: document.getElementById('m_request').value
-  };
+    // Also add the selected face highlight style dynamically
+    const tlStyle = document.createElement('style');
+    tlStyle.textContent = `.tl-face-sel { box-shadow: 0 0 0 3px var(--gold), 0 8px 28px rgba(212,175,55,0.4) !important; }`;
+    document.head.appendChild(tlStyle);
 
-  fetch('api/book-table.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-  })
-  .then(response => response.json())
-  .then(result => {
-      if(result.success){
-          alert('✅ Table booked successfully!');
+    // Initialize
+    tlRender();
+  </script>
+
+  <!-- MODAL OVERLAY -->
+  <div class="tl-modal-overlay" id="bookingModal">
+    <div class="tl-modal">
+      <div class="tl-modal-header">
+        <h3 id="modalTableTitle">Book Table</h3>
+        <button class="tl-modal-close" onclick="closeModal()">×</button>
+      </div>
+      <form id="modalBookingForm" onsubmit="submitBooking(event)">
+        <div class="tl-modal-body">
+          <div style="margin-bottom: 12px;">
+            <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Full Name</label>
+            <input type="text" id="m_name" required
+              style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Phone Number</label>
+            <input type="text" id="m_phone" required
+              style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+            <div style="flex: 1;">
+              <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Date</label>
+              <input type="date" id="m_date" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+            </div>
+            <div style="flex: 1;">
+              <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Time</label>
+              <input type="time" id="m_time" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+            </div>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="color: #ccc; font-size: 0.85rem; margin-bottom: 5px; display: block;">Special Request</label>
+            <textarea id="m_request" rows="2"
+              style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;"></textarea>
+          </div>
+          <input type="hidden" id="m_seats">
+          <button type="submit" class="tl-book-this"
+            style="width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--gold); color: black; font-weight: bold; cursor: pointer;">Confirm
+            Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .tl-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .tl-modal {
+      background: #111;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tl-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tl-modal-header h3 {
+      margin: 0;
+      color: var(--gold);
+      font-size: 1.2rem;
+    }
+
+    .tl-modal-close {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .tl-modal-close:hover {
+      color: #fff;
+    }
+
+    .tl-modal-body {
+      padding: 20px;
+    }
+  </style>
+
+  <script>
+    let loggedIn = false;
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch('api/check-session.php');
+        const data = await res.json();
+        if (data.success && data.logged_in) {
+          loggedIn = true;
+        }
+      } catch (e) {
+        console.error("Session check failed:", e);
+      }
+    });
+
+    function closeModal() {
+      document.getElementById('bookingModal').style.display = 'none';
+    }
+    function submitBooking(e) {
+      e.preventDefault();
+
+      const data = {
+        customer_name: document.getElementById('m_name').value,
+        customer_phone: document.getElementById('m_phone').value,
+        guests: document.getElementById('m_seats').value,
+        reservation_date: document.getElementById('m_date').value,
+        reservation_time: document.getElementById('m_time').value,
+        special_request: document.getElementById('m_request').value
+      };
+
+      fetch('api/book-table.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('✅ Table booked successfully!');
+            closeModal();
+            document.getElementById('modalBookingForm').reset();
+          } else {
+            alert(result.message || 'Booking failed');
+          }
+        })
+        .catch(error => {
+          // Simulated for local testing without PHP backend
+          alert('✅ Table booked successfully!\\n(Simulated since API is not available)\\n\\nName: ' + data.customer_name);
           closeModal();
           document.getElementById('modalBookingForm').reset();
-      } else {
-          alert(result.message || 'Booking failed');
-      }
-  })
-  .catch(error => {
-      // Simulated for local testing without PHP backend
-      alert('✅ Table booked successfully!\\n(Simulated since API is not available)\\n\\nName: ' + data.customer_name);
-      closeModal();
-      document.getElementById('modalBookingForm').reset();
-  });
-}
-</script>
+        });
+    }
+  </script>
 </body>
+
 </html>
