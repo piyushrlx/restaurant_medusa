@@ -69,7 +69,7 @@ $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC) ?: [
 
 // Fetch orders for history
 try {
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+    $stmt = $pdo->prepare("SELECT *, tracking_token, tracking_status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
     $stmt->execute([$user_id]);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -820,12 +820,12 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Luxury Top Header Bar -->
     <header class="luxury-navbar">
         <div class="d-flex justify-content-between align-items-center w-100 max-width-1200 mx-auto">
-            <a href="menutest.html" class="navbar-brand">
+            <a href="menutest.php" class="navbar-brand">
                 <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
                 <span>Medusa</span>
             </a>
             <div class="d-flex align-items-center gap-4">
-                <a href="menutest.html" class="nav-link-custom">
+                <a href="menutest.php" class="nav-link-custom">
                     <i class="fa-solid fa-utensils"></i>
                     <span>Browse Menu</span>
                 </a>
@@ -1014,7 +1014,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <i class="fa-solid fa-utensils text-gold mb-3" style="font-size: 3rem; opacity: 0.4;"></i>
                                 <h4 class="mb-2">No Orders Yet</h4>
                                 <p class="text-white-50 mb-4" style="max-width: 380px; margin: 0 auto;">You haven't placed any fine dining orders yet.</p>
-                                <a href="menutest.html" class="btn-gold-medusa">Browse Our Menu</a>
+                                <a href="menutest.php" class="btn-gold-medusa">Browse Our Menu</a>
                             </div>
                         <?php else: ?>
                             <?php foreach ($orders as $order): ?>
@@ -1080,6 +1080,17 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="text-gold font-weight-bold mb-3" style="font-size: 1.4rem;">₹<?php echo number_format($order['total_amount'], 2); ?></div>
                                             
                                             <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                                <?php
+                                                $trk_token  = $order['tracking_token']  ?? null;
+                                                $trk_status = $order['tracking_status'] ?? 'placed';
+                                                $trk_active = !in_array(strtolower($order['order_status']), ['completed','cancelled']) && $trk_token;
+                                                ?>
+                                                <?php if ($trk_active): ?>
+                                                <a href="track.php?token=<?php echo htmlspecialchars($trk_token); ?>" class="btn btn-sm btn-track-live-acc" target="_blank">
+                                                    <span class="live-dot-acc"></span>
+                                                    <i class="fa-solid fa-location-dot"></i> Track Order
+                                                </a>
+                                                <?php endif; ?>
                                                 <button type="button" class="btn btn-sm btn-gold-medusa" onclick="reorderItems(<?php echo $order['id']; ?>)">
                                                     <i class="fa-solid fa-arrows-rotate"></i> Reorder
                                                 </button>
@@ -2446,5 +2457,40 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             switchDashboardMode('profile');
         });
     </script>
+
+<style>
+/* ── Track Order Button ── */
+.btn-track-live-acc {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.4);
+    color: #c9a84c;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-track-live-acc:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: #c9a84c;
+    color: #d4b05a;
+    transform: translateY(-1px);
+}
+.live-dot-acc {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #c9a84c;
+    animation: liveAcc 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+}
+@keyframes liveAcc { 0%,100%{opacity:1} 50%{opacity:0.3} }
+</style>
+
+<?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
+<?php require_once __DIR__ . '/includes/order_toast.php'; ?>
 </body>
 </html>

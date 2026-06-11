@@ -124,290 +124,797 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEDUSA - Verify Account</title>
-    <script src="assets/js/theme-toggle.js"></script>
+    <title>LA-MEDUSAA — Verify Code</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <style>
         :root {
-            --gold: #d4af37;
-            --white: #ffffff;
-            --gray-light: rgba(255, 255, 255, 0.6);
-            --bg-glass: rgba(15, 15, 15, 0.55);
-            --border-glass: rgba(212, 175, 55, 0.12);
+            --burgundy: #4A1521;
+            --burgundy-dark: #2D0910;
+            --burgundy-light: #5C1D2B;
+            --gold: #dfba86;
+            --gold-light: #f3dfc1;
+            --cream: #FAF6F2;
+            --cream-dark: #F2EAE1;
+            --text-dark: #3D0C11;
+            --text-muted: #6E5D57;
+            --text-light: #FAF6F2;
+            --border-color: #D1C5B7;
+            
+            --serif: 'Cormorant Garamond', Georgia, serif;
+            --sans: 'Jost', sans-serif;
             --transition: all 0.25s ease;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: var(--sans);
+            background-color: var(--burgundy-dark);
+            color: var(--text-light);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            background-color: #000000;
+            flex-direction: column;
         }
-        .login-container {
+
+        /* ── HEADER ── */
+        .top-nav {
+            background-color: var(--burgundy);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.15);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
             width: 100%;
-            max-width: 400px;
-            padding: 30px 24px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
         }
-        .brand-container { text-align: center; margin-bottom: 25px; }
-        .brand-logo-img {
-            width: 80px;
-            height: 80px;
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-light);
+        }
+
+        .logo-img {
+            width: 42px;
+            height: 42px;
             object-fit: contain;
             border-radius: 50%;
-            border: 1.5px solid var(--gold);
-            padding: 2px;
-            background: rgba(0, 0, 0, 0.5);
-        }
-        .section-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .section-header h2 {
-            font-family: 'Playfair Display', Georgia, serif;
-            color: var(--gold);
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-        .section-header p {
-            color: var(--gray-light);
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-        .error-msg {
-            background: rgba(255, 107, 107, 0.12);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 107, 107, 0.2);
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .success-msg {
-            background: rgba(46, 196, 182, 0.12);
-            color: #2ec4b6;
-            border: 1px solid rgba(46, 196, 182, 0.2);
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .channel-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--gray-light);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .status-badge {
-            font-size: 0.65rem;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-weight: 700;
-        }
-        .badge-verified {
-            background: rgba(46, 196, 182, 0.15);
-            color: #2ec4b6;
-            border: 1px solid rgba(46, 196, 182, 0.25);
-        }
-        .badge-pending {
-            background: rgba(223, 186, 134, 0.15);
-            color: var(--gold);
-            border: 1px solid rgba(223, 186, 134, 0.25);
-        }
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            margin-bottom: 20px;
-            padding: 6px 0;
+            border: 1px solid var(--gold);
+            padding: 1px;
+            background: rgba(0,0,0,0.3);
             transition: var(--transition);
         }
-        .input-wrapper.focused { border-bottom-color: var(--gold); }
-        .input-wrapper.disabled { border-bottom-color: rgba(255, 255, 255, 0.05); opacity: 0.5; }
-        .input-icon {
+
+        .nav-logo:hover .logo-img {
+            transform: scale(1.05);
+        }
+
+        .nav-brand {
+            font-family: var(--serif);
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .nav-brand small {
+            font-size: 0.68rem;
+            letter-spacing: 1px;
+            color: var(--gold);
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #D6C7B3;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: #FFFFFF;
+        }
+
+        .btn-reserve {
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 10px 24px;
+            border-radius: 4px;
+            transition: var(--transition);
+            background: transparent;
+        }
+
+        .btn-reserve:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* ── MAIN CONTENT ── */
+        .main-wrapper {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--white);
-            opacity: 0.75;
+            padding: 80px 24px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1578474846511-04ba529f0b88?q=80&w=1600');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
-        .input-wrapper.focused .input-icon { color: var(--gold); }
-        .input-field {
+
+        .verification-card {
+            background-color: var(--cream);
+            color: var(--text-dark);
+            border-radius: 20px;
             width: 100%;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--white);
-            font-size: 0.92rem;
-            padding-left: 12px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            max-width: 480px;
+            padding: 56px 48px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            position: relative;
+        }
+
+        .card-logo-emblem {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background-color: var(--burgundy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-logo-emblem svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--gold);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .card-title {
+            font-family: var(--serif);
+            font-size: 2.1rem;
             font-weight: 500;
-            letter-spacing: 2px;
+            color: var(--burgundy);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
         }
-        .input-field:disabled { cursor: not-allowed; }
-        .btn-submit {
-            width: 100%;
-            background-color: var(--gold);
-            color: #000000;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 0.95rem;
+
+        .gold-ornament {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .otp-group {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .otp-instruction {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .otp-target {
+            font-family: var(--serif);
+            font-size: 1.35rem;
             font-weight: 700;
+            color: var(--burgundy);
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+            word-break: break-all;
+        }
+
+        .otp-inputs-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+            direction: ltr;
+        }
+
+        .otp-box {
+            width: 52px;
+            height: 62px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--cream-dark);
+            text-align: center;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--burgundy);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .otp-box::placeholder {
+            color: var(--border-color);
+            font-weight: 400;
+        }
+
+        .otp-box:focus {
+            border-color: var(--burgundy);
+            background-color: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(74, 21, 33, 0.08);
+        }
+
+        .hidden-validation-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        /* ── Resend Text & Buttons ── */
+        .resend-wrapper {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        .resend-disabled .resend-txt {
+            color: var(--burgundy);
+            font-weight: 600;
+        }
+
+        .resend-disabled .timer-txt {
+            color: var(--text-muted);
+        }
+
+        .resend-link {
+            color: var(--burgundy);
+            font-weight: 700;
+            text-decoration: underline;
+            transition: var(--transition);
+        }
+
+        .resend-link:hover {
+            color: var(--gold);
+        }
+
+        .btn-verify {
+            width: 100%;
+            background-color: var(--burgundy);
+            color: var(--cream);
+            border: none;
+            border-radius: 6px;
+            padding: 16px 20px;
+            font-family: var(--sans);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             cursor: pointer;
             transition: var(--transition);
-            margin-bottom: 20px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(74, 21, 33, 0.2);
         }
-        .btn-submit:hover { background-color: #e5c158; transform: translateY(-1px); }
-        .btn-submit:active { transform: translateY(0); }
-        .resend-container {
-            text-align: center;
-            color: var(--white);
-            font-size: 0.85rem;
-            opacity: 0.75;
+
+        .btn-verify:hover {
+            background-color: var(--burgundy-light);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(74, 21, 33, 0.3);
         }
-        .resend-link {
-            color: var(--gold);
+
+        .btn-verify:active {
+            transform: translateY(0);
+        }
+
+        .verified-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background-color: rgba(46, 196, 182, 0.08);
+            border: 1px solid rgba(46, 196, 182, 0.25);
+            border-radius: 8px;
+            color: #0d8a7c;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 28px;
+        }
+
+        .verified-indicator i {
+            font-size: 1.05rem;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 28px;
+        }
+
+        /* ── NOTIFICATION MESSAGES ── */
+        .msg {
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .msg i {
+            font-size: 1.05rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .msg-error {
+            background-color: #FDF2F2;
+            border: 1px solid #F8B4B4;
+            color: #9B1C1C;
+        }
+
+        .msg-success {
+            background-color: #F3FAF5;
+            border: 1px solid #DEF7EC;
+            color: #03543F;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background-color: var(--burgundy-dark);
+            border-top: 1px solid rgba(223, 186, 134, 0.12);
+            padding: 56px 0 24px;
+            color: #BFA89E;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 48px;
+            padding: 0 24px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
-            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .footer-brand {
+            font-family: var(--serif);
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .footer-brand small {
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            color: var(--gold);
+            font-weight: 400;
+        }
+
+        .footer-desc {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-width: 240px;
+        }
+
+        .footer-col h3 {
+            font-family: var(--serif);
+            color: var(--gold);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .footer-col p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .footer-col p strong {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .map-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--gold);
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 8px;
             transition: var(--transition);
         }
-        .resend-link.disabled {
-            color: var(--gray-light);
-            cursor: not-allowed;
-            text-decoration: none;
+
+        .map-link:hover {
+            color: #FFFFFF;
         }
-        .resend-link:not(.disabled):hover {
-            color: var(--white);
+
+        .social-icons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .social-icons a:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 24px 24px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        @media (max-width: 992px) {
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .main-wrapper {
+                padding: 48px 16px;
+            }
+            .verification-card {
+                padding: 40px 24px;
+            }
+            .card-title {
+                font-size: 1.75rem;
+            }
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="brand-container">
-            <img class="brand-logo-img" src="assets/images/versace_logo.png" alt="Medusa Logo">
-        </div>
 
-        <div class="section-header">
-            <h2>Dual-Channel OTP Verification</h2>
-            <p>We've sent verification codes to your registered email and phone number. Enter them below to activate your account.</p>
-        </div>
-
-        <?php if (!empty($error)): ?>
-            <div class="error-msg">
-                <i class="fas fa-exclamation-circle me-1"></i> <?php echo htmlspecialchars($error); ?>
+    <!-- TOP NAVIGATION -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <img class="logo-img" src="assets/images/medusaa 2 ( only logo).png" alt="La-Medusaa Logo" onerror="this.src='assets/images/versace_logo.png'">
+                <span class="nav-brand">La-Medusaa<br><small>Bar & Lounge</small></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About Us</a>
+                <a href="menutest.php" class="nav-link">Menu</a>
+                <a href="table_booking.php" class="nav-link">Book Table</a>
+                <a href="career.html" class="nav-link">Career</a>
+                <a href="login.html" class="nav-link">Login</a>
             </div>
-        <?php endif; ?>
+            <a href="table_booking.php" class="btn-reserve">Book a Table</a>
+        </div>
+    </nav>
 
-        <?php if (!empty($success)): ?>
-            <div class="success-msg">
-                <i class="fas fa-check-circle me-1"></i> <?php echo htmlspecialchars($success); ?>
+    <!-- MAIN WRAPPER -->
+    <main class="main-wrapper">
+        <div class="verification-card">
+            
+            <div class="card-logo-emblem">
+                <svg viewBox="0 0 64 64">
+                    <path d="M32 8 C38 16, 48 22, 48 32 C48 42, 38 52, 32 56 C26 52, 16 42, 16 32 C16 22, 26 16, 32 8 Z"/>
+                    <path d="M32 18 C35 24, 40 28, 40 32 C40 36, 35 40, 32 44 C29 40, 24 36, 24 32 C24 28, 29 24, 32 18 Z" stroke-width="1.5"/>
+                    <path d="M32 8 V56"/>
+                </svg>
             </div>
-            <?php if ($redirect): ?>
-                <script>
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 3000);
-                </script>
+            
+            <h1 class="card-title">Verify Your Code</h1>
+            
+            <div class="gold-ornament">
+                <svg width="100" height="16" viewBox="0 0 100 16" fill="none">
+                    <line x1="0" y1="8" x2="40" y2="8" stroke="#C5A880" stroke-width="1"/>
+                    <path d="M43,8 C43,4 47,4 50,8 C53,12 57,12 57,8 C57,4 53,4 50,8 C47,12 43,12 43,8 Z" stroke="#C5A880" stroke-width="1.2" fill="none"/>
+                    <line x1="60" y1="8" x2="100" y2="8" stroke="#C5A880" stroke-width="1"/>
+                </svg>
+            </div>
+
+            <!-- Error / Success Notifications -->
+            <?php if (!empty($error)): ?>
+                <div class="msg msg-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span><?php echo htmlspecialchars($error); ?></span>
+                </div>
             <?php endif; ?>
-        <?php endif; ?>
 
-        <?php if (!$redirect): ?>
-            <form action="verify_otp.php" method="POST">
-                <!-- Email OTP -->
-                <?php if (!empty($user['email'])): ?>
-                <div>
-                    <div class="channel-label">
-                        <span>Email Code (<?php echo htmlspecialchars(substr($user['email'], 0, 4) . '***' . strstr($user['email'], '@')); ?>)</span>
-                        <span class="status-badge <?php echo $isEmailVerified ? 'badge-verified' : 'badge-pending'; ?>">
-                            <?php echo $isEmailVerified ? 'Verified' : 'Verification Pending'; ?>
-                        </span>
-                    </div>
-                    <div class="input-wrapper <?php echo $isEmailVerified ? 'disabled' : ''; ?>">
-                        <span class="input-icon"><i class="fas fa-envelope-open-text"></i></span>
-                        <input type="text" name="email_otp" class="input-field" placeholder="------" maxlength="6" pattern="[0-9]{6}" required <?php echo $isEmailVerified ? 'disabled value="******"' : ''; ?> autocomplete="off">
-                    </div>
+            <?php if (!empty($success)): ?>
+                <div class="msg msg-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span><?php echo htmlspecialchars($success); ?></span>
                 </div>
+                <?php if ($redirect): ?>
+                    <script>
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 3000);
+                    </script>
                 <?php endif; ?>
+            <?php endif; ?>
 
-                <!-- Phone OTP -->
-                <div>
-                    <div class="channel-label">
-                        <span>Phone Code (******<?php echo htmlspecialchars(substr($user['phone'], -4)); ?>)</span>
-                        <span class="status-badge <?php echo $isPhoneVerified ? 'badge-verified' : 'badge-pending'; ?>">
-                            <?php echo $isPhoneVerified ? 'Verified' : 'Verification Pending'; ?>
-                        </span>
+            <?php if (!$redirect): ?>
+                <form action="verify_otp.php" method="POST" id="otpForm">
+                    
+                    <!-- EMAIL OTP VERIFICATION GROUP -->
+                    <?php if (!empty($user['email']) && !$isEmailVerified): ?>
+                        <div class="otp-group" data-type="email">
+                            <p class="otp-instruction">We've sent a 6-digit verification code to your email</p>
+                            <p class="otp-target"><?php echo htmlspecialchars($user['email']); ?></p>
+                            <div class="otp-inputs-container">
+                                <input type="text" maxlength="1" class="otp-box" data-index="0" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="1" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="2" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="3" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="4" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="5" placeholder="—" required>
+                            </div>
+                            <input type="text" name="email_otp" id="email_otp_hidden" required pattern="[0-9]{6}" class="hidden-validation-input">
+                        </div>
+                    <?php elseif ($isEmailVerified): ?>
+                        <input type="hidden" name="email_otp" value="******">
+                        <div class="verified-indicator">
+                            <i class="fas fa-circle-check"></i>
+                            <span>Email address verified</span>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- PHONE OTP VERIFICATION GROUP -->
+                    <?php if (!$isPhoneVerified): ?>
+                        <div class="otp-group" data-type="phone">
+                            <p class="otp-instruction">We've sent a 6-digit verification code to</p>
+                            <p class="otp-target"><?php echo htmlspecialchars($user['phone']); ?></p>
+                            <div class="otp-inputs-container">
+                                <input type="text" maxlength="1" class="otp-box" data-index="0" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="1" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="2" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="3" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="4" placeholder="—" required>
+                                <input type="text" maxlength="1" class="otp-box" data-index="5" placeholder="—" required>
+                            </div>
+                            <input type="text" name="phone_otp" id="phone_otp_hidden" required pattern="[0-9]{6}" class="hidden-validation-input">
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" name="phone_otp" value="******">
+                        <div class="verified-indicator">
+                            <i class="fas fa-circle-check"></i>
+                            <span>Phone number verified</span>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- RESEND CODE COUNTDOWN -->
+                    <div class="resend-wrapper" id="resend-wrapper">
+                        Didn't receive the code?
+                        <span id="resend-container-inner"></span>
                     </div>
-                    <div class="input-wrapper <?php echo $isPhoneVerified ? 'disabled' : ''; ?>">
-                        <span class="input-icon"><i class="fas fa-sms"></i></span>
-                        <input type="text" name="phone_otp" class="input-field" placeholder="------" maxlength="6" pattern="[0-9]{6}" required <?php echo $isPhoneVerified ? 'disabled value="******"' : ''; ?> autocomplete="off">
-                    </div>
-                </div>
 
-                <button type="submit" class="btn-submit">Verify Codes</button>
-            </form>
-        <?php endif; ?>
+                    <button type="submit" class="btn-verify">Verify Code</button>
+                </form>
+            <?php endif; ?>
 
-        <div class="resend-container">
-            Didn't receive codes? 
-            <span id="countdown-wrapper">
-                <a href="resend_otp.php" id="resend-btn" class="resend-link <?php echo $secondsLeft > 0 ? 'disabled' : ''; ?>">Resend OTP</a>
-                <span id="timer-text" style="display: <?php echo $secondsLeft > 0 ? 'inline' : 'none'; ?>;">(in <span id="timer-seconds"><?php echo $secondsLeft; ?></span>s)</span>
-            </span>
+            <!-- SECURITY BADGE -->
+            <div class="security-badge">
+                <svg class="security-shield-svg" width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1L1 4.11111V8.66667C1 12.8944 3.993 16.8 8 17C12.007 16.8 15 12.8944 15 8.66667V4.11111L8 1Z" stroke="#C5A880" stroke-width="1.2" stroke-linejoin="round"/>
+                    <path d="M5.5 9L7 10.5L10.5 7" stroke="#C5A880" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Your security is our priority</span>
+            </div>
+            
         </div>
-    </div>
+    </main>
 
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-col footer-about">
+                <a href="index.html" class="footer-logo">
+                    <img class="logo-img" src="assets/images/medusaa 2 ( only logo).png" alt="La-Medusaa Logo" onerror="this.src='assets/images/versace_logo.png'">
+                    <span class="footer-brand">La-Medusaa<br><small>Bar & Lounge</small></span>
+                </a>
+                <p class="footer-desc">Sahibzada Ajit Singh Nagar's premier luxury dining experience.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Contact Us</h3>
+                <p><strong>Phone :</strong> +91 94272 72798</p>
+                <p><strong>Email :</strong> support@medusarestaurant.com</p>
+            </div>
+            <div class="footer-col">
+                <h3>Location</h3>
+                <p>SCO 44,45, District One Market</p>
+                <p>Sector 68, SAS Nagar</p>
+                <p>Punjab 140308</p>
+                <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308" target="_blank" rel="noopener" class="map-link">View on Google Maps <i class="fas fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="footer-col footer-social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="https://www.instagram.com/la_medusaa_mohali?igsh=MXVwcHA3Nm9wbXV1dQ==" aria-label="Instagram" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Globe"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 La-Medusaa Bar & Lounge. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- AUTO-ADVANCING INPUTS & TIMER SCRIPT -->
     <script>
-        // Visual focus bindings
-        const inputs = document.querySelectorAll('.input-field:not(:disabled)');
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                input.closest('.input-wrapper').classList.add('focused');
+        document.querySelectorAll('.otp-group').forEach(group => {
+            const boxes = group.querySelectorAll('.otp-box');
+            const type = group.dataset.type; // 'email' or 'phone'
+            const hiddenInput = document.getElementById(type + '_otp_hidden');
+
+            boxes.forEach((box, idx) => {
+                // Restrict input to numbers only
+                box.addEventListener('input', e => {
+                    box.value = box.value.replace(/[^0-9]/g, '');
+                    updateHidden();
+                    
+                    if (box.value.length === 1 && idx < 5) {
+                        boxes[idx + 1].focus();
+                    }
+                });
+
+                // Keydown logic for Backspace
+                box.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace') {
+                        if (box.value.length === 0 && idx > 0) {
+                            boxes[idx - 1].focus();
+                            boxes[idx - 1].value = '';
+                            updateHidden();
+                        } else {
+                            box.value = '';
+                            updateHidden();
+                        }
+                    }
+                });
+
+                // Paste support
+                box.addEventListener('paste', e => {
+                    e.preventDefault();
+                    const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
+                    if (pastedData.length > 0) {
+                        for (let i = 0; i < 6; i++) {
+                            if (idx + i < 6 && i < pastedData.length) {
+                                boxes[idx + i].value = pastedData[i];
+                            }
+                        }
+                        updateHidden();
+                        const nextFocus = Math.min(5, idx + pastedData.length);
+                        boxes[nextFocus].focus();
+                    }
+                });
             });
-            input.addEventListener('blur', () => {
-                input.closest('.input-wrapper').classList.remove('focused');
-            });
+
+            function updateHidden() {
+                let code = '';
+                boxes.forEach(box => {
+                    code += box.value;
+                });
+                hiddenInput.value = code;
+            }
         });
 
-        // Resend countdown logic
-        let timeLeft = parseInt(document.getElementById('timer-seconds').textContent) || 0;
-        if (timeLeft > 0) {
-            const resendBtn = document.getElementById('resend-btn');
-            const timerText = document.getElementById('timer-text');
-            const timerSecs = document.getElementById('timer-seconds');
+        // Resend Timer Countdown
+        (function() {
+            let secondsLeft = <?php echo intval($secondsLeft); ?>;
+            const container = document.getElementById('resend-container-inner');
 
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerSecs.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    resendBtn.classList.remove('disabled');
-                    timerText.style.display = 'none';
+            function formatTime(s) {
+                const m = Math.floor(s / 60);
+                const sec = s % 60;
+                return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            }
+
+            function renderResend() {
+                if (secondsLeft > 0) {
+                    container.innerHTML = `
+                        <span class="resend-disabled">
+                            <span class="resend-txt">Resend Code</span> 
+                            <span class="timer-txt">(${formatTime(secondsLeft)})</span>
+                        </span>`;
+                } else {
+                    container.innerHTML = `<a href="resend_otp.php" class="resend-link">Resend Code</a>`;
                 }
-            }, 1000);
-        }
+            }
+
+            renderResend();
+
+            if (secondsLeft > 0) {
+                const interval = setInterval(() => {
+                    secondsLeft--;
+                    renderResend();
+                    if (secondsLeft <= 0) {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+            }
+        })();
     </script>
 </body>
 </html>

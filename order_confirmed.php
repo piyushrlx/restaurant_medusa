@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * order_confirmed.php — Post-order confirmation page
+ * order_confirmed.php â€” Post-order confirmation page
  * Reads tracking token from session. Shows animated confirmation + embedded tracker.
  * Auto-redirects to track.php after 5 seconds.
  */
@@ -8,7 +8,7 @@ require_once __DIR__ . '/api/config.php';
 
 $token = $_SESSION['active_order_token'] ?? null;
 if (!$token || strlen($token) !== 64 || !ctype_xdigit($token)) {
-    header('Location: menutest.html');
+    header('Location: menutest.php');
     exit;
 }
 
@@ -34,7 +34,7 @@ try {
 } catch (PDOException $e) { /* silent */ }
 
 if (!$order) {
-    header('Location: menutest.html');
+    header('Location: menutest.php');
     exit;
 }
 
@@ -55,7 +55,7 @@ $steps = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Order confirmed at LA-MEDUSAA Bar & Lounge.">
-    <title>Order Confirmed — LA-MEDUSAA</title>
+    <title>Order Confirmed â€” LA-MEDUSAA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -87,7 +87,7 @@ $steps = [
             padding: 48px 20px 80px;
         }
 
-        /* ── Checkmark Animation ── */
+        /* â”€â”€ Checkmark Animation â”€â”€ */
         .checkmark-wrap {
             position: relative;
             margin-bottom: 28px;
@@ -115,7 +115,7 @@ $steps = [
         @keyframes popIn { from { opacity:0; transform:scale(0.4); } to { opacity:1; transform:scale(1); } }
         @keyframes expandRing { from { opacity:0.6; transform:scale(0.9); } to { opacity:0; transform:scale(1.5); } }
 
-        /* ── Hero ── */
+        /* â”€â”€ Hero â”€â”€ */
         .hero { text-align: center; margin-bottom: 40px; animation: fadeUp 0.6s ease 0.15s both; }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         .hero-subtitle {
@@ -140,7 +140,7 @@ $steps = [
         }
         .hero-tagline { font-size: 0.88rem; color: var(--muted); margin-top: 8px; }
 
-        /* ── Auto-redirect bar ── */
+        /* â”€â”€ Auto-redirect bar â”€â”€ */
         .redirect-bar {
             width: 100%;
             max-width: 640px;
@@ -168,7 +168,7 @@ $steps = [
         .skip-link { color: var(--gold); text-decoration: none; font-weight: 600; white-space: nowrap; margin-left: 16px; font-size: 0.8rem; }
         .skip-link:hover { color: #d4b05a; }
 
-        /* ── Cards ── */
+        /* â”€â”€ Cards â”€â”€ */
         .card {
             width: 100%;
             max-width: 640px;
@@ -189,7 +189,7 @@ $steps = [
             margin-bottom: 16px;
         }
 
-        /* ── Mini Tracker ── */
+        /* â”€â”€ Mini Tracker â”€â”€ */
         .mini-tracker {
             display: flex;
             align-items: flex-start;
@@ -264,7 +264,7 @@ $steps = [
         }
         @keyframes pulse { 0%{box-shadow:0 0 0 0 var(--gold-glow)} 70%{box-shadow:0 0 0 7px rgba(0,0,0,0)} 100%{box-shadow:0 0 0 0 rgba(0,0,0,0)} }
 
-        /* ── Items ── */
+        /* â”€â”€ Items â”€â”€ */
         .item-row {
             display: flex;
             justify-content: space-between;
@@ -288,10 +288,10 @@ $steps = [
         .gt-label { font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
         .gt-value { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
 
-        /* ── Address ── */
+        /* â”€â”€ Address â”€â”€ */
         .address-text { font-size: 0.86rem; color: var(--muted); line-height: 1.7; }
 
-        /* ── CTA ── */
+        /* â”€â”€ CTA â”€â”€ */
         .cta-row { width: 100%; max-width: 640px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.6s ease 0.4s both; }
         .btn-gold {
             display: inline-flex; align-items: center; gap: 8px;
@@ -390,14 +390,14 @@ $steps = [
         <div class="item-row">
             <span class="item-name">
                 <?php echo htmlspecialchars($item['item_name']); ?>
-                <span class="item-qty">× <?php echo intval($item['quantity']); ?></span>
+                <span class="item-qty">Ã— <?php echo intval($item['quantity']); ?></span>
             </span>
-            <span class="item-price">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
+            <span class="item-price">â‚¹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
         </div>
         <?php endforeach; ?>
         <div class="grand-total">
             <span class="gt-label">Grand Total</span>
-            <span class="gt-value">₹<?php echo number_format($order['total_amount'], 2); ?></span>
+            <span class="gt-value">â‚¹<?php echo number_format($order['total_amount'], 2); ?></span>
         </div>
     </div>
     <div class="card-section">
@@ -411,7 +411,7 @@ $steps = [
     <a href="track.php?token=<?php echo htmlspecialchars($token); ?>" class="btn-gold">
         <i class="fas fa-location-dot"></i> View Full Tracking
     </a>
-    <a href="menutest.html" class="btn-ghost">
+    <a href="menutest.php" class="btn-ghost">
         <i class="fas fa-utensils"></i> Back to Menu
     </a>
 </div>
@@ -420,7 +420,7 @@ $steps = [
 const TOKEN    = <?php echo json_encode($token); ?>;
 const TRACK_URL = 'track.php?token=' + TOKEN;
 
-// ── Countdown & auto-redirect ──
+// â”€â”€ Countdown & auto-redirect â”€â”€
 let secs = 5;
 const cdEl = document.getElementById('countdown');
 const timer = setInterval(() => {
@@ -429,7 +429,7 @@ const timer = setInterval(() => {
     if (secs <= 0) { clearInterval(timer); window.location.href = TRACK_URL; }
 }, 1000);
 
-// ── Mini tracker ──
+// â”€â”€ Mini tracker â”€â”€
 const STEP_ORDER = { placed:1, confirmed:2, preparing:3, out_for_delivery:4, delivered:5, cancelled:0 };
 const CHIP_LABELS = { placed:'Order Placed', confirmed:'Confirmed', preparing:'Being Prepared', out_for_delivery:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' };
 

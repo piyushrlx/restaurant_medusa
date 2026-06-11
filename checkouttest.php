@@ -1540,11 +1540,15 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         customer_name: compiledName,
         customer_phone: phone,
         delivery_address: compiledAddress,
+        delivery_city: city,
+        delivery_state: state,
+        delivery_pincode: zip,
         customer_email: document.getElementById('billing_email').value,
         message: document.getElementById('billing_message').value || '',
         csrf_token: document.getElementById('csrf_token').value,
         razorpay_payment_id: paymentId,
         cart_items: cartItems,
+        payment_method: (document.querySelector('input[name="payment_method"]:checked') || {}).value || 'Online',
         save_address: saveAddress,
         saved_address_id: savedAddressId,
         first_name: firstName,
@@ -1556,11 +1560,7 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         state: state,
         zip: zip,
         coupon_code: appliedCouponCode,
-        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false,
-        delivery_city: city,
-        delivery_state: state,
-        delivery_pincode: zip,
-        payment_method: document.querySelector('input[name="payment_method"]:checked')?.value || 'Online'
+        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false
     };
 
     try {
@@ -1586,8 +1586,11 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
                 if (statusText) statusText.textContent = "Order secured successfully! Redirecting...";
                 
                 setTimeout(() => {
-                    // Use server-provided redirect URL (order_confirmed.php or order-success.php)
-                    window.location.href = result.redirect_url || `order-success.php?order_id=${result.order_id}`;
+                    // Use server-provided redirect_url (order_confirmed.php) if available
+                    const dest = result.redirect_url
+                        ? result.redirect_url
+                        : `order-success.php?order_id=${result.order_id}`;
+                    window.location.href = dest;
                 }, 1000);
             } else {
                 if (window.paymentLoaderInterval) clearInterval(window.paymentLoaderInterval);
@@ -1723,12 +1726,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
-<?php
-require_once __DIR__ . '/api/config.php';
-if (!empty($_SESSION['active_order_token'])) {
-    include __DIR__ . '/includes/active_order_bar.php';
-    include __DIR__ . '/includes/order_toast.php';
-}
-?>
+<?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
+<?php require_once __DIR__ . '/includes/order_toast.php'; ?>
 </body>
 </html>
