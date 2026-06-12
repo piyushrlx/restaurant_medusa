@@ -672,15 +672,18 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 900px) {
+            .top-nav {
+                padding: 0 20px;
+            }
+
             .login-layout {
                 flex-direction: column;
-                padding: 120px 5% 40px;
+                padding: 100px 5% 30px;
             }
 
             .left-panel {
                 display: none;
             }
-
 
             .right-panel {
                 padding: 40px 30px;
@@ -693,7 +696,7 @@
             .feature-bar {
                 flex-direction: column;
                 gap: 24px;
-                padding: 30px;
+                padding: 30px 20px;
             }
 
             .feature-quote {
@@ -707,6 +710,63 @@
                 flex-direction: column;
                 gap: 20px;
                 padding-left: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .top-nav {
+                padding: 0 15px;
+            }
+
+            .nav-logo-text {
+                font-size: 1rem;
+            }
+
+            .nav-reserve {
+                padding: 6px 12px;
+                font-size: 0.65rem;
+            }
+
+            .right-panel {
+                padding: 30px 20px;
+                border-radius: 12px;
+            }
+
+            .form-title {
+                font-size: 1.8rem;
+            }
+
+            .social-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-social {
+                padding: 12px;
+            }
+
+            .modal-content {
+                padding: 24px 20px;
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .nav-logo-text {
+                display: none; /* Hide text on very small screens to fit reserve button */
+            }
+            
+            .login-layout {
+                padding: 90px 4% 20px;
+            }
+
+            .right-panel {
+                padding: 25px 15px;
+            }
+            
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
             }
         }
     </style>
@@ -746,7 +806,7 @@
 
                     <!-- Brand -->
                     <div class="form-brand">
-                        <img src="assets/images/medusaa 2 ( only logo).png" alt="La-Medusaa Logo"
+                        <img src="assets/images/medusaa2(onlylogo).png" alt="La-Medusaa Logo"
                             style="width: 48px; height: 48px; object-fit: contain; margin-bottom: 8px; filter: invert(0.8) sepia(1) hue-rotate(350deg) saturate(3) brightness(0.6);">
                         <span class="form-brand-name">La-Medusaa</span>
                         <span class="form-brand-sub">Bar &amp; Lounge</span>
