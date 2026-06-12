@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- TOP NAV -->
     <nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-12 h-20 bg-[#2f1317]">
         <a href="index.html" class="flex items-center gap-3 no-underline">
-            <img src="assets/images/medusaa 2 ( only logo).png" alt="Logo" class="w-10 h-10 object-contain brightness-110" onerror="this.src='assets/images/versace_logo.png'">
+            <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" class="w-10 h-10 object-contain brightness-110">
             <div class="font-serif text-[1.15rem] font-semibold text-gold-light tracking-[2px] uppercase leading-tight">
                 LA-MEDUSAA
                 <small class="block text-[0.58rem] tracking-[4px] font-normal text-gold-light/65">Bar & Lounge</small>
@@ -212,11 +212,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- RIGHT PANEL (FLOATING CARD) -->
             <div id="card" class="bg-cream w-full max-w-[580px] rounded-2xl shadow-[0_25px_50px_rgba(0,0,0,0.5)] px-10 py-[30px] flex flex-col items-center overflow-hidden transition-all duration-300">
                 
-                <div class="text-center mb-7 w-full">
+                <!-- <div class="text-center mb-7 w-full">
                     <i class="fas fa-crown text-[2.2rem] text-text-dark mb-2.5 block"></i>
                     <span class="font-serif text-[1.2rem] font-semibold tracking-[4px] uppercase text-text-dark block">Medusa Club</span>
                     <span class="text-[0.65rem] tracking-[5px] text-text-muted font-medium uppercase block mt-1">Join the Elite</span>
-                </div>
+                </div> -->
 
                 <h1 class="font-serif text-[2.2rem] font-normal text-text-dark text-center mb-2">Create Account</h1>
                 <div class="text-center mb-[26px]">
