@@ -49,17 +49,17 @@ if (session_status() === PHP_SESSION_NONE) {
 function requireLogin() {
     global $pdo;
     if (empty($_SESSION['user_id'])) {
-        // Return 401 Unauthorized for AJAX/API requests
+        // Return 200 OK with success=false for AJAX/API requests to avoid console error logs
         if (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false || 
             (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
             (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')) {
             header('Content-Type: application/json');
-            http_response_code(401);
+            http_response_code(200);
             echo json_encode(['success' => false, 'message' => 'Unauthorized login required']);
             exit;
         } else {
             // Redirect HTML pages to login
-            header('Location: login.html');
+            header('Location: ../login.html');
             exit;
         }
     }
@@ -86,11 +86,11 @@ function requireLogin() {
                     (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
                     (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')) {
                     header('Content-Type: application/json');
-                    http_response_code(401);
+                    http_response_code(200);
                     echo json_encode(['success' => false, 'message' => 'Session expired or logged out from other devices. Please login again.']);
                     exit;
                 } else {
-                    header('Location: login.html');
+                    header('Location: ../login.html');
                     exit;
                 }
             }

@@ -13,7 +13,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <!-- FontAwesome for professional icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -51,6 +53,7 @@
                 opacity: 0;
                 transform: translateY(40px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -102,11 +105,13 @@
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             color: var(--gold) !important;
         }
 
-        .nav-link:hover::after, .nav-link.active::after {
+        .nav-link:hover::after,
+        .nav-link.active::after {
             transform: scaleX(1);
             transform-origin: left;
         }
@@ -116,7 +121,7 @@
             position: relative;
             padding: 220px 0 140px;
             background: linear-gradient(rgba(13, 32, 22, 0.65), rgba(13, 32, 22, 0.95)),
-                        url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
+                url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -377,21 +382,23 @@
         }
 
         /* Parent container highlight on focus */
-        .col-md-6:focus-within .form-label, 
-        .col-md-4:focus-within .form-label, 
+        .col-md-6:focus-within .form-label,
+        .col-md-4:focus-within .form-label,
         .col-12:focus-within .form-label {
             color: var(--gold-hover) !important;
             text-shadow: 0 0 8px rgba(223, 186, 134, 0.35);
         }
-        .col-md-6:focus-within .form-label i, 
-        .col-md-4:focus-within .form-label i, 
+
+        .col-md-6:focus-within .form-label i,
+        .col-md-4:focus-within .form-label i,
         .col-12:focus-within .form-label i {
             transform: scale(1.1);
             color: #ffffff;
         }
 
         /* UNDERLINED SLEEK INPUTS */
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             background: transparent !important;
             border: none !important;
             border-bottom: 1.5px solid rgba(223, 186, 134, 0.2) !important;
@@ -402,7 +409,8 @@
             transition: var(--transition-smooth);
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-bottom-color: var(--gold) !important;
             box-shadow: none !important;
         }
@@ -566,45 +574,59 @@
             background: #f8f9fa;
             color: #333333;
         }
+
         html.light-mode .navbar {
             background: rgba(255, 255, 255, 0.85);
             border-bottom: 1px solid rgba(223, 186, 134, 0.25);
         }
+
         html.light-mode .nav-link {
             color: #333333 !important;
         }
+
         html.light-mode .careers-card {
             color: #333333;
         }
+
         html.light-mode .careers-subtitle {
             color: #666666;
         }
+
         html.light-mode .form-label {
             color: #555555;
         }
-        html.light-mode .form-control, html.light-mode .form-select {
+
+        html.light-mode .form-control,
+        html.light-mode .form-select {
             border-bottom-color: rgba(223, 186, 134, 0.4) !important;
             color: #333333 !important;
         }
-        html.light-mode .form-control:focus, html.light-mode .form-select:focus {
+
+        html.light-mode .form-control:focus,
+        html.light-mode .form-select:focus {
             border-bottom-color: var(--gold) !important;
         }
+
         html.light-mode .form-select option {
             background-color: #ffffff;
             color: #333333;
         }
+
         html.light-mode .file-upload-wrapper {
             background: rgba(0, 0, 0, 0.01);
             border-color: rgba(223, 186, 134, 0.4);
         }
+
         html.light-mode .file-upload-text {
             color: #666666;
         }
+
         html.light-mode .btn-gold {
             color: #0b0a09 !important;
             background: var(--gold);
             border-color: var(--gold);
         }
+
         html.light-mode .btn-gold:hover {
             background: #0b0a09;
             color: var(--gold) !important;
@@ -613,7 +635,7 @@
 
         html.light-mode .ambitions-hero {
             background: linear-gradient(rgba(248, 249, 250, 0.75), rgba(248, 249, 250, 0.98)),
-                        url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
+                url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
         }
 
         html.light-mode .hero-title {
@@ -660,8 +682,10 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="indextest.html" style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html"
+                style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo"
+                    style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
                 <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
             </a>
             <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
@@ -671,7 +695,7 @@
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="indextest.html">Home</a>
+                        <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link auth-required" href="menutest.html">Menu</a>
@@ -704,7 +728,8 @@
         <div class="container">
             <span class="hero-badge">Pioneering Luxury & Careers</span>
             <h1 class="hero-title">Ambitions & Careers</h1>
-            <p class="hero-subtitle">Redefining the fine dining paradigm by synthesizing eco-luxury gastronomy, global expansion, sensory technology, and nurturing local talent. Join our vision and grow with us.</p>
+            <p class="hero-subtitle">Redefining the fine dining paradigm by synthesizing eco-luxury gastronomy, global
+                expansion, sensory technology, and nurturing local talent. Join our vision and grow with us.</p>
         </div>
     </header>
 
@@ -754,14 +779,18 @@
                     <div class="ambition-card">
                         <div class="card-img-wrapper">
                             <span class="card-tag">Sustainability</span>
-                            <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=800&auto=format&fit=crop" alt="Culinary Innovation Lab">
+                            <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=800&auto=format&fit=crop"
+                                alt="Culinary Innovation Lab">
                         </div>
                         <div class="card-body-content">
                             <div class="card-icon">
                                 <i class="fas fa-leaf"></i>
                             </div>
                             <h3>Eco-Luxury & Innovation Lab</h3>
-                            <p>We are establishing a Culinary Innovation Lab dedicated to designing sustainable haute cuisine. Our ambition is to build direct-trade farm partnerships with biodynamic family estates, completely eliminate single-use plastics, and transition to a fully carbon-neutral kitchen operation by 2028.</p>
+                            <p>We are establishing a Culinary Innovation Lab dedicated to designing sustainable haute
+                                cuisine. Our ambition is to build direct-trade farm partnerships with biodynamic family
+                                estates, completely eliminate single-use plastics, and transition to a fully
+                                carbon-neutral kitchen operation by 2028.</p>
                         </div>
                     </div>
                 </div>
@@ -771,14 +800,17 @@
                     <div class="ambition-card">
                         <div class="card-img-wrapper">
                             <span class="card-tag">Expansion</span>
-                            <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=800&auto=format&fit=crop" alt="Global Cities">
+                            <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=800&auto=format&fit=crop"
+                                alt="Global Cities">
                         </div>
                         <div class="card-body-content">
                             <div class="card-icon">
                                 <i class="fas fa-globe"></i>
                             </div>
                             <h3>Global Footprint & Expansion</h3>
-                            <p>We believe that Medusa's signature palatial design and bespoke hospitality belong on the global stage. Our development roadmap targets establishing new fine dining landmarks in Dubai (Downtown), London (Mayfair), and Mumbai (Colaba) between 2027 and 2029.</p>
+                            <p>We believe that Medusa's signature palatial design and bespoke hospitality belong on the
+                                global stage. Our development roadmap targets establishing new fine dining landmarks in
+                                Dubai (Downtown), London (Mayfair), and Mumbai (Colaba) between 2027 and 2029.</p>
                         </div>
                     </div>
                 </div>
@@ -788,14 +820,18 @@
                     <div class="ambition-card">
                         <div class="card-img-wrapper">
                             <span class="card-tag">Technology</span>
-                            <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=800&auto=format&fit=crop" alt="Sensory Dining">
+                            <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=800&auto=format&fit=crop"
+                                alt="Sensory Dining">
                         </div>
                         <div class="card-body-content">
                             <div class="card-icon">
                                 <i class="fas fa-wand-magic-sparkles"></i>
                             </div>
                             <h3>Sensory Dining Chambers</h3>
-                            <p>Gastronomy is a multisensory art. We are designing immersive, projection-mapped dining rooms where acoustic choreography, custom spatial scent diffusion, and lighting systems synchronize with chef Giovanni Vance’s tasting menus to create a theatrical three-dimensional dining experience.</p>
+                            <p>Gastronomy is a multisensory art. We are designing immersive, projection-mapped dining
+                                rooms where acoustic choreography, custom spatial scent diffusion, and lighting systems
+                                synchronize with chef Giovanni Vance’s tasting menus to create a theatrical
+                                three-dimensional dining experience.</p>
                         </div>
                     </div>
                 </div>
@@ -805,14 +841,18 @@
                     <div class="ambition-card">
                         <div class="card-img-wrapper">
                             <span class="card-tag">Academy</span>
-                            <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=800&auto=format&fit=crop" alt="Culinary Academy">
+                            <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=800&auto=format&fit=crop"
+                                alt="Culinary Academy">
                         </div>
                         <div class="card-body-content">
                             <div class="card-icon">
                                 <i class="fas fa-graduation-cap"></i>
                             </div>
                             <h3>Culinary Arts Foundation</h3>
-                            <p>Our final pillar is dedicated to giving back. The Medusa Culinary Arts Foundation will provide full scholarships and mentorship programs to support talented, aspiring young chefs across India, enabling them to study and apprentice at top-tier culinary academies in Italy and France.</p>
+                            <p>Our final pillar is dedicated to giving back. The Medusa Culinary Arts Foundation will
+                                provide full scholarships and mentorship programs to support talented, aspiring young
+                                chefs across India, enabling them to study and apprentice at top-tier culinary academies
+                                in Italy and France.</p>
                         </div>
                     </div>
                 </div>
@@ -828,33 +868,37 @@
                     <h1 class="careers-title">Join Team Medusa</h1>
                     <p class="careers-subtitle">Build your career with one of the most premium dining destinations.</p>
                 </div>
-                
+
                 <form id="careerForm" onsubmit="submitApplication(event)" novalidate>
                     <div class="row g-5">
                         <!-- Full Name -->
                         <div class="col-md-6">
                             <label for="full_name" class="form-label"><i class="fas fa-user"></i> Full Name</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="E.g. Vikram Malhotra">
+                            <input type="text" class="form-control" id="full_name" name="full_name" required
+                                placeholder="E.g. Vikram Malhotra">
                             <div class="invalid-feedback">Please enter your full name (minimum 2 characters).</div>
                         </div>
 
                         <!-- Mobile Number -->
                         <div class="col-md-6">
                             <label for="mobile" class="form-label"><i class="fas fa-phone"></i> Mobile Number</label>
-                            <input type="tel" class="form-control" id="mobile" name="mobile" required placeholder="E.g. 9876543210">
+                            <input type="tel" class="form-control" id="mobile" name="mobile" required
+                                placeholder="E.g. 9876543210">
                             <div class="invalid-feedback">Please enter a valid mobile number (10-15 digits).</div>
                         </div>
 
                         <!-- Email Address -->
                         <div class="col-md-6">
                             <label for="email" class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" required placeholder="E.g. vikram@example.com">
+                            <input type="email" class="form-control" id="email" name="email" required
+                                placeholder="E.g. vikram@example.com">
                             <div class="invalid-feedback">Please enter a valid email address.</div>
                         </div>
 
                         <!-- Position Selector -->
                         <div class="col-md-6">
-                            <label for="position" class="form-label"><i class="fas fa-briefcase"></i> Position Applying For</label>
+                            <label for="position" class="form-label"><i class="fas fa-briefcase"></i> Position Applying
+                                For</label>
                             <select class="form-select" id="position" name="position" required>
                                 <option value="" disabled selected>Select Position</option>
                                 <option value="Waiter">Waiter</option>
@@ -872,46 +916,58 @@
 
                         <!-- Years of Experience -->
                         <div class="col-md-4">
-                            <label for="experience" class="form-label"><i class="fas fa-history"></i> Years of Experience</label>
-                            <input type="number" class="form-control" id="experience" name="experience" min="0" required placeholder="E.g. 3">
+                            <label for="experience" class="form-label"><i class="fas fa-history"></i> Years of
+                                Experience</label>
+                            <input type="number" class="form-control" id="experience" name="experience" min="0" required
+                                placeholder="E.g. 3">
                             <div class="invalid-feedback">Please specify years of experience (minimum 0).</div>
                         </div>
 
                         <!-- Current City -->
                         <div class="col-md-4">
-                            <label for="city" class="form-label"><i class="fas fa-map-marker-alt"></i> Current City</label>
-                            <input type="text" class="form-control" id="city" name="city" required placeholder="E.g. Chandigarh">
+                            <label for="city" class="form-label"><i class="fas fa-map-marker-alt"></i> Current
+                                City</label>
+                            <input type="text" class="form-control" id="city" name="city" required
+                                placeholder="E.g. Chandigarh">
                             <div class="invalid-feedback">Please enter your current city.</div>
                         </div>
 
                         <!-- Expected Salary -->
                         <div class="col-md-4">
-                            <label for="expected_salary" class="form-label"><i class="fas fa-indian-rupee-sign"></i> Expected Salary (₹ / Month)</label>
-                            <input type="number" class="form-control" id="expected_salary" name="expected_salary" min="1" required placeholder="E.g. 25000">
+                            <label for="expected_salary" class="form-label"><i class="fas fa-indian-rupee-sign"></i>
+                                Expected Salary (₹ / Month)</label>
+                            <input type="number" class="form-control" id="expected_salary" name="expected_salary"
+                                min="1" required placeholder="E.g. 25000">
                             <div class="invalid-feedback">Please enter your expected salary.</div>
                         </div>
 
                         <!-- Resume Upload -->
                         <div class="col-12">
-                            <label class="form-label"><i class="fas fa-file-arrow-up"></i> Resume Upload (PDF/DOC/DOCX - Max 5MB)</label>
+                            <label class="form-label"><i class="fas fa-file-arrow-up"></i> Resume Upload (PDF/DOC/DOCX -
+                                Max 5MB)</label>
                             <div class="file-upload-wrapper" id="uploadArea">
-                                <input type="file" class="file-upload-input" id="resume" name="resume" accept=".pdf,.doc,.docx" required onchange="handleFileSelected(this)">
+                                <input type="file" class="file-upload-input" id="resume" name="resume"
+                                    accept=".pdf,.doc,.docx" required onchange="handleFileSelected(this)">
                                 <div class="upload-icon-wrapper mb-2">
-                                    <i class="fas fa-cloud-arrow-up" style="font-size: 2.2rem; color: rgba(223, 186, 134, 0.6); transition: var(--transition-smooth);"></i>
+                                    <i class="fas fa-cloud-arrow-up"
+                                        style="font-size: 2.2rem; color: rgba(223, 186, 134, 0.6); transition: var(--transition-smooth);"></i>
                                 </div>
                                 <p class="file-upload-text" id="uploadText">
                                     Drag & drop your resume file here or <strong>browse files</strong>
                                 </p>
                             </div>
-                            <div class="invalid-feedback" id="fileFeedback" style="display:none;">Please upload a valid resume in PDF, DOC, or DOCX format (Max 5MB).</div>
+                            <div class="invalid-feedback" id="fileFeedback" style="display:none;">Please upload a valid
+                                resume in PDF, DOC, or DOCX format (Max 5MB).</div>
                         </div>
 
                         <!-- Cover Letter -->
                         <div class="col-12">
-                            <label for="cover_letter" class="form-label"><i class="fas fa-comment-dots"></i> Cover Letter / Message (Optional)</label>
-                            <textarea class="form-control" id="cover_letter" name="cover_letter" rows="4" placeholder="Describe why you are a great fit for Medusa..."></textarea>
+                            <label for="cover_letter" class="form-label"><i class="fas fa-comment-dots"></i> Cover
+                                Letter / Message (Optional)</label>
+                            <textarea class="form-control" id="cover_letter" name="cover_letter" rows="4"
+                                placeholder="Describe why you are a great fit for Medusa..."></textarea>
                         </div>
-                        
+
                         <!-- Submit Button -->
                         <div class="col-12 mt-5">
                             <button type="submit" class="btn btn-gold" id="submitBtn">Submit Application</button>
@@ -927,8 +983,10 @@
         <div class="container">
             <div class="row g-5">
                 <div class="col-lg-3">
-                    <h2 class="d-flex align-items-center gap-2" style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
-                        <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
+                    <h2 class="d-flex align-items-center gap-2"
+                        style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
+                        <img src="assets/images/versace_logo.png" alt="Medusa Logo"
+                            style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
                         <span>Medusa</span>
                     </h2>
                     <p class="mt-4 text-secondary">
@@ -938,22 +996,33 @@
                 <div class="col-lg-3">
                     <h5 class="mb-4">Navigation</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-3"><a href="indextest.html" class="text-secondary text-decoration-none">Home</a></li>
-                        <li class="mb-3"><a href="menutest.html" class="text-secondary text-decoration-none auth-required">Our Menu</a></li>
-                        <li class="mb-3"><a href="book-table-test.html" class="text-secondary text-decoration-none">Reservations</a></li>
-                        <li class="mb-3"><a href="about.html" class="text-secondary text-decoration-none">About Us</a></li>
-                        <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create Account</a></li>
-                        <li class="mb-3"><a href="#ambitions-section" class="text-secondary text-decoration-none">Ambitions</a></li>
-                        <li class="mb-3"><a href="#career-form" class="text-secondary text-decoration-none text-gold">Career</a></li>
-                        <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none" id="footerAuthLink">Login</a></li>
+                        <li class="mb-3"><a href="index.html" class="text-secondary text-decoration-none">Home</a>
+                        </li>
+                        <li class="mb-3"><a href="menutest.html"
+                                class="text-secondary text-decoration-none auth-required">Our Menu</a></li>
+                        <li class="mb-3"><a href="book-table-test.html"
+                                class="text-secondary text-decoration-none">Reservations</a></li>
+                        <li class="mb-3"><a href="about.html" class="text-secondary text-decoration-none">About Us</a>
+                        </li>
+                        <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create
+                                Account</a></li>
+                        <li class="mb-3"><a href="#ambitions-section"
+                                class="text-secondary text-decoration-none">Ambitions</a></li>
+                        <li class="mb-3"><a href="#career-form"
+                                class="text-secondary text-decoration-none text-gold">Career</a></li>
+                        <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none"
+                                id="footerAuthLink">Login</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
                     <h5 class="mb-4">Contact</h5>
-                    <p class="text-secondary">SCO 44,45, District One Market<br>Sector 68, SAS Nagar<br>Punjab 140308</p>
+                    <p class="text-secondary">SCO 44,45, District One Market<br>Sector 68, SAS Nagar<br>Punjab 140308
+                    </p>
                     <p class="text-secondary">+91 94272 72798</p>
                     <p class="text-secondary">contact@medusa.com</p>
-                    <button class="btn btn-outline-warning btn-sm mt-2" style="border-color: var(--gold); color: var(--gold); border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;" onclick="openMapModal()">
+                    <button class="btn btn-outline-warning btn-sm mt-2"
+                        style="border-color: var(--gold); color: var(--gold); border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;"
+                        onclick="openMapModal()">
                         <i class="fas fa-location-dot me-1"></i> View on Map
                     </button>
                 </div>
@@ -961,8 +1030,10 @@
                     <h5 class="mb-4">Join Our Circle</h5>
                     <p class="text-secondary mb-4">Get exclusive offers and premium updates.</p>
                     <div class="d-flex">
-                        <input type="email" class="form-control" placeholder="Email Address" style="border-radius: 8px 0 0 8px; border-color: rgba(223, 186, 134, 0.2); background: transparent; color: white;">
-                        <button class="btn btn-outline-warning" style="border-radius: 0 8px 8px 0; border-color: var(--gold); color: var(--gold); width: 60px; min-width: auto; margin: 0;">→</button>
+                        <input type="email" class="form-control" placeholder="Email Address"
+                            style="border-radius: 8px 0 0 8px; border-color: rgba(223, 186, 134, 0.2); background: transparent; color: white;">
+                        <button class="btn btn-outline-warning"
+                            style="border-radius: 0 8px 8px 0; border-color: var(--gold); color: var(--gold); width: 60px; min-width: auto; margin: 0;">→</button>
                     </div>
                 </div>
             </div>
@@ -974,15 +1045,25 @@
     </footer>
 
     <!-- GOOGLE MAPS LOCATION MODAL -->
-    <div id="mapModal" style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
-        <button onclick="closeMapModal()" style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
-        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);" id="mapContent">
-            <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
-                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div id="mapModal"
+        style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
+        <button onclick="closeMapModal()"
+            style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
+        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);"
+            id="mapContent">
+            <div
+                style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-            <h4 style="font-family:'Cormorant Garamond',serif;color:#fff;margin-top:16px;font-size:1.3rem;">Medusa Restaurant</h4>
-            <p style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
-            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size:0.75rem;"></i></a>
+            <h4 style="font-family:'Cormorant Garamond',serif;color:#fff;margin-top:16px;font-size:1.3rem;">Medusa
+                Restaurant</h4>
+            <p style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
+                SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308"
+                target="_blank" rel="noopener"
+                style="display:inline-block;margin-top:12px;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open
+                in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size:0.75rem;"></i></a>
         </div>
     </div>
 
@@ -1117,7 +1198,7 @@
             const form = document.getElementById('careerForm');
             const resumeInput = document.getElementById('resume');
             const fileFeedback = document.getElementById('fileFeedback');
-            
+
             let isFileValid = true;
             if (!resumeInput.files || resumeInput.files.length === 0) {
                 isFileValid = false;
@@ -1132,7 +1213,7 @@
 
             const submitBtn = document.getElementById('submitBtn');
             const originalBtnText = submitBtn.innerHTML;
-            
+
             // Set Loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-gold me-2"></span>Submitting...';
@@ -1151,7 +1232,7 @@
                     alert('Success! ' + data.message);
                     form.reset();
                     form.classList.remove('was-validated');
-                    
+
                     // Reset file upload styles
                     document.getElementById('uploadArea').style.borderColor = 'rgba(223, 186, 134, 0.3)';
                     document.getElementById('uploadText').innerHTML = 'Drag & drop your resume file here or <strong>browse files</strong>';
