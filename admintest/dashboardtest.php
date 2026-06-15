@@ -43,6 +43,20 @@ function isVegItem($name, $description = '') {
     return true;
 }
 
+// Helper to resolve dish image URLs for admin view
+function getDishImage($image_url) {
+    if (empty($image_url)) {
+        return '../uploads/default.jpg';
+    }
+    if (strpos($image_url, 'http://') === 0 || strpos($image_url, 'https://') === 0 || strpos($image_url, '//') === 0) {
+        return $image_url;
+    }
+    if (strpos($image_url, 'uploads/') === 0) {
+        return '../' . $image_url;
+    }
+    return '../uploads/' . $image_url;
+}
+
 // Helper to determine date boundaries for report filtering
 function getDateBounds($range, $start_custom = null, $end_custom = null) {
     date_default_timezone_set('Asia/Kolkata');
@@ -3321,6 +3335,7 @@ html:not(.light-mode) .form-select:focus{
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
+                                <option value="Liquor">Liquor</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -3425,7 +3440,7 @@ html:not(.light-mode) .form-select:focus{
                             <?php foreach ($menu_list as $dish): ?>
                             <tr>
                                 <td>
-                                    <img src="<?php echo htmlspecialchars($dish['image_url']); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                                    <img src="<?php echo htmlspecialchars(getDishImage($dish['image_url'])); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($dish['name']); ?></strong></td>
                                 <td><span class="text-uppercase"><?php echo htmlspecialchars($dish['category']); ?></span></td>
@@ -4383,6 +4398,7 @@ html:not(.light-mode) .form-select:focus{
                         <div class="mb-3">
                             <label class="form-label text-muted">Category</label>
                             <select id="menu_category" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="Liquor">Liquor</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -5132,8 +5148,12 @@ html:not(.light-mode) .form-select:focus{
             }
             
             let displayUrl = url;
-            if (url.startsWith('uploads/')) {
-                displayUrl = '../' + url;
+            if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//')) {
+                if (url.startsWith('uploads/')) {
+                    displayUrl = '../' + url;
+                } else {
+                    displayUrl = '../uploads/' + url;
+                }
             }
 
             if (previewImg) previewImg.src = displayUrl;
@@ -5540,7 +5560,17 @@ html:not(.light-mode) .form-select:focus{
                 return;
             }
 
-            tbody.innerHTML = menu.map(dish => {
+             tbody.innerHTML = menu.map(dish => {
+                let imgSrc = dish.image_url || '';
+                if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
+                    if (imgSrc.startsWith('uploads/')) {
+                        imgSrc = '../' + imgSrc;
+                    } else {
+                        imgSrc = '../uploads/' + imgSrc;
+                    }
+                }
+                if (!imgSrc) imgSrc = '../uploads/default.jpg';
+
                 const vegBadge = dish.is_veg
                     ? '<span class="badge" style="background:#16a34a; color:#fff; font-size:0.7rem;">VEG</span>'
                     : '<span class="badge" style="background:#dc2626; color:#fff; font-size:0.7rem;">NON-VEG</span>';
@@ -5552,7 +5582,7 @@ html:not(.light-mode) .form-select:focus{
                     : '<span class="status-badge bg-danger text-white">Unavailable</span>';
 
                 return `<tr>
-                    <td><img src="${dish.image_url || ''}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
+                    <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
                     <td><strong>${dish.name}</strong> ${vegBadge}${bestBadge}</td>
                     <td class="text-uppercase"><small>${dish.category || '—'}</small></td>
                     <td class="text-gold">${fmtINR(dish.price)}</td>

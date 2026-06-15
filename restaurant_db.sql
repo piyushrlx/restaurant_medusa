@@ -6,13 +6,23 @@
 -- Generation Time: Jun 11, 2026 at 07:24 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
+<<<<<<< Updated upstream
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+=======
+>>>>>>> Stashed changes
 
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET FOREIGN_KEY_CHECKS = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -21,7 +31,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 --
 -- Database: `restaurant_db`
 --
+<<<<<<< Updated upstream
 DROP DATABASE IF EXISTS `restaurant_db`;
+=======
+>>>>>>> Stashed changes
 CREATE DATABASE IF NOT EXISTS `restaurant_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `restaurant_db`;
 
@@ -321,11 +334,19 @@ INSERT INTO `food_items` (`id`, `name`, `description`, `price`, `category`, `ima
 (96, 'Meat Balls', 'Rogan josh gravy with meatballs on pizza — bold and flavorful', 695.00, 'Brick Oven Pizza', '', 1),
 (97, 'Chilli Basil Chicken', 'Wok-tossed chicken in spicy chilli basil sauce', 465.00, 'Non-Veg Appetizer', '', 1),
 (98, 'Mutton Keema Pav', 'Street-style mutton keema served with buttered pav', 0.00, 'Non-Veg Appetizer', '', 1),
+<<<<<<< Updated upstream
 (99, 'Johnnie Walker Black Label', 'Premium Scotch Whisky aged 12 years', 4500.00, 'Liquor', 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=400&h=300&fit=crop', 1),
 (100, 'Jack Daniel\'s Tennessee Whiskey', 'Smooth Tennessee sour mash whiskey', 3800.00, 'Liquor', 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=400&h=300&fit=crop', 1),
 (101, 'Absolut Vodka', 'Classic Swedish premium vodka', 3200.00, 'Liquor', 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop', 1),
 (102, 'Bacardi White Rum', 'Light-bodied rum with subtle sweetness', 2800.00, 'Liquor', 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop', 1),
 (103, 'Hendrick\'s Artisanal Gin', 'Scottish gin infused with rose and cucumber', 4200.00, 'Liquor', 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop', 1);
+=======
+(99, 'Johnnie Walker Black Label', 'Premium Scotch Whisky aged 12 years', 4500.00, 'Liquor', 'johnnie_walker.png', 1),
+(100, 'Jack Daniel\'s Tennessee Whiskey', 'Smooth Tennessee sour mash whiskey', 3800.00, 'Liquor', 'jack_daniels.png', 1),
+(101, 'Absolut Vodka', 'Classic Swedish premium vodka', 3200.00, 'Liquor', 'absolut_vodka.png', 1),
+(102, 'Bacardi White Rum', 'Light-bodied rum with subtle sweetness', 2800.00, 'Liquor', 'bacardi_rum.png', 1),
+(103, 'Hendrick\'s Artisanal Gin', 'Scottish gin infused with rose and cucumber', 4200.00, 'Liquor', 'hendricks_gin.png', 1);
+>>>>>>> Stashed changes
 
 -- --------------------------------------------------------
 
@@ -1108,6 +1129,7 @@ INSERT INTO `user_notifications` (`id`, `user_id`, `title`, `message`, `is_read`
 --
 -- Table structure for table `user_settings`
 --
+<<<<<<< Updated upstream
 
 DROP TABLE IF EXISTS `user_settings`;
 CREATE TABLE `user_settings` (
@@ -1526,7 +1548,426 @@ ALTER TABLE `user_notifications`
 ALTER TABLE `user_settings`
   ADD CONSTRAINT `fk_user_settings_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
+=======
+>>>>>>> Stashed changes
 
+DROP TABLE IF EXISTS `user_settings`;
+CREATE TABLE `user_settings` (
+  `user_id` int(11) NOT NULL,
+  `email_notifications` tinyint(1) DEFAULT 1,
+  `sms_notifications` tinyint(1) DEFAULT 1,
+  `promotional_offers` tinyint(1) DEFAULT 1,
+  `privacy_mode` tinyint(1) DEFAULT 0,
+  `language` varchar(10) DEFAULT 'en',
+  `theme` varchar(10) DEFAULT 'dark'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_settings`
+--
+
+INSERT INTO `user_settings` (`user_id`, `email_notifications`, `sms_notifications`, `promotional_offers`, `privacy_mode`, `language`, `theme`) VALUES
+(2, 0, 1, 1, 0, 'en', 'dark');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `career_applications`
+--
+ALTER TABLE `career_applications`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `cart`
+--
+ALTER TABLE `cart`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `food_item_id` (`food_item_id`);
+
+--
+-- Indexes for table `coupons`
+--
+ALTER TABLE `coupons`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `coupon_code` (`coupon_code`),
+  ADD KEY `idx_coupons_user_id` (`user_id`),
+  ADD KEY `idx_coupons_status` (`status`),
+  ADD KEY `idx_coupons_expires_at` (`expires_at`),
+  ADD KEY `fk_coupons_feedback` (`review_id`),
+  ADD KEY `fk_coupons_orders` (`order_id`);
+
+--
+-- Indexes for table `customer_tiers`
+--
+ALTER TABLE `customer_tiers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `tier_name` (`tier_name`);
+
+--
+-- Indexes for table `dish_customizations`
+--
+ALTER TABLE `dish_customizations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `food_item_id` (`food_item_id`);
+
+--
+-- Indexes for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_feedback_orders` (`order_number`),
+  ADD KEY `fk_feedback_users` (`user_id`);
+
+--
+-- Indexes for table `food_items`
+--
+ALTER TABLE `food_items`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `login_activity_logs`
+--
+ALTER TABLE `login_activity_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_login_logs_users` (`user_id`);
+
+--
+-- Indexes for table `loyalty_transactions`
+--
+ALTER TABLE `loyalty_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_transactions_users` (`user_id`),
+  ADD KEY `fk_transactions_orders` (`order_id`);
+
+--
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_is_read` (`is_read`),
+  ADD KEY `idx_notif_created_at` (`created_at`),
+  ADD KEY `idx_notif_type` (`type`);
+
+--
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `order_number` (`order_number`),
+  ADD UNIQUE KEY `tracking_token` (`tracking_token`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_tracking_token` (`tracking_token`);
+
+--
+-- Indexes for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `order_id` (`order_id`),
+  ADD KEY `food_item_id` (`food_item_id`);
+
+--
+-- Indexes for table `reservations`
+--
+ALTER TABLE `reservations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `reward_points`
+--
+ALTER TABLE `reward_points`
+  ADD PRIMARY KEY (`user_id`);
+
+--
+-- Indexes for table `support_requests`
+--
+ALTER TABLE `support_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_support_requests_users` (`user_id`);
+
+--
+-- Indexes for table `table_bookings`
+--
+ALTER TABLE `table_bookings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `tier_history`
+--
+ALTER TABLE `tier_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_history_users` (`user_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `user_addresses`
+--
+ALTER TABLE `user_addresses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `user_liquor_quota`
+--
+ALTER TABLE `user_liquor_quota`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_item` (`user_id`,`food_item_id`),
+  ADD KEY `fk_quota_items` (`food_item_id`);
+
+--
+-- Indexes for table `user_notifications`
+--
+ALTER TABLE `user_notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_notifications_users` (`user_id`);
+
+--
+-- Indexes for table `user_settings`
+--
+ALTER TABLE `user_settings`
+  ADD PRIMARY KEY (`user_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `career_applications`
+--
+ALTER TABLE `career_applications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cart`
+--
+ALTER TABLE `cart`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `coupons`
+--
+ALTER TABLE `coupons`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `customer_tiers`
+--
+ALTER TABLE `customer_tiers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `dish_customizations`
+--
+ALTER TABLE `dish_customizations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `feedback`
+--
+ALTER TABLE `feedback`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `food_items`
+--
+ALTER TABLE `food_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
+
+--
+-- AUTO_INCREMENT for table `login_activity_logs`
+--
+ALTER TABLE `login_activity_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+
+--
+-- AUTO_INCREMENT for table `loyalty_transactions`
+--
+ALTER TABLE `loyalty_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+
+--
+-- AUTO_INCREMENT for table `order_items`
+--
+ALTER TABLE `order_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
+
+--
+-- AUTO_INCREMENT for table `reservations`
+--
+ALTER TABLE `reservations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `support_requests`
+--
+ALTER TABLE `support_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `table_bookings`
+--
+ALTER TABLE `table_bookings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `tier_history`
+--
+ALTER TABLE `tier_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `user_addresses`
+--
+ALTER TABLE `user_addresses`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_liquor_quota`
+--
+ALTER TABLE `user_liquor_quota`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `user_notifications`
+--
+ALTER TABLE `user_notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `cart`
+--
+ALTER TABLE `cart`
+  ADD CONSTRAINT `fk_cart_food` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cart_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `coupons`
+--
+ALTER TABLE `coupons`
+  ADD CONSTRAINT `fk_coupons_feedback` FOREIGN KEY (`review_id`) REFERENCES `feedback` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_coupons_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_coupons_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `dish_customizations`
+--
+ALTER TABLE `dish_customizations`
+  ADD CONSTRAINT `fk_customization_food` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD CONSTRAINT `fk_feedback_orders` FOREIGN KEY (`order_number`) REFERENCES `orders` (`order_number`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_feedback_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `login_activity_logs`
+--
+ALTER TABLE `login_activity_logs`
+  ADD CONSTRAINT `fk_login_logs_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `loyalty_transactions`
+--
+ALTER TABLE `loyalty_transactions`
+  ADD CONSTRAINT `fk_transactions_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_transactions_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `fk_items_food` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `reward_points`
+--
+ALTER TABLE `reward_points`
+  ADD CONSTRAINT `fk_rewards_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `support_requests`
+--
+ALTER TABLE `support_requests`
+  ADD CONSTRAINT `fk_support_requests_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `table_bookings`
+--
+ALTER TABLE `table_bookings`
+  ADD CONSTRAINT `table_bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `tier_history`
+--
+ALTER TABLE `tier_history`
+  ADD CONSTRAINT `fk_history_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_addresses`
+--
+ALTER TABLE `user_addresses`
+  ADD CONSTRAINT `fk_addresses_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_liquor_quota`
+--
+ALTER TABLE `user_liquor_quota`
+  ADD CONSTRAINT `fk_quota_items` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_quota_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_notifications`
+--
+ALTER TABLE `user_notifications`
+  ADD CONSTRAINT `fk_notifications_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_settings`
+--
+ALTER TABLE `user_settings`
+  ADD CONSTRAINT `fk_user_settings_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+COMMIT;
 SET FOREIGN_KEY_CHECKS = 1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
