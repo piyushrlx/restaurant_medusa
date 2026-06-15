@@ -4,1267 +4,1178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medusa - The Legend of Luxury Gastronomy</title>
-    <meta name="description"
-        content="Discover the legacy of Medusa, Sahibzada Ajit Singh Nagar's premier luxury dining experience at SCO 44,45, District One Market, Sector 68. Culinary philosophy, master chefs, and palatial ambiance.">
-
-    <!-- Global Theme Controller -->
-    <script src="assets/js/theme-toggle.js"></script>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <title>Medusa - About Us</title>
     <!-- Google Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap"
         rel="stylesheet">
-
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Global Styles & Transitions -->
-    <link rel="stylesheet" href="assets/css/main.css">
-    <!-- Custom Page Styles -->
-    <link rel="stylesheet" href="assets/css/about.css">
-
     <style>
         :root {
-            --gold: #dfba86;
-            --gold-hover: #f3dfc1;
-            --formal-garden: #132F20;
-            --formal-garden-light: #1C3B2B;
-            --formal-garden-deep: #0D2016;
-            --rosewood: #5A1827;
-            --rosewood-light: #7E2638;
-            --warm-ivory: #FAF7F0;
-            --warm-ivory-dark: #F0ECE1;
-            --dark: #0D2016;
-            --dark-card: rgba(13, 32, 22, 0.6);
-            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --dark-green: #0b1a13;
+            --dark-maroon: #280b10;
+            --cream: #f4efe6;
+            --gold: #d9b882;
+            --text-light: #ffffff;
+            --text-dark: #222222;
+            --text-muted: #888888;
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Jost', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background: var(--dark);
-            color: #f7f5f2;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: var(--font-sans);
+            color: var(--text-dark);
+            background-color: var(--cream);
+            line-height: 1.6;
             overflow-x: hidden;
-            letter-spacing: 0.2px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* UTILITIES */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
-        /* NAVBAR */
-        .navbar {
-            background: rgba(11, 10, 9, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.12);
-            padding: 16px 0;
-            transition: var(--transition-smooth);
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 20px;
         }
 
-        .navbar-brand {
-            color: var(--gold) !important;
-            font-size: 2rem;
-            font-family: 'Cormorant Garamond', serif;
-            letter-spacing: 2px;
-        }
-
-        .navbar-brand img {
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .navbar-brand:hover img {
-            transform: rotate(360deg) scale(1.08);
-        }
-
-        .nav-link {
-            color: #eae5df !important;
-            margin-left: 20px;
-            font-size: 0.85rem;
+        .gold-subtitle {
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            position: relative;
-            transition: var(--transition-smooth);
+            letter-spacing: 2px;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .nav-link::after {
+        .gold-subtitle::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background-color: var(--gold);
+        }
+
+        .torn-paper-top,
+        .torn-paper-bottom {
+            width: 100%;
+            height: auto;
+            display: block;
+            fill: var(--cream);
+            margin-top: -1px;
+            /* fix rendering gap */
+        }
+
+        .torn-paper-bottom {
+            transform: scaleY(-1);
+            margin-bottom: -1px;
+        }
+
+        /* NAVIGATION */
+        .top-nav {
+            background-color: var(--dark-maroon);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            position: relative;
+            width: 250px;
+            height: 50px;
+        }
+
+        .nav-logo img {
+            position: absolute;
+            height: 100px;
+            width: auto;
+            max-width: none;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--gold);
+        }
+
+        .nav-links a.active::after {
             content: '';
             position: absolute;
-            bottom: -4px;
-            left: 8px;
-            right: 8px;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
             height: 1px;
-            background: var(--gold);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background-color: var(--gold);
         }
 
-        .nav-link:hover {
-            color: var(--gold) !important;
+        .btn-reserve {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 24px;
+            transition: all 0.3s;
         }
 
-        .nav-link:hover::after {
-            transform: scaleX(1);
-            transform-origin: left;
+        .btn-reserve:hover {
+            border-color: var(--gold);
+            color: var(--gold);
         }
 
         /* HERO SECTION */
-        .about-hero {
+        .hero {
+            background-color: var(--dark-green);
+            color: var(--text-light);
             position: relative;
-            padding: 180px 0 100px;
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, rgba(11, 10, 9, 0) 70%),
-                linear-gradient(rgba(11, 10, 9, 0.4), rgba(11, 10, 9, 0.95));
-            text-align: center;
+            padding: 80px 0 0 0;
+            overflow: hidden;
         }
 
-        .about-title-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: var(--gold);
-            margin-bottom: 20px;
-            display: inline-block;
-            border: 1px solid rgba(223, 186, 134, 0.3);
-            padding: 6px 20px;
-            border-radius: 50px;
-            background: rgba(223, 186, 134, 0.02);
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 100%;
+            background-image: url('https://static.wixstatic.com/media/196df9_441e5f3cac7349c49e7f7815dabea8aa~mv2.png/v1/fill/w_412,h_1000,fp_0.08_0.34,q_90,enc_avif,quality_auto/196df9_441e5f3cac7349c49e7f7815dabea8aa~mv2.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: left center;
+            pointer-events: none;
+            opacity: 0.4;
         }
 
-        .about-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4rem;
-            color: #ffffff;
-            font-weight: 600;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .about-subtitle {
-            font-size: 1.1rem;
-            color: #a09a93;
-            max-width: 650px;
+        .hero-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
             margin: 0 auto;
-            line-height: 1.8;
-            font-weight: 300;
-            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        /* SECTION STYLING */
-        .section-premium {
-            padding: 80px 0;
+            padding: 0 40px;
             position: relative;
+            z-index: 1;
         }
 
-        .section-header-gold {
-            text-align: center;
-            margin-bottom: 60px;
+        .hero-content {
+            width: 45%;
+            padding-right: 40px;
         }
 
-        .section-header-gold h2 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.8rem;
+        .hero-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+            max-width: 400px;
+        }
+
+        .btn-discover {
             color: var(--gold);
+            text-decoration: none;
+            font-size: 0.75rem;
             font-weight: 600;
-            letter-spacing: 1.5px;
-            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid var(--gold);
+            padding: 14px 30px;
             display: inline-block;
-            padding-bottom: 15px;
+            transition: all 0.3s;
         }
 
-        .section-header-gold h2::after {
+        .btn-discover:hover {
+            background: var(--gold);
+            color: var(--dark-green);
+        }
+
+        .hero-image-wrapper {
+            width: 50%;
+            height: 500px;
+            position: relative;
+            margin-bottom: -50px;
+            z-index: 2;
+        }
+
+        .hero-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* TORN PAPER SVGS */
+        .torn-mask {
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 3;
+            transform: translateY(2px);
+            /* overlap */
+        }
+
+        .torn-mask svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            fill: var(--cream);
+        }
+
+        .torn-mask-bottom {
+            transform: translateY(-2px) rotate(180deg);
+        }
+
+        /* PHILOSOPHY SECTION */
+        .philosophy {
+            background-color: var(--cream);
+            padding: 80px 0 100px;
+            text-align: center;
+        }
+
+        .phil-header {
+            margin-bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .phil-header .gold-subtitle {
+            margin-bottom: 20px;
+        }
+
+        .phil-header .gold-subtitle::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background-color: var(--gold);
+        }
+
+        .phil-header h2 {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+
+        .phil-header p {
+            max-width: 600px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .phil-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .phil-item {
+            text-align: center;
+            position: relative;
+        }
+
+        .phil-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .phil-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            color: var(--text-dark);
+        }
+
+        .phil-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: currentColor;
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .phil-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+        }
+
+        .phil-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* STORY SECTION */
+        .story {
+            background-color: var(--dark-green);
+            color: var(--text-light);
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .story::before {
             content: '';
             position: absolute;
             bottom: 0;
-            left: 25%;
-            width: 50%;
-            height: 1.5px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        }
-
-        /* HERITAGE GRID */
-        .heritage-content {
-            font-size: 1rem;
-            line-height: 1.9;
-            color: #d1cbc4;
-        }
-
-        .heritage-highlight {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.7rem;
-            color: #ffffff;
-            font-style: italic;
-            border-left: 2.5px solid var(--gold);
-            padding-left: 20px;
-            margin: 30px 0;
-        }
-
-        .heritage-frame {
-            border: 1px solid rgba(223, 186, 134, 0.2);
-            border-radius: 20px;
-            padding: 2.5rem;
-            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.03) 0%, transparent 60%);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            left: 0;
+            width: 300px;
             height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="200" height="400" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg"><path d="M10 200 Q 80 150 40 50" stroke="%23d9b882" fill="none" opacity="0.1" stroke-width="1"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom left;
+            pointer-events: none;
+        }
+
+        .story-container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            gap: 50px;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 40px;
+            align-items: center;
+        }
+
+        .story-img-col {
+            height: 350px;
+        }
+
+        .story-img-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .story-text-col {
+            padding-right: 20px;
+        }
+
+        .story-text-col h2 {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 25px;
+            line-height: 1.1;
+        }
+
+        .story-text-col p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .story-signature {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-top: 20px;
+        }
+
+        .story-features-col {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            padding-left: 40px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .heritage-accent-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: var(--gold);
-            margin-bottom: 1.2rem;
-        }
-
-        /* PHILOSOPHY CARDS */
-        .ph-card {
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(223, 186, 134, 0.12);
-            border-radius: 16px;
-            padding: 40px 30px;
-            text-align: center;
-            height: 100%;
-            transition: var(--transition-smooth);
-        }
-
-        .ph-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--gold);
-            background: rgba(223, 186, 134, 0.03);
-            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.08);
-        }
-
-        .ph-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(223, 186, 134, 0.06);
-            border: 1.5px solid rgba(223, 186, 134, 0.2);
+        .story-feature {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 25px;
+            gap: 40px;
+            text-align: left;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .story-feature:first-child {
+            padding-top: 0;
+        }
+
+        .story-feature:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .story-feature .phil-icon {
             color: var(--gold);
-            font-size: 1.6rem;
-            transition: var(--transition-smooth);
+            margin-bottom: 0;
+            width: 35px;
+            height: 35px;
+            flex-shrink: 0;
         }
 
-        .ph-card:hover .ph-icon {
-            background: var(--gold);
-            color: #0b0a09;
-            transform: scale(1.08);
-            box-shadow: 0 0 20px rgba(223, 186, 134, 0.4);
+        .story-feature-text {
+            display: flex;
+            flex-direction: column;
         }
 
-        .ph-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.6rem;
-            color: #ffffff;
+        .story-feature h4 {
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-        }
-
-        .ph-text {
-            font-size: 0.9rem;
-            color: #a09a93;
-            line-height: 1.7;
-        }
-
-        /* MASTER CHEF */
-        .chef-card {
-            border: 1px solid rgba(223, 186, 134, 0.12);
-            border-radius: 20px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.01);
-            transition: var(--transition-smooth);
-        }
-
-        .chef-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .chef-details {
-            padding: 40px;
-        }
-
-        .chef-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: #ffffff;
-            margin-bottom: 5px;
-        }
-
-        .chef-subtitle {
-            font-size: 0.82rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             color: var(--gold);
-            margin-bottom: 25px;
-            font-weight: 600;
+            margin-bottom: 6px;
         }
 
-        .chef-text {
-            color: #d1cbc4;
-            line-height: 1.8;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
+        .story-feature p {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0;
         }
 
-        .chef-quote {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.4rem;
-            font-style: italic;
-            color: var(--gold);
-            border-left: 2px solid var(--gold);
-            padding-left: 15px;
-            margin: 0;
-        }
-
-        .chef-graphic {
-            background: linear-gradient(135deg, #1c1a17 0%, #0d0c0a 100%);
-            height: 100%;
-            min-height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .chef-graphic::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.05) 0%, transparent 70%);
-        }
-
-        .chef-graphic-crest {
-            font-size: 6rem;
-            color: rgba(223, 186, 134, 0.15);
-            animation: rotateCrest 25s linear infinite;
-        }
-
-        @keyframes rotateCrest {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* GLOBAL MOON THEME ICON SUPPORT */
-        html.light-mode body {
-            background: #f8f9fa;
-            color: #333333;
-        }
-
-        html.light-mode .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.25);
-        }
-
-        html.light-mode .nav-link {
-            color: #333333 !important;
-        }
-
-        html.light-mode .about-hero {
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.15) 0%, rgba(248, 249, 250, 0) 70%);
-        }
-
-        html.light-mode .about-title {
-            color: #1a1917;
-        }
-
-        html.light-mode .about-subtitle {
-            color: #555555;
-        }
-
-        html.light-mode .heritage-highlight {
-            color: #222222;
-        }
-
-        html.light-mode .heritage-frame {
-            border-color: rgba(223, 186, 134, 0.4);
-            background: #ffffff;
-        }
-
-        html.light-mode .ph-card {
-            background: #ffffff;
-            border-color: rgba(223, 186, 134, 0.3);
-        }
-
-        html.light-mode .ph-card:hover {
-            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.18);
-        }
-
-        html.light-mode .ph-title {
-            color: #1a1917;
-        }
-
-        html.light-mode .chef-card {
-            background: #ffffff;
-            border-color: rgba(223, 186, 134, 0.3);
-        }
-
-        html.light-mode .chef-title {
-            color: #1a1917;
-        }
-
-        html.light-mode .chef-graphic {
-            background: linear-gradient(135deg, #eae5df 0%, #f7f5f2 100%);
-        }
-
-        /* SERVICES & FEATURES */
-        .services-showcase-section {
-            position: relative;
-            padding: 100px 0;
-            background-image: linear-gradient(rgba(11, 10, 9, 0.85), rgba(11, 10, 9, 0.9)), url('assets/images/medusa_outdoor_dining.png');
-            background-attachment: fixed;
-            background-position: center;
+        /* CHEF SECTION */
+        .chef {
+            background-color: var(--cream);
+            background-image: url('https://static.wixstatic.com/media/196df9_441e5f3cac7349c49e7f7815dabea8aa~mv2.png/v1/fill/w_1500,h_831,fp_0.08_0.34,q_90,enc_avif,quality_auto/196df9_441e5f3cac7349c49e7f7815dabea8aa~mv2.png');
             background-size: cover;
             background-repeat: no-repeat;
-            border-top: 1px solid rgba(223, 186, 134, 0.06);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.06);
+            background-position: center;
+            padding: 100px 0;
         }
 
-        .features-category {
-            background: rgba(11, 10, 9, 0.78);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(223, 186, 134, 0.18);
-            border-radius: 18px;
-            padding: 28px 24px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: var(--transition-smooth);
-        }
-
-        .features-category:hover {
-            border-color: rgba(223, 186, 134, 0.5);
-            background: rgba(11, 10, 9, 0.88);
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(223, 186, 134, 0.12);
-        }
-
-        .features-cat-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            color: var(--gold);
-            margin-bottom: 18px;
-            display: flex;
+        .chef-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 50px;
             align-items: center;
-            gap: 8px;
-            font-weight: 600;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
-        .features-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        .chef-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
-        .feature-tag {
-            font-size: 0.75rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #d1cbc4;
-            padding: 5px 12px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: var(--transition-smooth);
-            font-weight: 500;
+        .chef-info .gold-subtitle {
+            margin-bottom: 10px;
         }
 
-        .feature-tag:hover {
-            border-color: var(--gold);
-            color: #ffffff;
-            background: rgba(223, 186, 134, 0.08);
-            transform: translateY(-1px);
-            box-shadow: 0 0 10px rgba(223, 186, 134, 0.15);
-        }
-
-        .feature-tag i {
-            font-size: 0.75rem;
-            color: var(--gold);
-            opacity: 0.8;
-        }
-
-        /* LIGHT MODE OVERRIDES FOR SERVICES */
-        html.light-mode .services-showcase-section {
-            background-image: linear-gradient(rgba(248, 249, 250, 0.88), rgba(248, 249, 250, 0.92)), url('assets/images/medusa_outdoor_dining.png');
-        }
-
-        html.light-mode .features-category {
-            background: rgba(255, 255, 255, 0.82);
-            border-color: rgba(223, 186, 134, 0.35);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-        }
-
-        html.light-mode .feature-tag {
-            background: rgba(0, 0, 0, 0.04);
-            border-color: rgba(0, 0, 0, 0.08);
-            color: #333333;
-        }
-
-        html.light-mode .feature-tag:hover {
-            color: var(--gold);
-            background: rgba(223, 186, 134, 0.08);
-        }
-
-        /* FOOTER */
-        footer {
-            padding: 80px 0 40px;
-            background: #060505;
-            border-top: 1px solid rgba(223, 186, 134, 0.12);
-            color: #a09a93;
-        }
-
-        footer h2 {
+        .chef-info h2 {
+            font-family: var(--font-serif);
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: var(--text-dark);
             margin-bottom: 20px;
         }
 
-        footer h5 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            color: #ffffff;
-            letter-spacing: 1.5px;
+        .chef-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 20px;
         }
 
-        footer ul li a {
-            font-size: 0.9rem;
-            transition: var(--transition-smooth);
+        .chef-quote-box {
+            background-color: transparent;
+            border: 1px solid rgba(217, 184, 130, 0.5);
+            border-radius: 8px;
+            padding: 40px 30px;
+            position: relative;
+            box-shadow: none;
+            overflow: hidden;
         }
 
-        footer ul li a:hover {
-            color: var(--gold) !important;
-            padding-left: 5px;
+        .chef-quote-box::before {
+            content: '“';
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            color: var(--dark-maroon);
+            position: absolute;
+            top: 10px;
+            left: 25px;
+            line-height: 1;
+            opacity: 1;
         }
 
-        /* BRAND THEME OVERRIDES */
-        .about-hero {
-            background: linear-gradient(135deg, rgba(19, 47, 32, 0.65) 0%, rgba(90, 24, 39, 0.65) 100%),
-                radial-gradient(circle at center, transparent 0%, rgba(13, 32, 22, 0.95) 90%) !important;
+
+
+        .chef-quote-box p {
+            font-family: var(--font-serif);
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 20px;
+            margin-top: 15px;
+            text-align: left;
+            line-height: 1.5;
         }
 
-        .section-premium {
-            background: var(--formal-garden-deep);
+        .chef-quote-box span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
         }
 
-        .heritage-frame {
-            border-color: rgba(223, 186, 134, 0.15) !important;
-            background: radial-gradient(circle at top right, rgba(223, 186, 134, 0.05) 0%, transparent 60%) !important;
+        /* STATS FOOTER */
+        .stats-bar {
+            background-color: var(--dark-maroon);
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .services-showcase-section {
-            background-image: linear-gradient(rgba(13, 32, 22, 0.85), rgba(90, 24, 39, 0.85)), url('assets/images/medusa_outdoor_dining.png') !important;
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
-        .features-category {
-            background: rgba(13, 32, 22, 0.85) !important;
-            border-color: rgba(223, 186, 134, 0.18) !important;
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .features-category:hover {
-            border-color: rgba(223, 186, 134, 0.5) !important;
-            background: rgba(13, 32, 22, 0.95) !important;
+        .stat-icon {
+            color: var(--gold);
+            font-size: 2rem;
         }
 
-        .ph-card {
-            background: rgba(90, 24, 39, 0.15) !important;
-            border-color: rgba(223, 186, 134, 0.15) !important;
+        .stat-icon svg {
+            width: 35px;
+            height: 35px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
         }
 
-        .ph-card:hover {
-            background: rgba(90, 24, 39, 0.25) !important;
-            border-color: var(--gold) !important;
+        .stat-info h4 {
+            color: var(--text-light);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 2px;
         }
 
-        .chef-card {
-            background: rgba(13, 32, 22, 0.45) !important;
-            border-color: rgba(223, 186, 134, 0.15) !important;
+        .stat-info p {
+            color: rgba(217, 184, 130, 0.8);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .chef-card:hover {
-            border-color: var(--gold) !important;
+        /* MAIN FOOTER */
+        .main-footer {
+            background-color: var(--dark-green);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 80px 0 30px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .chef-graphic {
-            background: linear-gradient(135deg, #132F20 0%, #0D2016 100%) !important;
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
-        footer {
-            background: #07120D !important;
-            border-top: 1px solid rgba(223, 186, 134, 0.15) !important;
-            color: #A8A196 !important;
+        .footer-col h3 {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            color: var(--gold);
+            font-weight: 500;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
         }
 
-        footer h5 {
-            color: var(--gold) !important;
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
-        footer ul li a {
-            color: #A8A196 !important;
+        .footer-logo img {
+            width: auto;
+            height: 90px;
         }
 
-        footer ul li a:hover {
-            color: var(--gold) !important;
+        .footer-col p {
+            line-height: 1.8;
+            margin-bottom: 15px;
         }
 
-        /* Buttons / Icons overrides */
-        .btn-outline-warning {
-            border-color: var(--rosewood) !important;
-            color: var(--gold) !important;
+        .footer-links {
+            list-style: none;
         }
 
-        .btn-outline-warning:hover {
-            background: var(--rosewood) !important;
-            border-color: var(--rosewood-light) !important;
-            color: #ffffff !important;
+        .footer-links li {
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+        }
+
+        .footer-btn-map {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .footer-btn-map i {
+            color: var(--gold);
+        }
+
+        .footer-btn-map:hover {
+            border-color: var(--gold);
+            background: rgba(217, 184, 130, 0.1);
+        }
+
+        .newsletter-form {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .newsletter-form input {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: none;
+            padding: 12px 15px;
+            color: var(--text-light);
+            width: 100%;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter-form input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .newsletter-form button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gold);
+            padding: 0 20px;
+            cursor: pointer;
+            border-radius: 0 4px 4px 0;
+            transition: all 0.3s;
+        }
+
+        .newsletter-form button:hover {
+            background: rgba(217, 184, 130, 0.1);
+            border-color: var(--gold);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 40px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+
+            .hero-container,
+            .story-container {
+                flex-direction: column;
+                display: flex;
+            }
+
+            .hero-content,
+            .hero-image-wrapper {
+                width: 100%;
+                padding: 0;
+            }
+
+            .hero-image-wrapper {
+                margin-top: 50px;
+            }
+
+            .phil-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 60px;
+            }
+
+            .phil-item::after {
+                display: none;
+            }
+
+            .chef-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                flex-wrap: wrap;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .phil-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+
+            .story-container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .story-features-col {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 40px;
+            }
         }
     </style>
-    =======
-    <!-- Global Styles & Transitions -->
-    <link rel="stylesheet" href="assets/css/main.css">
-    <!-- Custom Page Styles -->
-    <link rel="stylesheet" href="assets/css/about.css">
-    >>>>>>> 4f77db645dbed00b7fda972c3da5939df0aaf384
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo"
-                    style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
-                <span
-                    style="font-size: 1.8rem; font-weight: 600; color: var(--gold); font-family: 'Playfair Display', serif; letter-spacing: 2px;">Medusa</span>
+    <!-- TOP NAV -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <img src="assets/images/logo_right.png" alt="Medusa Logo">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
-                aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link auth-required" href="menutest.html">Menu</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="book-table-test.html">Book Table</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="about.html">About Us</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="register.html">Create Account</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="career.html#ambitions-section">Ambitions</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="career.html#career-form">Career</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html" id="authLink">Login</a>
-                    </li>
-                </ul>
-            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="menutest.html">Menu</a></li>
+                <li><a href="book-table-test.html">Reservation</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html" id="authLink">Login</a></li>
+            </ul>
+            <a href="book-table-test.html" class="btn-reserve">Reserve A Table</a>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
-    <header class="about-hero d-flex align-items-center">
-        <div class="container">
-            <span class="about-title-badge">Luxury Gastronomy</span>
-            <h1 class="about-title">The Legend of Medusa</h1>
-            <p class="about-subtitle">A sanctuary of epicurean luxury, blending timeless classical design with
-                state-of-the-art culinary craft.</p>
-            <div class="scroll-down-btn" onclick="scrollToLegacy()">
-                <i class="fa-solid fa-chevron-down"></i>
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="gold-subtitle">About Us</div>
+                <h1 class="section-title">More Than Just<br>a Restaurant</h1>
+                <p class="hero-text">Medusa is more than just a place to eat. It's a place to enjoy unforgettable food,
+                    create unforgettable memories, and savor life's finest moments in unparalleled luxury.</p>
+                <a href="#philosophy" class="btn-discover">Discover Our Story</a>
+            </div>
+            <div class="hero-image-wrapper">
+                <img src="assets/images/luxury_bg.png" alt="Restaurant Interior">
             </div>
         </div>
-    </header>
+        <!-- Torn Paper Top -->
+        <div class="torn-mask">
+            <svg viewBox="0 0 1200 45" preserveAspectRatio="none">
+                <path
+                    d="M0,45 L1200,45 L1200,20 C1150,20 1100,5 1050,15 C1000,25 950,5 900,10 C850,15 800,0 750,15 C700,30 650,5 600,15 C550,25 500,5 450,15 C400,25 350,5 300,15 C250,25 200,0 150,10 C100,20 50,5 0,15 L0,45 Z">
+                </path>
+            </svg>
+        </div>
+    </section>
 
-    <main>
-        <!-- LEGACY / STORY SECTION -->
-        <section class="section-premium timeline-section" id="legacySection">
-            <div class="container">
-                <div class="section-header-gold">
-                    <span>Our Heritage</span>
-                    <h2>The Chronicle of Medusa</h2>
+    <!-- PHILOSOPHY SECTION -->
+    <section class="philosophy" id="philosophy">
+        <div class="phil-header container">
+            <div class="gold-subtitle">Our Philosophy</div>
+            <h2>Crafted With Passion, Served With Heart</h2>
+            <p>We believe in using only the finest ingredients, sourced responsibly and prepared with care. Every dish
+                is a reflection of our dedication to quality and our love for the culinary arts.</p>
+        </div>
+        <div class="phil-grid container">
+            <div class="phil-item">
+                <div class="phil-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V11H17V13H11V7Z" />
+                    </svg>
                 </div>
-
-                <!-- Timeline Navigation -->
-                <div class="timeline-nav">
-                    <div class="timeline-progress-bar" id="timelineProgress"></div>
-                    <button class="timeline-node active" data-year="2018" data-index="0" onclick="switchTimeline(0)">
-                        <span>18</span>
-                    </button>
-                    <button class="timeline-node" data-year="2020" data-index="1" onclick="switchTimeline(1)">
-                        <span>20</span>
-                    </button>
-                    <button class="timeline-node" data-year="2023" data-index="2" onclick="switchTimeline(2)">
-                        <span>23</span>
-                    </button>
-                    <button class="timeline-node" data-year="2026" data-index="3" onclick="switchTimeline(3)">
-                        <span>26</span>
-                    </button>
+                <h3 class="phil-title">Quality Ingredients</h3>
+                <p class="phil-text">We source only the finest and freshest ingredients, from trusted local producers.
+                </p>
+            </div>
+            <div class="phil-item">
+                <div class="phil-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M18.9 3H5.1C3.9 3 3 3.9 3 5.1V8.5C3 10.4 4.5 12 6.4 12C8.1 12 9.5 10.7 9.8 9H14.2C14.5 10.7 15.9 12 17.6 12C19.5 12 21 10.4 21 8.5V5.1C21 3.9 20.1 3 18.9 3ZM6.4 10C5.6 10 5 9.4 5 8.6V5H7.8C7.4 5.9 7 7.2 7.1 8.3C6.9 9.3 6.6 10 6.4 10ZM17.6 10C17.4 10 17.1 9.3 16.9 8.3C17 7.2 16.6 5.9 16.2 5H19V8.6C19 9.4 18.4 10 17.6 10ZM12 14C9.2 14 7 16.2 7 19H17C17 16.2 14.8 14 12 14Z" />
+                    </svg>
                 </div>
+                <h3 class="phil-title">Expertly Crafted</h3>
+                <p class="phil-text">Our chefs bring creativity and expertise to craft dishes that delight your senses.
+                </p>
+            </div>
+            <div class="phil-item">
+                <div class="phil-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" />
+                    </svg>
+                </div>
+                <h3 class="phil-title">Memorable Experience</h3>
+                <p class="phil-text">From the moment you walk in to the last bite, we ensure an experience to remember.
+                </p>
+            </div>
+            <div class="phil-item">
+                <div class="phil-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z" />
+                    </svg>
+                </div>
+                <h3 class="phil-title">Rooted In Community</h3>
+                <p class="phil-text">We're proud to support local farmers, artisans, and the communities we serve.</p>
+            </div>
+        </div>
+    </section>
 
-                <!-- Timeline Panels -->
-                <div class="timeline-content-wrapper">
-                    <!-- Panel 2018 -->
-                    <div class="timeline-panel active" id="panel-0">
-                        <h3>2018: The Dream & Conception</h3>
-                        <p>Medusa was born from a visionary dream to challenge standard fine dining conventions. Our
-                            founders travelled across Italy, sourcing vintage marble, cast Versace decorative accents,
-                            and custom hand-forged lighting templates to prepare the foundation of the region's most
-                            exclusive palatial dining experience.</p>
+    <!-- STORY SECTION -->
+    <section class="story">
+        <div class="torn-mask torn-mask-bottom" style="position: absolute; top: 0; left: 0;">
+            <svg viewBox="0 0 1200 45" preserveAspectRatio="none">
+                <path
+                    d="M0,45 L1200,45 L1200,20 C1150,20 1100,5 1050,15 C1000,25 950,5 900,10 C850,15 800,0 750,15 C700,30 650,5 600,15 C550,25 500,5 450,15 C400,25 350,5 300,15 C250,25 200,0 150,10 C100,20 50,5 0,15 L0,45 Z">
+                </path>
+            </svg>
+        </div>
+
+        <div class="story-container">
+            <div class="story-img-col">
+                <img src="assets/images/signature_dish.png" alt="Signature Dish">
+            </div>
+            <div class="story-text-col">
+                <div class="gold-subtitle">Our Story</div>
+                <h2>A Journey of Passion and Purpose</h2>
+                <p>Medusa was born from a simple idea — to a space where exceptional food brings people together.</p>
+                <p>Our journey began with a passion for authentic hospitality, and timeless experience. Today, we honor
+                    that vision in every dish we serve.</p>
+                <div class="story-signature">The Medusa Team</div>
+            </div>
+            <div class="story-features-col">
+                <div class="story-feature">
+                    <div class="phil-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 4v4a2 2 0 0 0 4 0V4" />
+                            <path d="M10 8v12" />
+                            <path d="M16 4v16" />
+                            <path d="M16 4h1.5a1.5 1.5 0 0 1 1.5 1.5v4.5a1.5 1.5 0 0 1-1.5 1.5H16" />
+                        </svg></div>
+                    <div class="story-feature-text">
+                        <h4>Authentic Flavors</h4>
+                        <p>Inspired by timeless recipes<br>and global influences.</p>
                     </div>
-
-                    <!-- Panel 2020 -->
-                    <div class="timeline-panel" id="panel-1">
-                        <h3>2020: The Grand Opening</h3>
-                        <p>We officially opened our doors in the heart of Chandigarh, establishing a sanctuary of visual
-                            and culinary theater. Within months, Medusa became the premier destination for elite events,
-                            VIP celebrations, and gastronomic connoisseurs seeking high-society dining.</p>
+                </div>
+                <div class="story-feature">
+                    <div class="phil-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 4v4" />
+                            <path d="M9 6h6" />
+                            <path d="M6 8h12l1 5H5l1-5z" />
+                            <path d="M12 13v5" />
+                            <path d="M9 18h6" />
+                        </svg></div>
+                    <div class="story-feature-text">
+                        <h4>Warm & Elegant Space</h4>
+                        <p>Designed to make every<br>moment special.</p>
                     </div>
-
-                    <!-- Panel 2023 -->
-                    <div class="timeline-panel" id="panel-2">
-                        <h3>2023: Michelin-Class Recognition</h3>
-                        <p>Led by Culinary Director Chef Giovanni Vance, our kitchen brigade was honored with
-                            international recognition for their pioneering "contrast and harmony" cooking techniques,
-                            elevating regional Indian and Mediterranean ingredients to a premium global stage.</p>
-                    </div>
-
-                    <!-- Panel 2026 -->
-                    <div class="timeline-panel" id="panel-3">
-                        <h3>2026: The Modern Luxury Era</h3>
-                        <p>Embracing state-of-the-art technological details, we introduced virtual interactive table
-                            layouts, real-time booking, and a bespoke customer loyalty tier system, ensuring that every
-                            guest receives customizable VIP service tailored perfectly to their individual preference.
-                        </p>
+                </div>
+                <div class="story-feature">
+                    <div class="phil-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="13" r="8" />
+                            <path d="M12 13V8" />
+                            <path d="M12 13l3.5 2.5" />
+                            <path d="M12 5V2" />
+                            <path d="M18 7l1.5-1.5" />
+                            <path d="M6 7L4.5 5.5" />
+                        </svg></div>
+                    <div class="story-feature-text">
+                        <h4>Timeless Hospitality</h4>
+                        <p>Because every guest<br>deserves to feel at home.</p>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- PILLARS SECTION -->
-        <section class="section-premium pillars-section">
-            <div class="container">
-                <div class="section-header-gold">
-                    <span>Our Foundation</span>
-                    <h2>The Three Pillars</h2>
-                </div>
-                <div class="row g-4">
-                    <div class="col-lg-4">
-                        <div class="ph-card">
-                            <div class="ph-icon"><i class="fa-solid fa-utensils"></i></div>
-                            <h3 class="ph-title">Artisanal Gastronomy</h3>
-                            <p class="ph-text">Our menus bridge classic international methods and bold regional spices,
-                                resulting in distinct signature dishes that are both comforting and surprising.</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="ph-card">
-                            <div class="ph-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
-                            <h3 class="ph-title">Bespoke Hospitality</h3>
-                            <p class="ph-text">At Medusa, service is an art form. Our dining hosts are trained to
-                                deliver intuitive, highly personalized service that honors your privacy and sets a
-                                perfect pace.</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="ph-card">
-                            <div class="ph-icon"><i class="fa-solid fa-gem"></i></div>
-                            <h3 class="ph-title">Palatial Ambiance</h3>
-                            <p class="ph-text">Step into a space styled with hand-finished marble, custom gold trims,
-                                and Versace emblems, designed to make every celebratory dinner feel extraordinary.</p>
-                        </div>
-                    </div>
+    <!-- CHEF SECTION -->
+    <section class="chef">
+        <div class="torn-mask" style="position: absolute; top: -43px; left: 0; z-index: 10;">
+            <svg viewBox="0 0 1200 45" preserveAspectRatio="none">
+                <path
+                    d="M0,45 L1200,45 L1200,20 C1150,20 1100,5 1050,15 C1000,25 950,5 900,10 C850,15 800,0 750,15 C700,30 650,5 600,15 C550,25 500,5 450,15 C400,25 350,5 300,15 C250,25 200,0 150,10 C100,20 50,5 0,15 L0,45 Z">
+                </path>
+            </svg>
+        </div>
+
+        <div class="chef-container">
+            <div class="chef-info">
+                <div class="gold-subtitle">Meet Our Chef</div>
+                <h2>Chef Giovanni Vance</h2>
+                <p>With over 15 years of experience in fine dining, Chef Giovanni brings passion, creativity, and a deep
+                    respect for ingredients to every plate.<br>His philosophy is simple: let quality speak for itself.
+                </p>
+                <div class="story-signature">Giovanni Vance</div>
+            </div>
+            <div class="chef-img-wrapper">
+                <img src="assets/images/chef_portrait.png" alt="Chef Giovanni Vance" class="chef-img">
+            </div>
+            <div class="chef-quote-wrapper">
+                <div class="chef-quote-box">
+                    <p>Good food is not just about taste,<br>it's about creating memories<br>that last a lifetime.</p>
+                    <span>— Chef Giovanni Vance</span>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- CHEF & SIGNATURE SHOTLIGHT -->
-        <section class="section-premium">
-            <div class="container chef-container">
-                <div class="section-header-gold">
-                    <span>Culinary Leadership</span>
-                    <h2>The Culinary Director</h2>
-                </div>
-                <div class="chef-card">
-                    <div class="row g-0">
-                        <div class="col-lg-5">
-                            <div class="chef-image-wrapper">
-                                <img src="assets/images/chef_portrait.png" alt="Chef Giovanni Vance" class="chef-img">
-                                <div class="chef-image-overlay"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-7">
-                            <div class="chef-details">
-                                <h3 class="chef-title">Chef Giovanni Vance</h3>
-                                <div class="chef-subtitle">Executive Chef & Culinary Director</div>
-                                <p class="chef-text">With over 18 years of experience leading Michelin-recognized
-                                    kitchens across Rome, London, and New Delhi, Chef Vance leads the culinary brigade
-                                    at Medusa with raw artistic focus. His unique style centers on transforming
-                                    traditional recipes by pairing them with unexpected textures and modern
-                                    presentations.</p>
-                                <p class="chef-quote">"We do not feed our guests; we choreograph a series of
-                                    experiences. Each plate leaving our line represents a dedicated, passionate study in
-                                    contrast, harmony, and sensory delight."</p>
-
-                                <div class="signature-dish-box">
-                                    <img src="assets/images/signature_dish.png" alt="Signature Dish"
-                                        class="signature-dish-thumb">
-                                    <div class="signature-dish-info">
-                                        <h5>The Medusa Gold Cannoli</h5>
-                                        <p>Artisanal cocoa-rolled pastry shell, organic orange blossom sweet ricotta
-                                            filling, premium dark chocolate chips, and edible 24k gold leaf highlights.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- STATS FOOTER -->
+    <div class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path
+                            d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                    </svg></div>
+                <div class="stat-info">
+                    <h4>15+</h4>
+                    <p>Years of Passion</p>
                 </div>
             </div>
-        </section>
-
-        <!-- GALLERY SECTION (LIGHTBOX INTEGRATED) -->
-        <section class="section-premium"
-            style="border-top: 1px solid rgba(223, 186, 134, 0.08); border-bottom: 1px solid rgba(223, 186, 134, 0.08);">
-            <div class="container">
-                <div class="section-header-gold">
-                    <span>Visual Splendor</span>
-                    <h2>The Medusa Experience</h2>
-                </div>
-                <div class="gallery-grid">
-                    <!-- Gallery Item 1 -->
-                    <div class="gallery-item" onclick="openLightbox(0)">
-                        <img src="assets/images/luxury_bg.png" alt="The Grand Dining Hall">
-                        <div class="gallery-overlay">
-                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                            <h4>The Grand Dining Hall</h4>
-                            <p>Palatial Indoors</p>
-                        </div>
-                    </div>
-                    <!-- Gallery Item 2 -->
-                    <div class="gallery-item" onclick="openLightbox(1)">
-                        <img src="assets/images/medusa_outdoor_dining.png" alt="The Outdoor Piazza">
-                        <div class="gallery-overlay">
-                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                            <h4>The Outdoor Piazza</h4>
-                            <p>Al Fresco Garden</p>
-                        </div>
-                    </div>
-                    <!-- Gallery Item 3 -->
-                    <div class="gallery-item" onclick="openLightbox(2)">
-                        <img src="assets/images/login_bg.png" alt="The Chef's Lounge">
-                        <div class="gallery-overlay">
-                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                            <h4>The Chef's Lounge</h4>
-                            <p>Exclusive Dining</p>
-                        </div>
-                    </div>
-                    <!-- Gallery Item 4 -->
-                    <div class="gallery-item" onclick="openLightbox(3)">
-                        <img src="assets/images/checkout_hero.png" alt="The Vault Cellar">
-                        <div class="gallery-overlay">
-                            <div class="gallery-overlay-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                            <h4>The Vault Cellar</h4>
-                            <p>Private Reserve</p>
-                        </div>
-                    </div>
+            <div class="stat-item">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path
+                            d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" />
+                        <path
+                            d="M8.5 11C10.7091 11 12.5 9.20914 12.5 7C12.5 4.79086 10.7091 3 8.5 3C6.29086 3 4.5 4.79086 4.5 7C4.5 9.20914 6.29086 11 8.5 11Z" />
+                        <path
+                            d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" />
+                        <path
+                            d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45768C17.623 10.1593 16.8604 10.6597 16 10.88" />
+                    </svg></div>
+                <div class="stat-info">
+                    <h4>50K+</h4>
+                    <p>Happy Guests</p>
                 </div>
             </div>
-        </section>
-
-        <!-- DID YOU KNOW (CUSTOM ACCORDION) -->
-        <section class="section-premium">
-            <div class="container">
-                <div class="section-header-gold">
-                    <span>Curiosities</span>
-                    <h2>Secrets of Medusa</h2>
-                </div>
-                <div class="accordion-wrapper">
-                    <!-- Accordion 1 -->
-                    <div class="dyk-card" id="dyk-0">
-                        <div class="dyk-header" onclick="toggleAccordion(0)">
-                            <h3>Why the name "Medusa"?</h3>
-                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
-                        </div>
-                        <div class="dyk-content-panel">
-                            <div class="dyk-content-inner">
-                                <p>Inspired by the classical symbol of allure and theatrical beauty in Italian
-                                    high-fashion and classical mythology. Just as the mythical figure captures absolute
-                                    attention, we aim to captivate your senses from the moment you step through our
-                                    golden entrance arches, making the dining experience completely unforgettable.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Accordion 2 -->
-                    <div class="dyk-card" id="dyk-1">
-                        <div class="dyk-header" onclick="toggleAccordion(1)">
-                            <h3>Do you accommodate customized organic dietary requests?</h3>
-                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
-                        </div>
-                        <div class="dyk-content-panel">
-                            <div class="dyk-content-inner">
-                                <p>Absolutely. Our culinary brigade, led by Chef Vance, regularly designs custom
-                                    degustation menus for gluten-free, vegan, kosher, and specific organic preferences.
-                                    We believe luxury is personal; kindly mention your requests when making your table
-                                    reservation.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Accordion 3 -->
-                    <div class="dyk-card" id="dyk-2">
-                        <div class="dyk-header" onclick="toggleAccordion(2)">
-                            <h3>Can I host private events in the Vault Cellar?</h3>
-                            <div class="dyk-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
-                        </div>
-                        <div class="dyk-content-panel">
-                            <div class="dyk-content-inner">
-                                <p>Yes. The Vault Cellar is available for private bookings of up to 20 guests, offering
-                                    an exclusive multi-course degustation menu paired with select reserve wines. Please
-                                    contact our VIP hospitality hosts at least 48 hours in advance for reservations.</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-item">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 17H21M6 17C6 12 8 8 12 8C16 8 18 12 18 17M12 8V5M10 5H14" />
+                    </svg></div>
+                <div class="stat-info">
+                    <h4>120+</h4>
+                    <p>Signature Dishes</p>
                 </div>
             </div>
-        </section>
-
-        <!-- CALL TO ACTION -->
-        <section class="about-cta-section">
-            <div class="container cta-box">
-                <h2>Choreograph Your Evening</h2>
-                <p>Allow us to curate your perfect gastronomic affair. Table reservations at Medusa are highly
-                    exclusive, ensuring an intimate atmosphere and bespoke service for every party.</p>
-                <a href="book-table-test.html" class="cta-btn">Reserve Your Sanctuary</a>
-            </div>
-        </section>
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="container">
-            <div class="row g-5">
-                <div class="col-lg-3">
-                    <h2 class="d-flex align-items-center gap-2"
-                        style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
-                        <img src="assets/images/versace_logo.png" alt="Medusa Logo"
-                            style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
-                        <span>Medusa</span>
-                    </h2>
-                    <p class="mt-4 text-secondary">
-                        Luxury dining experience crafted for unforgettable moments.
-                    </p>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Navigation</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3"><a href="index.html" class="text-secondary text-decoration-none">Home</a></li>
-                        <li class="mb-3"><a href="menutest.html"
-                                class="text-secondary text-decoration-none auth-required">Our Menu</a></li>
-                        <li class="mb-3"><a href="book-table-test.html"
-                                class="text-secondary text-decoration-none">Reservations</a></li>
-                        <li class="mb-3"><a href="about.html"
-                                class="text-secondary text-decoration-none text-gold">About Us</a></li>
-                        <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create
-                                Account</a></li>
-                        <li class="mb-3"><a href="career.html#ambitions-section"
-                                class="text-secondary text-decoration-none">Ambitions</a></li>
-                        <li class="mb-3"><a href="career.html#career-form"
-                                class="text-secondary text-decoration-none">Career</a></li>
-                        <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none"
-                                id="footerAuthLink">Login</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Contact</h5>
-                    <p class="text-secondary">SCO 44,45, District One Market<br>Sector 68, Sahibzada Ajit Singh
-                        Nagar<br>Punjab 140308</p>
-                    <p class="text-secondary">+91 94272 72798</p>
-                    <p class="text-secondary">contact@medusa.com</p>
-                    <button class="btn btn-outline-warning btn-sm mt-2"
-                        style="border-color: var(--gold); color: var(--gold); border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;"
-                        onclick="openMapModal()">
-                        <i class="fas fa-location-dot me-1"></i> View on Map
-                    </button>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Join Our Circle</h5>
-                    <p class="text-secondary mb-4">Get exclusive offers and premium updates.</p>
-                    <div class="d-flex">
-                        <input type="email" class="form-control" placeholder="Email Address"
-                            style="border-radius: 8px 0 0 8px; border-color: rgba(223, 186, 134, 0.2); background: transparent; color: white;">
-                        <button class="btn btn-outline-warning"
-                            style="border-radius: 0 8px 8px 0; border-color: var(--gold); color: var(--gold); width: 60px;">→</button>
-                    </div>
+            <div class="stat-item">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path
+                            d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" />
+                        <path
+                            d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" />
+                    </svg></div>
+                <div class="stat-info">
+                    <h4>1</h4>
+                    <p>Unforgettable Experience</p>
                 </div>
             </div>
-            <hr class="my-5" style="border-color:rgba(255,255,255,0.1);">
-            <p class="text-center text-secondary mb-0">
-                © 2026 Medusa. All Rights Reserved.
-            </p>
+        </div>
+    </div>
+
+    <!-- MAIN FOOTER -->
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <img src="assets/images/logo.png" alt="Medusa Logo">
+                </div>
+                <p>Luxury dining experience crafted for unforgettable moments.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Navigation</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="menutest.html">Our Menu</a></li>
+                    <li><a href="book-table-test.html">Reservations</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="register.php">Create Account</a></li>
+                    <li><a href="#">Ambitions</a></li>
+                    <li><a href="career.html">Career</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Contact</h3>
+                <p>SCO 44,45, District One Market<br>Sector 68, Sahibzada Ajit Singh Nagar<br>Punjab 140308</p>
+                <p>+91 94272 72798</p>
+                <p>contact@medusa.com</p>
+                <button class="footer-btn-map" onclick="openMapModal()" style="background:transparent; cursor:pointer;">
+                    <i class="fa-solid fa-location-dot"></i> VIEW ON MAP
+                </button>
+            </div>
+            <div class="footer-col">
+                <h3>Join Our Circle</h3>
+                <p>Get exclusive offers and premium updates.</p>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Email Address">
+                    <button type="button"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Medusa. All Rights Reserved.
         </div>
     </footer>
 
     <!-- GOOGLE MAPS LOCATION MODAL -->
-    <div class="lightbox-modal" id="mapModal" style="z-index: 10001;">
-        <button class="lightbox-close" onclick="closeMapModal()">&times;</button>
-        <div class="lightbox-content" style="max-width: 700px; width: 95%;">
+    <div id="mapModal"
+        style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
+        <button onclick="closeMapModal()"
+            style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
+        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);"
+            id="mapContent">
             <div
-                style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(223, 186, 134, 0.2); box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
-                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0; display:block;"
-                    allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
+                style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-            <h4 class="lightbox-caption" style="margin-top: 16px; font-size: 1.3rem;">Medusa Restaurant</h4>
-            <p class="lightbox-subcaption">SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
+            <h4 style="font-family:var(--font-serif);color:#fff;margin-top:16px;font-size:1.3rem;">La Medusaa</h4>
+            <p
+                style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
+                SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
             <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308"
                 target="_blank" rel="noopener"
-                style="display: inline-block; margin-top: 12px; color: var(--gold); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; transition: color 0.3s;">Open
-                in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i></a>
+                style="display:inline-block;margin-top:12px;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open
+                in Google Maps <i class="fa-solid fa-arrow-up-right-from-square ms-1"
+                    style="font-size:0.75rem;"></i></a>
         </div>
     </div>
 
-    <!-- LIGHTBOX MODAL CONTAINER -->
-    <div class="lightbox-modal" id="lightboxModal">
-        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
-        <button class="lightbox-nav-btn lightbox-prev" onclick="navigateLightbox(-1)"><i
-                class="fa-solid fa-chevron-left"></i></button>
-        <button class="lightbox-nav-btn lightbox-next" onclick="navigateLightbox(1)"><i
-                class="fa-solid fa-chevron-right"></i></button>
-        <div class="lightbox-content">
-            <img src="" alt="" class="lightbox-img" id="lightboxImg">
-            <h4 class="lightbox-caption" id="lightboxCaption">Caption</h4>
-            <p class="lightbox-subcaption" id="lightboxSubcaption">Subcaption</p>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Interactive Legacy, Lightbox and FAQ scripts -->
+    <!-- Active Session Check Script -->
     <script>
-        // Smooth scroll to Legacy Section
-        function scrollToLegacy() {
-            document.getElementById('legacySection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // --- Timeline Logic ---
-        const totalNodes = 4;
-        function switchTimeline(index) {
-            // Update active timeline panel
-            document.querySelectorAll('.timeline-panel').forEach((panel, i) => {
-                if (i === index) {
-                    panel.classList.add('active');
-                } else {
-                    panel.classList.remove('active');
-                }
-            });
-
-            // Update active timeline node
-            document.querySelectorAll('.timeline-node').forEach((node, i) => {
-                if (i === index) {
-                    node.classList.add('active');
-                } else {
-                    node.classList.remove('active');
-                }
-            });
-
-            // Update timeline progress bar width
-            const progressBar = document.getElementById('timelineProgress');
-            const percent = (index / (totalNodes - 1)) * 100;
-            progressBar.style.width = percent + '%';
-        }
-
-        // Set initial timeline state
-        window.addEventListener('DOMContentLoaded', () => {
-            switchTimeline(0);
-        });
-
-        // --- Accordion Logic ---
-        function toggleAccordion(index) {
-            const card = document.getElementById(`dyk-${index}`);
-            const panel = card.querySelector('.dyk-content-panel');
-
-            // Toggle active card
-            const isActive = card.classList.contains('active');
-
-            // Collapse all others
-            document.querySelectorAll('.dyk-card').forEach((otherCard) => {
-                otherCard.classList.remove('active');
-                otherCard.querySelector('.dyk-content-panel').style.maxHeight = null;
-            });
-
-            if (!isActive) {
-                card.classList.add('active');
-                panel.style.maxHeight = panel.scrollHeight + "px";
-            }
-        }
-
-        // --- Lightbox Logic ---
-        const galleryData = [
-            { src: 'assets/images/luxury_bg.png', title: 'The Grand Dining Hall', sub: 'Palatial Indoors' },
-            { src: 'assets/images/medusa_outdoor_dining.png', title: 'The Outdoor Piazza', sub: 'Al Fresco Garden' },
-            { src: 'assets/images/login_bg.png', title: 'The Chef\'s Lounge', sub: 'Exclusive Dining' },
-            { src: 'assets/images/checkout_hero.png', title: 'The Vault Cellar', sub: 'Private Reserve' }
-        ];
-        let currentGalleryIndex = 0;
-
-        function openLightbox(index) {
-            currentGalleryIndex = index;
-            const modal = document.getElementById('lightboxModal');
-            const img = document.getElementById('lightboxImg');
-            const caption = document.getElementById('lightboxCaption');
-            const subcaption = document.getElementById('lightboxSubcaption');
-
-            img.src = galleryData[index].src;
-            img.alt = galleryData[index].title;
-            caption.textContent = galleryData[index].title;
-            subcaption.textContent = galleryData[index].sub;
-
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Disable page scrolling
-        }
-
-        function closeLightbox() {
-            const modal = document.getElementById('lightboxModal');
-            modal.classList.remove('active');
-            document.body.style.overflow = ''; // Restore page scrolling
-        }
-
-        function navigateLightbox(direction) {
-            currentGalleryIndex += direction;
-            if (currentGalleryIndex >= galleryData.length) {
-                currentGalleryIndex = 0;
-            } else if (currentGalleryIndex < 0) {
-                currentGalleryIndex = galleryData.length - 1;
-            }
-
-            // Fade effect transition
-            const img = document.getElementById('lightboxImg');
-            img.style.opacity = '0';
-            setTimeout(() => {
-                openLightbox(currentGalleryIndex);
-                img.style.opacity = '1';
-            }, 150);
-        }
-
-        // Close lightbox on click outside the image
-        document.getElementById('lightboxModal').addEventListener('click', (e) => {
-            if (e.target.id === 'lightboxModal') {
-                closeLightbox();
-            }
-        });
-
-        // Close/navigate on keyboard keys
-        window.addEventListener('keydown', (e) => {
-            const modal = document.getElementById('lightboxModal');
-            if (modal.classList.contains('active')) {
-                if (e.key === 'Escape') {
-                    closeLightbox();
-                } else if (e.key === 'ArrowRight') {
-                    navigateLightbox(1);
-                } else if (e.key === 'ArrowLeft') {
-                    navigateLightbox(-1);
-                }
-            }
-        });
-
         // --- Map Modal Logic ---
         const MAP_EMBED_URL = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2885.413030890794!2d76.71954153075983!3d30.680322781741616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fef0030d303dd%3A0xc81adde575ebd2ce!2sMedusa-bar%20and%20lounge!5e0!3m2!1sen!2sin!4v1780853698088!5m2!1sen!2sin';
-
         function openMapModal() {
             const modal = document.getElementById('mapModal');
-            const iframe = document.getElementById('mapIframe');
-            iframe.src = MAP_EMBED_URL;
-            modal.classList.add('active');
+            document.getElementById('mapIframe').src = MAP_EMBED_URL;
+            modal.style.opacity = '1'; modal.style.visibility = 'visible';
+            document.getElementById('mapContent').style.transform = 'scale(1)';
             document.body.style.overflow = 'hidden';
         }
-
         function closeMapModal() {
             const modal = document.getElementById('mapModal');
-            const iframe = document.getElementById('mapIframe');
-            modal.classList.remove('active');
+            modal.style.opacity = '0'; modal.style.visibility = 'hidden';
+            document.getElementById('mapContent').style.transform = 'scale(0.95)';
             document.body.style.overflow = '';
-            // Defer clearing src to allow fade-out
-            setTimeout(() => { iframe.src = ''; }, 350);
+            setTimeout(() => { document.getElementById('mapIframe').src = ''; }, 350);
         }
+        document.getElementById('mapModal').addEventListener('click', (e) => { if (e.target.id === 'mapModal') closeMapModal(); });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('mapModal').style.visibility === 'visible') closeMapModal(); });
 
-        document.getElementById('mapModal').addEventListener('click', (e) => {
-            if (e.target.id === 'mapModal') closeMapModal();
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('mapModal').classList.contains('active')) {
-                closeMapModal();
-            }
-        });
-
-        // --- Auto-Hiding Navbar on Scroll ---
-        let lastScrollY = window.scrollY;
-        const mainNavbar = document.getElementById('mainNavbar');
-        const navMenu = document.getElementById('navMenu');
-
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
-            const isMenuOpen = navMenu ? navMenu.classList.contains('show') : false;
-
-            // Ignore scroll if mobile menu is open
-            if (isMenuOpen) return;
-
-            // Ignore small scroll variations
-            if (Math.abs(currentScrollY - lastScrollY) < 10) return;
-
-            if (currentScrollY > lastScrollY && currentScrollY > 150) {
-                // Scrolling down - hide navbar
-                mainNavbar.classList.add('nav-hidden');
-            } else {
-                // Scrolling up - show navbar
-                mainNavbar.classList.remove('nav-hidden');
-            }
-
-            lastScrollY = currentScrollY;
-        });
-
-        // --- Active Session Check ---
         document.addEventListener("DOMContentLoaded", async () => {
             try {
                 const res = await fetch('api/check-session.php');
@@ -1274,11 +1185,6 @@
                     if (authLink) {
                         authLink.textContent = 'Logout';
                         authLink.href = 'api/logout.php';
-                    }
-                    const footerAuthLink = document.getElementById('footerAuthLink');
-                    if (footerAuthLink) {
-                        footerAuthLink.textContent = 'Logout';
-                        footerAuthLink.href = 'api/logout.php';
                     }
                 }
             } catch (e) {

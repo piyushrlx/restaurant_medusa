@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * order_confirmed.php â€” Post-order confirmation page
  * Reads tracking token from session. Shows animated confirmation + embedded tracker.
@@ -458,6 +458,12 @@ let pollTimer = setInterval(async () => {
         }
     } catch(e) {}
 }, 10000);
+
+// Clear local cart completely on successful order placement
+try {
+    localStorage.removeItem('foodie_cart');
+    localStorage.removeItem('foodie_cart_timestamp');
+} catch (e) {}
 </script>
 </body>
 </html>

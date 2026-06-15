@@ -1055,6 +1055,10 @@
                 });
                 const result = await res.json();
                 if (result.success) {
+                    try {
+                        localStorage.removeItem('foodie_cart');
+                        localStorage.removeItem('foodie_cart_timestamp');
+                    } catch (e) {}
                     if (result.user && result.user.role === 'admin') {
                         window.location.href = 'admintest/dashboardtest.php';
                     } else {

@@ -1169,6 +1169,12 @@ if (!$order) {
                 });
             });
         });
+
+        // Clear local cart completely on successful order placement
+        try {
+            localStorage.removeItem('foodie_cart');
+            localStorage.removeItem('foodie_cart_timestamp');
+        } catch (e) {}
     </script>
 </body>
 </html>
