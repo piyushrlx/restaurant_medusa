@@ -174,15 +174,19 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
     
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-secondary: #0a0a0a;
-            --bg-card: rgba(18, 17, 17, 0.75);
-            --gold: #dfba86;
-            --gold-light: #e6c89f;
-            --gold-dark: #b89562;
+            --bg-dark: #F9F6F0;
+            --bg-secondary: #ffffff;
+            --bg-sidebar: #143628;
+            --bg-header: #4A151D;
+            --bg-card: #ffffff;
+            --gold: #C09B5B;
+            --gold-light: #d6b883;
+            --gold-dark: #a17c40;
+            --text-dark: #332222;
+            --text-muted: #887a7a;
             --white: #ffffff;
             --gray: #a09f9f;
-            --border-glass: rgba(223, 186, 134, 0.12);
+            --border-glass: rgba(192, 155, 91, 0.2);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
@@ -354,7 +358,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         body {
             background-color: var(--bg-dark);
-            color: var(--white);
+            color: var(--text-dark);
             font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             display: flex;
@@ -363,10 +367,9 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         /* Luxury Top Header Bar */
         .luxury-navbar {
-            background-color: var(--bg-secondary);
+            background-color: var(--bg-header);
             border-bottom: 1px solid var(--border-glass);
             padding: 1.2rem 2rem;
-            backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -375,7 +378,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         .navbar-brand {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
-            color: var(--gold) !important;
+            color: var(--bg-dark) !important;
             font-weight: 700;
             letter-spacing: 1px;
             text-decoration: none;
@@ -385,7 +388,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .nav-link-custom {
-            color: var(--gray);
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95rem;
@@ -401,17 +404,18 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         /* Layout Grid */
         .dashboard-wrapper {
-            max-width: 1280px;
             width: 100%;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
+            margin: 0;
+            padding: 0;
             flex: 1;
+            display: flex;
         }
 
         .dashboard-grid {
             display: grid;
             grid-template-columns: 280px 1fr;
-            gap: 2rem;
+            width: 100%;
+            gap: 0;
         }
 
         @media (max-width: 991px) {
@@ -422,12 +426,12 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         /* Sidebar Container */
         .sidebar-container {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 2rem 1.5rem;
-            height: fit-content;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            background-color: var(--bg-sidebar);
+            border: none;
+            border-radius: 0;
+            padding: 3rem 1.5rem;
+            min-height: calc(100vh - 80px); /* Adjust based on header height */
+            box-shadow: 2px 0 20px rgba(0,0,0,0.05);
         }
 
         /* Profile Summary */
@@ -511,10 +515,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         .sidebar-menu .nav-link {
             width: 100%;
             text-align: left;
-            padding: 0.85rem 1.2rem;
-            color: var(--gray);
+            padding: 1rem 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
             border-radius: 10px;
-            font-size: 0.92rem;
+            font-size: 0.95rem;
             font-weight: 500;
             border: 1px solid transparent;
             margin-bottom: 0.5rem;
@@ -538,20 +542,19 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .sidebar-menu .nav-link.active {
-            color: #000000;
-            background: var(--gold);
-            border-color: var(--gold);
+            color: var(--white);
+            background: var(--bg-header);
+            border-color: transparent;
             font-weight: 600;
         }
 
         /* Main Content Container */
         .main-content {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 2.5rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            background-color: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 3rem 4rem;
+            box-shadow: none;
             animation: fadeIn 0.5s ease-out;
         }
 
@@ -559,9 +562,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             font-family: 'Playfair Display', serif;
             font-size: 1.8rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--text-dark);
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 0.75rem;
             display: flex;
             align-items: center;
@@ -575,37 +577,38 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         /* Inputs & Forms styling */
         .form-control-medusa {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff !important;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--text-dark) !important;
             padding: 0.75rem 1rem;
             border-radius: 8px;
             transition: var(--transition);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
         }
 
         .form-control-medusa:focus {
-            background: rgba(0, 0, 0, 0.6);
+            background: #ffffff;
             border-color: var(--gold);
-            box-shadow: 0 0 10px rgba(223, 186, 134, 0.15);
+            box-shadow: 0 0 0 3px rgba(192, 155, 91, 0.15);
             outline: none;
         }
 
         .form-label-medusa {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            color: var(--gray);
+            color: var(--text-muted);
             margin-bottom: 0.4rem;
         }
 
         .btn-gold-medusa {
-            background-color: var(--gold);
-            color: #000000;
+            background-color: var(--bg-header);
+            color: #ffffff;
             border: none;
             border-radius: 8px;
             padding: 0.75rem 1.8rem;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 0.95rem;
             letter-spacing: 0.5px;
             transition: var(--transition);
@@ -616,10 +619,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .btn-gold-medusa:hover {
-            background-color: var(--gold-light);
-            color: #000000;
+            background-color: #381016;
+            color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(223, 186, 134, 0.25);
+            box-shadow: 0 5px 15px rgba(74, 21, 29, 0.2);
         }
 
         .btn-outline-medusa {
@@ -813,9 +816,114 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* Settings Sub-Navigation */
+        .settings-subnav {
+            display: flex;
+            gap: 2.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            padding-bottom: 2px;
+        }
+        .settings-subnav .nav-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gray);
+            padding: 0.5rem 0;
+            border: none;
+            background: transparent;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .settings-subnav .nav-link i {
+            font-size: 0.9rem;
+        }
+        .settings-subnav .nav-link.active {
+            color: var(--bg-header);
+        }
+        .settings-subnav .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--bg-header);
+        }
+
+        /* Settings Action Cards */
+        .settings-action-card {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        .settings-action-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+            border-color: rgba(0,0,0,0.08);
+        }
+        .settings-icon-container {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(74, 21, 29, 0.05); /* very light maroon */
+            color: var(--bg-header);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .danger-zone-card {
+            background-color: #fcf6f6;
+            border: 1px solid #f8e5e5;
+        }
+        .danger-zone-icon {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
     </style>
+    <?php if ($settings['language'] !== 'en') { ?>
+    <!-- Auto Google Translate Integration -->
+    <script>
+        document.cookie = "googtrans=/en/<?php echo htmlspecialchars($settings['language']); ?>; path=/";
+        // Also set domain cookie to be safe
+        document.cookie = "googtrans=/en/<?php echo htmlspecialchars($settings['language']); ?>; domain=" + window.location.hostname + "; path=/";
+    </script>
+    <style>
+        /* Hide the Google Translate UI frame and body top-padding */
+        .VIpgJd-ZVi9od-ORHb-OEVmcd { display: none !important; }
+        .goog-te-banner-frame { display: none !important; }
+        body { top: 0 !important; }
+        #google_translate_element { display: none !important; }
+        /* Prevent translation styling glitches */
+        font { background: transparent !important; color: inherit !important; box-shadow: none !important; }
+    </style>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+        }
+    </script>
+    <?php } else { ?>
+    <!-- Clear translate cookie if English is selected -->
+    <script>
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + window.location.hostname + "; path=/;";
+    </script>
+    <?php } ?>
 </head>
 <body>
+    <div id="google_translate_element"></div>
 
     <!-- Luxury Top Header Bar -->
     <header class="luxury-navbar">
@@ -825,7 +933,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <span>Medusa</span>
             </a>
             <div class="d-flex align-items-center gap-4">
-                <a href="menutest.php" class="nav-link-custom">
+                <a href="menutest.html" class="nav-link-custom">
                     <i class="fa-solid fa-utensils"></i>
                     <span>Browse Menu</span>
                 </a>
@@ -867,13 +975,13 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h4 class="profile-name"><?php echo htmlspecialchars($user_name); ?></h4>
                     <div class="profile-email"><?php echo htmlspecialchars($user_email); ?></div>
                     
-                    <span class="tier-badge <?php echo 'tier-' . strtolower($user_tier_name); ?>">
-                        <i class="fa-solid fa-crown me-1"></i><?php echo htmlspecialchars($user_tier_name); ?>
-                    </span>
+                    <div class="mt-2" style="color: var(--gold); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-crown me-1"></i><?php echo htmlspecialchars($user_tier_name); ?> Member
+                    </div>
                 </div>
                 
                 <!-- Dashboard Toggle Buttons -->
-                <div class="dashboard-toggle-buttons">
+                <div class="dashboard-toggle-buttons" style="display: none;">
                     <button class="btn-dashboard-toggle active" id="btn-toggle-profile" onclick="switchDashboardMode('profile')">
                         <i class="fa-solid fa-id-card"></i> Profile Hub
                     </button>
@@ -885,7 +993,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <nav class="sidebar-menu nav flex-column nav-pills" role="tablist">
                     <!-- Profile Dashboard Group -->
                     <button class="nav-link active dashboard-pill-profile" id="pill-profile-tab" data-bs-toggle="pill" data-bs-target="#pill-profile" type="button" role="tab">
-                        <i class="fa-solid fa-user-gear"></i> Profile Details
+                        <i class="fa-regular fa-user"></i> Profile Overview
                     </button>
                     <button class="nav-link dashboard-pill-profile" id="pill-orders-tab" data-bs-toggle="pill" data-bs-target="#pill-orders" type="button" role="tab">
                         <i class="fa-solid fa-receipt"></i> Order History
@@ -926,55 +1034,239 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 <!-- ══ TAB 1: PROFILE DETAILS ══ -->
                 <div class="tab-pane fade show active" id="pill-profile" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Profile Information</h2>
-                    
-                    <form id="profileForm" onsubmit="submitProfileForm(event)">
-                        <div class="mb-4">
-                            <label class="form-label-medusa" for="profile_name">Full Name *</label>
-                            <input type="text" id="profile_name" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($user_name); ?>" required>
+                    <!-- Welcome Header & Rewards Card -->
+                    <div class="row mb-5 align-items-center">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <p class="text-muted mb-1" style="font-size: 0.9rem;">Welcome back,</p>
+                            <h1 class="display-4 mb-3" style="font-family: 'Playfair Display', serif; color: var(--bg-header);"><?php echo htmlspecialchars(explode(' ', $user_name)[0]); ?></h1>
+                            <p class="text-muted" style="font-size: 0.85rem; max-width: 250px;">Manage your account details and enjoy exclusive experiences.</p>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="form-label-medusa" for="profile_email">
-                                Email Address 
-                                <?php if (empty($user_email)): ?>
-                                    <span class="verification-tag tag-pending"><i class="fa-solid fa-circle-info"></i> Not Provided</span>
-                                <?php elseif ($is_email_verified): ?>
-                                    <span class="verification-tag tag-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
-                                <?php else: ?>
-                                    <span class="verification-tag tag-pending" onclick="sendOTP('email')"><i class="fa-solid fa-triangle-exclamation"></i> Verify email</span>
-                                <?php endif; ?>
-                            </label>
-                            <div class="input-group">
-                                <input type="email" id="profile_email" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($user_email); ?>">
-                                <button type="button" id="btn-verify-email" class="btn btn-outline-medusa" style="display: none;" onclick="sendOTP('email')">Verify</button>
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4" style="background-color: var(--bg-sidebar); color: var(--white); box-shadow: 0 10px 25px rgba(20, 54, 40, 0.2);">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fa-solid fa-crown text-gold me-2"></i>
+                                    <span class="text-uppercase tracking-widest text-gold" style="font-size: 0.75rem; letter-spacing: 1px;">Medusa Rewards</span>
+                                </div>
+                                <h4 class="mb-1" style="font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($user_tier_name); ?> Member</h4>
+                                <p class="mb-4" style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">You have <?php echo number_format($loyalty_points); ?> points</p>
+                                <a href="#" class="text-gold text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">View Rewards &rarr;</a>
                             </div>
-                            <div class="form-text text-muted mt-1" id="email-change-hint" style="display: none;">Email updated. You need to verify it via OTP before it takes effect.</div>
                         </div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label-medusa" for="profile_phone">
-                                Mobile Number
-                                <?php if ($is_phone_verified): ?>
-                                    <span class="verification-tag tag-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
-                                <?php else: ?>
-                                    <span class="verification-tag tag-pending" onclick="sendOTP('phone')"><i class="fa-solid fa-triangle-exclamation"></i> Verify phone</span>
-                                <?php endif; ?>
-                            </label>
-                            <div class="input-group">
-                                <input type="tel" id="profile_phone" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($phone); ?>" maxlength="10">
-                                <button type="button" id="btn-verify-phone" class="btn btn-outline-medusa" style="display: none;" onclick="sendOTP('phone')">Verify</button>
+                    <!-- Personal Information -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.4rem;">
+                            <i class="fa-regular fa-user me-2"></i> Personal Information
+                        </h3>
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0" onclick="document.getElementById('profile-view').style.display='none'; document.getElementById('profile-edit').style.display='block';" style="font-size: 0.85rem; font-weight: 500;">
+                            Edit Profile <i class="fa-solid fa-pencil ms-1" style="font-size: 0.75rem;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Static View -->
+                    <div id="profile-view" class="bg-white p-4 rounded-4 border mb-5" style="border-color: rgba(0,0,0,0.05) !important;">
+                        <div class="row">
+                            <div class="col-md-4 p-3 border-bottom border-end">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Full Name</label>
+                                <div class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($user_name); ?></div>
                             </div>
-                            <div class="form-text text-muted mt-1" id="phone-change-hint" style="display: none;">Mobile number updated. Click verify to validate via OTP.</div>
+                            <div class="col-md-4 p-3 border-bottom border-end">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Mobile Number</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($phone); ?></div>
+                                    <?php if ($is_phone_verified): ?>
+                                        <span class="badge bg-success bg-opacity-10 text-success" style="font-weight: 500; font-size: 0.7rem;">Verified</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="col-md-4 p-3 border-bottom">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Membership Tier</label>
+                                <div class="text-dark d-flex align-items-center gap-2" style="font-size: 0.95rem; font-weight: 500;">
+                                    <i class="fa-solid fa-crown text-gold"></i> <?php echo htmlspecialchars($user_tier_name); ?> Member
+                                </div>
+                                <div class="text-muted mt-1" style="font-size: 0.75rem;">Member since May 2024</div>
+                            </div>
+                            
+                            <div class="col-md-4 p-3 border-end">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Email Address</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($user_email); ?></div>
+                                    <?php if ($is_email_verified): ?>
+                                        <span class="badge bg-success bg-opacity-10 text-success" style="font-weight: 500; font-size: 0.7rem;">Verified</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="col-md-4 p-3 border-end">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Date of Birth</label>
+                                <div class="text-dark d-flex justify-content-between align-items-center" style="font-size: 0.95rem;">
+                                    15 Jan 1990 <i class="fa-regular fa-calendar text-muted"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-4 p-3">
+                                <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Preferred Ambience</label>
+                                <div class="text-dark" style="font-size: 0.95rem;">Lounge, Live Music</div>
+                            </div>
                         </div>
+                    </div>
 
-                        <button type="submit" class="btn-gold-medusa"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
-                    </form>
+                    <!-- Edit Form (Hidden initially) -->
+                    <div id="profile-edit" class="bg-white p-4 rounded-4 border mb-5" style="border-color: rgba(0,0,0,0.05) !important; display: none;">
+                        <form id="profileForm" onsubmit="submitProfileForm(event)">
+                            <div class="mb-4">
+                                <label class="form-label-medusa" for="profile_name">Full Name *</label>
+                                <input type="text" id="profile_name" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($user_name); ?>" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label-medusa" for="profile_email">
+                                    Email Address 
+                                    <?php if (empty($user_email)): ?>
+                                        <span class="verification-tag tag-pending"><i class="fa-solid fa-circle-info"></i> Not Provided</span>
+                                    <?php elseif ($is_email_verified): ?>
+                                        <span class="verification-tag tag-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                    <?php else: ?>
+                                        <span class="verification-tag tag-pending" onclick="sendOTP('email')"><i class="fa-solid fa-triangle-exclamation"></i> Verify email</span>
+                                    <?php endif; ?>
+                                </label>
+                                <div class="input-group">
+                                    <input type="email" id="profile_email" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($user_email); ?>">
+                                    <button type="button" id="btn-verify-email" class="btn btn-outline-medusa" style="display: none;" onclick="sendOTP('email')">Verify</button>
+                                </div>
+                            </div>
 
-                    <div class="mt-5 pt-4 border-top border-secondary">
-                        <h4 class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation text-danger"></i> Danger Zone</h4>
-                        <p class="text-white-50" style="font-size: 0.9rem;">Once you delete your account, there is no going back. Please be certain.</p>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteAccountModal()">Delete Account Permanently</button>
+                            <div class="mb-4">
+                                <label class="form-label-medusa" for="profile_phone">
+                                    Mobile Number
+                                    <?php if ($is_phone_verified): ?>
+                                        <span class="verification-tag tag-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                    <?php else: ?>
+                                        <span class="verification-tag tag-pending" onclick="sendOTP('phone')"><i class="fa-solid fa-triangle-exclamation"></i> Verify phone</span>
+                                    <?php endif; ?>
+                                </label>
+                                <div class="input-group">
+                                    <input type="tel" id="profile_phone" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($phone); ?>" maxlength="10">
+                                    <button type="button" id="btn-verify-phone" class="btn btn-outline-medusa" style="display: none;" onclick="sendOTP('phone')">Verify</button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-3 mt-4">
+                                <button type="submit" class="btn-gold-medusa">Save Changes</button>
+                                <button type="button" class="btn btn-outline-dark" onclick="document.getElementById('profile-edit').style.display='none'; document.getElementById('profile-view').style.display='block';">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Statistics Summary Bar -->
+                    <div class="rounded-4 p-4 mb-5" style="background-color: var(--bg-header); color: var(--white);">
+                        <div class="row text-center text-md-start">
+                            <div class="col-6 col-md-3 mb-3 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start gap-3 border-end border-light border-opacity-25">
+                                <i class="fa-regular fa-star text-gold" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;"><?php echo number_format($loyalty_points); ?></h4>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">Total Points</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-3 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start gap-3 border-end-md border-light border-opacity-25 ps-md-4">
+                                <i class="fa-regular fa-calendar text-gold" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;">0</h4>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">Reservations</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-3 border-end border-light border-opacity-25 ps-md-4">
+                                <i class="fa-solid fa-bag-shopping text-gold" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;"><?php echo count($orders); ?></h4>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">Orders</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-3 ps-md-4">
+                                <i class="fa-solid fa-gift text-gold" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;"><?php echo count($userCoupons); ?></h4>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">Coupons</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Reservation Placeholder -->
+                    <div class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.2rem;">
+                                <i class="fa-regular fa-calendar-check me-2"></i> Upcoming Reservation
+                            </h4>
+                            <a href="#" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">View All Reservations &rarr;</a>
+                        </div>
+                        <div class="bg-white p-4 rounded-4 border d-flex align-items-center gap-4 flex-wrap" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <img src="assets/images/hero_steak.png" alt="Reservation" class="rounded-3 object-cover" style="width: 150px; height: 100px;">
+                            <div class="flex-grow-1">
+                                <div class="d-flex gap-3 text-muted mb-2" style="font-size: 0.8rem;">
+                                    <span><i class="fa-regular fa-calendar me-1"></i> Sat, 24 May 2024</span>
+                                    <span><i class="fa-regular fa-clock me-1"></i> 7:00 PM</span>
+                                    <span><i class="fa-regular fa-user me-1"></i> 2 Guests</span>
+                                </div>
+                                <h5 class="text-dark mb-1" style="font-size: 1rem;">Medusa Lounge - Downtown</h5>
+                                <p class="text-muted m-0" style="font-size: 0.85rem;">123 Medusa Lane, New York, NY 10001</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success bg-opacity-10 text-success mb-3 d-inline-block" style="padding: 0.5rem 1rem;">CONFIRMED</span><br>
+                                <button class="btn-gold-medusa" style="padding: 0.5rem 1.5rem; font-size: 0.8rem;">VIEW DETAILS</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions & Account Security -->
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h4 class="mb-3" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.2rem;">Quick Actions</h4>
+                            <div class="bg-white p-4 rounded-4 border d-flex justify-content-around text-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <a href="#" class="text-dark text-decoration-none action-icon">
+                                    <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
+                                        <i class="fa-regular fa-calendar"></i>
+                                    </div>
+                                    <span style="font-size: 0.75rem;">Reserve</span>
+                                </a>
+                                <a href="menutest.html" class="text-dark text-decoration-none action-icon">
+                                    <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
+                                        <i class="fa-solid fa-utensils"></i>
+                                    </div>
+                                    <span style="font-size: 0.75rem;">View Menu</span>
+                                </a>
+                                <a href="carttest.html" class="text-dark text-decoration-none action-icon">
+                                    <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
+                                        <i class="fa-solid fa-bag-shopping"></i>
+                                    </div>
+                                    <span style="font-size: 0.75rem;">Order Now</span>
+                                </a>
+                                <a href="#" class="text-dark text-decoration-none action-icon">
+                                    <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
+                                        <i class="fa-solid fa-gift"></i>
+                                    </div>
+                                    <span style="font-size: 0.75rem;">Gift Cards</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h4 class="mb-3" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.2rem;">
+                                <i class="fa-solid fa-shield-halved me-2"></i> Account Security
+                            </h4>
+                            <div class="bg-white p-4 rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <p class="text-muted mb-4" style="font-size: 0.85rem;">Keep your account safe and secure.</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Password</span>
+                                    <span class="text-dark fw-bold flex-grow-1">••••••••••••</span>
+                                    <a href="#" onclick="switchDashboardMode('settings'); document.getElementById('pill-security-tab').click();" class="text-success text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">Change</a>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Last Login</span>
+                                    <span class="text-dark flex-grow-1" style="font-size: 0.85rem;">
+                                        <?php echo !empty($login_logs) ? date('M d, Y • h:i A', strtotime($login_logs[0]['login_time'])) : 'N/A'; ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1430,118 +1722,336 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
                 <div class="tab-pane fade" id="pill-settings" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-sliders"></i> Account Preferences</h2>
+                    <h2 class="section-title mb-1" style="border:none; padding-bottom:0;">Account Settings</h2>
+                    <p class="text-muted mb-4" style="font-size: 0.9rem;">Manage your account preferences and security settings.</p>
                     
-                    <form id="settingsForm" onsubmit="submitSettingsForm(event)">
-                        <h4 class="text-gold mb-3" style="font-size: 1.1rem; text-transform: uppercase;">Notifications</h4>
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="notif_email" <?php echo $settings['email_notifications'] ? 'checked' : ''; ?>>
-                            <label class="form-check-label text-white-50" for="notif_email">Email Notifications (Order receipts, booking alerts)</label>
-                        </div>
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="notif_sms" <?php echo $settings['sms_notifications'] ? 'checked' : ''; ?>>
-                            <label class="form-check-label text-white-50" for="notif_sms">SMS / WhatsApp Alerts (Instant delivery progress updates)</label>
-                        </div>
-                        <div class="mb-4 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="notif_promo" <?php echo $settings['promotional_offers'] ? 'checked' : ''; ?>>
-                            <label class="form-check-label text-white-50" for="notif_promo">Promotional Offers (Discounts, special menus, chef events)</label>
-                        </div>
-                        
-                        <h4 class="text-gold mb-3 pt-3 border-top border-secondary" style="font-size: 1.1rem; text-transform: uppercase;">Preferences</h4>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label-medusa" for="pref_lang">Language Preference</label>
-                                <select id="pref_lang" class="form-select form-control-medusa">
-                                    <option value="en" <?php echo $settings['language'] === 'en' ? 'selected' : ''; ?>>English</option>
-                                    <option value="hi" <?php echo $settings['language'] === 'hi' ? 'selected' : ''; ?>>Hindi</option>
-                                    <option value="es" <?php echo $settings['language'] === 'es' ? 'selected' : ''; ?>>Spanish</option>
-                                    <option value="fr" <?php echo $settings['language'] === 'fr' ? 'selected' : ''; ?>>French</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label-medusa" for="pref_theme">Theme Preference</label>
-                                <select id="pref_theme" class="form-select form-control-medusa">
-                                    <option value="dark" <?php echo $settings['theme'] === 'dark' ? 'selected' : ''; ?>>Medusa Dark (Gold)</option>
-                                    <option value="light" <?php echo $settings['theme'] === 'light' ? 'selected' : ''; ?>>Medusa Light</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="settings-subnav nav" role="tablist">
+                        <button class="nav-link active" id="subnav-account-tab" data-bs-toggle="tab" data-bs-target="#subnav-account" type="button" role="tab"><i class="fa-regular fa-user"></i> ACCOUNT</button>
+                        <button class="nav-link" id="subnav-notifications-tab" data-bs-toggle="tab" data-bs-target="#subnav-notifications" type="button" role="tab"><i class="fa-regular fa-bell"></i> NOTIFICATIONS</button>
+                        <button class="nav-link" id="subnav-preferences-tab" data-bs-toggle="tab" data-bs-target="#subnav-preferences" type="button" role="tab"><i class="fa-solid fa-sliders"></i> PREFERENCES</button>
+                        <button class="nav-link" id="subnav-privacy-tab" data-bs-toggle="tab" data-bs-target="#subnav-privacy" type="button" role="tab"><i class="fa-solid fa-lock"></i> PRIVACY</button>
+                    </div>
 
-                        <button type="submit" class="btn-gold-medusa"><i class="fa-solid fa-check"></i> Save Preferences</button>
-                    </form>
-                </div>
-
-                <!-- ══ TAB 5: SECURITY & SESSIONS ══ -->
-                <div class="tab-pane fade" id="pill-security" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> Security & Authentication</h2>
-                    
-                    <!-- Change Password Form -->
-                    <div class="mb-5">
-                        <h4 class="text-gold mb-3" style="font-size: 1.1rem; text-transform: uppercase;">Change Password</h4>
-                        <form id="passwordForm" onsubmit="submitPasswordForm(event)">
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label-medusa" for="cur_pass">Current Password *</label>
-                                    <input type="password" id="cur_pass" class="form-control form-control-medusa" required>
+                    <div class="tab-content" id="settings-tabContent">
+                        <!-- ACCOUNT TAB -->
+                        <div class="tab-pane fade show active" id="subnav-account" role="tabpanel">
+                            <!-- Account Information -->
+                        <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="m-0 text-dark" style="font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 50%; display: flex;">
+                                        <i class="fa-regular fa-user" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    Account Information
+                                </h4>
+                                <a href="#" onclick="switchDashboardMode('profile'); document.getElementById('btn-edit-profile').click();" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">
+                                    Edit Profile <i class="fa-solid fa-pencil ms-1" style="font-size: 0.75rem;"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 p-3 border-bottom border-end">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Full Name</label>
+                                    <div class="text-dark" style="font-size: 0.95rem; font-weight: 500;"><?php echo htmlspecialchars($user_name); ?></div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-medusa" for="new_pass">New Password *</label>
-                                    <input type="password" id="new_pass" class="form-control form-control-medusa" oninput="checkPassStrength(this.value)" required>
-                                    <div class="strength-bar">
-                                        <div class="seg" id="seg1"></div>
-                                        <div class="seg" id="seg2"></div>
-                                        <div class="seg" id="seg3"></div>
-                                        <div class="seg" id="seg4"></div>
+                                <div class="col-md-6 p-3 border-bottom">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Date of Birth</label>
+                                    <div class="text-dark d-flex justify-content-between align-items-center" style="font-size: 0.95rem; font-weight: 500;">
+                                        15 Jan 1990 <i class="fa-regular fa-calendar text-muted"></i>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-medusa" for="conf_pass">Confirm New Password *</label>
-                                    <input type="password" id="conf_pass" class="form-control form-control-medusa" required>
+                                <div class="col-md-6 p-3 border-bottom border-end">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Email Address</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-dark" style="font-size: 0.95rem; font-weight: 500;"><?php echo htmlspecialchars($user_email); ?></div>
+                                        <?php if ($is_email_verified): ?>
+                                            <span class="badge bg-success bg-opacity-10 text-success" style="font-weight: 500; font-size: 0.7rem;">Verified <i class="fa-solid fa-check"></i></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 p-3 border-bottom">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Membership Tier</label>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="text-dark d-flex align-items-center gap-2" style="font-size: 0.95rem; font-weight: 500;">
+                                            <i class="fa-solid fa-crown text-gold"></i> <?php echo htmlspecialchars($user_tier_name); ?> Member
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">Member since May 2024</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 p-3 border-end">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Mobile Number</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-dark" style="font-size: 0.95rem; font-weight: 500;"><?php echo htmlspecialchars($phone); ?></div>
+                                        <?php if ($is_phone_verified): ?>
+                                            <span class="badge bg-success bg-opacity-10 text-success" style="font-weight: 500; font-size: 0.7rem;">Verified <i class="fa-solid fa-check"></i></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 p-3">
+                                    <label class="text-muted d-block mb-1" style="font-size: 0.8rem;">Preferred Ambience</label>
+                                    <div class="text-dark" style="font-size: 0.95rem; font-weight: 500;">Lounge, Live Music, Outdoor Seating</div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn-gold-medusa"><i class="fa-solid fa-key"></i> Update Password</button>
-                        </form>
-                    </div>
+                        </div>
 
-                    <!-- 2FA Settings Toggle -->
-                    <div class="mb-5 pt-4 border-top border-secondary">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="text-gold mb-1" style="font-size: 1.1rem; text-transform: uppercase;">Two-Factor Authentication</h4>
-                                <p class="text-white-50 m-0" style="font-size: 0.85rem;">Secure your login sessions with dynamic OTP codes.</p>
+                        <!-- Action Cards Grid -->
+                        <div class="row g-4 mb-4">
+                            <!-- Change Password -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="settings-action-card">
+                                    <div class="settings-icon-container">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </div>
+                                    <h5 class="text-dark" style="font-size: 1rem; font-weight: 600;">Change Password</h5>
+                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">Keep your account safe with a strong password.</p>
+                                    <button class="btn btn-outline-dark btn-sm text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.5rem;" onclick="document.getElementById('pill-security-tab').click();">Change Password <i class="fa-solid fa-chevron-right ms-1"></i></button>
+                                </div>
                             </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="two_factor_toggle" <?php echo $settings['privacy_mode'] ? 'checked' : ''; ?> onchange="toggle2FA(this)">
+                            <!-- Two-Factor Authentication -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="settings-action-card">
+                                    <div class="settings-icon-container">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                    </div>
+                                    <h5 class="text-dark" style="font-size: 1rem; font-weight: 600;">Two-Factor<br>Authentication</h5>
+                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">Add an extra layer of security to your account.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1" style="font-size: 0.75rem;">Enabled <i class="fa-solid fa-check ms-1"></i></span>
+                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Linked Accounts -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="settings-action-card">
+                                    <div class="settings-icon-container">
+                                        <i class="fa-solid fa-user-group"></i>
+                                    </div>
+                                    <h5 class="text-dark" style="font-size: 1rem; font-weight: 600;">Linked Accounts</h5>
+                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">Manage your connected accounts and services.</p>
+                                    <button class="btn btn-outline-dark btn-sm text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.5rem;">Manage Accounts <i class="fa-solid fa-chevron-right ms-1"></i></button>
+                                </div>
+                            </div>
+                            <!-- Login Activity -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="settings-action-card">
+                                    <div class="settings-icon-container">
+                                        <i class="fa-regular fa-clock"></i>
+                                    </div>
+                                    <h5 class="text-dark" style="font-size: 1rem; font-weight: 600;">Login Activity</h5>
+                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">Review your recent login activity.</p>
+                                    <button class="btn btn-outline-dark btn-sm text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.5rem;" onclick="document.getElementById('pill-security-tab').click();">View Activity <i class="fa-solid fa-chevron-right ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="bg-white p-4 rounded-4 border danger-zone-card d-flex align-items-center flex-wrap gap-4">
+                            <div class="settings-icon-container danger-zone-icon m-0" style="width: 50px; height: 50px;">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="text-danger mb-1" style="font-size: 1.05rem; font-weight: 600;">Danger Zone</h5>
+                                <p class="text-muted m-0" style="font-size: 0.8rem;">Once you delete your account, there is no going back.<br>Please be certain.</p>
+                            </div>
+                            <button class="btn btn-outline-danger text-uppercase fw-bold bg-white" style="font-size: 0.8rem; letter-spacing: 0.5px; padding: 0.6rem 1.2rem; border-color: rgba(220,53,69,0.3);">Delete Account Permanently</button>
+                        </div>
+
+                    </div> <!-- End of subnav-account -->
+
+                        <!-- ══ TAB: NOTIFICATIONS ══ -->
+                        <div class="tab-pane fade" id="subnav-notifications" role="tabpanel">
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Notification Preferences</h4>
+                                <p class="text-muted mb-4" style="font-size: 0.85rem;">Manage how we contact you.</p>
+                                
+                                <form id="notifForm" onsubmit="submitSettingsForm(event)">
+                                    <div class="mb-3 form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="notif_email" <?php echo $settings['email_notifications'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label text-dark" style="font-size: 0.9rem;" for="notif_email">Email Notifications <span class="text-muted d-block" style="font-size: 0.75rem;">Order receipts, booking alerts</span></label>
+                                    </div>
+                                    <div class="mb-3 form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="notif_sms" <?php echo $settings['sms_notifications'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label text-dark" style="font-size: 0.9rem;" for="notif_sms">SMS / WhatsApp Alerts <span class="text-muted d-block" style="font-size: 0.75rem;">Instant delivery progress updates</span></label>
+                                    </div>
+                                    <div class="mb-4 form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="notif_promo" <?php echo $settings['promotional_offers'] ? 'checked' : ''; ?>>
+                                        <label class="form-check-label text-dark" style="font-size: 0.9rem;" for="notif_promo">Promotional Offers <span class="text-muted d-block" style="font-size: 0.75rem;">Discounts, special menus, chef events</span></label>
+                                    </div>
+                                    <button type="submit" class="btn btn-dark text-uppercase fw-bold mt-2" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.6rem 1.2rem;">Save Notifications</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- ══ TAB: PREFERENCES ══ -->
+                        <div class="tab-pane fade" id="subnav-preferences" role="tabpanel">
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">System Preferences</h4>
+                                <form id="prefForm" onsubmit="submitSettingsForm(event)">
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="pref_lang">Language Preference</label>
+                                            <select id="pref_lang" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
+                                                <option value="en" <?php echo $settings['language'] === 'en' ? 'selected' : ''; ?>>English</option>
+                                                <option value="hi" <?php echo $settings['language'] === 'hi' ? 'selected' : ''; ?>>Hindi</option>
+                                                <option value="es" <?php echo $settings['language'] === 'es' ? 'selected' : ''; ?>>Spanish</option>
+                                                <option value="fr" <?php echo $settings['language'] === 'fr' ? 'selected' : ''; ?>>French</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="pref_theme">Theme Preference</label>
+                                            <select id="pref_theme" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
+                                                <option value="dark" <?php echo $settings['theme'] === 'dark' ? 'selected' : ''; ?>>Medusa Dark (Gold)</option>
+                                                <option value="light" <?php echo $settings['theme'] === 'light' ? 'selected' : ''; ?>>Medusa Light</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-dark text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.6rem 1.2rem;">Save Preferences</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- ══ TAB: PRIVACY ══ -->
+                        <div class="tab-pane fade" id="subnav-privacy" role="tabpanel">
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Privacy Controls</h4>
+                                <p class="text-muted mb-4" style="font-size: 0.85rem;">Manage how your data is used across the platform.</p>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="privacy_analytics" checked>
+                                    <label class="form-check-label text-dark" style="font-size: 0.9rem;" for="privacy_analytics">Allow Analytics Tracking <span class="text-muted d-block" style="font-size: 0.75rem;">Help us improve by sharing usage data</span></label>
+                                </div>
+                                <div class="form-check form-switch mb-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="privacy_marketing" checked>
+                                    <label class="form-check-label text-dark" style="font-size: 0.9rem;" for="privacy_marketing">Marketing Partners <span class="text-muted d-block" style="font-size: 0.75rem;">Share data with partners for tailored offers</span></label>
+                                </div>
+                                <button class="btn btn-dark text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.6rem 1.2rem;">Save Privacy Settings</button>
+                            </div>
+                        </div>
+
+                    </div> <!-- End of settings-tabContent -->
+                </div> <!-- End of pill-settings -->
+
+                <!-- ══ NEW TAB 5: SECURITY & SESSIONS ══ -->
+                <div class="tab-pane fade" id="pill-security" role="tabpanel">
+                    <h2 class="section-title mb-1" style="border:none; padding-bottom:0;"><i class="fa-solid fa-shield-halved"></i> Security & Sessions</h2>
+                    <p class="text-muted mb-4" style="font-size: 0.9rem;">Manage your password, 2FA, and trusted devices.</p>
+
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <!-- Change Password -->
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Change Password</h4>
+                                <form id="passwordForm" onsubmit="submitPasswordForm(event)">
+                                    <div class="mb-3">
+                                        <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="cur_pass">Current Password *</label>
+                                        <input type="password" id="cur_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="new_pass">New Password *</label>
+                                        <input type="password" id="new_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" oninput="checkPassStrength(this.value)" required>
+                                        <div class="strength-bar mt-2">
+                                            <div class="seg" id="seg1"></div>
+                                            <div class="seg" id="seg2"></div>
+                                            <div class="seg" id="seg3"></div>
+                                            <div class="seg" id="seg4"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="conf_pass">Confirm New Password *</label>
+                                        <input type="password" id="conf_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-dark text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.6rem 1.2rem;">Update Password</button>
+                                </form>
+                            </div>
+
+                            <!-- Two Factor Authentication -->
+                            <div class="bg-white p-4 rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Two-Factor Authentication</h4>
+                                        <p class="text-muted m-0" style="font-size: 0.85rem;">Secure login with dynamic OTP codes.</p>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="two_factor_toggle" <?php echo $settings['privacy_mode'] ? 'checked' : ''; ?> onchange="toggle2FA(this)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <!-- New: Login Alerts -->
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Login Alerts</h4>
+                                        <p class="text-muted m-0" style="font-size: 0.85rem;">Get notified of unrecognized logins.</p>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="login_alerts_toggle" checked>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New: Trusted Devices -->
+                            <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Trusted Devices</h4>
+                                <ul class="list-group list-group-flush mb-3">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">iPhone 14 Pro Max</div>
+                                            <small class="text-muted">Currently active</small>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-top">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">MacBook Pro (Chrome)</div>
+                                            <small class="text-muted">Last used 2 days ago</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- New: Account Recovery -->
+                            <div class="bg-white p-4 rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Account Recovery</h4>
+                                <p class="text-muted mb-3" style="font-size: 0.85rem;">Add a fallback email in case you lose access.</p>
+                                <div class="input-group">
+                                    <input type="email" class="form-control" placeholder="Recovery Email" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
+                                    <button class="btn btn-dark" type="button">Save</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Session Activity Logs -->
-                    <div class="pt-4 border-top border-secondary">
+                    <!-- Recent Login Sessions -->
+                    <div class="bg-white p-4 rounded-4 border mt-4" style="border-color: rgba(0,0,0,0.05) !important;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="text-gold m-0" style="font-size: 1.1rem; text-transform: uppercase;">Recent Login Sessions</h4>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="logoutOtherDevices()">Logout From All Other Devices</button>
+                            <h4 class="text-dark m-0" style="font-size: 1.1rem; font-weight: 600;">Recent Login Sessions</h4>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="logoutOtherDevices()">Logout Other Devices</button>
                         </div>
-                        <div class="table-responsive bg-black p-2 rounded border border-secondary">
-                            <table class="table table-dark table-striped table-hover m-0 align-middle" style="font-size: 0.85rem;">
-                                <thead>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" style="font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
+                                <thead style="background: rgba(0,0,0,0.02);">
                                     <tr>
-                                        <th>IP Address</th>
-                                        <th>Device / User Agent</th>
-                                        <th>Timestamp</th>
-                                        <th>Status</th>
+                                        <th class="text-muted">IP Address</th>
+                                        <th class="text-muted">Device / Browser</th>
+                                        <th class="text-muted">Timestamp</th>
+                                        <th class="text-muted">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if (empty($login_logs)): ?>
                                         <tr>
-                                            <td colspan="4" class="text-center text-white-50">No logs found</td>
+                                            <td colspan="4" class="text-center text-muted">No logs found</td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($login_logs as $log): ?>
                                             <tr>
-                                                <td style="color: var(--gold); font-family: monospace;"><?php echo htmlspecialchars($log['ip_address']); ?></td>
-                                                <td class="text-white-50" title="<?php echo htmlspecialchars($log['user_agent']); ?>">
+                                                <td class="text-dark" style="font-family: monospace;"><?php echo htmlspecialchars($log['ip_address']); ?></td>
+                                                <td class="text-muted" title="<?php echo htmlspecialchars($log['user_agent']); ?>">
                                                     <?php 
                                                         $ua = $log['user_agent'];
                                                         if (preg_match('/(Chrome|Safari|Firefox|Edge|MSIE|Trident|Opera)/i', $ua, $matches)) {
@@ -1549,15 +2059,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                         } else {
                                                             echo "Browser";
                                                         }
-                                                        if (strpos(strtolower($ua), 'mobile') !== false) {
-                                                            echo " (Mobile)";
-                                                        } else {
-                                                            echo " (Desktop)";
-                                                        }
+                                                        echo (strpos(strtolower($ua), 'mobile') !== false) ? " (Mobile)" : " (Desktop)";
                                                     ?>
                                                 </td>
-                                                <td><?php echo date('d M Y, H:i:s', strtotime($log['login_time'])); ?></td>
-                                                <td><span class="badge bg-success">Success</span></td>
+                                                <td class="text-muted"><?php echo date('d M Y, H:i:s', strtotime($log['login_time'])); ?></td>
+                                                <td><span class="badge bg-success bg-opacity-10 text-success">Success</span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -2153,6 +2659,14 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 const result = await response.json();
                 if (result.success) {
                     showToast(result.message, 'success');
+                    
+                    // Update localStorage for the theme so the script picks it up on reload
+                    localStorage.setItem('medusa_admin_theme', theme);
+                    
+                    // Reload to the exact same tab
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?tab=settings&sub=preferences';
+                    }, 1500);
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -2454,7 +2968,13 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            switchDashboardMode('profile');
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab === 'settings') {
+                switchDashboardMode('settings');
+            } else {
+                switchDashboardMode('profile');
+            }
         });
     </script>
 
