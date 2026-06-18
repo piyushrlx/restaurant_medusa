@@ -5,6 +5,13 @@
  *  Unified hub for profiles, orders, settings, rewards, and support.
  * ══════════════════════════════════════════════════════════════
  */
+$account_section = 'profile';
+$settings_tabs = ['settings', 'security', 'feedback', 'support'];
+$account_section = $account_section ?? (in_array($_GET['tab'] ?? '', $settings_tabs, true) ? 'settings' : 'profile');
+$account_section = ($account_section === 'settings') ? 'settings' : 'profile';
+$is_settings_page = $account_section === 'settings';
+$account_page_title = $is_settings_page ? 'Account Settings' : 'Profile';
+
 require_once __DIR__ . '/api/config.php';
 requireLogin();
 
@@ -184,7 +191,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Medusa Luxury Restaurant - Customer Account Dashboard">
-    <title>My Account - Medusa Luxury</title>
+    <title><?php echo htmlspecialchars($account_page_title); ?> - Medusa Luxury</title>
     <!-- Global Theme Controller -->
     <script src="assets/js/theme-toggle.js"></script>
     <!-- Bootstrap CSS -->
@@ -1007,15 +1014,16 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 <!-- Dashboard Toggle Buttons -->
                 <div class="dashboard-toggle-buttons" style="display: none;">
-                    <button class="btn-dashboard-toggle active" id="btn-toggle-profile" onclick="switchDashboardMode('profile')">
+                    <button class="btn-dashboard-toggle <?php echo !$is_settings_page ? 'active' : ''; ?>" id="btn-toggle-profile" onclick="switchDashboardMode('profile')">
                         <i class="fa-solid fa-id-card"></i> Profile Hub
                     </button>
-                    <button class="btn-dashboard-toggle" id="btn-toggle-settings" onclick="switchDashboardMode('settings')">
+                    <button class="btn-dashboard-toggle <?php echo $is_settings_page ? 'active' : ''; ?>" id="btn-toggle-settings" onclick="switchDashboardMode('settings')">
                         <i class="fa-solid fa-gears"></i> Settings Hub
                     </button>
                 </div>
                 
                 <nav class="sidebar-menu nav flex-column nav-pills" role="tablist">
+                    <?php if (!$is_settings_page): ?>
                     <!-- Profile Dashboard Group -->
                     <button class="nav-link active dashboard-pill-profile" id="pill-profile-tab" data-bs-toggle="pill" data-bs-target="#pill-profile" type="button" role="tab">
                         <i class="fa-regular fa-user"></i> Profile Overview
@@ -1043,27 +1051,29 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button class="nav-link dashboard-pill-profile" id="pill-notifications-tab" data-bs-toggle="pill" data-bs-target="#pill-notifications" type="button" role="tab">
                         <i class="fa-solid fa-bell"></i> Notifications Log
                     </button>
-
-                    <!-- Settings Dashboard Group -->
-                    <button class="nav-link dashboard-pill-settings" id="pill-settings-tab" data-bs-toggle="pill" data-bs-target="#pill-settings" type="button" role="tab" style="display: none;">
-                        <i class="fa-solid fa-sliders"></i> Account Settings
-                    </button>
-                    <button class="nav-link dashboard-pill-settings" id="pill-security-tab" data-bs-toggle="pill" data-bs-target="#pill-security" type="button" role="tab" style="display: none;">
-                        <i class="fa-solid fa-shield-halved"></i> Security & Sessions
-                    </button>
-                    <button class="nav-link dashboard-pill-settings" id="pill-feedback-tab" data-bs-toggle="pill" data-bs-target="#pill-feedback" type="button" role="tab" style="display: none;">
-                        <i class="fa-solid fa-star"></i> Customer Feedback
-                    </button>
-                    <button class="nav-link dashboard-pill-settings" id="pill-support-tab" data-bs-toggle="pill" data-bs-target="#pill-support" type="button" role="tab" style="display: none;">
-                        <i class="fa-solid fa-headset"></i> Support & Help
-                    </button>
                     <!-- Hidden tab button for programmatic switching to Terms -->
                     <button id="pill-terms-tab" data-bs-toggle="pill" data-bs-target="#pill-terms" type="button" role="tab" style="display: none;"></button>
+                    <?php else: ?>
+                    <!-- Settings Dashboard Group -->
+                    <button class="nav-link active dashboard-pill-settings" id="pill-settings-tab" data-bs-toggle="pill" data-bs-target="#pill-settings" type="button" role="tab">
+                        <i class="fa-solid fa-sliders"></i> Account Settings
+                    </button>
+                    <button class="nav-link dashboard-pill-settings" id="pill-security-tab" data-bs-toggle="pill" data-bs-target="#pill-security" type="button" role="tab">
+                        <i class="fa-solid fa-shield-halved"></i> Security & Sessions
+                    </button>
+                    <button class="nav-link dashboard-pill-settings" id="pill-feedback-tab" data-bs-toggle="pill" data-bs-target="#pill-feedback" type="button" role="tab">
+                        <i class="fa-solid fa-star"></i> Customer Feedback
+                    </button>
+                    <button class="nav-link dashboard-pill-settings" id="pill-support-tab" data-bs-toggle="pill" data-bs-target="#pill-support" type="button" role="tab">
+                        <i class="fa-solid fa-headset"></i> Support & Help
+                    </button>
+                    <?php endif; ?>
                 </nav>
             </aside>
 
             <!-- Right Main Panels -->
             <main class="main-content tab-content">
+                <?php if (!$is_settings_page): ?>
                 
                 <!-- ══ TAB 1: PROFILE DETAILS ══ -->
                 <div class="tab-pane fade show active" id="pill-profile" role="tabpanel">
@@ -1092,7 +1102,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <h3 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.4rem;">
                             <i class="fa-regular fa-user me-2"></i> Personal Information
                         </h3>
-                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0" onclick="document.getElementById('profile-view').style.display='none'; document.getElementById('profile-edit').style.display='block';" style="font-size: 0.85rem; font-weight: 500;">
+                        <button type="button" id="btn-edit-profile" class="btn btn-link text-dark text-decoration-none p-0" onclick="document.getElementById('profile-view').style.display='none'; document.getElementById('profile-edit').style.display='block';" style="font-size: 0.85rem; font-weight: 500;">
                             Edit Profile <i class="fa-solid fa-pencil ms-1" style="font-size: 0.75rem;"></i>
                         </button>
                     </div>
@@ -1320,7 +1330,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Password</span>
                                     <span class="text-dark fw-bold flex-grow-1">••••••••••••</span>
-                                    <a href="#" onclick="switchDashboardMode('settings'); document.getElementById('pill-security-tab').click();" class="text-success text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">Change</a>
+                                    <a href="settings.php?tab=security" class="text-success text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">Change</a>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Last Login</span>
@@ -2506,7 +2516,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
-                <div class="tab-pane fade" id="pill-settings" role="tabpanel">
+                <?php else: ?>
+                <div class="tab-pane fade show active" id="pill-settings" role="tabpanel">
                     <h2 class="section-title mb-1" style="border:none; padding-bottom:0;">Account Settings</h2>
                     <p class="text-muted mb-4" style="font-size: 0.9rem;">Manage your account preferences and security settings.</p>
                     
@@ -2529,7 +2540,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     Account Information
                                 </h4>
-                                <a href="#" onclick="switchDashboardMode('profile'); document.getElementById('btn-edit-profile').click();" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">
+                                <a href="profile.php?edit=1" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">
                                     Edit Profile <i class="fa-solid fa-pencil ms-1" style="font-size: 0.75rem;"></i>
                                 </a>
                             </div>
@@ -3047,6 +3058,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
             </main>
         </div>
@@ -3116,6 +3128,12 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Client-Side Dashboard Operations -->
     <script>
+        const ACCOUNT_SECTION = <?php echo json_encode($account_section); ?>;
+        const ACCOUNT_URLS = {
+            profile: 'profile.php',
+            settings: 'settings.php'
+        };
+
         // Alert Toast Helper
         function showToast(message, type = 'info') {
             const toast = document.getElementById('medusaToast');
@@ -3147,6 +3165,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 document.getElementById('seg3'),
                 document.getElementById('seg4')
             ];
+
+            if (segs.some(seg => !seg)) return;
             
             segs.forEach(s => s.className = 'seg');
             if (!pw) return;
@@ -3169,7 +3189,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         const originalEmail = "<?php echo htmlspecialchars($user_email); ?>";
         const originalPhone = "<?php echo htmlspecialchars($phone); ?>";
 
-        document.getElementById('profile_email').addEventListener('input', function() {
+        const profileEmailInput = document.getElementById('profile_email');
+        const profilePhoneInput = document.getElementById('profile_phone');
+
+        if (profileEmailInput) {
+            profileEmailInput.addEventListener('input', function() {
             const btn = document.getElementById('btn-verify-email');
             const hint = document.getElementById('email-change-hint');
             if (this.value.trim() !== originalEmail) {
@@ -3179,9 +3203,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 btn.style.display = 'none';
                 hint.style.display = 'none';
             }
-        });
+            });
+        }
 
-        document.getElementById('profile_phone').addEventListener('input', function() {
+        if (profilePhoneInput) {
+            profilePhoneInput.addEventListener('input', function() {
             const btn = document.getElementById('btn-verify-phone');
             const hint = document.getElementById('phone-change-hint');
             if (this.value.trim() !== originalPhone) {
@@ -3191,7 +3217,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 btn.style.display = 'none';
                 hint.style.display = 'none';
             }
-        });
+            });
+        }
 
         // Feedback stars behavior
         const stars = document.querySelectorAll('#feedback-stars i');
@@ -3740,26 +3767,27 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         function switchDashboardMode(mode) {
+            if (mode !== ACCOUNT_SECTION) {
+                window.location.href = ACCOUNT_URLS[mode] || 'profile.php';
+                return;
+            }
+
             document.querySelectorAll('.btn-dashboard-toggle').forEach(btn => btn.classList.remove('active'));
-            if (mode === 'profile') {
-                const profileBtn = document.getElementById('btn-toggle-profile');
-                if (profileBtn) profileBtn.classList.add('active');
-                document.querySelectorAll('.dashboard-pill-profile').forEach(p => p.style.display = 'block');
-                document.querySelectorAll('.dashboard-pill-settings').forEach(p => p.style.display = 'none');
-                const activePill = document.querySelector('.sidebar-menu .nav-link.active');
-                if (!activePill || !activePill.classList.contains('dashboard-pill-profile')) {
-                    const profileTab = document.getElementById('pill-profile-tab');
-                    if (profileTab) profileTab.click();
-                }
-            } else {
-                const settingsBtn = document.getElementById('btn-toggle-settings');
-                if (settingsBtn) settingsBtn.classList.add('active');
-                document.querySelectorAll('.dashboard-pill-profile').forEach(p => p.style.display = 'none');
-                document.querySelectorAll('.dashboard-pill-settings').forEach(p => p.style.display = 'block');
-                const activePill = document.querySelector('.sidebar-menu .nav-link.active');
-                if (!activePill || !activePill.classList.contains('dashboard-pill-settings')) {
-                    const settingsTab = document.getElementById('pill-settings-tab');
-                    if (settingsTab) settingsTab.click();
+            const activeToggle = document.getElementById(`btn-toggle-${mode}`);
+            if (activeToggle) activeToggle.classList.add('active');
+
+            document.querySelectorAll('.dashboard-pill-profile').forEach(p => {
+                p.style.display = mode === 'profile' ? 'block' : 'none';
+            });
+            document.querySelectorAll('.dashboard-pill-settings').forEach(p => {
+                p.style.display = mode === 'settings' ? 'block' : 'none';
+            });
+
+            const activePill = document.querySelector('.sidebar-menu .nav-link.active');
+            if (!activePill || !activePill.classList.contains(`dashboard-pill-${mode}`)) {
+                const defaultTab = document.getElementById(mode === 'settings' ? 'pill-settings-tab' : 'pill-profile-tab');
+                if (defaultTab) {
+                    bootstrap.Tab.getOrCreateInstance(defaultTab).show();
                 }
             }
         }
@@ -3787,39 +3815,56 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
 
+        function activatePill(selector) {
+            const tabTriggerElement = selector ? document.querySelector(selector) : null;
+            if (!tabTriggerElement) return false;
+            bootstrap.Tab.getOrCreateInstance(tabTriggerElement).show();
+            return true;
+        }
+
+        function selectorFromHash(hash) {
+            if (!hash || !hash.startsWith('#pill-')) return null;
+            return `${hash}-tab`;
+        }
+
+        function selectorFromTabParam(tabParam) {
+            if (!tabParam || tabParam === ACCOUNT_SECTION) return null;
+            if (tabParam === 'settings' || tabParam === 'profile') return null;
+            return `#pill-${tabParam}-tab`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const urlTab = params.get('tab');
-            
-            // Handle specific URL tab parameter first
-            if (urlTab === 'settings') {
-                switchDashboardMode('settings');
-            } else {
-                switchDashboardMode('profile');
+            switchDashboardMode(ACCOUNT_SECTION);
+
+            let requestedPill = selectorFromHash(window.location.hash) || selectorFromTabParam(params.get('tab'));
+            if (params.get('edit') === '1') {
+                requestedPill = '#pill-profile-tab';
+            }
+            const storedPill = localStorage.getItem(`medusaActiveTab:${ACCOUNT_SECTION}`) || localStorage.getItem('medusaActiveTab');
+            const defaultPill = ACCOUNT_SECTION === 'settings' ? '#pill-settings-tab' : '#pill-profile-tab';
+
+            if (!activatePill(requestedPill) && !activatePill(storedPill)) {
+                activatePill(defaultPill);
             }
 
-            // Restore previously active tab from localStorage
-            const activeTabId = localStorage.getItem('medusaActiveTab');
-            if (activeTabId) {
-                const tabTriggerElement = document.querySelector(activeTabId);
-                if (tabTriggerElement) {
-                    const tab = new bootstrap.Tab(tabTriggerElement);
-                    tab.show();
-                    
-                    if (tabTriggerElement.classList.contains('dashboard-pill-settings')) {
-                        switchDashboardMode('settings');
-                    } else {
-                        switchDashboardMode('profile');
-                    }
-                }
+            const subTab = params.get('sub');
+            if (subTab) {
+                activatePill(`#subnav-${subTab}-tab`);
             }
-            
+
+            if (params.get('edit') === '1') {
+                const editButton = document.getElementById('btn-edit-profile');
+                if (editButton) editButton.click();
+            }
+
             // Save active tab to localStorage whenever a tab is switched
             const tabElements = document.querySelectorAll('button[data-bs-toggle="pill"]');
             tabElements.forEach(el => {
                 el.addEventListener('shown.bs.tab', event => {
                     const targetId = event.target.getAttribute('id');
                     if (targetId) {
+                        localStorage.setItem(`medusaActiveTab:${ACCOUNT_SECTION}`, '#' + targetId);
                         localStorage.setItem('medusaActiveTab', '#' + targetId);
                     }
                 });
