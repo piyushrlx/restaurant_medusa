@@ -24,13 +24,16 @@ try {
     // ── 1. UPDATE PROFILE ──
     if ($action === 'update_profile') {
         $name = trim($data['name'] ?? '');
+        $dob = trim($data['dob'] ?? '');
+        $ambience = trim($data['preferred_ambience'] ?? '');
+
         if (empty($name)) {
             echo json_encode(['success' => false, 'message' => 'Full Name is required']);
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE users SET full_name = ? WHERE id = ?");
-        $stmt->execute([$name, $user_id]);
+        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, dob = ?, preferred_ambience = ? WHERE id = ?");
+        $stmt->execute([$name, $dob ?: null, $ambience, $user_id]);
         $_SESSION['user_name'] = $name;
 
         echo json_encode(['success' => true, 'message' => 'Profile name updated successfully']);

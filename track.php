@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * track.php â€” Public live order tracking page
  * Token-based auth: ?token=<64-char hex>
@@ -9,7 +9,7 @@ $token = trim($_GET['token'] ?? $_SESSION['active_order_token'] ?? '');
 
 // Validate token format
 if (strlen($token) !== 64 || !ctype_xdigit($token)) {
-    header('Location: menutest.php');
+    header('Location: menutest.html');
     exit;
 }
 
@@ -35,7 +35,7 @@ try {
 } catch (PDOException $e) { /* silent */ }
 
 if (!$order) {
-    header('Location: menutest.php');
+    header('Location: menutest.html');
     exit;
 }
 
@@ -376,13 +376,18 @@ $current_step = $step_order[$tracking_status] ?? 1;
         }
         .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); transform: translateY(-1px); }
 
-        /* â”€â”€ FOOTER â”€â”€ */
+        /* ———— FOOTER ———— */
         footer {
             text-align: center;
             padding: 24px;
             font-size: 0.75rem;
             color: var(--muted);
             border-top: 1px solid var(--border);
+        }
+
+        .custom-scooter-icon {
+            background: transparent !important;
+            border: none !important;
         }
 
         @media (max-width: 640px) {
@@ -404,7 +409,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         <span class="nav-brand">La-Medusaa</span>
     </a>
     <div class="nav-actions">
-        <a href="menutest.php" class="nav-link">Menu</a>
+        <a href="menutest.html" class="nav-link">Menu</a>
         <?php if (!empty($_SESSION['user_id'])): ?>
             <a href="my-orders.php" class="nav-link">My Orders</a>
         <?php endif; ?>
@@ -470,6 +475,17 @@ $current_step = $step_order[$tracking_status] ?? 1;
         </div>
     </div>
 
+    <!-- Live Map Card -->
+    <div class="details-card" id="liveMapCard" style="display: <?php echo $tracking_status === 'out_for_delivery' ? 'block' : 'none'; ?>; overflow: hidden;">
+        <div class="details-section pb-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="details-title m-0">Live Tracking</p>
+                <div class="badge bg-gold text-dark" style="background: var(--gold); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;"><i class="fa-solid fa-location-crosshairs me-1"></i> Live</div>
+            </div>
+            <div id="partnerMap" style="height: 280px; width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px;"></div>
+        </div>
+    </div>
+
     <!-- Order Details -->
     <div class="details-card">
         <!-- Items -->
@@ -501,7 +517,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
 
     <!-- CTA -->
     <div class="cta-row">
-        <a href="menutest.php" class="btn-ghost"><i class="fas fa-utensils"></i> Browse Menu</a>
+        <a href="menutest.html" class="btn-ghost"><i class="fas fa-utensils"></i> Browse Menu</a>
         <?php if (!empty($_SESSION['user_id'])): ?>
         <a href="my-orders.php" class="btn-gold"><i class="fas fa-receipt"></i> All My Orders</a>
         <?php endif; ?>
@@ -512,6 +528,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
     LA-MEDUSAA Bar &amp; Lounge, Sector 68, Mohali &nbsp;Â·&nbsp; Live tracking updates every 15 seconds
 </footer>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(get_env_var('GOOGLE_MAPS_API_KEY', '')); ?>"></script>
 <script>
 const TOKEN   = <?php echo json_encode($token); ?>;
 const POLL_MS = 15000;
@@ -527,6 +544,170 @@ setFill(currentStep);
 function setFill(step) {
     const pct = step <= 1 ? 0 : ((step - 1) / 4) * 100;
     document.getElementById('stepFill').style.width = pct + '%';
+}
+
+const RESTAURANT_COORD = [30.6865, 76.7403];
+const USER_COORD = [30.6985, 76.7523];
+let map = null;
+let riderMarker = null;
+let restaurantMarker = null;
+let userMarker = null;
+let routeLine = null;
+let simulationProgress = 0.05; // Used for simulating movement
+
+const darkMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#212121" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#181818" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#373737" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
+  { featureType: "road.highway.controlled_access", elementType: "geometry", stylers: [{ color: "#4e4e4e" }] },
+  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { featureType: "transit", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] }
+];
+
+// Custom HTML overlay marker for Google Maps
+class HTMLMarker extends google.maps.OverlayView {
+    constructor(latlng, html, map) {
+        super();
+        this.latlng = latlng;
+        this.html = html;
+        this.setMap(map);
+    }
+    onAdd() {
+        this.div = document.createElement('div');
+        this.div.style.position = 'absolute';
+        this.div.style.cursor = 'pointer';
+        this.div.innerHTML = this.html;
+        const panes = this.getPanes();
+        panes.overlayImage.appendChild(this.div);
+    }
+    draw() {
+        const overlayProjection = this.getProjection();
+        const position = overlayProjection.fromLatLngToDivPixel(this.latlng);
+        if (position) {
+            // Anchor center bottom/middle: width 55px -> offset -27. height 55px -> offset -48
+            this.div.style.left = (position.x - 27) + 'px';
+            this.div.style.top = (position.y - 48) + 'px';
+        }
+    }
+    onRemove() {
+        if (this.div) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+        }
+    }
+    setLatLng(latlng) {
+        this.latlng = latlng;
+        this.draw();
+    }
+    getElement() {
+        return this.div;
+    }
+}
+
+function initMap() {
+    if (map) return;
+    
+    const restaurantPos = new google.maps.LatLng(RESTAURANT_COORD[0], RESTAURANT_COORD[1]);
+    const userPos = new google.maps.LatLng(USER_COORD[0], USER_COORD[1]);
+    
+    map = new google.maps.Map(document.getElementById('partnerMap'), {
+        center: restaurantPos,
+        zoom: 14,
+        styles: darkMapStyle,
+        disableDefaultUI: true,
+        zoomControl: false
+    });
+
+    // Restaurant Marker using custom SVG
+    const restaurantIcon = {
+        url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="14" fill="%231a1a1a" stroke="%23c9a84c" stroke-width="2"/><path d="M11 7v6h1.5v6H14v-6h1.5V7H11zm5 4c0 3 2 4 2 4v4h1.5v-4s2-1 2-4V7h-5.5v4z" fill="%23c9a84c"/></svg>',
+        size: new google.maps.Size(30, 30),
+        anchor: new google.maps.Point(15, 15)
+    };
+    restaurantMarker = new google.maps.Marker({
+        position: restaurantPos,
+        map: map,
+        icon: restaurantIcon,
+        title: "Restaurant"
+    });
+
+    // User Marker using custom SVG
+    const userIcon = {
+        url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34"><circle cx="17" cy="17" r="16" fill="%23111111" stroke="%23555555" stroke-width="2"/><path d="M17 9.5L10 15v9h4v-6h6v6h4v-9l-7-5.5z" fill="white"/></svg>',
+        size: new google.maps.Size(34, 34),
+        anchor: new google.maps.Point(17, 17)
+    };
+    userMarker = new google.maps.Marker({
+        position: userPos,
+        map: map,
+        icon: userIcon,
+        title: "Delivery Address"
+    });
+
+    // Route Line (Polyline)
+    routeLine = new google.maps.Polyline({
+        path: [restaurantPos, userPos],
+        geodesic: true,
+        strokeColor: "#1A73E8",
+        strokeOpacity: 0.9,
+        strokeWeight: 4,
+        map: map
+    });
+
+    // Rider Marker (Proper 3D Rider Image via HTMLMarker)
+    const initialFlip = (USER_COORD[1] > RESTAURANT_COORD[1]) ? 'scaleX(-1)' : 'scaleX(1)';
+    const riderHtml = `<img src="assets/images/delivery_rider_transparent.png" class="rider-scooter-img" style="width: 55px; height: auto; transition: transform 0.3s ease; filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.5)); transform: ${initialFlip}; display: block;">`;
+    
+    riderMarker = new HTMLMarker(restaurantPos, riderHtml, map);
+    
+    // Bounds setup to fit route
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(restaurantPos);
+    bounds.extend(userPos);
+    map.fitBounds(bounds, 30);
+}
+
+let lastLat = RESTAURANT_COORD[0];
+let lastLng = RESTAURANT_COORD[1];
+
+function updateMap(lat, lng) {
+    if (!map) {
+        initMap();
+    }
+    
+    const newLatLng = new google.maps.LatLng(lat, lng);
+    
+    // Flip rider horizontally depending on movement direction
+    if (lat !== lastLat || lng !== lastLng) {
+        const markerEl = riderMarker.getElement();
+        const imgEl = markerEl ? markerEl.querySelector('.rider-scooter-img') : null;
+        if (imgEl) {
+            if (lng > lastLng) {
+                imgEl.style.transform = 'scaleX(-1)'; // Move right -> flip
+            } else if (lng < lastLng) {
+                imgEl.style.transform = 'scaleX(1)';  // Move left -> default
+            }
+        }
+        lastLat = lat;
+        lastLng = lng;
+    }
+    
+    // Update rider position
+    riderMarker.setLatLng(newLatLng);
 }
 
 function updateUI(data) {
@@ -563,10 +744,39 @@ function updateUI(data) {
     // Fill bar
     setFill(step);
     currentStep = step;
+    
+    // Live Map Logic
+    if (status === 'out_for_delivery') {
+        const mapCard = document.getElementById('liveMapCard');
+        if (mapCard.style.display !== 'block') {
+            mapCard.style.display = 'block';
+            setTimeout(() => { if (map) google.maps.event.trigger(map, 'resize'); }, 300);
+        }
+        
+        // Simulate a moving rider away from the restaurant towards the user
+        simulationProgress += 0.05;
+        if (simulationProgress > 1) simulationProgress = 1;
+        
+        let lat = data.partner_lat || (RESTAURANT_COORD[0] + (USER_COORD[0] - RESTAURANT_COORD[0]) * simulationProgress);
+        let lng = data.partner_lng || (RESTAURANT_COORD[1] + (USER_COORD[1] - RESTAURANT_COORD[1]) * simulationProgress);
+        
+        updateMap(lat, lng);
+    } else {
+        document.getElementById('liveMapCard').style.display = 'none';
+    }
 
     // Stop polling if terminal
     if (isTerminal) clearInterval(pollTimer);
 }
+
+// Initial map load if already on the way
+<?php if ($tracking_status === 'out_for_delivery'): ?>
+    setTimeout(() => {
+        // Run updateUI with current simulated data to initialize map
+        updateMap(RESTAURANT_COORD[0] + (USER_COORD[0] - RESTAURANT_COORD[0]) * 0.05, RESTAURANT_COORD[1] + (USER_COORD[1] - RESTAURANT_COORD[1]) * 0.05);
+        google.maps.event.trigger(map, 'resize');
+    }, 500);
+<?php endif; ?>
 
 let pollTimer = null;
 
