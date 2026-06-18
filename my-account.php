@@ -39,6 +39,14 @@ try {
     ");
 } catch (PDOException $ex) {}
 
+// Ensure users table has dob and preferred_ambience
+try {
+    $pdo->exec("ALTER TABLE `users` ADD COLUMN `dob` DATE NULL DEFAULT NULL");
+} catch (PDOException $ex) {}
+try {
+    $pdo->exec("ALTER TABLE `users` ADD COLUMN `preferred_ambience` VARCHAR(100) NULL DEFAULT NULL");
+} catch (PDOException $ex) {}
+
 $has_liquor_quota = false;
 $user_liquor_quotas = [];
 if ($user_id) {
@@ -54,6 +62,9 @@ if ($user_id) {
 $phone = $user['phone'] ?? '';
 $is_email_verified = $user['is_email_verified'] ?? 0;
 $is_phone_verified = $user['is_phone_verified'] ?? 0;
+$dob_raw = $user['dob'] ?? '';
+$dob_display = !empty($dob_raw) ? date('d M Y', strtotime($dob_raw)) : 'Not Set';
+$preferred_ambience = $user['preferred_ambience'] ?? '';
 
 // Fetch settings
 $settings_stmt = $pdo->prepare("SELECT * FROM user_settings WHERE user_id = ?");
@@ -74,7 +85,7 @@ try {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($orders as &$order) {
-        $item_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+        $item_stmt = $pdo->prepare("SELECT oi.*, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
         $item_stmt->execute([$order['id']]);
         $order['items'] = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -150,6 +161,17 @@ $support_tickets = $support_stmt->fetchAll(PDO::FETCH_ASSOC);
 $fb_stmt = $pdo->prepare("SELECT * FROM feedback WHERE user_id = ? ORDER BY created_at DESC");
 $fb_stmt->execute([$user_id]);
 $feedbacks = $fb_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch table reservations
+$res_stmt = $pdo->prepare("SELECT * FROM table_bookings WHERE user_id = ? ORDER BY booking_date DESC, booking_time DESC");
+$res_stmt->execute([$user_id]);
+$user_reservations = $res_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get the closest upcoming reservation
+$upcoming_reservation = null;
+$upcoming_stmt = $pdo->prepare("SELECT * FROM table_bookings WHERE user_id = ? AND booking_date >= CURDATE() ORDER BY booking_date ASC, booking_time ASC LIMIT 1");
+$upcoming_stmt->execute([$user_id]);
+$upcoming_reservation = $upcoming_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetch login activity logs
 $login_logs_stmt = $pdo->prepare("SELECT * FROM login_activity_logs WHERE user_id = ? ORDER BY login_time DESC LIMIT 6");
@@ -928,9 +950,12 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Luxury Top Header Bar -->
     <header class="luxury-navbar">
         <div class="d-flex justify-content-between align-items-center w-100 max-width-1200 mx-auto">
-            <a href="menutest.php" class="navbar-brand">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-                <span>Medusa</span>
+            <a href="menutest.html" class="navbar-brand d-flex align-items-center gap-3 text-decoration-none" style="font-family: 'Playfair Display', serif; text-transform: uppercase; letter-spacing: 2px;">
+                <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="width: 48px; height: 48px; object-fit: contain; filter: brightness(1.1);">
+                <div class="d-flex flex-column justify-content-center">
+                    <span style="line-height: 1; margin-bottom: 4px; font-size: 1.25rem; color: #b8973a; font-weight: 600;">Medusa</span>
+                    <span style="font-size: 0.6rem; letter-spacing: 4px; color: rgba(223, 186, 134, 0.7); font-family: 'Inter', sans-serif; font-weight: 400;">RESTAURANT</span>
+                </div>
             </a>
             <div class="d-flex align-items-center gap-4">
                 <a href="menutest.html" class="nav-link-custom">
@@ -998,6 +1023,9 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button class="nav-link dashboard-pill-profile" id="pill-orders-tab" data-bs-toggle="pill" data-bs-target="#pill-orders" type="button" role="tab">
                         <i class="fa-solid fa-receipt"></i> Order History
                     </button>
+                    <button class="nav-link dashboard-pill-profile" id="pill-reservations-tab" data-bs-toggle="pill" data-bs-target="#pill-reservations" type="button" role="tab">
+                        <i class="fa-regular fa-calendar-check"></i> Table Reservations
+                    </button>
                     <button class="nav-link dashboard-pill-profile" id="pill-loyalty-tab" data-bs-toggle="pill" data-bs-target="#pill-loyalty" type="button" role="tab">
                         <i class="fa-solid fa-crown"></i> My Tier & Rewards
                     </button>
@@ -1009,6 +1037,9 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <i class="fa-solid fa-wine-bottle"></i> Liquor Quota
                     </button>
                     <?php endif; ?>
+                    <button class="nav-link dashboard-pill-profile" id="pill-membership-tab" data-bs-toggle="pill" data-bs-target="#pill-membership" type="button" role="tab">
+                        <i class="fa-solid fa-id-badge"></i> Membership Pass
+                    </button>
                     <button class="nav-link dashboard-pill-profile" id="pill-notifications-tab" data-bs-toggle="pill" data-bs-target="#pill-notifications" type="button" role="tab">
                         <i class="fa-solid fa-bell"></i> Notifications Log
                     </button>
@@ -1026,6 +1057,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button class="nav-link dashboard-pill-settings" id="pill-support-tab" data-bs-toggle="pill" data-bs-target="#pill-support" type="button" role="tab" style="display: none;">
                         <i class="fa-solid fa-headset"></i> Support & Help
                     </button>
+                    <!-- Hidden tab button for programmatic switching to Terms -->
+                    <button id="pill-terms-tab" data-bs-toggle="pill" data-bs-target="#pill-terms" type="button" role="tab" style="display: none;"></button>
                 </nav>
             </aside>
 
@@ -1049,7 +1082,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 <h4 class="mb-1" style="font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($user_tier_name); ?> Member</h4>
                                 <p class="mb-4" style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">You have <?php echo number_format($loyalty_points); ?> points</p>
-                                <a href="#" class="text-gold text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">View Rewards &rarr;</a>
+                                <a href="javascript:void(0)" onclick="document.getElementById('pill-loyalty-tab').click();" style="color: #0d6efd; font-size: 0.85rem; font-weight: 500; text-decoration: none;">View Rewards &rarr;</a>
                             </div>
                         </div>
                     </div>
@@ -1066,10 +1099,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Static View -->
                     <div id="profile-view" class="bg-white p-4 rounded-4 border mb-5" style="border-color: rgba(0,0,0,0.05) !important;">
-                        <div class="row">
+                        <div class="row justify-content-center">
                             <div class="col-md-4 p-3 border-bottom border-end">
                                 <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Full Name</label>
-                                <div class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($user_name); ?></div>
+                                <div id="view-profile-name" class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($user_name); ?></div>
                             </div>
                             <div class="col-md-4 p-3 border-bottom border-end">
                                 <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Mobile Number</label>
@@ -1097,15 +1130,15 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="col-md-4 p-3 border-end">
+                            <div class="col-md-4 p-3 <?php echo empty($preferred_ambience) ? '' : 'border-end'; ?>" id="view-profile-dob-container">
                                 <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Date of Birth</label>
                                 <div class="text-dark d-flex justify-content-between align-items-center" style="font-size: 0.95rem;">
-                                    15 Jan 1990 <i class="fa-regular fa-calendar text-muted"></i>
+                                    <span id="view-profile-dob"><?php echo htmlspecialchars($dob_display); ?></span> <i class="fa-regular fa-calendar text-muted"></i>
                                 </div>
                             </div>
-                            <div class="col-md-4 p-3">
+                            <div class="col-md-4 p-3" id="view-profile-ambience-container" style="<?php echo empty($preferred_ambience) ? 'display: none;' : ''; ?>">
                                 <label class="text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">Preferred Ambience</label>
-                                <div class="text-dark" style="font-size: 0.95rem;">Lounge, Live Music</div>
+                                <div id="view-profile-ambience" class="text-dark" style="font-size: 0.95rem;"><?php echo htmlspecialchars($preferred_ambience); ?></div>
                             </div>
                         </div>
                     </div>
@@ -1150,6 +1183,23 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label-medusa" for="profile_dob">Date of Birth</label>
+                                    <input type="date" id="profile_dob" class="form-control form-control-medusa" value="<?php echo htmlspecialchars($dob_raw); ?>">
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label-medusa" for="profile_ambience">Preferred Ambience</label>
+                                    <select id="profile_ambience" class="form-select form-control-medusa">
+                                        <option value="" <?php echo empty($preferred_ambience) ? 'selected' : ''; ?>>Not Selected</option>
+                                        <option value="Lounge, Live Music" <?php echo $preferred_ambience === 'Lounge, Live Music' ? 'selected' : ''; ?>>Lounge, Live Music</option>
+                                        <option value="Quiet Dining" <?php echo $preferred_ambience === 'Quiet Dining' ? 'selected' : ''; ?>>Quiet Dining</option>
+                                        <option value="Outdoor/Patio" <?php echo $preferred_ambience === 'Outdoor/Patio' ? 'selected' : ''; ?>>Outdoor/Patio</option>
+                                        <option value="Private Room" <?php echo $preferred_ambience === 'Private Room' ? 'selected' : ''; ?>>Private Room</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="d-flex gap-3 mt-4">
                                 <button type="submit" class="btn-gold-medusa">Save Changes</button>
                                 <button type="button" class="btn btn-outline-dark" onclick="document.getElementById('profile-edit').style.display='none'; document.getElementById('profile-view').style.display='block';">Cancel</button>
@@ -1170,7 +1220,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="col-6 col-md-3 mb-3 mb-md-0 d-flex align-items-center justify-content-center justify-content-md-start gap-3 border-end-md border-light border-opacity-25 ps-md-4">
                                 <i class="fa-regular fa-calendar text-gold" style="font-size: 1.5rem;"></i>
                                 <div>
-                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;">0</h4>
+                                    <h4 class="mb-0 text-white" style="font-weight: 700; font-size: 1.2rem;"><?php echo count($user_reservations); ?></h4>
                                     <span style="font-size: 0.75rem; opacity: 0.8;">Reservations</span>
                                 </div>
                             </div>
@@ -1191,30 +1241,43 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
 
-                    <!-- Upcoming Reservation Placeholder -->
+                    <!-- Upcoming Reservation -->
                     <div class="mb-5">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.2rem;">
                                 <i class="fa-regular fa-calendar-check me-2"></i> Upcoming Reservation
                             </h4>
-                            <a href="#" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">View All Reservations &rarr;</a>
+                            <a href="javascript:void(0)" onclick="document.getElementById('pill-reservations-tab').click();" class="text-dark text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">View All Reservations &rarr;</a>
                         </div>
+                        <?php if ($upcoming_reservation): ?>
                         <div class="bg-white p-4 rounded-4 border d-flex align-items-center gap-4 flex-wrap" style="border-color: rgba(0,0,0,0.05) !important;">
-                            <img src="assets/images/hero_steak.png" alt="Reservation" class="rounded-3 object-cover" style="width: 150px; height: 100px;">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 100px; background-color: var(--bg-sidebar); color: var(--gold);">
+                                <i class="fa-solid fa-wine-glass" style="font-size: 2.5rem;"></i>
+                            </div>
                             <div class="flex-grow-1">
                                 <div class="d-flex gap-3 text-muted mb-2" style="font-size: 0.8rem;">
-                                    <span><i class="fa-regular fa-calendar me-1"></i> Sat, 24 May 2024</span>
-                                    <span><i class="fa-regular fa-clock me-1"></i> 7:00 PM</span>
-                                    <span><i class="fa-regular fa-user me-1"></i> 2 Guests</span>
+                                    <span><i class="fa-regular fa-calendar me-1"></i> <?php echo date('D, d M Y', strtotime($upcoming_reservation['booking_date'])); ?></span>
+                                    <span><i class="fa-regular fa-clock me-1"></i> <?php echo date('g:i A', strtotime($upcoming_reservation['booking_time'])); ?></span>
+                                    <span><i class="fa-regular fa-user me-1"></i> <?php echo htmlspecialchars($upcoming_reservation['guests']); ?> Guests</span>
                                 </div>
-                                <h5 class="text-dark mb-1" style="font-size: 1rem;">Medusa Lounge - Downtown</h5>
-                                <p class="text-muted m-0" style="font-size: 0.85rem;">123 Medusa Lane, New York, NY 10001</p>
+                                <h5 class="text-dark mb-1" style="font-size: 1rem;"><?php echo htmlspecialchars($upcoming_reservation['venue_name']); ?></h5>
+                                <p class="text-muted m-0" style="font-size: 0.85rem;"><?php echo htmlspecialchars($upcoming_reservation['venue_address']); ?></p>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-success bg-opacity-10 text-success mb-3 d-inline-block" style="padding: 0.5rem 1rem;">CONFIRMED</span><br>
-                                <button class="btn-gold-medusa" style="padding: 0.5rem 1.5rem; font-size: 0.8rem;">VIEW DETAILS</button>
+                                <span class="badge bg-success bg-opacity-10 text-success mb-3 d-inline-block text-uppercase" style="padding: 0.5rem 1rem;"><?php echo htmlspecialchars($upcoming_reservation['status']); ?></span><br>
+                                <button class="btn-gold-medusa" onclick="document.getElementById('pill-reservations-tab').click();" style="padding: 0.5rem 1.5rem; font-size: 0.8rem;">VIEW DETAILS</button>
                             </div>
                         </div>
+                        <?php else: ?>
+                        <div class="bg-white p-4 rounded-4 border text-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <div class="mb-3">
+                                <i class="fa-regular fa-calendar-xmark text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                            </div>
+                            <h5 class="text-dark mb-2" style="font-size: 1rem;">No Upcoming Reservations</h5>
+                            <p class="text-muted mb-3" style="font-size: 0.85rem;">You don't have any table reservations booked at the moment.</p>
+                            <a href="book-table-test.html" class="btn-gold-medusa text-decoration-none d-inline-block" style="padding: 0.5rem 1.5rem; font-size: 0.8rem;">Book a Table</a>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Quick Actions & Account Security -->
@@ -1222,7 +1285,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="col-lg-6">
                             <h4 class="mb-3" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.2rem;">Quick Actions</h4>
                             <div class="bg-white p-4 rounded-4 border d-flex justify-content-around text-center" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <a href="#" class="text-dark text-decoration-none action-icon">
+                                <a href="book-table-test.html" class="text-dark text-decoration-none action-icon">
                                     <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
                                         <i class="fa-regular fa-calendar"></i>
                                     </div>
@@ -1240,7 +1303,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     <span style="font-size: 0.75rem;">Order Now</span>
                                 </a>
-                                <a href="#" class="text-dark text-decoration-none action-icon">
+                                <a href="#" onclick="showToast('Premium Gift Cards feature is launching soon!', 'info'); event.preventDefault();" class="text-dark text-decoration-none action-icon">
                                     <div class="rounded-circle border d-flex align-items-center justify-content-center mx-auto mb-2 hover-gold-border" style="width: 50px; height: 50px;">
                                         <i class="fa-solid fa-gift"></i>
                                     </div>
@@ -1272,20 +1335,32 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- ══ TAB 2: ORDER HISTORY ══ -->
                 <div class="tab-pane fade" id="pill-orders" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Order History</h2>
+                    
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.8rem;">
+                                <i class="fa-solid fa-clock-rotate-left me-2" style="color: #d4af37;"></i> Order History
+                            </h2>
+                            <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">View and manage your past orders.</p>
+                        </div>
+                        <button class="btn btn-outline-dark" style="border-color: rgba(0,0,0,0.15); font-weight: 500; font-size: 0.9rem;">
+                            <i class="fa-solid fa-download me-2 text-gold"></i> Export History
+                        </button>
+                    </div>
                     
                     <!-- Search & Filter Controls -->
-                    <div class="row g-3 mb-4 bg-black p-3 rounded border border-secondary">
+                    <div class="row g-3 mb-4 bg-white p-4 rounded-4 border align-items-end" style="border-color: rgba(0,0,0,0.05) !important;">
                         <div class="col-md-5">
-                            <label class="form-label-medusa">Search Order</label>
+                            <label class="form-label-medusa text-dark" style="font-weight: 500; font-size: 0.8rem;">Search Order</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-dark border-secondary text-white-50"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input type="text" id="order-search" class="form-control form-control-medusa" placeholder="Enter Order Number..." oninput="filterOrders()">
+                                <span class="input-group-text bg-white border-end-0" style="border-color: rgba(0,0,0,0.1);"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" id="order-search" class="form-control form-control-medusa border-start-0 ps-0" placeholder="Enter Order Number..." oninput="filterOrders()" style="background-color: transparent; border-color: rgba(0,0,0,0.1); box-shadow: none;">
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label-medusa">Filter by Status</label>
-                            <select id="order-status-filter" class="form-select form-control-medusa" onchange="filterOrders()">
+                            <label class="form-label-medusa text-dark" style="font-weight: 500; font-size: 0.8rem;">Filter By Status</label>
+                            <select id="order-status-filter" class="form-select form-control-medusa" onchange="filterOrders()" style="background-color: transparent; border-color: rgba(0,0,0,0.1);">
                                 <option value="all">All Orders</option>
                                 <option value="pending">Pending</option>
                                 <option value="preparing">Preparing</option>
@@ -1294,106 +1369,209 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button class="btn btn-outline-medusa w-100" onclick="resetOrderFilters()"><i class="fa-solid fa-rotate"></i> Reset</button>
+                        <div class="col-md-3">
+                            <button class="btn w-100 d-flex justify-content-center align-items-center" onclick="resetOrderFilters()" style="background-color: #1a3324; color: #e8ebe9; border-radius: 6px; padding: 0.6rem; font-weight: 500;">
+                                <i class="fa-solid fa-arrows-rotate me-2" style="color: #d4a755;"></i> Reset Filters
+                            </button>
                         </div>
                     </div>
 
                     <!-- Order Cards list -->
                     <div id="orders-list-container">
                         <?php if (empty($orders)): ?>
-                            <div class="text-center py-5 bg-black rounded border border-secondary border-dashed">
-                                <i class="fa-solid fa-utensils text-gold mb-3" style="font-size: 3rem; opacity: 0.4;"></i>
-                                <h4 class="mb-2">No Orders Yet</h4>
-                                <p class="text-white-50 mb-4" style="max-width: 380px; margin: 0 auto;">You haven't placed any fine dining orders yet.</p>
+                            <div class="text-center py-5 bg-white rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <i class="fa-solid fa-utensils text-muted mb-3" style="font-size: 3rem; opacity: 0.4;"></i>
+                                <h4 class="mb-2 text-dark" style="font-family: 'Playfair Display', serif;">No Orders Yet</h4>
+                                <p class="text-muted mb-4" style="max-width: 380px; margin: 0 auto;">You haven't placed any fine dining orders yet.</p>
                                 <a href="menutest.php" class="btn-gold-medusa">Browse Our Menu</a>
                             </div>
                         <?php else: ?>
                             <?php foreach ($orders as $order): ?>
                                 <?php
-                                    $status_class = 'status-pending';
-                                    $status_label = 'Pending';
-                                    $status_icon = 'fa-clock';
+                                    $status_class = 'bg-warning bg-opacity-25 text-warning';
+                                    $status_label = 'PENDING';
+                                    $status_icon = 'fa-solid fa-clock';
+                                    $status_style = '';
+                                    $icon_style = '';
                                     
                                     switch (strtolower($order['order_status'])) {
                                         case 'pending':
-                                            $status_class = 'status-pending';
-                                            $status_label = 'Pending';
-                                            $status_icon = 'fa-clock';
+                                            $status_class = '';
+                                            $status_style = 'background-color: #fceecb; color: #b48530; border: none; padding: 0.6rem 1.2rem;';
+                                            $status_label = 'PENDING';
+                                            $status_icon = 'fa-solid fa-clock';
+                                            $icon_style = 'color: #f9c823; font-size: 0.9rem;';
                                             break;
                                         case 'preparing':
-                                            $status_class = 'status-preparing';
-                                            $status_label = 'Preparing';
-                                            $status_icon = 'fa-fire-burner';
+                                            $status_class = 'bg-primary bg-opacity-10 text-primary';
+                                            $status_label = 'PREPARING';
+                                            $status_icon = 'fa-solid fa-clock';
                                             break;
                                         case 'ready':
-                                            $status_class = 'status-ready';
-                                            $status_label = 'Ready to Serve';
-                                            $status_icon = 'fa-bell';
+                                            $status_class = 'bg-info bg-opacity-10 text-info';
+                                            $status_label = 'READY';
+                                            $status_icon = 'fa-solid fa-bell';
                                             break;
                                         case 'completed':
-                                            $status_class = 'status-completed';
-                                            $status_label = 'Completed';
-                                            $status_icon = 'fa-circle-check';
+                                            $status_class = 'bg-success bg-opacity-10 text-success';
+                                            $status_label = 'COMPLETED';
+                                            $status_icon = 'fa-solid fa-check-circle';
                                             break;
                                         case 'cancelled':
-                                            $status_class = 'status-cancelled';
-                                            $status_label = 'Cancelled';
-                                            $status_icon = 'fa-circle-xmark';
+                                            $status_class = 'bg-danger bg-opacity-10 text-danger';
+                                            $status_label = 'CANCELLED';
+                                            $status_icon = 'fa-solid fa-times-circle';
                                             break;
                                     }
                                 ?>
-                                <div class="order-card" data-number="<?php echo htmlspecialchars($order['order_number']); ?>" data-status="<?php echo strtolower($order['order_status']); ?>">
-                                    <div class="order-header">
-                                        <div>
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['order_number']); ?></span>
-                                            <span class="text-white-50 ms-2" style="font-size: 0.8rem;">
-                                                <i class="fa-regular fa-calendar me-1"></i><?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>
-                                            </span>
-                                        </div>
-                                        <span class="status-badge <?php echo $status_class; ?>">
-                                            <i class="fa-solid <?php echo $status_icon; ?>"></i>
-                                            <?php echo $status_label; ?>
-                                        </span>
-                                    </div>
-                                    <div class="row g-3 align-items-center">
-                                        <div class="col-lg-7">
-                                            <div class="text-white-50" style="font-size: 0.9rem;">
-                                                <?php foreach ($order['items'] as $item): ?>
-                                                    <div class="d-flex justify-content-between mb-1">
-                                                        <span><span class="text-gold font-weight-bold"><?php echo $item['quantity']; ?>x</span> <?php echo htmlspecialchars($item['item_name']); ?></span>
-                                                        <span>₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
-                                                    </div>
-                                                <?php endforeach; ?>
+                                <div class="rounded-4 border mb-4 order-card" data-number="<?php echo htmlspecialchars($order['order_number']); ?>" data-status="<?php echo strtolower($order['order_status']); ?>" style="background-color: #FAF6F4; border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden; position: relative;">
+                                    
+                                    <!-- Card Header -->
+                                    <div class="d-flex justify-content-between align-items-center p-4 border-bottom" style="border-color: rgba(0,0,0,0.05) !important;">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 d-flex align-items-center justify-content-center" style="background-color: #143628; width: 48px; height: 48px;">
+                                                <i class="fa-solid fa-bag-shopping" style="color: #d4af37; font-size: 1.2rem;"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="mb-1" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.25rem; font-weight: 600;">
+                                                    Order #<?php echo htmlspecialchars($order['order_number']); ?>
+                                                </h4>
+                                                <div class="text-muted" style="font-size: 0.85rem;">
+                                                    <i class="fa-regular fa-calendar me-1"></i> <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-lg-5 text-end">
-                                            <div class="text-white-50" style="font-size: 0.8rem; text-transform: uppercase;">Grand Total</div>
-                                            <div class="text-gold font-weight-bold mb-3" style="font-size: 1.4rem;">₹<?php echo number_format($order['total_amount'], 2); ?></div>
+                                        <div>
+                                            <span class="badge rounded-pill <?php echo $status_class; ?>" style="font-weight: 600; padding: 0.5rem 1rem; font-size: 0.75rem; letter-spacing: 0.5px; border: 1px solid rgba(0,0,0,0.05); <?php echo $status_style; ?>">
+                                                <i class="<?php echo $status_icon; ?> me-1" style="<?php echo $icon_style; ?>"></i> <?php echo $status_label; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Card Body -->
+                                    <div class="row g-0">
+                                        <!-- Left Side: Items -->
+                                        <div class="col-md-7 p-4 border-end" style="border-color: rgba(0,0,0,0.05) !important;">
+                                            <?php foreach ($order['items'] as $item): ?>
+                                                <?php $img_src = !empty($item['image_url']) ? htmlspecialchars($item['image_url']) : 'assets/images/hero_steak.png'; ?>
+                                                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom" style="border-color: rgba(0,0,0,0.03) !important;">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="rounded-3 overflow-hidden d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background-color: #143628;">
+                                                            <img src="<?php echo $img_src; ?>" class="w-100 h-100" style="object-fit: cover;" alt="<?php echo htmlspecialchars($item['item_name']); ?>">
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-dark" style="font-weight: 500; font-size: 0.95rem;"><?php echo htmlspecialchars($item['item_name']); ?></div>
+                                                            <div class="text-muted" style="font-size: 0.85rem;"><?php echo $item['quantity']; ?> x</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-muted" style="font-size: 0.95rem;">
+                                                        ₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        
+                                        <!-- Right Side: Totals & Actions -->
+                                        <div class="col-md-5 p-4 position-relative">
+                                            <!-- Faint Watermark -->
+                                            <div class="position-absolute" style="top: 50%; right: -80px; transform: translateY(-50%) scale(2.2); opacity: 0.05; pointer-events: none;">
+                                                <img src="assets/images/medusaa2(onlylogo).png" width="250" alt="">
+                                            </div>
                                             
-                                            <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                                <?php
-                                                $trk_token  = $order['tracking_token']  ?? null;
-                                                $trk_status = $order['tracking_status'] ?? 'placed';
-                                                $trk_active = !in_array(strtolower($order['order_status']), ['completed','cancelled']) && $trk_token;
-                                                ?>
-                                                <?php if ($trk_active): ?>
-                                                <a href="track.php?token=<?php echo htmlspecialchars($trk_token); ?>" class="btn btn-sm btn-track-live-acc" target="_blank">
-                                                    <span class="live-dot-acc"></span>
-                                                    <i class="fa-solid fa-location-dot"></i> Track Order
-                                                </a>
-                                                <?php endif; ?>
-                                                <button type="button" class="btn btn-sm btn-gold-medusa" onclick="reorderItems(<?php echo $order['id']; ?>)">
-                                                    <i class="fa-solid fa-arrows-rotate"></i> Reorder
-                                                </button>
-                                                <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn btn-sm btn-outline-medusa">
-                                                    <i class="fa-solid fa-file-pdf"></i> Invoice
-                                                </a>
+                                            <div class="text-end position-relative h-100 d-flex flex-column justify-content-center" style="z-index: 1;">
+                                                <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Grand Total</div>
+                                                <div class="mb-4" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.8rem; font-weight: 600;">
+                                                    ₹<?php echo number_format($order['total_amount'], 2); ?>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-end gap-2 flex-wrap mt-auto">
+                                                    <?php
+                                                    $trk_token  = $order['tracking_token']  ?? null;
+                                                    $trk_active = !in_array(strtolower($order['order_status']), ['completed','cancelled']) && $trk_token;
+                                                    ?>
+                                                    <?php if ($trk_active): ?>
+                                                    <a href="track.php?token=<?php echo htmlspecialchars($trk_token); ?>" class="btn btn-sm text-gold" style="border: 1px solid var(--gold); background: transparent; font-weight: 500; border-radius: 6px; padding: 0.4rem 0.8rem;" target="_blank">
+                                                        <i class="fa-solid fa-location-dot me-1"></i> Track Order
+                                                    </a>
+                                                    <?php endif; ?>
+                                                    <button type="button" class="btn btn-sm" style="background-color: #5a2a35; color: white; font-weight: 500; border-radius: 6px; padding: 0.4rem 0.8rem;" onclick="reorderItems(<?php echo $order['id']; ?>)">
+                                                        <i class="fa-solid fa-arrows-rotate me-1 text-white-50"></i> Reorder
+                                                    </button>
+                                                    <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn btn-sm text-gold" style="border: 1px solid var(--gold); background: transparent; font-weight: 500; border-radius: 6px; padding: 0.4rem 0.8rem;">
+                                                        <i class="fa-solid fa-file-invoice me-1"></i> Invoice
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: TABLE RESERVATIONS ══ -->
+                <div class="tab-pane fade" id="pill-reservations" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                        <div>
+                            <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
+                                <i class="fa-regular fa-calendar-check me-2" style="color: #d4af37;"></i> Table Reservations
+                            </h2>
+                            <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Manage your upcoming and past dining experiences.</p>
+                        </div>
+                        <a href="book-table-test.html" class="btn-gold-medusa text-decoration-none">Book New Table</a>
+                    </div>
+                    
+                    <div class="reservations-list">
+                        <?php if (empty($user_reservations)): ?>
+                            <div class="text-center py-5 bg-white rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <i class="fa-regular fa-calendar-xmark text-muted mb-3" style="font-size: 3rem; opacity: 0.5;"></i>
+                                <h4 style="font-family: 'Playfair Display', serif;">No Reservations Found</h4>
+                                <p class="text-muted mb-4">You haven't made any table reservations yet.</p>
+                                <a href="book-table-test.html" class="btn-gold-medusa text-decoration-none">Explore & Book</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="row g-4">
+                                <?php foreach ($user_reservations as $res): ?>
+                                    <div class="col-12">
+                                        <div class="bg-white p-4 rounded-4 border d-flex align-items-center gap-4 flex-wrap" style="border-color: rgba(0,0,0,0.05) !important;">
+                                            <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background-color: var(--bg-sidebar); color: var(--gold);">
+                                                <i class="fa-solid fa-wine-glass" style="font-size: 2.5rem;"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex gap-3 text-muted mb-2" style="font-size: 0.85rem;">
+                                                    <span><i class="fa-regular fa-calendar me-1 text-gold"></i> <?php echo date('D, d M Y', strtotime($res['booking_date'])); ?></span>
+                                                    <span><i class="fa-regular fa-clock me-1 text-gold"></i> <?php echo date('g:i A', strtotime($res['booking_time'])); ?></span>
+                                                    <span><i class="fa-regular fa-user me-1 text-gold"></i> <?php echo htmlspecialchars($res['guests']); ?> Guests</span>
+                                                </div>
+                                                <h4 class="text-dark mb-1" style="font-family: 'Playfair Display', serif; font-size: 1.2rem;"><?php echo htmlspecialchars($res['venue_name']); ?></h4>
+                                                <p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fa-solid fa-location-dot me-1 text-muted"></i> <?php echo htmlspecialchars($res['venue_address']); ?></p>
+                                                <?php if (!empty($res['table_number'])): ?>
+                                                    <span class="badge bg-light text-dark border me-2"><i class="fa-solid fa-chair me-1 text-muted"></i> Table/Zone: <?php echo htmlspecialchars($res['table_number']); ?></span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($res['special_requests'])): ?>
+                                                    <span class="badge bg-light text-dark border"><i class="fa-solid fa-comment-dots me-1 text-muted"></i> Special Request Added</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="text-end" style="min-width: 150px;">
+                                                <?php 
+                                                    $st = strtolower($res['status']);
+                                                    $st_class = 'bg-secondary text-white';
+                                                    if ($st === 'confirmed') $st_class = 'bg-success bg-opacity-10 text-success';
+                                                    elseif ($st === 'cancelled') $st_class = 'bg-danger bg-opacity-10 text-danger';
+                                                    elseif ($st === 'completed') $st_class = 'bg-primary bg-opacity-10 text-primary';
+                                                    elseif ($st === 'pending') $st_class = 'bg-warning bg-opacity-10 text-warning';
+                                                ?>
+                                                <span class="badge <?php echo $st_class; ?> mb-3 d-inline-block text-uppercase" style="padding: 0.5rem 1rem; letter-spacing: 0.5px; border: 1px solid rgba(0,0,0,0.05);"><?php echo htmlspecialchars($res['status']); ?></span><br>
+                                                
+                                                <?php if ($res['booking_date'] >= date('Y-m-d') && $st !== 'cancelled'): ?>
+                                                    <button class="btn-outline-medusa border text-dark w-100 mb-2 rounded-3" style="padding: 0.5rem; font-size: 0.85rem;" onclick="alert('Modification requests can be made by calling the concierge.')">Modify</button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1407,88 +1585,142 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     $progress_percent = 100;
                     
                     if ($user_tier_id == 1) {
-                        $next_tier_name = 'Silver';
+                        $next_tier_name = 'Gold';
                         $next_tier_req = 25000;
                         $remaining_spend = max(0, 25000 - $tier_spend);
                         $progress_percent = min(100, round(($tier_spend / 25000) * 100));
                     } elseif ($user_tier_id == 2) {
-                        $next_tier_name = 'Gold';
+                        $next_tier_name = '';
                         $next_tier_req = 75000;
                         $remaining_spend = max(0, 75000 - $tier_spend);
-                        $progress_percent = min(100, round((($tier_spend - 25000) / (75000 - 25000)) * 100));
+                        $progress_percent = 100;
                     }
                     ?>
-                    <h2 class="section-title"><i class="fa-solid fa-crown text-gold"></i> Loyalty Status & Rewards</h2>
                     
-                    <div class="loyalty-progress-container">
-                        <div class="loyalty-progress-header">
-                            <div>
-                                <h4 class="mb-1">Active Tier: <span class="text-gold"><?php echo htmlspecialchars($user_tier_name); ?></span></h4>
-                                <p class="text-white-50 mb-0" style="font-size: 0.9rem;">
-                                    Tier Benefits: <?php echo floatval($user_tier_discount); ?>% Discount & Earning Points
-                                </p>
-                            </div>
-                            <div class="text-end">
-                                <?php if ($next_tier_name): ?>
-                                    <span class="badge bg-gold text-dark p-2" style="font-size: 0.8rem; background-color: var(--gold) !important;">
-                                        Next Tier: <?php echo $next_tier_name; ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span class="badge bg-success p-2" style="font-size: 0.8rem;">
-                                        Maximum Tier Reached
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <?php if ($next_tier_name): ?>
-                            <div class="loyalty-progress-bar-bg">
-                                <div class="loyalty-progress-bar-fill" style="width: <?php echo $progress_percent; ?>%;"></div>
-                            </div>
-                            <div class="d-flex justify-content-between text-white-50" style="font-size: 0.85rem;">
-                                <span>₹<?php echo number_format($tier_spend, 2); ?> spent</span>
-                                <span>₹<?php echo number_format($remaining_spend, 2); ?> more to unlock <?php echo $next_tier_name; ?></span>
-                            </div>
-                        <?php else: ?>
-                            <div class="loyalty-progress-bar-bg">
-                                <div class="loyalty-progress-bar-fill" style="width: 100%;"></div>
-                            </div>
-                            <div class="text-center text-gold" style="font-size: 0.85rem; font-weight: 500;">
-                                You have achieved the ultimate Gold Tier! Enjoy maximum benefits.
-                            </div>
-                        <?php endif; ?>
+                    <div class="d-flex flex-column mb-5">
+                        <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
+                            <i class="fa-solid fa-crown me-2" style="color: #d4af37;"></i> Loyalty Status & Rewards
+                        </h2>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Track your progress, points, and rewards.</p>
                     </div>
                     
-                    <h3 class="mb-4 text-gold" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-chart-line text-gold me-2"></i> Rewards Statistics</h3>
-                    <div class="loyalty-stats-grid">
-                        <div class="loyalty-stat-card">
-                            <div class="loyalty-stat-label">Current Balance</div>
-                            <div class="loyalty-stat-val"><?php echo number_format($points_balance); ?> pts</div>
-                        </div>
-                        <div class="loyalty-stat-card">
-                            <div class="loyalty-stat-label">Total Points Earned</div>
-                            <div class="loyalty-stat-val"><?php echo number_format($reward_points_row['points_earned']); ?> pts</div>
-                        </div>
-                        <div class="loyalty-stat-card">
-                            <div class="loyalty-stat-label">Total Points Redeemed</div>
-                            <div class="loyalty-stat-val"><?php echo number_format($reward_points_row['points_redeemed']); ?> pts</div>
-                        </div>
-                        <div class="loyalty-stat-card">
-                            <div class="loyalty-stat-label">Lifetime Spend</div>
-                            <div class="loyalty-stat-val">₹<?php echo number_format($tier_spend, 2); ?></div>
+                    <!-- Progress Card -->
+                    <div class="rounded-4 border p-4 p-md-5 mb-5 position-relative" style="background-color: #fcfbf8; border-color: rgba(0,0,0,0.05) !important;">
+                        <div class="row align-items-center">
+                            <div class="col-md-7 border-end" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-4 flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle" style="width: 110px; height: 110px; background-color: #fff; border: 2px dashed #d4af37; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 85px; height: 85px; background: linear-gradient(135deg, #e6e6e6, #f5f5f5);">
+                                            <i class="fa-solid fa-crown" style="font-size: 2.5rem; color: #999;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 pe-4">
+                                        <p class="text-muted mb-1" style="font-size: 0.85rem; font-weight: 500;">Active Tier</p>
+                                        <h3 class="mb-3" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 2rem; font-weight: 600;"><?php echo htmlspecialchars($user_tier_name); ?></h3>
+                                        
+                                        <div style="height: 8px; max-width: 300px; background-color: #e8e3d8; border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem;">
+                                            <div style="height: 100%; width: <?php echo $progress_percent; ?>%; background-color: #b48530; border-radius: 10px;"></div>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.8rem;">
+                                            <i class="fa-solid fa-crown me-1 text-gold" style="color: #b48530;"></i> <?php echo number_format($remaining_spend); ?> pts to reach <strong style="color: #b48530;"><?php echo $next_tier_name ?: 'Max Tier'; ?></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 ps-md-5 pt-4 pt-md-0 d-flex flex-row justify-content-between align-items-center">
+                                <div class="d-flex flex-column justify-content-center">
+                                    <p class="text-muted mb-1" style="font-size: 0.85rem; font-weight: 500;">Next Tier</p>
+                                    <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #b48530; font-size: 1.8rem; font-weight: 600;"><?php echo $next_tier_name ?: 'Maximum Tier'; ?></h3>
+                                    <p class="text-muted mb-0" style="font-size: 0.85rem;"><?php echo $next_tier_req ? number_format($next_tier_req) . ' pts required' : 'You are at the top!'; ?></p>
+                                </div>
+                                
+                                <div>
+                                    <button class="btn btn-sm text-white px-4 py-2 text-nowrap" style="background-color: #143628; border-radius: 6px; font-weight: 500;">
+                                        View Tier Benefits <i class="fa-solid fa-chevron-right ms-2" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Points transaction history -->
-                    <h3 class="mb-4 text-gold mt-5" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-clock-rotate-left text-gold me-2"></i> Point Transactions</h3>
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover border-glass" style="font-size: 0.9rem;">
-                            <thead>
-                                <tr class="text-gold">
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Change</th>
-                                    <th>Reference</th>
+                    
+                    <!-- Stats Section -->
+                    <h3 class="mb-4" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.4rem; font-weight: 600;">
+                        <i class="fa-solid fa-chart-line me-2"></i> Rewards Statistics
+                    </h3>
+                    
+                    <div class="row g-4 mb-5">
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="bg-white rounded-4 border p-4 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 50px; height: 50px; background-color: #fcf4db; border: 1px solid #f1e2b3;">
+                                    <i class="fa-regular fa-star" style="color: #b48530; font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted mb-1" style="font-size: 0.8rem;">Current Balance</div>
+                                    <div style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.4rem; font-weight: 600;"><?php echo number_format($points_balance); ?> <span style="font-size: 0.9rem; font-family: 'Plus Jakarta Sans', sans-serif;">pts</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="bg-white rounded-4 border p-4 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 50px; height: 50px; background-color: #f1efed; border: 1px solid #e2e0dd;">
+                                    <i class="fa-solid fa-gift" style="color: #6a8c79; font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted mb-1" style="font-size: 0.8rem;">Total Points Earned</div>
+                                    <div style="font-family: 'Playfair Display', serif; color: #143628; font-size: 1.4rem; font-weight: 600;"><?php echo number_format($reward_points_row['points_earned']); ?> <span style="font-size: 0.9rem; font-family: 'Plus Jakarta Sans', sans-serif;">pts</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="bg-white rounded-4 border p-4 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 50px; height: 50px; background-color: #fcf4db; border: 1px solid #f1e2b3;">
+                                    <i class="fa-solid fa-clock-rotate-left" style="color: #5a2a35; font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted mb-1" style="font-size: 0.8rem;">Total Points Redeemed</div>
+                                    <div style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.4rem; font-weight: 600;"><?php echo number_format($reward_points_row['points_redeemed']); ?> <span style="font-size: 0.9rem; font-family: 'Plus Jakarta Sans', sans-serif;">pts</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="bg-white rounded-4 border p-4 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 50px; height: 50px; background-color: #fcfbf8; border: 1px solid rgba(0,0,0,0.05);">
+                                    <i class="fa-solid fa-wallet" style="color: #b48530; font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted mb-1" style="font-size: 0.8rem;">Lifetime Spend</div>
+                                    <div style="font-family: 'Playfair Display', serif; color: #143628; font-size: 1.4rem; font-weight: 600;">₹<?php echo number_format($tier_spend, 2); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transactions Section -->
+                    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+                        <h3 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.4rem; font-weight: 600;">
+                            <i class="fa-solid fa-clock-rotate-left me-2"></i> Point Transactions
+                        </h3>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" id="txDropdownBtn" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: transparent; border-color: rgba(0,0,0,0.1); color: #555; padding: 0.4rem 1rem;">
+                                All Types
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border: 1px solid rgba(0,0,0,0.05); border-radius: 8px;">
+                                <li><a class="dropdown-item filter-tx" href="#" data-filter="all">All Types</a></li>
+                                <li><a class="dropdown-item filter-tx" href="#" data-filter="earn">Earn</a></li>
+                                <li><a class="dropdown-item filter-tx" href="#" data-filter="redeem">Redeem</a></li>
+                                <li><a class="dropdown-item filter-tx" href="#" data-filter="deduct">Deduct</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-4 border p-0 overflow-hidden" style="border-color: rgba(0,0,0,0.05) !important;">
+                        <table class="table mb-0" style="font-size: 0.85rem;">
+                            <thead style="background-color: #fcfbf8; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                <tr>
+                                    <th class="text-muted text-uppercase" style="font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; padding: 1rem 1.5rem; border: none;">Date</th>
+                                    <th class="text-muted text-uppercase" style="font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; padding: 1rem 1.5rem; border: none;">Type</th>
+                                    <th class="text-muted text-uppercase" style="font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; padding: 1rem 1.5rem; border: none;">Change</th>
+                                    <th class="text-muted text-uppercase" style="font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; padding: 1rem 1.5rem; border: none;">Reference</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1506,32 +1738,39 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 if (empty($txs)):
                                 ?>
                                     <tr>
-                                        <td colspan="4" class="text-center text-white-50">No point transactions found yet.</td>
+                                        <td colspan="4" class="text-center text-muted p-4">No point transactions found yet.</td>
                                     </tr>
                                 <?php
                                 else:
                                     foreach ($txs as $t):
                                         $change_str = '';
                                         $change_class = '';
+                                        $type_badge = '';
+                                        $type_filter = '';
                                         if ($t['points_earned'] > 0) {
                                             $change_str = '+' . $t['points_earned'];
                                             $change_class = 'text-success';
+                                            $type_badge = '<span class="badge rounded-pill" style="background-color: #e6f2eb; color: #2e7d51; font-weight: 500; padding: 0.35rem 0.8rem;">Earn</span>';
+                                            $type_filter = 'earn';
                                         } elseif ($t['points_redeemed'] > 0) {
                                             $change_str = '-' . $t['points_redeemed'];
                                             $change_class = 'text-danger';
+                                            $type_badge = '<span class="badge rounded-pill" style="background-color: #fde8eb; color: #c92a3e; font-weight: 500; padding: 0.35rem 0.8rem;">Redeem</span>';
+                                            $type_filter = 'redeem';
                                         } elseif ($t['points_deducted'] > 0) {
                                             $change_str = '-' . $t['points_deducted'];
                                             $change_class = 'text-warning';
+                                            $type_badge = '<span class="badge rounded-pill bg-warning text-dark" style="font-weight: 500; padding: 0.35rem 0.8rem;">Deduct</span>';
+                                            $type_filter = 'deduct';
                                         }
                                         
-                                        $type_label = ucfirst(str_replace('_', ' ', $t['transaction_type']));
                                         $ref = $t['order_number'] ? 'Order #' . $t['order_number'] : 'System Adjust';
                                 ?>
-                                        <tr>
-                                            <td><?php echo date('d M Y, h:i A', strtotime($t['transaction_date'])); ?></td>
-                                            <td><?php echo htmlspecialchars($type_label); ?></td>
-                                            <td class="<?php echo $change_class; ?> font-weight-bold"><?php echo $change_str; ?></td>
-                                            <td><?php echo htmlspecialchars($ref); ?></td>
+                                        <tr class="transaction-row" data-type="<?php echo $type_filter; ?>" style="border-bottom: 1px solid rgba(0,0,0,0.03);">
+                                            <td class="text-dark" style="padding: 1rem 1.5rem; border: none; font-weight: 500;"><?php echo date('d M Y, h:i A', strtotime($t['transaction_date'])); ?></td>
+                                            <td style="padding: 1rem 1.5rem; border: none;"><?php echo $type_badge; ?></td>
+                                            <td class="<?php echo $change_class; ?>" style="padding: 1rem 1.5rem; border: none; font-weight: 600;"><?php echo $change_str; ?></td>
+                                            <td class="text-dark" style="padding: 1rem 1.5rem; border: none;"><?php echo htmlspecialchars($ref); ?></td>
                                         </tr>
                                 <?php
                                     endforeach;
@@ -1541,41 +1780,135 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         </table>
                     </div>
 
-                    <!-- Loyalty Rules Section -->
-                    <h3 class="mb-4 mt-5 text-gold" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-scale-balanced text-gold me-2"></i> Loyalty Rules &amp; Resets</h3>
-                    <div class="card bg-transparent border-glass mb-4">
-                        <div class="card-body">
-                            <h5 class="text-white mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> Points Reset (Inactivity Penalty)</h5>
-                            <p class="text-white-50 mb-4" style="font-size: 0.9rem; line-height: 1.6;">
-                                To encourage regular visits, a <strong>20% deduction</strong> is applied to your reward points balance if you do not place any orders for <strong>3 consecutive months (90 days)</strong>. Don't worry, we will send you a warning email 7 days before any points are deducted!
-                            </p>
-                            
-                            <h5 class="text-white mb-3"><i class="fa-solid fa-calendar-check me-2"></i> Annual Tier Reset</h5>
-                            <p class="text-white-50 mb-0" style="font-size: 0.9rem; line-height: 1.6;">
-                                On <strong>January 1st</strong> of every year, all customers who are in the Silver or Gold tiers are <strong>moved down one tier</strong> (e.g. Gold to Silver, Silver to Bronze). Make sure to enjoy your premium benefits before the end of the year!
-                            </p>
+                    <!-- How to Redeem Points Section -->
+                    <h3 class="mb-4 mt-5" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.4rem; font-weight: 600;">
+                        <i class="fa-solid fa-gift me-2 text-gold" style="color: #d4af37;"></i> How to Redeem & Use Points
+                    </h3>
+                    
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-4">
+                            <div class="bg-white rounded-4 border p-4 h-100" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 45px; height: 45px; background-color: #e6f2eb; color: #2e7d51;">
+                                    <i class="fa-solid fa-receipt fa-lg"></i>
+                                </div>
+                                <h5 class="mb-2" style="font-size: 1.1rem; color: #222; font-weight: 600;">1. Earn on Every Order</h5>
+                                <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.6;">You automatically earn points for every rupee spent at Medusa. Your Tier determines your points multiplier!</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white rounded-4 border p-4 h-100" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 45px; height: 45px; background-color: #fde8eb; color: #c92a3e;">
+                                    <i class="fa-solid fa-money-bill-wave fa-lg"></i>
+                                </div>
+                                <h5 class="mb-2" style="font-size: 1.1rem; color: #222; font-weight: 600;">2. Apply at Checkout</h5>
+                                <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.6;">During your next order, look for the "Use Reward Points" toggle on the checkout page to instantly apply your discount.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white rounded-4 border p-4 h-100" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 45px; height: 45px; background-color: #fcf4db; color: #b48530;">
+                                    <i class="fa-solid fa-ticket fa-lg"></i>
+                                </div>
+                                <h5 class="mb-2" style="font-size: 1.1rem; color: #222; font-weight: 600;">3. Claim Special Coupons</h5>
+                                <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.6;">You can also exchange your points for high-value exclusive coupons in the <strong>Coupons & Rewards</strong> tab.</p>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="rounded-4 border p-4 p-md-5 mb-5 position-relative" style="background-color: #F9F6F0; border-color: rgba(0,0,0,0.05) !important; overflow: hidden;">
+                        <h4 class="mb-4" style="color: #5a2a35; font-family: 'Playfair Display', serif; font-weight: 600;">
+                            <i class="fa-solid fa-circle-exclamation me-2"></i> Important Rules
+                        </h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h6 style="color: #222; font-weight: 600;">Points Expiry</h6>
+                                <p class="text-muted mb-0" style="font-size: 0.85rem;">To encourage regular visits, a 20% deduction is applied to your balance if no orders are placed for 90 consecutive days. We'll email you 7 days before!</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 style="color: #222; font-weight: 600;">Annual Tier Reset</h6>
+                                <p class="text-muted mb-0" style="font-size: 0.85rem;">On January 1st, all customers in Silver or Gold tiers are moved down one tier. Make sure to enjoy your premium benefits before year-end!</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const filterLinks = document.querySelectorAll('.filter-tx');
+                            const txRows = document.querySelectorAll('.transaction-row');
+                            const txDropdownBtn = document.getElementById('txDropdownBtn');
+
+                            if (filterLinks.length > 0 && txDropdownBtn) {
+                                filterLinks.forEach(link => {
+                                    link.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        const filter = this.getAttribute('data-filter');
+                                        txDropdownBtn.textContent = this.textContent;
+                                        
+                                        txRows.forEach(row => {
+                                            if (filter === 'all' || row.getAttribute('data-type') === filter) {
+                                                row.style.display = '';
+                                            } else {
+                                                row.style.display = 'none';
+                                            }
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    </script>
                 </div>
 
                 <!-- ══ TAB: NOTIFICATIONS LOG ══ -->
                 <div class="tab-pane fade" id="pill-notifications" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-bell text-gold"></i> Notifications Log</h2>
+                    <div class="d-flex flex-column mb-5">
+                        <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
+                            <i class="fa-regular fa-bell me-2" style="color: #d4af37;"></i> Notifications Log
+                        </h2>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Stay updated with your recent activity and important alerts.</p>
+                    </div>
                     
                     <div class="notif-list">
                         <?php if (empty($user_notifications)): ?>
-                            <div class="text-center text-white-50 py-5">
-                                <i class="fa-regular fa-bell-slash fa-3x mb-3 text-gold" style="opacity: 0.5;"></i>
-                                <p>No notifications found.</p>
+                            <div class="text-center py-5 bg-white rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <i class="fa-regular fa-bell-slash mb-3" style="font-size: 2.5rem; color: #d4af37; opacity: 0.5;"></i>
+                                <p class="text-muted m-0">No notifications found.</p>
                             </div>
                         <?php else: ?>
-                            <?php foreach ($user_notifications as $notif): ?>
-                                <div class="notif-item <?php echo $notif['is_read'] ? '' : 'unread'; ?>">
-                                    <div class="notif-item-header">
-                                        <div class="notif-item-title"><?php echo htmlspecialchars($notif['title']); ?></div>
-                                        <div class="notif-item-date"><?php echo date('d M Y, h:i A', strtotime($notif['created_at'])); ?></div>
+                            <?php foreach ($user_notifications as $notif): 
+                                $title_lower = strtolower($notif['title']);
+                                $is_loyalty = strpos($title_lower, 'loyalty') !== false || strpos($title_lower, 'tier') !== false || strpos($title_lower, 'point') !== false;
+                                
+                                if ($is_loyalty) {
+                                    $icon_bg = '#fcf4db';
+                                    $icon_color = '#b48530';
+                                    $icon_class = 'fa-trophy';
+                                    $badge_bg = '#fcf4db';
+                                    $badge_color = '#b48530';
+                                    $badge_text = 'LOYALTY';
+                                } else {
+                                    $icon_bg = '#e6f2eb';
+                                    $icon_color = '#2e7d51';
+                                    $icon_class = 'fa-bag-shopping';
+                                    $badge_bg = '#e6f2eb';
+                                    $badge_color = '#2e7d51';
+                                    $badge_text = 'ORDER';
+                                }
+                            ?>
+                                <div class="bg-white rounded-4 p-4 mb-3 d-flex align-items-center justify-content-between position-relative" style="border: 1px solid rgba(0,0,0,0.05); overflow: hidden; <?php echo $notif['is_read'] ? '' : 'box-shadow: 0 4px 15px rgba(0,0,0,0.03);'; ?>">
+                                    <div class="position-absolute top-0 bottom-0 start-0" style="width: 4px; background-color: #d4af37;"></div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 me-4" style="width: 55px; height: 55px; background-color: <?php echo $icon_bg; ?>;">
+                                            <i class="fa-solid <?php echo $icon_class; ?>" style="color: <?php echo $icon_color; ?>; font-size: 1.2rem;"></i>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="badge rounded-pill mb-2" style="background-color: <?php echo $badge_bg; ?>; color: <?php echo $badge_color; ?>; width: fit-content; font-size: 0.65rem; padding: 0.3rem 0.6rem; letter-spacing: 0.5px;"><?php echo $badge_text; ?></span>
+                                            <h5 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.15rem; font-weight: 600;"><?php echo htmlspecialchars($notif['title']); ?></h5>
+                                            <p class="text-muted m-0" style="font-size: 0.85rem; max-width: 600px;"><?php echo htmlspecialchars($notif['message']); ?></p>
+                                        </div>
                                     </div>
-                                    <div class="notif-item-msg"><?php echo nl2br(htmlspecialchars($notif['message'])); ?></div>
+                                    <div class="text-muted flex-shrink-0 ms-4" style="font-size: 0.8rem;">
+                                        <i class="fa-regular fa-clock me-1"></i> <?php echo date('d M Y, h:i A', strtotime($notif['created_at'])); ?>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -1584,141 +1917,593 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- ══ TAB 3: COUPONS & REWARDS ══ -->
                 <div class="tab-pane fade" id="pill-coupons" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-gift"></i> Coupons & Loyalty Rewards</h2>
+                    <div class="d-flex flex-column mb-4">
+                        <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
+                            <i class="fa-solid fa-gift me-2" style="color: #d4af37;"></i> Coupons & Loyalty Rewards
+                        </h2>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Use your rewards and save more on your orders.</p>
+                    </div>
                     
                     <!-- Points Summary -->
                     <div class="row g-4 mb-5">
                         <div class="col-md-6">
-                            <div class="bg-black p-4 rounded border border-secondary d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="text-white-50 mb-1" style="font-size: 0.9rem; text-transform: uppercase;">Loyalty Points</h5>
-                                    <h2 class="text-gold font-weight-bold m-0"><?php echo $loyalty_points; ?> <span style="font-size: 1rem; color: #fff;">Points</span></h2>
-                                    <p class="text-muted m-0 mt-2" style="font-size: 0.75rem;">Earn 1 point for every ₹100 spent.</p>
+                            <div class="bg-white rounded-4 border p-4 h-100 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 flex-shrink-0" style="width: 70px; height: 70px; background-color: #fcf4db;">
+                                    <i class="fa-regular fa-gem" style="color: #b48530; font-size: 2rem;"></i>
                                 </div>
-                                <div style="font-size: 3rem; color: var(--gold); opacity: 0.4;">
-                                    <i class="fa-solid fa-gem"></i>
+                                <div>
+                                    <p class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">Loyalty Points</p>
+                                    <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 2rem; font-weight: 600;"><?php echo number_format($loyalty_points); ?> <span style="font-size: 1.2rem; font-family: 'Plus Jakarta Sans', sans-serif;">pts</span></h3>
+                                    <p class="text-muted m-0" style="font-size: 0.8rem;">Earn 1 point for every ₹100 spent.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="bg-black p-4 rounded border border-secondary d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="text-white-50 mb-1" style="font-size: 0.9rem; text-transform: uppercase;">Total Spent</h5>
-                                    <h2 class="text-white font-weight-bold m-0">₹<?php echo number_format($total_spent, 2); ?></h2>
-                                    <p class="text-muted m-0 mt-2" style="font-size: 0.75rem;">Calculated from <?php echo $completed_count; ?> completed orders.</p>
+                            <div class="bg-white rounded-4 border p-4 h-100 d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 flex-shrink-0" style="width: 70px; height: 70px; background-color: #fcfbf8; border: 1px solid rgba(0,0,0,0.03);">
+                                    <i class="fa-solid fa-wallet" style="color: #b48530; font-size: 2rem;"></i>
                                 </div>
-                                <div style="font-size: 3rem; color: var(--gray); opacity: 0.4;">
-                                    <i class="fa-solid fa-wallet"></i>
+                                <div>
+                                    <p class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">Total Spent</p>
+                                    <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 2rem; font-weight: 600;">₹<?php echo number_format($total_spent, 2); ?></h3>
+                                    <p class="text-muted m-0" style="font-size: 0.8rem;">Calculated from <?php echo $completed_count; ?> completed orders.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Coupons List -->
-                    <h4 class="mb-3 text-gold">Available Promo Coupons</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.3rem; font-weight: 600;">
+                            <i class="fa-solid fa-tag me-2" style="color: #b48530;"></i> Promo Coupons
+                        </h4>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm coupon-filter-btn" data-filter="active" style="background-color: #143628; color: #fff; font-weight: 500; border: 1px solid #143628; border-radius: 6px 0 0 6px; padding: 0.35rem 1rem;">Active</button>
+                            <button type="button" class="btn btn-sm coupon-filter-btn" data-filter="expired" style="background-color: transparent; color: #555; font-weight: 500; border: 1px solid rgba(0,0,0,0.1); border-radius: 0 6px 6px 0; padding: 0.35rem 1rem;">Expired / Used</button>
+                        </div>
+                    </div>
+                    
                     <?php if (empty($userCoupons)): ?>
-                        <div class="text-center py-4 bg-black rounded border border-secondary">
-                            <i class="fa-solid fa-ticket-simple mb-2 text-gold-dark" style="font-size: 2.2rem; opacity: 0.4;"></i>
-                            <p class="text-white-50 m-0">No active coupons found. Leave a 5-star review to unlock a coupon!</p>
+                        <div class="text-center py-5 bg-white rounded-4 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <i class="fa-solid fa-ticket-simple mb-3" style="font-size: 2.5rem; color: #d4af37; opacity: 0.5;"></i>
+                            <p class="text-muted m-0">No active coupons found. Leave a 5-star review to unlock a coupon!</p>
                         </div>
                     <?php else: ?>
-                        <div class="row g-4">
+                        <div class="row g-4 mb-5">
                             <?php foreach ($userCoupons as $coupon): ?>
                                 <?php
                                     $statusBadge = '';
                                     $cardOpacity = '1';
                                     switch (strtolower($coupon->status)) {
                                         case 'active':
-                                            $statusBadge = '<span class="badge bg-success text-white">Active</span>';
+                                            $statusBadge = '<span class="badge rounded-pill" style="background-color: #143628; color: #fff; font-weight: 500; font-size: 0.7rem; padding: 0.35rem 0.8rem;">Active</span>';
                                             break;
                                         case 'redeemed':
-                                            $statusBadge = '<span class="badge bg-secondary text-white">Redeemed</span>';
+                                            $statusBadge = '<span class="badge rounded-pill bg-secondary text-white" style="font-weight: 500; font-size: 0.7rem; padding: 0.35rem 0.8rem;">Redeemed</span>';
                                             $cardOpacity = '0.6';
                                             break;
                                         case 'expired':
-                                            $statusBadge = '<span class="badge bg-danger text-white">Expired</span>';
+                                            $statusBadge = '<span class="badge rounded-pill bg-danger text-white" style="font-weight: 500; font-size: 0.7rem; padding: 0.35rem 0.8rem;">Expired</span>';
                                             $cardOpacity = '0.5';
                                             break;
                                     }
                                 ?>
-                                <div class="col-md-6" style="opacity: <?php echo $cardOpacity; ?>;">
-                                    <div class="bg-black p-3 rounded border border-secondary d-flex flex-column gap-2" style="border-style: dashed !important;">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="text-gold font-weight-bold" style="font-size: 1.15rem;"><?php echo intval($coupon->discount_value); ?>% DISCOUNT</span>
+                                <div class="col-xl-6 coupon-card" data-status="<?php echo strtolower($coupon->status); ?>" style="opacity: <?php echo $cardOpacity; ?>;">
+                                    <div class="bg-white p-4 rounded-4 border d-flex position-relative" style="border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.01);">
+                                        <div class="position-absolute top-0 end-0 mt-4 me-4">
                                             <?php echo $statusBadge; ?>
                                         </div>
-                                        <p class="text-white-50 m-0" style="font-size: 0.8rem;">Campaign: <?php echo htmlspecialchars($coupon->campaign_code); ?></p>
-                                        
-                                        <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary" style="margin-top: 0.25rem;">
-                                            <code style="font-family: monospace; font-size: 0.95rem; color: var(--gold); font-weight: bold;"><?php echo htmlspecialchars($coupon->coupon_code); ?></code>
-                                            <?php if ($coupon->status === 'active'): ?>
-                                                <button type="button" class="btn btn-sm btn-outline-light" onclick="copyCouponCode(this, '<?php echo htmlspecialchars($coupon->coupon_code); ?>')" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Copy</button>
-                                            <?php endif; ?>
+                                        <div class="me-4 flex-shrink-0 d-flex flex-column justify-content-center align-items-center" style="width: 80px; height: 100px; background-color: #f6efe1; border-radius: 8px; position: relative;">
+                                            <div style="position: absolute; left: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 20px; background-color: #fff; border-radius: 0 10px 10px 0; border: 1px solid rgba(0,0,0,0.05); border-left: none;"></div>
+                                            <div style="position: absolute; right: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 20px; background-color: #fff; border-radius: 10px 0 0 10px; border: 1px solid rgba(0,0,0,0.05); border-right: none;"></div>
+                                            <h3 class="m-0" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.6rem; font-weight: 600;"><?php echo intval($coupon->discount_value); ?>%</h3>
+                                            <span style="font-family: 'Playfair Display', serif; color: #887a6b; font-size: 0.9rem; font-weight: 500;">OFF</span>
                                         </div>
-                                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
-                                            <span>Expires: <?php echo date('d M Y', strtotime($coupon->expires_at)); ?></span>
-                                            <?php if ($coupon->redeemed_at): ?>
-                                                <span>Used: <?php echo date('d M Y', strtotime($coupon->redeemed_at)); ?></span>
-                                            <?php endif; ?>
+                                        <div class="flex-grow-1 pe-5 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <h5 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-weight: 600; font-size: 1.1rem;"><?php echo intval($coupon->discount_value); ?>% Discount</h5>
+                                                <p class="text-muted m-0" style="font-size: 0.75rem;">Campaign: <?php echo htmlspecialchars($coupon->campaign_code); ?></p>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between mt-3" style="border: 1px dashed #d4af37; border-radius: 6px; padding: 0.4rem 0.8rem; background-color: #fcfbf8; width: fit-content;">
+                                                <code style="font-family: monospace; font-size: 0.8rem; color: #5a2a35; font-weight: 600; margin-right: 1.5rem; letter-spacing: 0.5px;"><?php echo htmlspecialchars($coupon->coupon_code); ?></code>
+                                                <?php if ($coupon->status === 'active'): ?>
+                                                    <a href="javascript:void(0)" onclick="copyCouponCode(this, '<?php echo htmlspecialchars($coupon->coupon_code); ?>')" style="color: #b48530; transition: 0.2s;"><i class="fa-regular fa-copy"></i></a>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="text-muted mt-2" style="font-size: 0.75rem;">
+                                                Expires: <?php echo date('d M Y', strtotime($coupon->expires_at)); ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
+                    
+                    <div class="rounded-4 p-3 d-flex align-items-center" style="background-color: #F9F6F0; border: 1px solid rgba(0,0,0,0.03);">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style="width: 30px; height: 30px; background-color: #d4af37; color: #fff;">
+                            <i class="fa-solid fa-info" style="font-size: 0.8rem;"></i>
+                        </div>
+                        <p class="text-muted m-0" style="font-size: 0.85rem;">Coupons are only applicable on eligible orders and cannot be combined with other offers.</p>
+                    </div>
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const couponBtns = document.querySelectorAll('.coupon-filter-btn');
+                            const couponCards = document.querySelectorAll('.coupon-card');
+
+                            // Initial load: show active
+                            filterCoupons('active');
+
+                            couponBtns.forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    // Update button styling
+                                    couponBtns.forEach(b => {
+                                        b.style.backgroundColor = 'transparent';
+                                        b.style.color = '#555';
+                                        b.style.borderColor = 'rgba(0,0,0,0.1)';
+                                    });
+                                    this.style.backgroundColor = '#143628';
+                                    this.style.color = '#fff';
+                                    this.style.borderColor = '#143628';
+                                    
+                                    // Filter cards
+                                    const filter = this.getAttribute('data-filter');
+                                    filterCoupons(filter);
+                                });
+                            });
+
+                            function filterCoupons(filter) {
+                                let hasVisible = false;
+                                couponCards.forEach(card => {
+                                    const status = card.getAttribute('data-status');
+                                    if (filter === 'active' && status === 'active') {
+                                        card.style.display = '';
+                                        hasVisible = true;
+                                    } else if (filter === 'expired' && (status === 'expired' || status === 'redeemed')) {
+                                        card.style.display = '';
+                                        hasVisible = true;
+                                    } else {
+                                        card.style.display = 'none';
+                                    }
+                                });
+                            }
+                        });
+                    </script>
                 </div>
 
                 <!-- ══ TAB: LIQUOR QUOTA ══ -->
                 <?php if ($has_liquor_quota): ?>
                 <div class="tab-pane fade" id="pill-quota" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-wine-bottle text-gold"></i> Liquor Quota Balance</h2>
                     
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                        <div>
+                            <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.8rem;">
+                                <i class="fa-solid fa-wine-bottle me-2" style="color: #d4af37;"></i> Liquor Quota Balance
+                            </h2>
+                            <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Track and manage your available bottles and pegs.</p>
+                        </div>
+                        <button class="btn btn-outline-dark" style="border-color: #5a2a35; color: #5a2a35; font-weight: 500; font-size: 0.9rem; border-radius: 6px;">
+                            <i class="fa-regular fa-circle-question me-2"></i> How It Works
+                        </button>
+                    </div>
+                    
+                    <!-- Quota Cards -->
                     <div class="row g-4 mb-5">
                         <?php foreach ($user_liquor_quotas as $quota): 
                             $total_pegs = intval($quota['total_pegs']);
                             $bottles_left = floor($total_pegs / 8);
                             $pegs_left = $total_pegs % 8;
+                            
+                            $name_lower = strtolower($quota['item_name']);
+                            $cat_badge = 'PREMIUM WHISKY';
+                            $bg_circle = '#5a2a35'; 
+                            $img_src = 'assets/images/black_label.png'; 
+                            
+                            if (strpos($name_lower, 'gin') !== false) {
+                                $cat_badge = 'PREMIUM GIN';
+                                $bg_circle = '#143628'; 
+                                $img_src = 'assets/images/hendricks.png';
+                            } elseif (strpos($name_lower, 'vodka') !== false) {
+                                $cat_badge = 'PREMIUM VODKA';
+                                $bg_circle = '#223843'; 
+                                $img_src = 'assets/images/vodka.png';
+                            }
                         ?>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="bg-black p-4 rounded border border-secondary text-center h-100 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="mb-3" style="font-size: 2.5rem; color: var(--gold);">
-                                        <i class="fa-solid fa-wine-bottle"></i>
-                                    </div>
-                                    <h4 class="text-white font-weight-bold mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem;"><?php echo htmlspecialchars($quota['item_name']); ?></h4>
-                                    <div class="d-flex justify-content-center gap-4 my-3">
-                                        <div>
-                                            <h2 class="text-gold font-weight-bold mb-0" style="font-size: 2rem;"><?php echo $bottles_left; ?></h2>
-                                            <span class="text-white-50" style="font-size: 0.8rem;">bottles left</span>
+                        <div class="col-lg-6">
+                            <div class="bg-white rounded-4 border p-4 position-relative" style="border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden;">
+                                <div class="position-absolute" style="top: 50%; right: -20px; transform: translateY(-50%); opacity: 0.08; pointer-events: none; z-index: 0;">
+                                    <img src="assets/images/floral_watermark.png" width="180" alt="" onerror="this.style.display='none'">
+                                </div>
+                                
+                                <div class="d-flex position-relative mb-4" style="z-index: 1;">
+                                    <!-- Left Side: Image -->
+                                    <div class="me-4 d-flex align-items-center justify-content-center" style="width: 140px; height: 140px; flex-shrink: 0;">
+                                        <img src="<?php echo $img_src; ?>" alt="<?php echo htmlspecialchars($quota['item_name']); ?>" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="rounded-circle align-items-center justify-content-center" style="background-color: <?php echo $bg_circle; ?>; width: 110px; height: 110px; display: none;">
+                                            <i class="fa-solid fa-wine-bottle" style="font-size: 4rem; color: #d4af37;"></i>
                                         </div>
-                                        <div style="border-left: 1px solid rgba(255,255,255,0.15); height: 40px; align-self: center;"></div>
-                                        <div>
-                                            <h2 class="text-gold font-weight-bold mb-0" style="font-size: 2rem;"><?php echo $pegs_left; ?></h2>
-                                            <span class="text-white-50" style="font-size: 0.8rem;">pegs left</span>
+                                    </div>
+                                    
+                                    <!-- Right Side: Details -->
+                                    <div class="flex-grow-1">
+                                        <span class="badge rounded-pill mb-2" style="background-color: #f1ebd9; color: #8e734a; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; border: 1px solid rgba(0,0,0,0.05);">
+                                            <?php echo $cat_badge; ?>
+                                        </span>
+                                        <h4 class="mb-3" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.25rem; font-weight: 600;">
+                                            <?php echo htmlspecialchars($quota['item_name']); ?>
+                                        </h4>
+                                        
+                                        <div class="d-flex gap-3">
+                                            <div class="d-flex align-items-center justify-content-center flex-column rounded-3 border" style="background-color: #fcfbf8; border-color: rgba(0,0,0,0.05) !important; padding: 0.6rem; flex: 1;">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <i class="fa-solid fa-wine-bottle me-2" style="color: #d4af37; font-size: 1rem;"></i>
+                                                    <span style="font-size: 1.3rem; font-family: 'Playfair Display', serif; color: #5a2a35; font-weight: 600;"><?php echo $bottles_left; ?></span>
+                                                </div>
+                                                <span class="text-muted" style="font-size: 0.7rem;">Bottles Left</span>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-center flex-column rounded-3 border" style="background-color: #fcfbf8; border-color: rgba(0,0,0,0.05) !important; padding: 0.6rem; flex: 1;">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <i class="fa-solid fa-wine-glass me-2" style="color: #d4af37; font-size: 1rem;"></i>
+                                                    <span style="font-size: 1.3rem; font-family: 'Playfair Display', serif; color: #5a2a35; font-weight: 600;"><?php echo $pegs_left; ?></span>
+                                                </div>
+                                                <span class="text-muted" style="font-size: 0.7rem;">Pegs Left</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mt-4">
-                                    <a href="menutest.html?category=Liquor" class="btn btn-outline-medusa btn-sm w-100">
-                                        <i class="fa-solid fa-cart-plus"></i> Buy Again
-                                    </a>
-                                </div>
+                                
+                                <button class="btn w-100 position-relative" style="z-index: 1; border: 1px solid #5a2a35; color: #5a2a35; background-color: #fffafb; font-weight: 500; padding: 0.6rem; border-radius: 6px;">
+                                    <i class="fa-solid fa-cart-plus me-2" style="color: #5a2a35;"></i> Buy Again
+                                </button>
                             </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
 
-                    <div class="bg-black p-4 rounded border border-secondary">
-                        <h4 class="text-gold mb-3" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-circle-info text-gold me-2"></i> How the Liquor Quota Works</h4>
-                        <ul class="text-white-50 ms-3" style="font-size: 0.9rem; line-height: 1.6;">
-                            <li>Select your favorite premium brands from our <strong>Liquor</strong> category in the menu.</li>
-                            <li>Order a bottle. Upon payment confirmation, <strong>8 pegs</strong> will be credited to your quota balance per bottle.</li>
-                            <li>You can track and manage your available bottles and pegs from this panel.</li>
-                            <li>To consume a peg during your visit, please request the waiter/admin to record the consumption at the counter.</li>
-                        </ul>
+                    <!-- How It Works Section -->
+                    <div class="rounded-4 border p-4 p-md-5 position-relative mb-4" style="background-color: #F9F6F0; border-color: rgba(0,0,0,0.05) !important; overflow: hidden;">
+                        <div class="position-absolute" style="bottom: -20px; right: -20px; opacity: 0.1; pointer-events: none; z-index: 0;">
+                            <img src="assets/images/wine_watermark.png" width="300" alt="" onerror="this.style.display='none'">
+                        </div>
+
+                        <div class="position-relative" style="z-index: 1; max-width: 800px;">
+                            <div class="d-flex align-items-center mb-4 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.3) !important;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="background-color: #5a2a35; width: 32px; height: 32px;">
+                                    <i class="fa-solid fa-info text-white" style="font-size: 0.9rem;"></i>
+                                </div>
+                                <h4 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.4rem;">How the Liquor Quota Works</h4>
+                            </div>
+
+                            <div class="d-flex align-items-start mb-4">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 mt-1 shadow-sm" style="background-color: #fdf4d7; width: 40px; height: 40px; border: 1px solid #f9c823; flex-shrink: 0;">
+                                    <i class="fa-solid fa-wine-bottle" style="color: #b48530;"></i>
+                                </div>
+                                <div class="pt-2">
+                                    <p class="m-0" style="color: #555; font-size: 0.95rem;">Select your favorite premium brands from our <strong style="color: #5a2a35;">Liquor</strong> category in the menu.</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start mb-4">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 mt-1 shadow-sm" style="background-color: #fdf4d7; width: 40px; height: 40px; border: 1px solid #f9c823; flex-shrink: 0;">
+                                    <i class="fa-solid fa-wine-glass" style="color: #b48530;"></i>
+                                </div>
+                                <div class="pt-2">
+                                    <p class="m-0" style="color: #555; font-size: 0.95rem;">Order a bottle. Upon payment confirmation, <strong style="color: #5a2a35;">8 pegs</strong> will be credited to your quota balance per bottle.</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start mb-4">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 mt-1 shadow-sm" style="background-color: #fdf4d7; width: 40px; height: 40px; border: 1px solid #f9c823; flex-shrink: 0;">
+                                    <i class="fa-solid fa-chart-simple" style="color: #b48530;"></i>
+                                </div>
+                                <div class="pt-2">
+                                    <p class="m-0" style="color: #555; font-size: 0.95rem;">You can track and manage your available bottles and pegs from this panel.</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-4 mt-1 shadow-sm" style="background-color: #fdf4d7; width: 40px; height: 40px; border: 1px solid #f9c823; flex-shrink: 0;">
+                                    <i class="fa-solid fa-bell-concierge" style="color: #b48530;"></i>
+                                </div>
+                                <div class="pt-2">
+                                    <p class="m-0" style="color: #555; font-size: 0.95rem;">To consume a peg during your visit, please request the waiter/admin to record the consumption at the counter.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php endif; ?>
+
+                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
+                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
+                <div class="tab-pane fade" id="pill-membership" role="tabpanel">
+                    
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="section-title mb-1" style="border: none; padding: 0;"><i class="fa-solid fa-id-card text-gold me-2"></i> Membership Pass</h2>
+                            <p class="text-muted" style="font-size: 0.9rem;">View and manage your membership details and benefits.</p>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" style="color: var(--text-dark); border-color: rgba(0,0,0,0.15); border-radius: 8px; font-weight: 500;">
+                            <i class="fa-regular fa-circle-question me-1 text-danger"></i> How It Works
+                        </button>
+                    </div>
+
+                    <!-- 3D Card Area -->
+                    <div class="d-flex justify-content-center align-items-center mb-5 position-relative" style="min-height: 420px; perspective: 1000px; cursor: pointer;">
+                        
+                        <!-- Glowing Shadow underneath the card -->
+                        <div style="position: absolute; bottom: 20px; width: 60%; height: 20px; background: rgba(223,186,134,0.4); filter: blur(20px); border-radius: 50%; pointer-events: none;"></div>
+
+                        <!-- Tilt Container -->
+                        <div id="atm-card-3d" style="width: 660px; height: 360px; transform-style: preserve-3d; transition: transform 0.1s; position: relative; z-index: 2;">
+                            <!-- Flip Container -->
+                            <div id="card-flipper" style="width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); transform-style: preserve-3d;">
+                                
+                                <!-- ================= FRONT SIDE ================= -->
+                                <div class="membership-card card-front" style="
+                                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden;
+                                    background: linear-gradient(135deg, #091712 0%, #10211a 50%, #060e0a 100%);
+                                    border-radius: 20px; padding: 35px 40px;
+                                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(223, 186, 134, 0.2);
+                                    overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+                                ">
+                                    <!-- Medusa Background Watermark -->
+                                    <div style="position: absolute; top: -10%; right: -5%; width: 60%; height: 120%; background-image: url('assets/images/medusaa2(onlylogo).png'); background-size: contain; background-repeat: no-repeat; background-position: right center; opacity: 0.08; transform: scale(1.3); pointer-events: none; filter: sepia(1) hue-rotate(90deg) saturate(2);"></div>
+                                    
+                                    <!-- Top Row -->
+                                    <div class="d-flex justify-content-between align-items-start" style="position: relative; z-index: 1;">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa" style="height: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                                            <div>
+                                                <h5 class="m-0" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; letter-spacing: 2px; color: #dfba86;">MEDUSA</h5>
+                                                <span style="font-size: 0.7rem; letter-spacing: 6px; color: rgba(223, 186, 134, 0.7); font-weight: 400;">PREMIUM</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div style="font-family: 'Playfair Display', serif; font-size: 1.6rem; letter-spacing: 2px; color: #fff; text-transform: uppercase;"><?php echo htmlspecialchars($user_tier_name); ?></div>
+                                            <div style="font-size: 0.75rem; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Member</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Row: Chip & Contactless -->
+                                    <div class="d-flex align-items-center gap-3 mt-4" style="position: relative; z-index: 1;">
+                                        <div style="width: 55px; height: 40px; background: linear-gradient(135deg, #e3c58f 0%, #b8973a 100%); border-radius: 6px; position: relative; overflow: hidden; box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.5);">
+                                            <div style="position: absolute; width: 1px; height: 100%; background: rgba(0,0,0,0.2); left: 30%;"></div>
+                                            <div style="position: absolute; width: 1px; height: 100%; background: rgba(0,0,0,0.2); right: 30%;"></div>
+                                            <div style="position: absolute; width: 100%; height: 1px; background: rgba(0,0,0,0.2); top: 50%;"></div>
+                                            <div style="position: absolute; width: 20px; height: 14px; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                        </div>
+                                        <i class="fa-solid fa-wifi" style="transform: rotate(90deg); font-size: 1.5rem; color: rgba(255,255,255,0.7);"></i>
+                                    </div>
+
+                                    <!-- Bottom Area: Numbers and Details -->
+                                    <div style="position: relative; z-index: 1; margin-top: auto;">
+                                        <div style="font-family: 'Inter', monospace; font-size: 2rem; letter-spacing: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: 300; margin-bottom: 10px;">
+                                            8824 4590 1200 <?php echo sprintf("%04d", $user_id); ?>
+                                        </div>
+                                        
+                                        <!-- Valid Thru (floating left-ish) -->
+                                        <div class="d-flex mb-3" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; align-items: center;">
+                                            <div style="line-height: 1; text-align: left; margin-right: 8px; color: rgba(255,255,255,0.6);">Valid<br>Thru</div>
+                                            <div style="font-family: 'Inter', monospace; font-size: 1.1rem; color: #dfba86; font-weight: 500; letter-spacing: 2px;"><?php echo date('m/y', strtotime('+5 years')); ?></div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-end">
+                                            <div>
+                                                <div style="font-size: 0.6rem; letter-spacing: 2px; color: rgba(223, 186, 134, 0.7); text-transform: uppercase; margin-bottom: 4px;">Member Name</div>
+                                                <div style="font-size: 1.3rem; letter-spacing: 3px; color: #fff; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 400; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                                    <?php echo htmlspecialchars($user_name); ?>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div style="font-size: 0.6rem; letter-spacing: 2px; color: rgba(223, 186, 134, 0.7); text-transform: uppercase; margin-bottom: 4px;">Member Since</div>
+                                                <div style="font-size: 1.1rem; letter-spacing: 2px; color: #dfba86; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 500;">
+                                                    <?php echo date('M Y', strtotime('-2 months')); ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= BACK SIDE ================= -->
+                                <div class="membership-card card-back" style="
+                                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg);
+                                    background: linear-gradient(135deg, #091712 0%, #10211a 100%);
+                                    border-radius: 20px; box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(223, 186, 134, 0.2);
+                                    display: flex; flex-direction: column; overflow: hidden;
+                                ">
+                                    <!-- Magnetic Stripe -->
+                                    <div style="width: 100%; height: 60px; background-color: #000; margin-top: 40px; position: relative; z-index: 1;"></div>
+                                    <div style="padding: 20px 40px; position: relative; z-index: 1; flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start;">
+                                        <!-- Signature Strip -->
+                                        <div class="d-flex align-items-center mt-3">
+                                            <div style="background-color: #eef1f5; width: 75%; height: 45px; display: flex; align-items: center; padding-left: 15px; color: #000; font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.5rem; border-radius: 4px; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);">
+                                                <?php echo htmlspecialchars($user_name); ?>
+                                            </div>
+                                            <div style="background-color: #fff; height: 35px; padding: 0 15px; margin-left: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-family: 'Courier New', monospace; font-size: 1.1rem; font-style: italic; border-radius: 4px; border: 1px solid #ccc;">
+                                                3<?php echo sprintf("%02d", rand(10, 99)); ?>
+                                            </div>
+                                        </div>
+                                        <!-- Legal Text -->
+                                        <div class="mt-auto mb-2" style="font-size: 0.65rem; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.5;">
+                                            This card is the property of Medusa Restaurant & Lounge. If found, please return to any Medusa location.<br>
+                                            Use of this card is governed by the Member Terms and Conditions.<br>
+                                            <div class="mt-2 text-white-50"><i class="fa-solid fa-phone me-1 text-gold"></i> +1 (800) MEDUSA-VIP &nbsp;&nbsp;|&nbsp;&nbsp; <i class="fa-solid fa-globe me-1 text-gold"></i> www.medusarestaurant.com</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Statistics Boxes -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
+                                    <i class="fa-solid fa-crown"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #777;">Current Tier</div>
+                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($user_tier_name); ?> Member</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
+                                    <i class="fa-regular fa-star"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #777;">Points Balance</div>
+                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;">1,250 pts</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
+                                    <i class="fa-regular fa-calendar-check"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #777;">Member Since</div>
+                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo date('M Y', strtotime('-2 months')); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #777;">Valid Thru</div>
+                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo date('M Y', strtotime('+5 years')); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Benefits & Management Section -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="bg-white rounded-4 p-4 border h-100" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h5 class="mb-4" style="color: #5a2a35; font-family: 'Playfair Display', serif; font-weight: 700;">Your Benefits</h5>
+                                <ul class="list-unstyled mb-0" style="font-size: 0.95rem; color: #444;">
+                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Priority Reservations</li>
+                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Exclusive Offers & Discounts</li>
+                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Complimentary Welcome Drink</li>
+                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Birthday Treats</li>
+                                    <li class="d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Invitations to Special Events</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-white rounded-4 p-4 border h-100" style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h5 class="mb-4" style="color: #5a2a35; font-family: 'Playfair Display', serif; font-weight: 700;">Manage Membership</h5>
+                                <div class="list-group list-group-flush border-0">
+                                    <a href="#" onclick="document.getElementById('pill-loyalty-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 mb-2 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
+                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-gift me-3 text-muted"></i> View Tier Benefits</span>
+                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
+                                    </a>
+                                    <a href="#" onclick="document.getElementById('pill-orders-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 mb-2 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
+                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-file-invoice-dollar me-3 text-muted"></i> Transaction History</span>
+                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
+                                    </a>
+                                    <a href="#" onclick="document.getElementById('pill-terms-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
+                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-file-contract me-3 text-muted"></i> Terms & Conditions</span>
+                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Banner -->
+                    <div class="bg-white rounded-4 p-4 border d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem; flex-shrink: 0;">
+                                <i class="fa-solid fa-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="m-0 mb-1" style="color: #5a2a35; font-weight: bold; font-family: 'Playfair Display', serif;">Stay Active, Stay Privileged</h6>
+                                <div style="font-size: 0.85rem; color: #666;">Keep exploring and dining with us to enjoy continuous benefits and unlock higher tiers.</div>
+                            </div>
+                        </div>
+                        <button class="btn" style="background-color: #5a2a35; color: white; padding: 0.6rem 1.5rem; font-weight: 500; border-radius: 6px; white-space: nowrap;">Explore Rewards</button>
+                    </div>
+                    
+                    <!-- 3D Tilt & Flip Script for the Card -->
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const cardTilt = document.getElementById("atm-card-3d");
+                            const flipper = document.getElementById("card-flipper");
+                            let isFlipped = false;
+                            
+                            if (cardTilt && flipper) {
+                                cardTilt.addEventListener("mousemove", (e) => {
+                                    const rect = cardTilt.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    const centerX = rect.width / 2;
+                                    const centerY = rect.height / 2;
+                                    const mult = isFlipped ? -1 : 1;
+                                    const rotateX = ((y - centerY) / centerY) * -8 * mult; // softer tilt for larger card
+                                    const rotateY = ((x - centerX) / centerX) * 8 * mult;
+                                    cardTilt.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                                });
+                                
+                                cardTilt.addEventListener("mouseleave", () => {
+                                    cardTilt.style.transition = "transform 0.5s ease"; 
+                                    cardTilt.style.transform = "rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+                                });
+                                
+                                cardTilt.addEventListener("mouseenter", () => {
+                                    cardTilt.style.transition = "transform 0.1s ease-out"; 
+                                });
+
+                                cardTilt.addEventListener("click", () => {
+                                    isFlipped = !isFlipped;
+                                    flipper.style.transform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
+                                });
+                            }
+                        });
+                    </script>
+                </div>
+
+                <!-- ══ TAB: TERMS & CONDITIONS ══ -->
+                <div class="tab-pane fade" id="pill-terms" role="tabpanel">
+                    <h2 class="section-title"><i class="fa-solid fa-file-contract text-gold"></i> Membership Terms & Conditions</h2>
+                    <div class="bg-white rounded-4 p-5 border" style="border-color: rgba(0,0,0,0.05) !important;">
+                        
+                        <h5 class="mb-3" style="color: #5a2a35; font-family: 'Playfair Display', serif;">1. Program Overview</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">The Medusa Premium Membership is an exclusive loyalty program offered by Medusa Restaurant & Lounge. By participating in the program, members agree to these terms and conditions. Membership is subject to approval and may be revoked at the discretion of management.</p>
+                        
+                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">2. Earning and Redeeming Points</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Points are earned on eligible purchases at any Medusa location when the digital membership pass is presented. Points have no cash value, cannot be exchanged for cash, and cannot be transferred to another member. Medusa reserves the right to adjust point balances due to system errors or fraudulent activity.</p>
+                        
+                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">3. Tier Progression</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Member tiers (e.g., Bronze, Silver, Gold, Platinum) are determined based on annual spending and points accumulated. Your tier status is evaluated annually on your membership anniversary. Medusa reserves the right to modify tier thresholds, benefits, and rewards at any time without prior notice.</p>
+
+                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">4. Digital Card Usage</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">The digital membership pass is strictly personal and non-transferable. The member must present the digital card upon request when redeeming benefits, points, or discounts. Lost access to the account should be reported immediately.</p>
+                        
+                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">5. Privacy and Data</h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">By joining the membership program, you consent to the collection and use of your personal data for the purpose of managing your account and providing tailored offers. We prioritize your privacy and will never sell your information to third parties.</p>
+
+                        <div class="mt-5 text-center border-top pt-4">
+                            <button class="btn" style="background-color: #5a2a35; color: white; padding: 0.6rem 1.5rem; font-weight: 500; border-radius: 6px;" onclick="document.getElementById('pill-membership-tab').click()">
+                                <i class="fa-solid fa-arrow-left me-2"></i> Back to Membership Pass
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
                 <div class="tab-pane fade" id="pill-settings" role="tabpanel">
@@ -2614,17 +3399,52 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         async function submitProfileForm(e) {
             e.preventDefault();
             const name = document.getElementById('profile_name').value.trim();
+            const dob = document.getElementById('profile_dob').value;
+            const ambience = document.getElementById('profile_ambience').value;
+
             try {
                 const response = await fetch('api/account-api.php?action=update_profile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name })
+                    body: JSON.stringify({ name: name, dob: dob, preferred_ambience: ambience })
                 });
                 const result = await response.json();
                 if (result.success) {
                     showToast(result.message, 'success');
                     // update profile displays
                     document.querySelectorAll('.profile-name').forEach(el => el.textContent = name);
+                    
+                    // Update static view mode
+                    const viewNameEl = document.getElementById('view-profile-name');
+                    if (viewNameEl) viewNameEl.textContent = name;
+                    
+                    const viewDobEl = document.getElementById('view-profile-dob');
+                    if (viewDobEl) {
+                        if (dob) {
+                            const d = new Date(dob);
+                            viewDobEl.textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                        } else {
+                            viewDobEl.textContent = 'Not Set';
+                        }
+                    }
+
+                    const viewAmbienceEl = document.getElementById('view-profile-ambience');
+                    const viewAmbienceContainer = document.getElementById('view-profile-ambience-container');
+                    const viewDobContainer = document.getElementById('view-profile-dob-container');
+                    if (viewAmbienceEl && viewAmbienceContainer) {
+                        viewAmbienceEl.textContent = ambience;
+                        if (ambience) {
+                            viewAmbienceContainer.style.display = 'block';
+                            if (viewDobContainer) viewDobContainer.classList.add('border-end');
+                        } else {
+                            viewAmbienceContainer.style.display = 'none';
+                            if (viewDobContainer) viewDobContainer.classList.remove('border-end');
+                        }
+                    }
+                    
+                    // Toggle views back to normal
+                    document.getElementById('profile-edit').style.display = 'none';
+                    document.getElementById('profile-view').style.display = 'block';
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -2969,12 +3789,41 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const tab = params.get('tab');
-            if (tab === 'settings') {
+            const urlTab = params.get('tab');
+            
+            // Handle specific URL tab parameter first
+            if (urlTab === 'settings') {
                 switchDashboardMode('settings');
             } else {
                 switchDashboardMode('profile');
             }
+
+            // Restore previously active tab from localStorage
+            const activeTabId = localStorage.getItem('medusaActiveTab');
+            if (activeTabId) {
+                const tabTriggerElement = document.querySelector(activeTabId);
+                if (tabTriggerElement) {
+                    const tab = new bootstrap.Tab(tabTriggerElement);
+                    tab.show();
+                    
+                    if (tabTriggerElement.classList.contains('dashboard-pill-settings')) {
+                        switchDashboardMode('settings');
+                    } else {
+                        switchDashboardMode('profile');
+                    }
+                }
+            }
+            
+            // Save active tab to localStorage whenever a tab is switched
+            const tabElements = document.querySelectorAll('button[data-bs-toggle="pill"]');
+            tabElements.forEach(el => {
+                el.addEventListener('shown.bs.tab', event => {
+                    const targetId = event.target.getAttribute('id');
+                    if (targetId) {
+                        localStorage.setItem('medusaActiveTab', '#' + targetId);
+                    }
+                });
+            });
         });
     </script>
 
