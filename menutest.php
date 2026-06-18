@@ -304,7 +304,7 @@
                 <a href="menutest.html" id="navMenu" class="btn btn-outline-light btn-sm">Menu</a>
                 <a href="carttest.html" id="navCart" class="btn btn-outline-light btn-sm">Cart (<span id="cartCount">0</span>)</a>
                 <a href="#" id="navBill" class="btn btn-gold-action btn-sm" style="display:none;"><i class="fas fa-receipt"></i> View Bill</a>
-                <a href="my-account.php" id="navAccount" class="btn btn-outline-light btn-sm">My Account</a>
+                <a href="profile.php" id="navAccount" class="btn btn-outline-light btn-sm">My Account</a>
                 <a href="api/logout.php" id="navLogout" class="btn btn-outline-light btn-sm">Logout</a>
             </div>
         </div>
