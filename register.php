@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/otp_helper.php';
 
 // If already active/logged in, redirect to index
 if (!empty($_SESSION['user_id'])) {
-    header('Location: indextest.html');
+    header('Location: index.html');
     exit;
 }
 

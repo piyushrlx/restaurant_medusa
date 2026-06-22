@@ -1,697 +1,29 @@
+\
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medusa Bar & Lounge</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <title>
+
+        Medusa - Premium Dining
+
+    </title>
+
+    <!-- Global Theme Controller -->
+    <script src="assets/js/theme-toggle.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root {
-            --bg-dark: #120a07;
-            --bg-header-footer: #2f1317;
-            --bg-cream: #ece8df;
-            --bg-green: #193627;
-
-            --text-gold: #c39255;
-            --text-white: #ffffff;
-            --text-light: #d8d3cd;
-            --text-dark: #1c1815;
-            --text-burgundy: #2f1317;
-
-            --btn-burgundy: #521c22;
-            --btn-green: #1c3628;
-
-            --font-serif: 'Cinzel', serif;
-            --font-playfair: 'Playfair Display', serif;
-            --font-sans: 'Lato', sans-serif;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 40px;
-        }
-
-        /* ----- HEADER ----- */
-        header {
-            background-color: var(--bg-header-footer);
-            padding: 9px 0;
-            position: relative;
-            z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .header-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-white);
-        }
-
-        .logo-box img {
-            max-height: 70px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 25px;
-        }
-
-        .nav-links a {
-            font-size: 0.88rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-            color: #d8d8d8;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-gold);
-        }
-
-        .btn-outline {
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 12px 25px;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-            color: var(--text-white);
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline:hover {
-            border-color: var(--text-gold);
-            color: var(--text-gold);
-        }
-
-        /* ----- HERO SECTION ----- */
-        .hero {
-            position: relative;
-            min-height: calc(100vh - 100px);
-            display: flex;
-            align-items: center;
-            background-color: var(--bg-dark);
-            padding-bottom: 50px;
-        }
-
-        .hero-content {
-            flex: 0 0 55%;
-            padding-right: 50px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .hero-subtitle {
-            font-family: var(--font-serif);
-            color: var(--text-gold);
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-
-        .hero-title {
-            font-family: var(--font-serif);
-            font-size: 4rem;
-            line-height: 1.15;
-            color: var(--text-white);
-            margin-bottom: 25px;
-            font-weight: 400;
-        }
-
-        .hero-divider {
-            width: 50px;
-            height: 1px;
-            background-color: var(--text-gold);
-            margin-bottom: 30px;
-            opacity: 0.7;
-        }
-
-        .hero-text {
-            font-size: 1.05rem;
-            max-width: 400px;
-            margin-bottom: 45px;
-            color: var(--text-light);
-            line-height: 1.7;
-        }
-
-        .hero-actions {
-            display: flex;
-            align-items: center;
-            gap: 35px;
-        }
-
-        .btn-solid-green {
-            background-color: var(--btn-green);
-            color: var(--text-white);
-            padding: 16px 35px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn-solid-green:hover {
-            background-color: #12241b;
-        }
-
-        .play-btn {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-        }
-
-        .play-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-white);
-        }
-
-        .play-text {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            color: var(--text-white);
-        }
-
-        .hero-image-wrapper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 1;
-        }
-
-        .hero-image-wrapper video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center center;
-            opacity: 0.55;
-            transition: opacity 0.5s ease;
-        }
-
-        /* Dark gradient on left half to keep text legible */
-        .hero-image-wrapper::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 65%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(18, 10, 7, 0.92) 0%, rgba(18, 10, 7, 0.55) 60%, transparent 100%);
-            z-index: 2;
-        }
-
-        /* Subtle vignette over the entire section */
-        .hero-image-wrapper::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, rgba(18, 10, 7, 0.25) 0%, transparent 40%, rgba(18, 10, 7, 0.4) 100%);
-            z-index: 2;
-        }
-
-        /* ----- FEATURES SECTION ----- */
-        .features {
-            background-image: url('assets/images/torn_paper.png');
-            background-repeat: no-repeat;
-            background-size: 100% auto;
-            background-position: center top;
-            background-color: transparent;
-            color: var(--text-dark);
-            padding: calc(60px + 9.27vw) 0 80px;
-            margin-top: -12.27vw;
-            position: relative;
-            z-index: 100;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            text-align: center;
-            padding-top: 2rem;
-        }
-
-        .feature-item {
-            padding: 0 30px;
-            position: relative;
-        }
-
-        .feature-item:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 15%;
-            height: 70%;
-            width: 1px;
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .feature-icon {
-            font-size: 2.2rem;
-            color: #8c7258;
-            margin-bottom: 25px;
-            font-weight: 300;
-        }
-
-        .feature-title {
-            font-family: var(--font-serif);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 15px;
-        }
-
-        .feature-text {
-            font-size: 0.85rem;
-            color: #444;
-            max-width: 220px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        /* ----- ABOUT US SECTION ----- */
-        .about-split {
-            display: flex;
-            min-height: 550px;
-        }
-
-        .about-content {
-            flex: 0 0 40%;
-            background-color: var(--bg-green);
-            padding: 80px 8%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .about-subtitle {
-            font-family: var(--font-serif);
-            color: var(--text-gold);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .about-title {
-            font-family: var(--font-serif);
-            font-size: 3rem;
-            line-height: 1.2;
-            color: var(--text-white);
-            margin-bottom: 20px;
-            font-weight: 400;
-        }
-
-        .about-divider {
-            width: 30px;
-            height: 1px;
-            background-color: rgba(255, 255, 255, 0.3);
-            margin-bottom: 25px;
-        }
-
-        .about-text {
-            font-size: 0.95rem;
-            color: var(--text-light);
-            margin-bottom: 40px;
-            max-width: 380px;
-            line-height: 1.7;
-        }
-
-        .btn-solid-burgundy {
-            background-color: var(--btn-burgundy);
-            color: var(--text-white);
-            padding: 16px 35px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            display: inline-block;
-            align-self: flex-start;
-            transition: background-color 0.3s;
-        }
-
-        .btn-solid-burgundy:hover {
-            background-color: #3f1519;
-        }
-
-        .about-image {
-            flex: 1;
-            background-image: url('assets/images/restaurant_interior.png');
-            background-size: cover;
-            background-position: center;
-        }
-
-        /* ----- GALLERY SECTION ----- */
-        .gallery {
-            background-color: var(--bg-cream);
-            padding: 90px 0;
-            text-align: center;
-        }
-
-        .gallery-header {
-            margin-bottom: 50px;
-            color: var(--bg-header-footer);
-        }
-
-        .gallery-title {
-            font-family: var(--font-serif);
-            font-size: 2.8rem;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            font-weight: 400;
-        }
-
-        .gallery-subtitle {
-            font-family: var(--font-playfair);
-            font-style: italic;
-            font-size: 1.2rem;
-            color: #8c7258;
-            position: relative;
-            display: inline-block;
-        }
-
-        .gallery-subtitle::before,
-        .gallery-subtitle::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 40px;
-            height: 1px;
-            background-color: #ccc;
-        }
-
-        .gallery-subtitle::before {
-            right: 100%;
-            margin-right: 15px;
-        }
-
-        .gallery-subtitle::after {
-            left: 100%;
-            margin-left: 15px;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            padding: 0 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .gallery-item {
-            position: relative;
-            padding-top: 100%;
-            overflow: hidden;
-            border-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .gallery-item img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s ease;
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.05);
-        }
-
-        /* ----- FOOTER ----- */
-        footer {
-            background-color: var(--bg-header-footer);
-            color: var(--text-white);
-            padding: 70px 0 30px;
-        }
-
-        .footer-grid {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 50px;
-        }
-
-        .footer-col {
-            flex: 1;
-            padding: 0 20px;
-        }
-
-        .footer-logo {
-            flex: 1.5;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            padding-right: 40px;
-        }
-
-        .footer-logo-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .footer-logo .logo-icon {
-            font-size: 2rem;
-            color: var(--text-gold);
-        }
-
-        .footer-logo .logo-text h2 {
-            font-size: 1.3rem;
-            letter-spacing: 4px;
-            margin-bottom: 0;
-            text-align: left;
-        }
-
-        .footer-logo .logo-text span {
-            font-size: 0.5rem;
-            text-align: left;
-            display: block;
-        }
-
-        .footer-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.8rem;
-            max-width: 220px;
-            line-height: 1.6;
-        }
-
-        .footer-heading {
-            font-family: var(--font-serif);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-
-        .footer-col p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .footer-col a {
-            color: rgba(255, 255, 255, 0.7);
-            transition: color 0.3s ease;
-        }
-
-        .footer-col a:hover {
-            color: var(--text-gold);
-        }
-
-        .btn-view-map {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--text-gold);
-            color: var(--text-gold) !important;
-            padding: 8px 16px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            text-decoration: none !important;
-            margin-top: 10px;
-        }
-
-        .btn-view-map:hover {
-            background-color: var(--text-gold);
-            color: var(--bg-header-footer) !important;
-        }
-
-        .footer-col span.lbl {
-            width: 60px;
-            display: inline-block;
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 20px;
-        }
-
-        .social-icons a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            color: var(--text-white);
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .social-icons a:hover {
-            border-color: var(--text-gold);
-            color: var(--text-gold);
-        }
-
-        .copyright {
-            text-align: center;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .hero-title {
-                font-size: 3.2rem;
-            }
-
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 50px;
-            }
-
-            .feature-item:nth-child(2)::after {
-                display: none;
-            }
-
-            .about-split {
-                flex-direction: column;
-            }
-
-            .about-image {
-                min-height: 400px;
-            }
-
-            .gallery-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .footer-grid {
-                flex-wrap: wrap;
-                gap: 40px;
-            }
-
-            .footer-logo {
-                border-right: none;
-                flex: 100%;
-                padding-right: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .hero-image-wrapper {
-                width: 100%;
-                position: static;
-                height: 350px;
-            }
-
-            .hero-content {
-                padding-right: 0;
-                padding-top: 50px;
-                text-align: center;
-            }
-
-            .hero-actions {
-                justify-content: center;
-            }
-
-            .hero-divider {
-                margin: 0 auto 30px;
-            }
-
-            .hero-text {
-                margin: 0 auto 40px;
-            }
-
-            .hero {
-                flex-direction: column;
-            }
-        }
-
-        /* ----- BRAND THEME & INTEGRATED SECTIONS VARIABLES ----- */
         :root {
             --gold: #dfba86;
             --gold-hover: #f3dfc1;
@@ -701,34 +33,213 @@
             --rosewood: #5A1827;
             --rosewood-light: #7E2638;
             --warm-ivory: #FAF7F0;
+            --warm-ivory-dark: #F0ECE1;
+            --dark: #0D2016;
             --card-bg: rgba(13, 32, 22, 0.6);
             --border-light: rgba(223, 186, 134, 0.12);
             --border-hover: rgba(223, 186, 134, 0.35);
             --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* ----- REVEAL ANIMATIONS ----- */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+        body {
+            background: var(--dark);
+            color: #f7f5f2;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            letter-spacing: 0.2px;
         }
 
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* ----- BOOTSTRAP UTILITIES RE-IMPLEMENTATION ----- */
-        #luxury-story-section,
-        #reviews-section,
-        #faqs-section {
-            font-family: var(--font-sans);
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
         }
 
-        #reviews-section .stars {
-            font-family: var(--font-sans) !important;
+        /* NAVBAR */
+
+        .navbar {
+            background: rgba(11, 10, 9, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 0;
+            transition: var(--transition-smooth);
         }
+
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-size: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 2px;
+        }
+
+        .navbar-brand:hover img {
+            transform: rotate(360deg) scale(1.08);
+        }
+
+        .nav-link {
+            color: #eae5df !important;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 8px;
+            right: 8px;
+            height: 1px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* HERO */
+
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.35) contrast(1.05);
+            transition: transform 10s ease-out;
+        }
+
+        .hero:hover img {
+            transform: scale(1.04);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(19, 47, 32, 0.65) 0%, rgba(90, 24, 39, 0.65) 100%);
+            z-index: 1;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(13, 32, 22, 0.95) 90%),
+                        radial-gradient(circle at 75% 25%, rgba(223, 186, 134, 0.12) 0%, transparent 55%);
+            z-index: 1.5;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            padding: 20px;
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .hero-subtitle {
+            color: var(--gold);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: inline-block;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 8px;
+        }
+
+        .hero-title {
+            font-size: 4.8rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            line-height: 1.15;
+            margin-bottom: 35px;
+            color: #ffffff;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-title br {
+            display: block;
+        }
+
+        .hero-buttons .btn {
+            margin: 10px;
+            padding: 15px 36px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .btn-gold {
+            background: var(--rosewood);
+            color: var(--gold) !important;
+            border: 1px solid var(--rosewood);
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(90, 24, 39, 0.25);
+        }
+
+        .btn-gold:hover {
+            background: var(--rosewood-light);
+            border-color: var(--rosewood-light);
+            color: #ffffff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(90, 24, 39, 0.45);
+        }
+
+        .btn-outline-gold {
+            border: 1px solid var(--gold);
+            color: var(--gold) !important;
+            background: transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-outline-gold:hover {
+            background: rgba(90, 24, 39, 0.25);
+            border-color: var(--gold-hover);
+            color: var(--gold-hover) !important;
+            transform: translateY(-2px);
+        }
+
+        /* SECTION */
 
         .section {
             padding: 120px 0;
@@ -754,133 +265,8 @@
             margin-bottom: 70px;
         }
 
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-left: -15px;
-            margin-right: -15px;
-        }
+        /* CARDS */
 
-        .row>[class*="col-"] {
-            padding-left: 15px;
-            padding-right: 15px;
-            width: 100%;
-        }
-
-        .align-items-center {
-            align-items: center;
-        }
-
-        .g-4 {
-            margin-left: -12px;
-            margin-right: -12px;
-        }
-
-        .g-4>[class*="col-"] {
-            padding-left: 12px;
-            padding-right: 12px;
-        }
-
-        .g-5 {
-            margin-left: -24px;
-            margin-right: -24px;
-        }
-
-        .g-5>[class*="col-"] {
-            padding-left: 24px;
-            padding-right: 24px;
-        }
-
-        @media (min-width: 768px) {
-            .col-md-6 {
-                flex: 0 0 50%;
-                max-width: 50%;
-            }
-        }
-
-        @media (min-width: 992px) {
-            .col-lg-4 {
-                flex: 0 0 33.33333%;
-                max-width: 33.33333%;
-            }
-
-            .col-lg-5 {
-                flex: 0 0 41.66667%;
-                max-width: 41.66667%;
-            }
-
-            .col-lg-7 {
-                flex: 0 0 58.33333%;
-                max-width: 58.33333%;
-            }
-
-            .d-lg-block {
-                display: block !important;
-            }
-        }
-
-        .img-fluid {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .rounded-4 {
-            border-radius: 1rem !important;
-        }
-
-        .shadow-lg {
-            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
-        }
-
-        .text-start {
-            text-align: left !important;
-        }
-
-        .mb-4 {
-            margin-bottom: 1.5rem !important;
-        }
-
-        .mb-5 {
-            margin-bottom: 3rem !important;
-        }
-
-        .fs-5 {
-            font-size: 1.25rem !important;
-        }
-
-        .text-secondary {
-            color: #a09a93 !important;
-        }
-
-        .px-5 {
-            padding-left: 3rem !important;
-            padding-right: 3rem !important;
-        }
-
-        .py-3 {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-        }
-
-        .p-4 {
-            padding: 1.5rem !important;
-        }
-
-        .w-100 {
-            width: 100% !important;
-        }
-
-        .mt-3 {
-            margin-top: 1rem !important;
-        }
-
-        @media (min-width: 992px) {
-            .p-lg-5 {
-                padding: 3rem !important;
-            }
-        }
-
-        /* ----- NEW SECTIONS LAYOUT SPECIFIC ----- */
         .premium-card {
             background: var(--card-bg);
             border: 1px solid var(--border-light);
@@ -914,26 +300,29 @@
             transform: scale(1.05);
         }
 
-        .floating-img {
-            animation: float 6s ease-in-out infinite;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
-            transition: var(--transition-smooth);
+        .card-content {
+            padding: 30px;
         }
 
-        .floating-img:hover {
-            border-color: var(--border-hover);
-            transform: scale(1.02);
+        .card-content h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+            margin-bottom: 10px;
         }
 
-        .btn-gold {
-            background: var(--rosewood);
-            color: var(--gold) !important;
-            border: 1px solid var(--rosewood);
-            transition: var(--transition-smooth);
-            box-shadow: 0 4px 15px rgba(90, 24, 39, 0.25);
-            text-align: center;
-            display: inline-block;
+        .card-content p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .card-content h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .card-content .btn {
             border-radius: 8px;
             padding: 12px;
             font-size: 0.85rem;
@@ -942,36 +331,216 @@
             letter-spacing: 1px;
         }
 
-        .btn-gold:hover {
-            background: var(--rosewood-light);
-            border-color: var(--rosewood-light);
-            color: #ffffff !important;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(90, 24, 39, 0.45);
-        }
+        /* FLOATING IMAGES */
 
-        .btn-outline-gold {
-            border: 1px solid var(--gold);
-            color: var(--gold) !important;
-            background: transparent;
+        .floating-img {
+            animation: float 6s ease-in-out infinite;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.5);
             transition: var(--transition-smooth);
+        }
+
+        .floating-img:hover {
+            border-color: var(--border-hover);
+            transform: scale(1.02);
+        }
+
+        /* FOOTER */
+
+        footer {
+            padding: 100px 0 50px;
+            background: #060505;
+            border-top: 1px solid var(--border-light);
+            color: #a09a93;
+        }
+
+        footer h2 {
+            margin-bottom: 20px;
+        }
+
+        footer h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+        }
+
+        footer ul li a {
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer ul li a:hover {
+            color: var(--gold) !important;
+            padding-left: 5px;
+        }
+
+        footer p.text-secondary {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        footer input.form-control {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-light);
+            color: white;
+            border-radius: 8px 0 0 8px;
+            padding: 12px 18px;
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        footer input.form-control:focus {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--gold);
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.15);
+            color: white;
+        }
+
+        footer button.btn-gold {
+            border-radius: 0 8px 8px 0;
+            padding: 12px 24px;
+        }
+
+        /* SCROLL REVEAL */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* MOUSE INDICATOR */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            animation: fadeInUp 2s ease both 1.2s;
+        }
+        .mouse-icon {
+            width: 26px;
+            height: 42px;
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            position: relative;
+            margin: 0 auto;
+        }
+        .scroll-wheel {
+            width: 4px;
+            height: 8px;
+            background-color: var(--gold);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollWheel 1.6s infinite ease-in-out;
+        }
+        @keyframes scrollWheel {
+            0% { opacity: 0; top: 8px; }
+            20% { opacity: 1; }
+            80% { opacity: 0; top: 22px; }
+            100% { opacity: 0; top: 22px; }
+        }
+
+        /* STATS BANNER */
+        .stats-banner {
+            background: linear-gradient(90deg, #3F0F1A 0%, #5A1827 50%, #3F0F1A 100%);
+            border-top: 1px solid rgba(223, 186, 134, 0.2);
+            border-bottom: 1px solid rgba(223, 186, 134, 0.2);
+            padding: 60px 0;
+        }
+        .stat-item {
             text-align: center;
-            display: inline-block;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
+        }
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            color: var(--gold);
+            font-weight: 300;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(223,186,134,0.2);
+        }
+        .stat-label {
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            color: #eae5df;
         }
 
-        .btn-outline-gold:hover {
-            background: rgba(90, 24, 39, 0.25);
-            border-color: var(--gold-hover);
-            color: var(--gold-hover) !important;
-            transform: translateY(-2px);
+        /* EXPERIENCE/SERVICES GRID */
+        .feature-icon-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            color: var(--gold);
+            background: rgba(223, 186, 134, 0.03);
+            transition: var(--transition-smooth);
+        }
+        .feature-item {
+            padding: 40px 30px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.01);
+            transition: var(--transition-smooth);
+            height: 100%;
+        }
+        .feature-item:hover {
+            background: rgba(223, 186, 134, 0.03);
+            border-color: var(--border-light);
+            transform: translateY(-5px);
+        }
+        .feature-item:hover .feature-icon-box {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.1);
+            box-shadow: 0 0 20px rgba(223, 186, 134, 0.2);
+            color: var(--gold-hover);
+        }
+        .feature-item h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        .feature-item p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #a09a93;
+            margin: 0;
         }
 
-        /* Testimonials */
+        /* CARD BADGES */
+        .badge-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(11, 10, 9, 0.8);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* TESTIMONIALS */
         .review-card {
             background: var(--card-bg);
             border: 1px solid var(--border-light);
@@ -982,19 +551,16 @@
             -webkit-backdrop-filter: blur(10px);
             transition: var(--transition-smooth);
         }
-
         .review-card:hover {
             border-color: var(--border-hover);
             box-shadow: 0 15px 35px rgba(223, 186, 134, 0.05);
         }
-
         .stars {
             color: var(--gold);
             margin-bottom: 20px;
             font-size: 0.9rem;
             letter-spacing: 2px;
         }
-
         .review-text {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.35rem;
@@ -1003,13 +569,11 @@
             line-height: 1.5;
             margin-bottom: 25px;
         }
-
         .reviewer-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-
         .reviewer-avatar {
             width: 48px;
             height: 48px;
@@ -1017,13 +581,11 @@
             border: 1px solid var(--gold);
             object-fit: cover;
         }
-
         .reviewer-name {
             font-size: 0.9rem;
             font-weight: 600;
             color: #ffffff;
         }
-
         .reviewer-title {
             font-size: 0.75rem;
             color: var(--gold);
@@ -1031,17 +593,15 @@
             letter-spacing: 1px;
         }
 
-        /* FAQ Accordion */
+        /* FAQ ACCORDION */
         .faq-accordion {
             max-width: 800px;
             margin: 0 auto;
         }
-
         .faq-item {
             border-bottom: 1px solid var(--border-light);
             padding: 24px 0;
         }
-
         .faq-header {
             display: flex;
             justify-content: space-between;
@@ -1050,11 +610,9 @@
             user-select: none;
             transition: var(--transition-smooth);
         }
-
         .faq-header:hover h3 {
             color: var(--gold);
         }
-
         .faq-header h3 {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.5rem;
@@ -1063,19 +621,16 @@
             margin: 0;
             transition: var(--transition-smooth);
         }
-
         .faq-icon {
             color: var(--gold);
             font-size: 1rem;
             transition: transform 0.4s ease;
         }
-
         .faq-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), padding 0.4s ease;
         }
-
         .faq-content p {
             font-size: 0.9rem;
             line-height: 1.6;
@@ -1083,262 +638,697 @@
             margin: 0;
             padding-top: 15px;
         }
-
         .faq-item.active .faq-icon {
             transform: rotate(45deg);
         }
-
         .faq-item.active .faq-content {
             max-height: 200px;
             transition: max-height 0.4s cubic-bezier(1, 0, 1, 0), padding 0.4s ease;
         }
 
-        /* Theme Styling Overrides */
+        /* BRAND THEME OVERRIDES */
+        #services-section {
+            background: var(--formal-garden-deep);
+        }
+        #services-section .feature-item {
+            background: rgba(28, 59, 43, 0.15);
+            border: 1px solid rgba(223, 186, 134, 0.08);
+        }
+        #services-section .feature-item:hover {
+            background: rgba(90, 24, 39, 0.12);
+            border-color: var(--border-hover);
+        }
+        
+        #featured-dishes {
+            background: var(--warm-ivory);
+            color: var(--formal-garden-deep);
+        }
+        #featured-dishes .section-title {
+            color: var(--formal-garden-deep) !important;
+        }
+        #featured-dishes .section-subtitle {
+            color: var(--rosewood) !important;
+        }
+        #featured-dishes .premium-card {
+            background: #ffffff !important;
+            border-color: rgba(19, 47, 32, 0.1) !important;
+            box-shadow: 0 15px 35px rgba(19, 47, 32, 0.05) !important;
+        }
+        #featured-dishes .premium-card:hover {
+            border-color: var(--rosewood) !important;
+            box-shadow: 0 25px 50px rgba(90, 24, 39, 0.12) !important;
+        }
+        #featured-dishes .card-content h3 {
+            color: var(--formal-garden-deep) !important;
+        }
+        #featured-dishes .card-content p {
+            color: #4A524D !important;
+        }
+        #featured-dishes .card-content h4 {
+            color: var(--rosewood) !important;
+        }
+        #featured-dishes .badge-tag {
+            background: var(--formal-garden);
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+        
+        #about-us {
+            background: var(--formal-garden);
+        }
+        
         #luxury-story-section {
             background: var(--formal-garden-deep);
         }
-
         #luxury-story-section .premium-card {
             background: rgba(90, 24, 39, 0.15) !important;
             border-color: rgba(223, 186, 134, 0.15) !important;
             padding-bottom: 80px !important;
         }
-
         #luxury-story-section .premium-card:hover {
             border-color: var(--border-hover) !important;
             background: rgba(90, 24, 39, 0.25) !important;
         }
-
+        
         #reviews-section {
             background: #ffffff !important;
         }
-
         #reviews-section .section-title {
             color: var(--formal-garden-deep) !important;
         }
-
         #reviews-section .section-subtitle {
             color: var(--rosewood) !important;
         }
-
         #reviews-section .review-card {
             background: #5a1827 !important;
             border-color: rgba(223, 186, 134, 0.15) !important;
         }
-
         #reviews-section .review-card:hover {
             border-color: var(--border-hover) !important;
             background: #7E2638 !important;
             box-shadow: 0 15px 35px rgba(90, 24, 39, 0.15) !important;
         }
-
+        
         #faqs-section {
             background: var(--formal-garden-deep);
         }
-
         #faqs-section .faq-item {
             border-bottom-color: rgba(223, 186, 134, 0.15);
         }
-
         #faqs-section .faq-header:hover h3 {
             color: var(--gold);
         }
-
         #faqs-section .faq-content p {
             color: #A8A196;
         }
+        
+        footer {
+            background: #07120D !important;
+            border-top: 1px solid rgba(223, 186, 134, 0.15) !important;
+            color: #A8A196 !important;
+        }
+        footer h5 {
+            color: var(--gold) !important;
+        }
+        footer ul li a {
+            color: #A8A196 !important;
+        }
+        footer ul li a:hover {
+            color: var(--gold) !important;
+        }
+        footer input.form-control {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(223, 186, 134, 0.15) !important;
+        }
+        footer input.form-control:focus {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.15) !important;
+        }
     </style>
+
 </head>
 
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="container header-inner">
-            <div class="logo-box">
-                <img src="assets/images/logo.png" alt="La Medusaa Logo">
+    <!-- NAVBAR -->
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+
+        <div class="container">
+
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
+            </a>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+
+                <span class="navbar-toggler-icon">
+
+                </span>
+
+            </button>
+
+            <div class="collapse navbar-collapse" id="navMenu">
+
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="index.html">
+
+                            Home
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link auth-required" href="menutest.html">
+
+                            Menu
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="book-table-test.html">
+
+                            Book Table
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="about.html">
+
+                            About Us
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="register.html">
+
+                            Create Account
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="career.html#ambitions-section">
+
+                            Ambitions
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="career.html#career-form">
+
+                            Career
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="login.html" id="authLink">
+
+                            Login
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
             </div>
 
-            <nav class="nav-links">
-                <a href="index.html">HOME</a>
-                <a href="about.html">ABOUT US</a>
-                <a href="menutest.html">MENU</a>
-                <a href="book-table-test.html">BOOK TABLE</a>
-
-                <!-- <a href="register.html">CREATE ACCOUNT</a>
-                <a href="ambitions.html">AMBITIONS</a> -->
-                <a href="career.html">CAREER</a>
-                <!-- <a href="login.html">LOGIN</a> -->
-            </nav>
-
-            <a href="login.html" class="btn-outline">MY ACCOUNT</a>
         </div>
-    </header>
 
-    <!-- Hero Section -->
+    </nav>
+
     <section class="hero">
-        <div class="container" style="display:flex; width:100%;">
-            <div class="hero-content">
-                <div class="hero-subtitle">FINE FOR MOMENTS</div>
-                <h1 class="hero-title">Taste the Difference,<br>Savor the Moment.</h1>
-                <div class="hero-divider"></div>
-                <p class="hero-text">An exceptional culinary experience crafted with passion and the finest ingredients.
-                </p>
 
-                <div class="hero-actions">
-                    <button class="btn-solid-green" onclick="window.location.href='book-table-test.html'">BOOK A
-                        TABLE</button>
-                    <div class="play-btn">
-                        <div class="play-icon"><i class="fa-solid fa-play" style="margin-left:3px;"></i></div>
-                        <span class="play-text">WATCH OUR VIDEO</span>
+        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1800&auto=format&fit=crop"
+            alt="Medusa Restaurant">
+
+        <div class="hero-overlay">
+
+        </div>
+
+        <div class="hero-content">
+
+            <p class="hero-subtitle">
+
+                Premium Dining Experience
+
+            </p>
+
+            <h1 class="hero-title">
+
+                Luxury Taste <br>
+
+                Crafted Perfectly
+
+            </h1>
+
+            <div class="hero-buttons">
+
+                <a href="menutest.html" class="btn btn-gold auth-required">
+
+                    Order Now
+
+                </a>
+
+                <a href="book-table-test.html" class="btn btn-outline-gold">
+
+                    Book Table
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- Scroll Down Mouse Indicator -->
+        <div class="scroll-indicator">
+            <div class="mouse-icon">
+                <div class="scroll-wheel"></div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- STATS BANNER -->
+    <section class="stats-banner">
+        <div class="container">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Culinary Awards</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">20K+</div>
+                        <div class="stat-label">Happy Diners</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Master Chefs</div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="hero-image-wrapper">
-            <video autoplay loop muted playsinline>
-                <source src="assets/video/into_video.mp4" type="video/mp4">
-            </video>
-        </div>
     </section>
 
-
-    <!-- Features Section -->
-    <section class="features">
-        <div class="container features-grid">
-            <div class="feature-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="width: 40px; height: 40px; margin: 0 auto 25px; display: block; color: #8c7258;">
-                    <path d="M18 18V21H6V18" />
-                    <path d="M12 18v3" />
-                    <path
-                        d="M6 18C4 18 3 17 3 15C3 13 4 12 6 12C6.5 12 7 12.2 7.5 12.5C8 9.5 10 7.5 12 7.5C14 7.5 16 9.5 16.5 12.5C17 12.2 17.5 12 18 12C20 12 21 13 21 15C21 17 20 18 18 18" />
-                </svg>
-                <h4 class="feature-title">QUALITY INGREDIENTS</h4>
-                <p class="feature-text">We use only the finest<br>and freshest ingredients.</p>
-            </div>
-            <div class="feature-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="width: 40px; height: 40px; margin: 0 auto 25px; display: block; color: #8c7258;">
-                    <path
-                        d="M12 2C12 2 14.5 5.5 14.5 8C14.5 10.5 12 13 12 13C12 13 9.5 10.5 9.5 8C9.5 5.5 12 2 12 2Z" />
-                    <path
-                        d="M12 13C12 13 15.5 14.5 18 14.5C20.5 14.5 23 12 23 12C23 12 20.5 9.5 18 9.5C15.5 9.5 12 13 12 13Z" />
-                    <path d="M12 13C12 13 8.5 14.5 6 14.5C3.5 14.5 1 12 1 12C1 12 3.5 9.5 6 9.5C8.5 9.5 12 13 12 13Z" />
-                    <path
-                        d="M12 13C12 13 13.5 16.5 13.5 19C13.5 21.5 12 23 12 23C12 23 10.5 21.5 10.5 19C10.5 16.5 12 13 12 13Z" />
-                </svg>
-                <h4 class="feature-title">SEASONAL MENU</h4>
-                <p class="feature-text">Our menu changes with<br>the seasons.</p>
-            </div>
-            <div class="feature-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="width: 40px; height: 40px; margin: 0 auto 25px; display: block; color: #8c7258;">
-                    <path
-                        d="M12 2C7.5 6 5.5 9.5 5.5 13.5C5.5 17.5 8.5 20.5 12 22C15.5 20.5 18.5 17.5 18.5 13.5C18.5 9.5 16.5 6 12 2Z" />
-                    <path
-                        d="M9 7.5H15M9 7.5C9 10.5 10.5 12 12 12C13.5 12 15 10.5 15 7.5M9 7.5V7M15 7.5V7M12 12V17M9.5 17H14.5" />
-                </svg>
-                <h4 class="feature-title">PERFECT PAIRING</h4>
-                <p class="feature-text">Handpicked wines to<br>elevate your experience.</p>
-            </div>
-            <div class="feature-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="width: 40px; height: 40px; margin: 0 auto 25px; display: block; color: #8c7258;">
-                    <path d="M12 22V14" />
-                    <path
-                        d="M12 14C15 14 17.5 11.5 17.5 8.5C17.5 5.5 15 3 12 3C9 3 6.5 5.5 6.5 8.5C6.5 11.5 9 14 12 14Z" />
-                    <path
-                        d="M12 8.5C13.5 8.5 14.5 7.5 14.5 6C14.5 4.5 13.5 3.5 12 3.5C10.5 3.5 9.5 4.5 9.5 6C9.5 7.5 10.5 8.5 12 8.5Z" />
-                    <path d="M9 14C9.5 15.5 10.5 16.5 12 16.5C13.5 16.5 14.5 15.5 15 14" />
-                </svg>
-                <h4 class="feature-title">MEMORABLE EXPERIENCE</h4>
-                <p class="feature-text">Creating moments you'll<br>always remember.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Us Section -->
-    <section class="about-split">
-        <div class="about-content">
-            <div class="about-subtitle">ABOUT US</div>
-            <h2 class="about-title">More Than Just<br>a Restaurant</h2>
-            <div class="about-divider"></div>
-            <p class="about-text">Medusa Bar & Lounge is more than just a place to eat. It's a place to enjoy
-                unforgtbble food, create unforgetiable memories.</p>
-            <button class="btn-solid-burgundy" onclick="window.location.href='about.html'">DISCOVER OUR STORY</button>
-        </div>
-        <div class="about-image"></div>
-    </section>
-
-    <!-- Gallery Section -->
-    <section class="gallery">
-        <div class="gallery-header">
-            <h2 class="gallery-title">GALLERY</h2>
-            <div class="gallery-subtitle">Explore</div>
-        </div>
-        <div class="gallery-grid">
-            <div class="gallery-item"><img src="assets/images/gallery_1.png" alt="Gallery 1"></div>
-            <div class="gallery-item"><img src="assets/images/gallery_2.png" alt="Gallery 2"></div>
-            <div class="gallery-item"><img src="assets/images/gallery_3.png" alt="Gallery 3"></div>
-            <div class="gallery-item"><img src="assets/images/gallery_4.png" alt="Gallery 4"></div>
-        </div>
-    </section>
-
-    <!-- THE ESSENCE SECTION -->
-    <section class="section" id="luxury-story-section">
+    <!-- SERVICES & FEATURES GRID -->
+    <section class="section" id="services-section">
         <div class="container">
+            <h2 class="section-title reveal">The Medusa Experience</h2>
+            <p class="section-subtitle reveal">Every detail curated to perfection</p>
+            
+            <div class="row g-4">
+                <!-- FEATURE 1 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <h3>Artisanal Menu</h3>
+                        <p>Dishes handcrafted with ingredients flown in fresh from organic heritage farms daily.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 2 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22a7 7 0 0 0 7-7V4H5v11a7 7 0 0 0 7 7z"/>
+                                <path d="M12 2v2"/>
+                                <path d="M9 10h6"/>
+                            </svg>
+                        </div>
+                        <h3>Private Reserve</h3>
+                        <p>An expansive private collection of cellar-aged wines curated by world-class sommeliers.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 3 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                                <circle cx="12" cy="12" r="4"/>
+                            </svg>
+                        </div>
+                        <h3>Bespoke Ambience</h3>
+                        <p>Enjoy candlelight setting, velvet fixtures, and acoustic space designed for conversations.</p>
+                    </div>
+                </div>
+                <!-- FEATURE 4 -->
+                <div class="col-lg-3 col-md-6 reveal">
+                    <div class="feature-item text-center">
+                        <div class="feature-icon-box mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="7"/>
+                                <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"/>
+                            </svg>
+                        </div>
+                        <h3>Master Chefs</h3>
+                        <p>Dishes orchestrated by Michelin-awarded culinary experts pushing boundaries of taste.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- FEATURED DISHES -->
+
+    <section class="section" id="featured-dishes">
+
+        <div class="container">
+
+            <h2 class="section-title reveal">
+
+                Featured Dishes
+
+            </h2>
+
+            <p class="section-subtitle reveal">
+
+                Chef curated premium selections
+
+            </p>
+
+            <div class="row g-4">
+
+                <!-- CARD 1 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Chef's Special</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800&auto=format&fit=crop"
+                                alt="Pizza">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Margherita Pizza
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Fresh mozzarella, basil,
+                                rich tomato sauce
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹299
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CARD 2 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Award Winning</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=800&auto=format&fit=crop"
+                                alt="Butter Chicken">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Butter Chicken
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Creamy curry with
+                                premium spices
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹349
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CARD 3 -->
+
+                <div class="col-md-4 reveal">
+
+                    <div class="premium-card">
+
+                        <div class="badge-tag">Premium Reserve</div>
+
+                        <div class="img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=800&auto=format&fit=crop"
+                                alt="Dessert">
+                        </div>
+
+                        <div class="card-content">
+
+                            <h3>
+
+                                Gulab Jamun
+
+                            </h3>
+
+                            <p class="text-secondary">
+
+                                Luxury Indian dessert
+                                with saffron syrup
+
+                            </p>
+
+                            <h4 class="text-warning">
+
+                                ₹99
+
+                            </h4>
+
+                            <a href="menutest.html" class="btn btn-gold w-100 mt-3 auth-required">
+
+                                Order Now
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+    <!-- EXPERIENCE SECTION -->
+
+    <section class="section" id="about-us">
+
+        <div class="container">
+
+            <div class="row align-items-center g-5">
+
+                <div class="col-lg-6 reveal">
+
+                    <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?q=80&w=800&auto=format&fit=crop"
+                        class="img-fluid rounded-4 shadow-lg floating-img" alt="Chef">
+
+                </div>
+
+                <!-- CONTENT -->
+
+                <div class="col-lg-6 reveal">
+
+                    <p class="hero-subtitle">
+
+                        OUR STORY
+
+                    </p>
+
+                    <h2 class="section-title text-start">
+
+                        Crafting Luxury Dining Experiences
+
+                    </h2>
+
+                    <p class="text-secondary fs-5 mb-4">
+
+                        At Medusa,
+                        we believe dining is more than food.
+
+                        It is atmosphere,
+                        emotion,
+                        and unforgettable taste.
+
+                    </p>
+
+                    <p class="text-secondary fs-5 mb-5">
+
+                        From premium ingredients
+                        to handcrafted dishes,
+                        every plate is designed
+                        to deliver elegance
+                        and perfection.
+
+                    </p>
+
+                    <a href="book-table-test.html" class="btn btn-gold px-5 py-3">
+
+                        Reserve A Table
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+    <!-- LUXURY STORY SECTION -->
+
+    <section class="section" id="luxury-story-section">
+
+        <div class="container">
+
             <div class="premium-card p-4 p-lg-5 reveal">
+
                 <div class="row align-items-center g-5">
+
                     <div class="col-lg-5">
+
                         <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=800&auto=format&fit=crop"
                             class="img-fluid rounded-4 floating-img" alt="Chef">
+
                     </div>
+
                     <div class="col-lg-7">
+
                         <p class="hero-subtitle">
+
                             THE ESSENCE
+
                         </p>
+
                         <h2 class="section-title text-start mb-4">
+
                             A Culinary Experience Beyond Taste
+
                         </h2>
+
                         <p class="text-secondary fs-5 mb-4">
-                            Medusa combines premium ingredients, luxury atmosphere, and culinary artistry to create
-                            unforgettable dining.
+
+                            Medusa combines
+                            premium ingredients,
+                            luxury atmosphere,
+                            and culinary artistry
+                            to create unforgettable dining.
+
                         </p>
+
                         <p class="text-secondary fs-5 mb-5">
-                            Every dish is carefully crafted to deliver elegance, emotion, and exceptional flavor.
+
+                            Every dish is carefully crafted
+                            to deliver elegance,
+                            emotion,
+                            and exceptional flavor.
+
                         </p>
+
                         <a href="book-table-test.html" class="btn btn-outline-gold px-5 py-3">
+
                             Discover Our Philosophy →
+
                         </a>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </section>
 
-    <!-- SIGNATURE REVIEWS / GUEST EXPERIENCES -->
+    <!-- SIGNATURE REVIEWS -->
     <section class="section" id="reviews-section">
         <div class="container">
             <h2 class="section-title reveal">Guest Experiences</h2>
             <p class="section-subtitle reveal">Accolades from our esteemed patrons</p>
-
+            
             <div class="row g-4">
                 <!-- REVIEW 1 -->
                 <div class="col-md-6 col-lg-4 reveal">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"Medusa is not merely a restaurant; it's a sensory performance. The
-                            butter chicken customizations are absolutely exquisite. A truly majestic fine dining
-                            encounter."</div>
+                        <div class="review-text">"Medusa is not merely a restaurant; it's a sensory performance. The butter chicken customizations are absolutely exquisite. A truly majestic fine dining encounter."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"
-                                class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Vikram Malhotra</div>
                                 <div class="reviewer-title">Elite Member</div>
@@ -1350,12 +1340,9 @@
                 <div class="col-md-6 col-lg-4 reveal">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"The private cellar wine options paired with the custom pizza was
-                            incredibly divine. The candlelit atmosphere creates a level of elegance unmatched in the
-                            city."</div>
+                        <div class="review-text">"The private cellar wine options paired with the custom pizza was incredibly divine. The candlelit atmosphere creates a level of elegance unmatched in the city."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"
-                                class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Ananya Sen</div>
                                 <div class="reviewer-title">Food Critic</div>
@@ -1367,11 +1354,9 @@
                 <div class="col-md-6 col-lg-4 reveal d-md-none d-lg-block">
                     <div class="review-card">
                         <div class="stars">★★★★★</div>
-                        <div class="review-text">"Flawless reservation system and outstanding service. The dessert list
-                            is a masterpiece of flavors. Easily the finest dining establishment in the region."</div>
+                        <div class="review-text">"Flawless reservation system and outstanding service. The dessert list is a masterpiece of flavors. Easily the finest dining establishment in the region."</div>
                         <div class="reviewer-info">
-                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop"
-                                class="reviewer-avatar" alt="Patron Avatar">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop" class="reviewer-avatar" alt="Patron Avatar">
                             <div>
                                 <div class="reviewer-name">Rohan Verma</div>
                                 <div class="reviewer-title">Gourmand</div>
@@ -1388,130 +1373,252 @@
         <div class="container">
             <h2 class="section-title reveal">Frequently Asked Questions</h2>
             <p class="section-subtitle reveal">Your inquiries, resolved</p>
-
+            
             <div class="faq-accordion reveal">
                 <!-- FAQ 1 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>What is the dress code at Medusa?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>We maintain a smart casual to formal dress code to preserve the elegant atmosphere of our
-                            dining rooms. Sportswear, sandals, and sleeveless shirts are discouraged.</p>
+                        <p>We maintain a smart casual to formal dress code to preserve the elegant atmosphere of our dining rooms. Sportswear, sandals, and sleeveless shirts are discouraged.</p>
                     </div>
                 </div>
                 <!-- FAQ 2 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>Do I need to reserve a table in advance?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>While walk-ins are welcome if space allows, we highly recommend booking a table via our
-                            online system to ensure availability, especially for weekend dinner reservations.</p>
+                        <p>While walk-ins are welcome if space allows, we highly recommend booking a table via our online system to ensure availability, especially for weekend dinner reservations.</p>
                     </div>
                 </div>
                 <!-- FAQ 3 -->
                 <div class="faq-item">
                     <div class="faq-header" onclick="toggleFaq(this)">
                         <h3>Can you accommodate specific dietary restrictions?</h3>
-                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg></div>
+                        <div class="faq-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
                     </div>
                     <div class="faq-content">
-                        <p>Yes, absolutely. Our culinary team is highly experienced in preparing custom options for
-                            gluten-free, vegan, nut allergies, and other dietary preferences. Simply specify when
-                            reserving or ordering.</p>
+                        <p>Yes, absolutely. Our culinary team is highly experienced in preparing custom options for gluten-free, vegan, nut allergies, and other dietary preferences. Simply specify when reserving or ordering.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- FOOTER -->
+
     <footer>
-        <div class="container footer-grid">
-            <div class="footer-col footer-logo">
-                <img src="assets/images/logo.png" alt="La Medusaa Logo" style="max-height: 90px; margin-bottom: 25px;">
-                <p class="footer-text">The Signature of Elegance!</p>
-            </div>
 
-            <div class="footer-col">
-                <h4 class="footer-heading">NAVIGATION</h4>
-                <p><a href="index.html">Home</a></p>
-                <p><a href="menutest.html">Our Menu</a></p>
-                <p><a href="book-table-test.html">Reservations</a></p>
-                <p><a href="about.html">About Us</a></p>
-                <p><a href="register.html">Create Account</a></p>
-                <p><a href="career.html#ambitions-section">Ambitions</a></p>
-                <p><a href="career.html#career-form">Career</a></p>
-                <p><a href="login.html">Login</a></p>
-            </div>
+        <div class="container">
 
-            <div class="footer-col">
-                <h4 class="footer-heading">CONTACT</h4>
-                <p>SCO 44,45, District One Market<br>Sector 68, SAS Nagar<br>Punjab 140308</p>
-                <p style="margin-top: 15px;">+91 94272 72798</p>
-                <p>contact@medusa.com</p>
-                <button class="btn-view-map" onclick="openMapModal()" style="background:transparent; cursor:pointer;">
-                    <i class="fa-solid fa-location-dot"></i> VIEW ON MAP
-                </button>
-            </div>
+            <div class="row g-5">
 
-            <div class="footer-col" style="padding-right:0;">
-                <h4 class="footer-heading">FOLLOW US</h4>
-                <div class="social-icons">
-                    <a href="https://www.instagram.com/la_medusaa_mohali?igsh=MXVwcHA3Nm9wbXV1dQ=="><i
-                            class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#"><i class="fa-solid fa-globe"></i></a>
+                <div class="col-lg-3">
+
+                    <h2 class="d-flex align-items-center gap-2" style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
+                        <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
+                        <span>Medusa</span>
+                    </h2>
+
+                    <p class="mt-4 text-secondary">
+
+                        Luxury dining experience
+                        crafted for unforgettable moments.
+
+                    </p>
+
                 </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Navigation
+
+                    </h5>
+
+                    <ul class="list-unstyled">
+
+                        <li class="mb-3">
+
+                            <a href="index.html" class="text-secondary text-decoration-none">
+
+                                Home
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="menutest.html" class="text-secondary text-decoration-none auth-required">
+
+                                Our Menu
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="book-table-test.html" class="text-secondary text-decoration-none">
+
+                                Reservations
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="about.html" class="text-secondary text-decoration-none">
+
+                                About Us
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="register.html" class="text-secondary text-decoration-none">
+
+                                Create Account
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="career.html#ambitions-section" class="text-secondary text-decoration-none">
+
+                                Ambitions
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="career.html#career-form" class="text-secondary text-decoration-none">
+
+                                Career
+
+                            </a>
+
+                        </li>
+
+                        <li class="mb-3">
+
+                            <a href="login.html" class="text-secondary text-decoration-none" id="footerAuthLink">
+
+                                Login
+
+                            </a>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Contact
+
+                    </h5>
+
+                    <p class="text-secondary">
+
+                        SCO 44,45, District One Market<br>
+                        Sector 68, SAS Nagar<br>
+                        Punjab 140308
+
+                    </p>
+
+                    <p class="text-secondary">
+
+                        +91 94272 72798
+
+                    </p>
+
+                    <p class="text-secondary">
+
+                        contact@medusa.com
+
+                    </p>
+
+                    <button class="btn btn-outline-gold btn-sm mt-2" style="border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;" onclick="openMapModal()">
+                        <i class="fas fa-location-dot me-1"></i> View on Map
+                    </button>
+
+                </div>
+
+                <div class="col-lg-3">
+
+                    <h5 class="mb-4">
+
+                        Join Our Circle
+
+                    </h5>
+
+                    <p class="text-secondary mb-4">
+
+                        Get exclusive offers
+                        and premium updates.
+
+                    </p>
+
+                    <div class="d-flex">
+
+                        <input type="email" class="form-control" placeholder="Email Address">
+
+                        <button class="btn btn-gold">
+
+                            →
+
+                        </button>
+
+                    </div>
+
+                </div>
+
             </div>
+
+            <hr class="my-5" style="border-color:rgba(255,255,255,0.1);">
+
+            <p class="text-center text-secondary mb-0">
+
+                © 2026 Medusa.
+                All Rights Reserved.
+
+            </p>
+
         </div>
 
-        <div class="copyright">
-            &copy; 2026 Medusa Restaurant. All rights reserved.
-        </div>
     </footer>
 
     <!-- GOOGLE MAPS LOCATION MODAL -->
-    <div id="mapModal"
-        style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
-        <button onclick="closeMapModal()"
-            style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
-        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);"
-            id="mapContent">
-            <div
-                style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
-                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen
-                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div id="mapModal" style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
+        <button onclick="closeMapModal()" style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
+        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);" id="mapContent">
+            <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-            <h4 style="font-family:var(--font-serif);color:#fff;margin-top:16px;font-size:1.3rem;">La Medusaa</h4>
-            <p
-                style="color:var(--text-gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
-                SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
-            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308"
-                target="_blank" rel="noopener"
-                style="display:inline-block;margin-top:12px;color:var(--text-gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open
-                in Google Maps <i class="fa-solid fa-arrow-up-right-from-square ms-1"
-                    style="font-size:0.75rem;"></i></a>
+            <h4 style="font-family:'Cormorant Garamond',serif;color:#fff;margin-top:16px;font-size:1.3rem;">Medusa Restaurant</h4>
+            <p style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size:0.75rem;"></i></a>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // --- Map Modal Logic ---
@@ -1533,21 +1640,63 @@
         document.getElementById('mapModal').addEventListener('click', (e) => { if (e.target.id === 'mapModal') closeMapModal(); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('mapModal').style.visibility === 'visible') closeMapModal(); });
 
-        // --- FAQ Accordion Toggle ---
+        // FAQ Accordion Toggle
         function toggleFaq(headerElement) {
             const item = headerElement.closest('.faq-item');
             const isActive = item.classList.contains('active');
-
+            
             // Close other items
             document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-
+            
             if (!isActive) {
                 item.classList.add('active');
             }
         }
 
-        // --- Scroll Reveal Observer ---
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('msg') === 'login_first') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let loggedIn = false;
+            try {
+                const res = await fetch('api/check-session.php');
+                const data = await res.json();
+                if (data.success && data.logged_in) {
+                    loggedIn = true;
+                    
+                    // Update main nav link
+                    const authLink = document.getElementById('authLink');
+                    if (authLink) {
+                        authLink.textContent = 'Logout';
+                        authLink.href = 'api/logout.php';
+                    }
+                    
+                    // Update footer nav link
+                    const footerAuthLink = document.getElementById('footerAuthLink');
+                    if (footerAuthLink) {
+                        footerAuthLink.textContent = 'Logout';
+                        footerAuthLink.href = 'api/logout.php';
+                    }
+                }
+            } catch (e) {
+                console.error("Session check failed:", e);
+            }
+
+            // Intercept clicks on links and buttons requiring authentication
+            document.querySelectorAll('.auth-required').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    if (!loggedIn) {
+                        e.preventDefault();
+                        alert('Login first');
+                        window.location.href = 'login.html';
+                    }
+                });
+            });
+
+            // Scroll Reveal Observer
             const revealCallback = (entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -1568,6 +1717,7 @@
             });
         });
     </script>
+
 </body>
 
 </html>
