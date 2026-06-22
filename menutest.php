@@ -295,7 +295,7 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" id="navBrand" href="indextest.html" style="display:flex;align-items:center;gap:8px;">
+            <a class="navbar-brand" id="navBrand" href="index.html" style="display:flex;align-items:center;gap:8px;">
                 <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height:32px;border-radius:50%;border:1px solid var(--gold);padding:1px;">
                 Medusa
             </a>

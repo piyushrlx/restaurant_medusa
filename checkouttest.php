@@ -868,7 +868,12 @@ $csrf_token = "dummy_test_token";
 
                             <div class="col-12">
                                 <label for="billing_street" class="form-label-checkout">Street address<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_street" class="form-control-checkout mb-2" placeholder="House number and street name" value="" required>
+                                <div style="display: flex; gap: 10px; margin-bottom: 0.5rem;">
+                                    <input type="text" id="billing_street" class="form-control-checkout" placeholder="House number and street name" value="" required style="margin-bottom: 0;">
+                                    <button type="button" class="btn btn-outline-warning" id="btnChooseFromMap" style="white-space: nowrap; border-color: var(--gold); color: var(--gold); padding: 0.8rem 1rem; border-radius: 8px;">
+                                        <i class="fas fa-map-marker-alt"></i> Choose from Map
+                                    </button>
+                                </div>
                                 <input type="text" id="billing_apartment" class="form-control-checkout" placeholder="Apartment, suite, unit, etc. (optional)" value="">
                             </div>
 
@@ -1661,6 +1666,51 @@ scrollToTopBtn.addEventListener('click', () => {
         behavior: 'smooth'
     });
 });
+
+// Geolocation - Choose from Map
+const btnChooseMap = document.getElementById('btnChooseFromMap');
+if(btnChooseMap) {
+    btnChooseMap.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            btnChooseMap.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                    const data = await res.json();
+                    
+                    if (data && data.address) {
+                        const addr = data.address;
+                        const street = (addr.road || addr.suburb || '') + (addr.house_number ? ' ' + addr.house_number : '');
+                        document.getElementById('billing_street').value = street.trim() + ` [${lat}, ${lng}]`;
+                        
+                        if(addr.city || addr.town || addr.village) {
+                            document.getElementById('billing_city').value = addr.city || addr.town || addr.village;
+                        }
+                        if(addr.postcode) {
+                            document.getElementById('billing_zip').value = addr.postcode;
+                        }
+                    } else {
+                        document.getElementById('billing_street').value = `Coordinates: [${lat}, ${lng}]`;
+                    }
+                } catch (err) {
+                    console.error("Geocoding failed:", err);
+                    alert("Failed to get address from map, but coordinates captured.");
+                    document.getElementById('billing_street').value = `[${lat}, ${lng}]`;
+                }
+                btnChooseMap.innerHTML = '<i class="fas fa-check"></i> Found';
+                setTimeout(() => { btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map'; }, 3000);
+            }, (error) => {
+                alert('Location access denied or unavailable.');
+                btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map';
+            });
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+}
 </script>
 
 <!-- Premium Payment Loading Overlay -->

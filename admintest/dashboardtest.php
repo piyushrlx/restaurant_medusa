@@ -1860,6 +1860,21 @@ $table_zones = [
 .sidebar{
     transition:all .3s ease;
     width:260px;
+    height: 100vh;
+    overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(223, 186, 134, 0.4);
+    border-radius: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(223, 186, 134, 0.8);
 }
 .sidebar.collapsed{
     width:80px;
@@ -2825,6 +2840,12 @@ html:not(.light-mode) .form-select:focus{
                 </a>
             </li>
             <li>
+                <a class="sidebar-link" onclick="switchTab('driver-tab', this)">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Driver View</span>
+                </a>
+            </li>
+            <li>
                 <a class="sidebar-link" onclick="switchTab('settings-tab', this)">
                     <i class="fas fa-sliders"></i>
                     <span>Settings</span>
@@ -2842,6 +2863,11 @@ html:not(.light-mode) .form-select:focus{
     <!-- MAIN CONTAINER -->
     <div class="main-content">
         
+        <!-- ==================== DRIVER TAB ==================== -->
+        <div id="driver-tab" class="tab-panel" style="height: calc(100vh - 40px); overflow: hidden; padding: 0;">
+            <iframe src="driver.php" style="width: 100%; height: 100%; border: none; border-radius: 12px;"></iframe>
+        </div>
+
         <!-- ==================== DASHBOARD TAB ==================== -->
         <div id="dashboard-tab" class="tab-panel active">
             <div class="page-header">

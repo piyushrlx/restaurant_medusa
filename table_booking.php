@@ -340,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="indextest.html" style="display: flex; align-items: center; gap: 8px;">
+            <a class="navbar-brand" href="index.html" style="display: flex; align-items: center; gap: 8px;">
                 <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
                 Medusa
             </a>
@@ -394,7 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <p style="font-size: 0.82rem; color: #888; font-style: italic;">Note: Please arrive 10 minutes before your booking time.</p>
                         
                         <div class="d-flex gap-3 justify-content-center mt-4">
-                            <a href="indextest.html" class="btn-outline-gold">Back to Home</a>
+                            <a href="index.html" class="btn-outline-gold">Back to Home</a>
                             <a href="book-table-test.html" class="btn-outline-gold" style="border-color:#ccc;color:#ccc;">Book Another Table</a>
                         </div>
                     </div>

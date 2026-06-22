@@ -3718,7 +3718,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     const myModalEl = document.getElementById('deleteAccountModal');
                     const modal = bootstrap.Modal.getInstance(myModalEl);
                     modal.hide();
-                    setTimeout(() => { window.location.href = 'indextest.html'; }, 2000);
+                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
                 } else {
                     showToast(result.message, 'error');
                 }
