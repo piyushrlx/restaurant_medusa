@@ -17,7 +17,7 @@ if (strlen($token) !== 64 || !ctype_xdigit($token)) {
 $order = null;
 try {
     $stmt = $pdo->prepare("
-        SELECT o.id, o.order_number, o.customer_name, o.delivery_address,
+        SELECT o.id, o.order_number, o.customer_name, o.delivery_address, o.delivery_city,
                o.total_amount, o.order_status, o.tracking_status,
                o.estimated_delivery, o.order_date
         FROM orders o
@@ -67,6 +67,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
         :root {
@@ -511,7 +512,7 @@ $current_step = $step_order[$tracking_status] ?? 1;
         <!-- Address -->
         <div class="details-section">
             <p class="details-title">Delivery Address</p>
-            <p class="address-text"><?php echo nl2br(htmlspecialchars($order['delivery_address'])); ?></p>
+            <p class="address-text"><?php echo nl2br(htmlspecialchars(preg_replace('/\[[0-9.-]+,\s*[0-9.-]+\]/', '', $order['delivery_address']))); ?></p>
         </div>
     </div>
 
@@ -528,10 +529,12 @@ $current_step = $step_order[$tracking_status] ?? 1;
     LA-MEDUSAA Bar &amp; Lounge, Sector 68, Mohali &nbsp;Â·&nbsp; Live tracking updates every 15 seconds
 </footer>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(get_env_var('GOOGLE_MAPS_API_KEY', '')); ?>"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const TOKEN   = <?php echo json_encode($token); ?>;
 const POLL_MS = 15000;
+const DELIVERY_ADDRESS = <?php echo json_encode($order['delivery_address']); ?>;
+const DELIVERY_CITY = <?php echo json_encode($order['delivery_city'] ?? ''); ?>;
 
 const STEP_ORDER = { placed:1, confirmed:2, preparing:3, out_for_delivery:4, delivered:5, cancelled:0 };
 const LABELS = { placed:'Order Placed', confirmed:'Order Confirmed', preparing:'Being Prepared', out_for_delivery:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' };
@@ -546,168 +549,101 @@ function setFill(step) {
     document.getElementById('stepFill').style.width = pct + '%';
 }
 
-const RESTAURANT_COORD = [30.6865, 76.7403];
-const USER_COORD = [30.6985, 76.7523];
 let map = null;
 let riderMarker = null;
-let restaurantMarker = null;
-let userMarker = null;
+let customerMarker = null;
 let routeLine = null;
-let simulationProgress = 0.05; // Used for simulating movement
 
-const darkMapStyle = [
-  { elementType: "geometry", stylers: [{ color: "#212121" }] },
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
-  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
-  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
-  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#181818" }] },
-  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
-  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
-  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#373737" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
-  { featureType: "road.highway.controlled_access", elementType: "geometry", stylers: [{ color: "#4e4e4e" }] },
-  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
-  { featureType: "transit", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] }
-];
+async function getCustomerCoords() {
+    const match = DELIVERY_ADDRESS.match(/\[([0-9.-]+),\s*([0-9.-]+)\]/);
+    if (match) return [parseFloat(match[1]), parseFloat(match[2])];
+    
+    let cleanAddr = DELIVERY_ADDRESS.replace(/Table\s+[A-Za-z0-9]+/gi, '').trim();
+    if(cleanAddr) {
+        try {
+            const query = encodeURIComponent(cleanAddr);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            }
+        } catch(e) { console.error("Geocoding address failed", e); }
+    }
 
-// Custom HTML overlay marker for Google Maps
-class HTMLMarker extends google.maps.OverlayView {
-    constructor(latlng, html, map) {
-        super();
-        this.latlng = latlng;
-        this.html = html;
-        this.setMap(map);
+    if(DELIVERY_CITY && DELIVERY_CITY.trim() !== '') {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(DELIVERY_CITY.trim())}&limit=1`);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            }
+        } catch(e) { console.error("Geocoding city failed", e); }
     }
-    onAdd() {
-        this.div = document.createElement('div');
-        this.div.style.position = 'absolute';
-        this.div.style.cursor = 'pointer';
-        this.div.innerHTML = this.html;
-        const panes = this.getPanes();
-        panes.overlayImage.appendChild(this.div);
-    }
-    draw() {
-        const overlayProjection = this.getProjection();
-        const position = overlayProjection.fromLatLngToDivPixel(this.latlng);
-        if (position) {
-            // Anchor center bottom/middle: width 55px -> offset -27. height 55px -> offset -48
-            this.div.style.left = (position.x - 27) + 'px';
-            this.div.style.top = (position.y - 48) + 'px';
-        }
-    }
-    onRemove() {
-        if (this.div) {
-            this.div.parentNode.removeChild(this.div);
-            this.div = null;
-        }
-    }
-    setLatLng(latlng) {
-        this.latlng = latlng;
-        this.draw();
-    }
-    getElement() {
-        return this.div;
-    }
+    
+    // Fallback if geocoding fails so map always shows a line
+    console.warn("Using fallback coordinates for customer destination.");
+    return [30.690, 76.735];
 }
 
 function initMap() {
     if (map) return;
     
-    const restaurantPos = new google.maps.LatLng(RESTAURANT_COORD[0], RESTAURANT_COORD[1]);
-    const userPos = new google.maps.LatLng(USER_COORD[0], USER_COORD[1]);
-    
-    map = new google.maps.Map(document.getElementById('partnerMap'), {
-        center: restaurantPos,
-        zoom: 14,
-        styles: darkMapStyle,
-        disableDefaultUI: true,
-        zoomControl: false
+    map = L.map('partnerMap').setView([30.681219808145546, 76.72328631342646], 16);
+    L.tileLayer('http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
+        attribution: 'Google Maps'
+    }).addTo(map);
+
+    const truckIconHtml = `
+        <div style="background-color: #38bdf8; border: 2px solid white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            🚚
+        </div>
+    `;
+    const truckIcon = L.divIcon({
+        html: truckIconHtml,
+        className: 'dummy',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
     });
 
-    // Restaurant Marker using custom SVG
-    const restaurantIcon = {
-        url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="14" fill="%231a1a1a" stroke="%23c9a84c" stroke-width="2"/><path d="M11 7v6h1.5v6H14v-6h1.5V7H11zm5 4c0 3 2 4 2 4v4h1.5v-4s2-1 2-4V7h-5.5v4z" fill="%23c9a84c"/></svg>',
-        size: new google.maps.Size(30, 30),
-        anchor: new google.maps.Point(15, 15)
-    };
-    restaurantMarker = new google.maps.Marker({
-        position: restaurantPos,
-        map: map,
-        icon: restaurantIcon,
-        title: "Restaurant"
-    });
+    riderMarker = L.marker([30.681219808145546, 76.72328631342646], {icon: truckIcon}).addTo(map);
 
-    // User Marker using custom SVG
-    const userIcon = {
-        url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34"><circle cx="17" cy="17" r="16" fill="%23111111" stroke="%23555555" stroke-width="2"/><path d="M17 9.5L10 15v9h4v-6h6v6h4v-9l-7-5.5z" fill="white"/></svg>',
-        size: new google.maps.Size(34, 34),
-        anchor: new google.maps.Point(17, 17)
-    };
-    userMarker = new google.maps.Marker({
-        position: userPos,
-        map: map,
-        icon: userIcon,
-        title: "Delivery Address"
+    getCustomerCoords().then(coords => {
+        if (coords) {
+            const customerIconHtml = `
+                <div style="background-color: #ef4444; border: 2px solid white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                    🏠
+                </div>
+            `;
+            const customerIcon = L.divIcon({
+                html: customerIconHtml,
+                className: 'dummy',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+            customerMarker = L.marker(coords, {icon: customerIcon}).addTo(map);
+            
+            routeLine = L.polyline([riderMarker.getLatLng(), coords], {color: '#000000', weight: 4, opacity: 0.8, dashArray: '10, 10'}).addTo(map);
+            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+        }
     });
-
-    // Route Line (Polyline)
-    routeLine = new google.maps.Polyline({
-        path: [restaurantPos, userPos],
-        geodesic: true,
-        strokeColor: "#1A73E8",
-        strokeOpacity: 0.9,
-        strokeWeight: 4,
-        map: map
-    });
-
-    // Rider Marker (Proper 3D Rider Image via HTMLMarker)
-    const initialFlip = (USER_COORD[1] > RESTAURANT_COORD[1]) ? 'scaleX(-1)' : 'scaleX(1)';
-    const riderHtml = `<img src="assets/images/delivery_rider_transparent.png" class="rider-scooter-img" style="width: 55px; height: auto; transition: transform 0.3s ease; filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.5)); transform: ${initialFlip}; display: block;">`;
-    
-    riderMarker = new HTMLMarker(restaurantPos, riderHtml, map);
-    
-    // Bounds setup to fit route
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend(restaurantPos);
-    bounds.extend(userPos);
-    map.fitBounds(bounds, 30);
 }
-
-let lastLat = RESTAURANT_COORD[0];
-let lastLng = RESTAURANT_COORD[1];
 
 function updateMap(lat, lng) {
     if (!map) {
         initMap();
     }
     
-    const newLatLng = new google.maps.LatLng(lat, lng);
-    
-    // Flip rider horizontally depending on movement direction
-    if (lat !== lastLat || lng !== lastLng) {
-        const markerEl = riderMarker.getElement();
-        const imgEl = markerEl ? markerEl.querySelector('.rider-scooter-img') : null;
-        if (imgEl) {
-            if (lng > lastLng) {
-                imgEl.style.transform = 'scaleX(-1)'; // Move right -> flip
-            } else if (lng < lastLng) {
-                imgEl.style.transform = 'scaleX(1)';  // Move left -> default
-            }
+    if (lat && lng) {
+        const latlng = [lat, lng];
+        riderMarker.setLatLng(latlng);
+        
+        if (routeLine && customerMarker) {
+            routeLine.setLatLngs([latlng, customerMarker.getLatLng()]);
+            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+        } else {
+            map.setView(latlng, 15);
         }
-        lastLat = lat;
-        lastLng = lng;
     }
-    
-    // Update rider position
-    riderMarker.setLatLng(newLatLng);
 }
 
 function updateUI(data) {
@@ -750,17 +686,18 @@ function updateUI(data) {
         const mapCard = document.getElementById('liveMapCard');
         if (mapCard.style.display !== 'block') {
             mapCard.style.display = 'block';
-            setTimeout(() => { if (map) google.maps.event.trigger(map, 'resize'); }, 300);
+            setTimeout(() => { if (map) map.invalidateSize(); }, 300);
         }
         
-        // Simulate a moving rider away from the restaurant towards the user
-        simulationProgress += 0.05;
-        if (simulationProgress > 1) simulationProgress = 1;
-        
-        let lat = data.partner_lat || (RESTAURANT_COORD[0] + (USER_COORD[0] - RESTAURANT_COORD[0]) * simulationProgress);
-        let lng = data.partner_lng || (RESTAURANT_COORD[1] + (USER_COORD[1] - RESTAURANT_COORD[1]) * simulationProgress);
-        
-        updateMap(lat, lng);
+        // Fetch location from the new API
+        fetch('api/get_location.php')
+            .then(res => res.json())
+            .then(loc => {
+                if (loc.lat && loc.lng) {
+                    updateMap(loc.lat, loc.lng);
+                }
+            })
+            .catch(err => console.error("Error fetching location:", err));
     } else {
         document.getElementById('liveMapCard').style.display = 'none';
     }
@@ -772,9 +709,14 @@ function updateUI(data) {
 // Initial map load if already on the way
 <?php if ($tracking_status === 'out_for_delivery'): ?>
     setTimeout(() => {
-        // Run updateUI with current simulated data to initialize map
-        updateMap(RESTAURANT_COORD[0] + (USER_COORD[0] - RESTAURANT_COORD[0]) * 0.05, RESTAURANT_COORD[1] + (USER_COORD[1] - RESTAURANT_COORD[1]) * 0.05);
-        google.maps.event.trigger(map, 'resize');
+        initMap();
+        fetch('api/get_location.php')
+            .then(res => res.json())
+            .then(loc => {
+                if (loc.lat && loc.lng) {
+                    updateMap(loc.lat, loc.lng);
+                }
+            });
     }, 500);
 <?php endif; ?>
 
@@ -792,6 +734,21 @@ async function poll() {
 <?php if (!$terminal): ?>
 pollTimer = setInterval(poll, POLL_MS);
 <?php endif; ?>
+
+// Fallback to fetch location if map is visible but order status not polled yet
+setInterval(() => {
+    const mapCard = document.getElementById('liveMapCard');
+    if (mapCard.style.display === 'block') {
+        fetch('api/get_location.php')
+            .then(res => res.json())
+            .then(loc => {
+                if (loc.lat && loc.lng) {
+                    updateMap(loc.lat, loc.lng);
+                }
+            })
+            .catch(err => console.error("Error fetching location:", err));
+    }
+}, 2000);
 </script>
 
 </body>
