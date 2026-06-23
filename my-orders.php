@@ -12,7 +12,7 @@ try {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($orders as &$order) {
-        $item_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+        $item_stmt = $pdo->prepare("SELECT oi.*, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
         $item_stmt->execute([$order['id']]);
         $order['items'] = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -46,6 +46,20 @@ try {
     $userCoupons = $couponService->getUserCoupons($user_id);
 } catch (Exception $e) {
     // Ignore error
+}
+
+$user_notifications = [];
+$unread_notifications_count = 0;
+try {
+    $notif_stmt = $pdo->prepare("SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $notif_stmt->execute([$user_id]);
+    $user_notifications = $notif_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($user_notifications as $n) {
+        if (empty($n['is_read'])) $unread_notifications_count++;
+    }
+} catch(PDOException $e) {
+    // ignore
 }
 ?>
 <!DOCTYPE html>
@@ -211,6 +225,22 @@ try {
     }
     .notif-dropdown.show {
       display: flex;
+    }
+
+    /* Bell Ringing Animation */
+    @keyframes bell-ring {
+      0% { transform: rotate(0); }
+      10% { transform: rotate(20deg); }
+      20% { transform: rotate(-15deg); }
+      30% { transform: rotate(10deg); }
+      40% { transform: rotate(-5deg); }
+      50% { transform: rotate(0); }
+      100% { transform: rotate(0); }
+    }
+    .bell-ringing {
+      display: inline-block;
+      transform-origin: top center;
+      animation: bell-ring 1.5s infinite;
     }
     .notif-header {
       padding: 15px;
@@ -796,29 +826,33 @@ try {
 
     <div class="lux-nav-actions">
       <div class="nav-icon-container" id="notif-bell">
-        <a href="javascript:void(0)" class="nav-icon"><i class="fa-regular fa-bell"></i></a>
-        <div class="notif-badge">2</div>
+        <a href="javascript:void(0)" class="nav-icon position-relative">
+          <i class="fa-regular fa-bell <?php echo ($unread_notifications_count > 0) ? 'bell-ringing' : ''; ?>" id="notifBellIcon"></i>
+          <?php if($unread_notifications_count > 0): ?>
+              <span id="notifRedDot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;">
+                  <span class="visually-hidden">New alerts</span>
+              </span>
+          <?php endif; ?>
+        </a>
         
         <!-- Dropdown -->
         <div class="notif-dropdown" id="notif-dropdown">
           <div class="notif-header">Notifications</div>
-          <a href="#" class="notif-item">
-            <i class="fa-solid fa-circle-check notif-icon"></i>
-            <div class="notif-content">
-              <h5>Order Confirmed</h5>
-              <p>Your recent order has been confirmed by the kitchen.</p>
-              <span class="notif-time">10 mins ago</span>
-            </div>
-          </a>
-          <a href="#" class="notif-item">
-            <i class="fa-solid fa-gift notif-icon"></i>
-            <div class="notif-content">
-              <h5>Special Offer</h5>
-              <p>Enjoy a complimentary dessert on your next visit.</p>
-              <span class="notif-time">2 hours ago</span>
-            </div>
-          </a>
-          <a href="#" class="notif-footer">View All Notifications</a>
+          <?php if (empty($user_notifications)): ?>
+              <div class="notif-item" style="justify-content: center; color: var(--gold); padding: 15px;">No new notifications</div>
+          <?php else: ?>
+              <?php foreach ($user_notifications as $notif): ?>
+              <a href="#" class="notif-item">
+                <i class="fa-solid fa-circle-info notif-icon"></i>
+                <div class="notif-content">
+                  <h5><?php echo htmlspecialchars($notif['title']); ?></h5>
+                  <p><?php echo htmlspecialchars($notif['message']); ?></p>
+                  <span class="notif-time"><?php echo date('M d, g:i A', strtotime($notif['created_at'])); ?></span>
+                </div>
+              </a>
+              <?php endforeach; ?>
+          <?php endif; ?>
+          <a href="profile.php?tab=notifications" class="notif-footer">View All Notifications</a>
         </div>
       </div>
       <a href="profile.php" class="nav-avatar"><?php echo substr($user_name, 0, 1); ?></a>
@@ -939,14 +973,19 @@ try {
             if (strpos($lname, 'mojito') !== false || strpos($lname, 'wine') !== false || strpos($lname, 'beer') !== false || strpos($lname, 'cola') !== false) {
                 $dClass = 'diet-bar'; $dText = 'Bar';
             }
-            // Image mock
-            $imgSrc = 'assets/images/placeholder_food.png';
-            if (strpos($lname, 'risotto') !== false) $imgSrc = 'assets/images/gallery_2.png';
-            if (strpos($lname, 'lamb') !== false) $imgSrc = 'assets/images/gallery_4.png';
-            if (strpos($lname, 'pasta') !== false) $imgSrc = 'assets/images/gallery_3.png';
+            // Resolve image source
+            $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '';
+            if (!empty($imgSrc) && strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, '//') !== 0) {
+                if (strpos($imgSrc, 'uploads/') !== 0) {
+                    $imgSrc = 'uploads/' . $imgSrc;
+                }
+            }
+            if (empty($imgSrc)) {
+                $imgSrc = 'uploads/default.jpg';
+            }
           ?>
           <div class="oi-row">
-            <img src="<?php echo $imgSrc; ?>" alt="item" class="oi-img" onerror="this.src='assets/images/logo.png'">
+            <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="item" class="oi-img" onerror="this.src='assets/images/logo.png'">
             <div class="oi-info">
               <div class="oi-name"><?php echo htmlspecialchars($item['item_name']); ?></div>
               <span class="diet-badge <?php echo $dClass; ?>"><?php echo $dText; ?></span>
@@ -962,7 +1001,7 @@ try {
           <div style="display: flex; gap: 15px;">
             <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details">View Details</a>
             <?php if ($curStep > 0 && $curStep < 5): ?>
-            <a href="order-tracking.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details" style="background: var(--gold); color: var(--card-bg); border-color: var(--gold); font-weight: 600;">Track Order <i class="fa-solid fa-location-arrow" style="margin-left: 5px;"></i></a>
+            <a href="track.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details" style="background: var(--gold); color: var(--card-bg); border-color: var(--gold); font-weight: 600;">Track Order <i class="fa-solid fa-location-arrow" style="margin-left: 5px;"></i></a>
             <a href="javascript:void(0);" class="btn-details" style="border-color: #ff4d4d; color: #ff4d4d;">Cancel Order</a>
             <?php endif; ?>
           </div>
@@ -1060,7 +1099,25 @@ try {
 
   <script>
     document.getElementById('notif-bell').addEventListener('click', function(e) {
-      document.getElementById('notif-dropdown').classList.toggle('show');
+      const dropdown = document.getElementById('notif-dropdown');
+      const isShowing = dropdown.classList.toggle('show');
+      
+      if (isShowing) {
+        const bellIcon = document.getElementById('notifBellIcon');
+        const redDot = document.getElementById('notifRedDot');
+        if (bellIcon && bellIcon.classList.contains('bell-ringing')) {
+          bellIcon.classList.remove('bell-ringing');
+          if (redDot) redDot.style.display = 'none';
+          
+          // Call API to mark as read
+          fetch('api/mark-notifications-read.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }).catch(err => console.error('Error marking notifications as read:', err));
+        }
+      }
       e.stopPropagation();
     });
     document.addEventListener('click', function(e) {

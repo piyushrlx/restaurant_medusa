@@ -385,7 +385,9 @@
             tbody.innerHTML = items.map(item => {
                 let imgSrc = item.image_url || 'default.jpg';
                 if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
-                    imgSrc = 'uploads/' + imgSrc;
+                    if (!imgSrc.startsWith('uploads/')) {
+                        imgSrc = 'uploads/' + imgSrc;
+                    }
                 }
                 return `
                 <tr>

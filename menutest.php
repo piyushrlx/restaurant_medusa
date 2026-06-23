@@ -472,7 +472,9 @@
             container.innerHTML = items.map(item => {
                 let imgSrc = item.image_url || '';
                 if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
-                    imgSrc = 'uploads/' + imgSrc;
+                    if (!imgSrc.startsWith('uploads/')) {
+                        imgSrc = 'uploads/' + imgSrc;
+                    }
                 }
                 if (!imgSrc) imgSrc = 'uploads/default.jpg';
 
@@ -530,7 +532,11 @@
 
             // Set header info
             let imgSrc = item.image_url || '';
-            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) imgSrc = 'uploads/' + imgSrc;
+            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+                if (!imgSrc.startsWith('uploads/')) {
+                    imgSrc = 'uploads/' + imgSrc;
+                }
+            }
             if (!imgSrc) imgSrc = 'uploads/default.jpg';
             document.getElementById('custDishImg').src      = imgSrc;
             document.getElementById('custDishImg').alt      = item.name;

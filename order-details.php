@@ -18,7 +18,7 @@ if (!empty($order_number)) {
                 $error_msg = "Access Denied: You do not have permission to view this invoice.";
                 $order = null;
             } else {
-                $item_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+                $item_stmt = $pdo->prepare("SELECT oi.*, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
                 $item_stmt->execute([$order['id']]);
                 $order_items = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
             }
@@ -764,16 +764,21 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
                         if (strpos($lname, 'chicken') !== false || strpos($lname, 'lamb') !== false || strpos($lname, 'ribs') !== false || strpos($lname, 'prawn') !== false) {
                             $dClass = 'diet-nonveg'; $dText = 'Non-Veg';
                         }
-                        // Mock image
-                        $imgSrc = 'assets/images/placeholder_food.png';
-                        if (strpos($lname, 'ribs') !== false) $imgSrc = 'assets/images/gallery_4.png';
-                        if (strpos($lname, 'chicken') !== false) $imgSrc = 'assets/images/gallery_2.png';
-                        if (strpos($lname, 'cake') !== false || strpos($lname, 'dessert') !== false) $imgSrc = 'assets/images/gallery_3.png';
+                        // Resolve image source
+                        $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '';
+                        if (!empty($imgSrc) && strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, '//') !== 0) {
+                            if (strpos($imgSrc, 'uploads/') !== 0) {
+                                $imgSrc = 'uploads/' . $imgSrc;
+                            }
+                        }
+                        if (empty($imgSrc)) {
+                            $imgSrc = 'uploads/default.jpg';
+                        }
                     ?>
                     <tr>
                         <td>
                             <div class="item-cell">
-                                <img src="<?php echo $imgSrc; ?>" alt="item" class="item-img" onerror="this.src='assets/images/logo.png'">
+                                <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="item" class="item-img" onerror="this.src='assets/images/logo.png'">
                                 <div>
                                     <div class="item-name"><?php echo htmlspecialchars($item['item_name']); ?></div>
                                     <span class="diet-badge <?php echo $dClass; ?>"><?php echo $dText; ?></span>
