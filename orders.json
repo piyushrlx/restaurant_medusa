@@ -1255,41 +1255,5 @@
         "sms_status": "failed",
         "sms_response": "",
         "created_at": "2026-06-19 09:39:39"
-    },
-    "ORD-DD322": {
-        "order_id": "ORD-DD322",
-        "customer_name": "Test Customer",
-        "customer_phone": "9876543211",
-        "customer_email": "customer@example.com",
-        "delivery_address": "dfghjkhgfdsd, 25692, dsxfcgvhbjnkml, Delhi - 485945894, India",
-        "message": "",
-        "payment_id": "pay_T4cpj8CtadKwUb",
-        "cart_items": [
-            {
-                "id": "1",
-                "food_item_id": "1",
-                "quantity": 1,
-                "name": "Cream of Mushroom",
-                "price": 425,
-                "image_url": ""
-            },
-            {
-                "id": "2",
-                "food_item_id": "2",
-                "quantity": 1,
-                "name": "Manchow Soup",
-                "price": 425,
-                "image_url": ""
-            }
-        ],
-        "subtotal": 850,
-        "gst": 153,
-        "packing": 4.06,
-        "delivery": 40,
-        "total": 962.06,
-        "status": "Paid",
-        "sms_status": "failed",
-        "sms_response": "",
-        "created_at": "2026-06-22 11:20:54"
     }
 }

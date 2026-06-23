@@ -27,13 +27,19 @@ try {
             exit;
         }
 
+        // Ensure column exists
+        try {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `recovery_email` VARCHAR(255) NULL DEFAULT NULL");
+        } catch (Exception $ex) {}
+
         // Check if user exists
         if ($is_email) {
-            $stmt = $pdo->prepare("SELECT id, full_name, email, phone FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, recovery_email FROM users WHERE email = ? OR recovery_email = ?");
+            $stmt->execute([$identifier, $identifier]);
         } else {
-            $stmt = $pdo->prepare("SELECT id, full_name, email, phone FROM users WHERE phone = ?");
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, recovery_email FROM users WHERE phone = ?");
+            $stmt->execute([$identifier]);
         }
-        $stmt->execute([$identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
@@ -62,10 +68,12 @@ try {
         $sent_email = false;
         $sent_sms = false;
 
-        if ($is_email || !empty($user['email'])) {
+        if ($is_email) {
+            $sent_email = sendOTPEmail($identifier, $user['full_name'], $otp);
+        } else if (!empty($user['email'])) {
             $sent_email = sendOTPEmail($user['email'], $user['full_name'], $otp);
         }
-        if ($is_phone || !empty($user['phone'])) {
+        if ($is_phone || (!empty($user['phone']) && !$is_email)) {
             $sent_sms = sendOTPSMS($user['phone'], $otp);
         }
 
@@ -93,12 +101,18 @@ try {
 
         $is_email = filter_var($identifier, FILTER_VALIDATE_EMAIL);
 
+        // Ensure column exists
+        try {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `recovery_email` VARCHAR(255) NULL DEFAULT NULL");
+        } catch (Exception $ex) {}
+
         if ($is_email) {
-            $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE email = ? OR recovery_email = ?");
+            $stmt->execute([$identifier, $identifier]);
         } else {
             $stmt = $pdo->prepare("SELECT id, email_otp, otp_expires_at FROM users WHERE phone = ?");
+            $stmt->execute([$identifier]);
         }
-        $stmt->execute([$identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user || empty($user['email_otp'])) {

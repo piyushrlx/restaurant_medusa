@@ -35,6 +35,12 @@ $payment_method = trim($data['payment_method'] ?? 'Online');
 $cart_items = $data['cart_items'] ?? [];
 $coupon_code = trim($data['coupon_code'] ?? '');
 $redeem_loyalty_points = !empty($data['redeem_loyalty_points']);
+$save_address = !empty($data['save_address']);
+$first_name = trim($data['first_name'] ?? '');
+$last_name = trim($data['last_name'] ?? '');
+$country = trim($data['country'] ?? 'India');
+$street = trim($data['street'] ?? $delivery_address);
+$apartment = trim($data['apartment'] ?? '');
 
 if (empty($customer_phone) || empty($cart_items)) {
     echo json_encode([
@@ -167,6 +173,32 @@ try {
     ");
 } catch (PDOException $ex) {
     error_log("Failed to create user_liquor_quota table: " . $ex->getMessage());
+}
+
+// Save address if requested
+if ($db_user_id && $save_address) {
+    try {
+        $ins_addr = $pdo->prepare("
+            INSERT INTO user_addresses 
+            (user_id, first_name, last_name, phone, email, country, street, apartment, city, state, zip) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $ins_addr->execute([
+            $db_user_id,
+            $first_name ?: $customer_name,
+            $last_name,
+            $customer_phone,
+            $customer_email,
+            $country,
+            $street,
+            $apartment,
+            $delivery_city,
+            $delivery_state,
+            $delivery_pincode
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to save address: " . $e->getMessage());
+    }
 }
 
 try {
@@ -504,6 +536,6 @@ echo json_encode([
     'order_id'       => $order_number,
     'sms_status'     => $sms_status,
     'tracking_token' => $tracking_token ?? null,
-    'redirect_url'   => ($tracking_token ?? null) ? 'order_confirmed.php' : ('order-success.php?order_id=' . $order_number),
+    'redirect_url'   => 'order-success.php?order_id=' . $order_number,
 ]);
 exit;
