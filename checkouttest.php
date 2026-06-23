@@ -1041,6 +1041,16 @@ $csrf_token = "dummy_test_token";
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Membership Card Option -->
+                                <div class="payment-option-item" data-target="membership-panel">
+                                    <input type="radio" name="payment_method" value="membership" id="payment_membership" class="payment-option-radio">
+                                    <div class="payment-option-content">
+                                        <label for="payment_membership" class="payment-option-text" style="cursor: pointer;">Membership Pass</label>
+                                        <div class="payment-option-icons">
+                                            <i class="fas fa-id-badge" style="color: #C09B5B;"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Payment Details Panels -->
@@ -1055,6 +1065,13 @@ $csrf_token = "dummy_test_token";
                             </div>
                             <div id="banking-panel" class="payment-details-panel">
                                 Pay securely using Credit/Debit Cards, Net Banking, or other supported wallets.
+                            </div>
+                            <div id="membership-panel" class="payment-details-panel">
+                                Pay using your Medusa Elite Membership Pass.
+                                <div class="mt-3">
+                                    <input type="text" id="membership_card_number" name="membership_card_number" class="form-control-checkout mb-2" placeholder="Card Number (e.g. 8824 4590 1200 0002)">
+                                    <input type="text" id="membership_cvv" name="membership_cvv" class="form-control-checkout" placeholder="CVV (3 digits)" maxlength="4">
+                                </div>
                             </div>
 
                             <p class="privacy-policy-text">
@@ -1500,7 +1517,17 @@ document.getElementById('orderForm').onsubmit = async (e) => {
     const selectedMethodElement = document.querySelector('input[name="payment_method"]:checked');
     if (selectedMethodElement) {
         const selectedMethod = selectedMethodElement.value;
-        if (selectedMethod === 'upi') {
+        if (selectedMethod === 'membership') {
+            const cardNum = document.getElementById('membership_card_number').value.trim();
+            const cvv = document.getElementById('membership_cvv').value.trim();
+            if (!cardNum || !cvv) {
+                alert('Please enter your Membership Card Number and CVV.');
+                return;
+            }
+            showLoaderOverlay();
+            submitBackendOrder(compiledName, phone, compiledAddress, 'MEMBERSHIP_PASS');
+            return;
+        } else if (selectedMethod === 'upi') {
             options.prefill.method = 'upi';
             const upiIdVal = document.getElementById('upi_id').value.trim();
             if (upiIdVal) {
@@ -1565,7 +1592,9 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         state: state,
         zip: zip,
         coupon_code: appliedCouponCode,
-        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false
+        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false,
+        membership_card_number: document.getElementById('membership_card_number') ? document.getElementById('membership_card_number').value.trim() : '',
+        membership_cvv: document.getElementById('membership_cvv') ? document.getElementById('membership_cvv').value.trim() : ''
     };
 
     try {

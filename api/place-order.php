@@ -23,6 +23,28 @@ $customer_email = $data['customer_email'] ?? '';
 $delivery_address = $data['delivery_address'] ?? '';
 $message = $data['message'] ?? '';
 $payment_id = $data['razorpay_payment_id'] ?? 'MOCK_PAYMENT';
+$payment_method = $data['payment_method'] ?? 'Online';
+
+if ($payment_method === 'membership') {
+    $card_number = trim($data['membership_card_number'] ?? '');
+    $cvv = trim($data['membership_cvv'] ?? '');
+    
+    $user_id = $_SESSION['user_id'] ?? 0;
+    
+    if (!$user_id) {
+        echo json_encode(['success' => false, 'message' => 'Please log in to use Membership Pass.']);
+        exit;
+    }
+    
+    $stmt = $pdo->prepare("SELECT id FROM membership_cards WHERE user_id = ? AND card_number = ? AND cvv = ?");
+    $stmt->execute([$user_id, $card_number, $cvv]);
+    if (!$stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Invalid Membership Pass Details.']);
+        exit;
+    }
+    
+    $payment_id = 'MEMBERSHIP_' . substr($card_number, -4);
+}
 $cart_items = $data['cart_items'] ?? [];
 $coupon_code = trim($data['coupon_code'] ?? '');
 

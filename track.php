@@ -622,10 +622,44 @@ function initMap() {
             });
             customerMarker = L.marker(coords, {icon: customerIcon}).addTo(map);
             
-            routeLine = L.polyline([riderMarker.getLatLng(), coords], {color: '#000000', weight: 4, opacity: 0.8, dashArray: '10, 10'}).addTo(map);
-            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+            drawRoute(riderMarker.getLatLng(), customerMarker.getLatLng());
         }
     });
+}
+
+async function drawRoute(startLatLng, endLatLng) {
+    const startLng = startLatLng.lng !== undefined ? startLatLng.lng : startLatLng[1];
+    const startLat = startLatLng.lat !== undefined ? startLatLng.lat : startLatLng[0];
+    const endLng = endLatLng.lng !== undefined ? endLatLng.lng : endLatLng[1];
+    const endLat = endLatLng.lat !== undefined ? endLatLng.lat : endLatLng[0];
+    
+    const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            if (routeLine) {
+                routeLine.setLatLngs(coords);
+            } else {
+                routeLine = L.polyline(coords, {color: '#000000', weight: 5, opacity: 0.8}).addTo(map);
+            }
+            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+        } else {
+            drawStraightLine([startLat, startLng], [endLat, endLng]);
+        }
+    } catch(e) {
+        drawStraightLine([startLat, startLng], [endLat, endLng]);
+    }
+}
+
+function drawStraightLine(startCoords, endCoords) {
+    if (routeLine) {
+        routeLine.setLatLngs([startCoords, endCoords]);
+    } else {
+        routeLine = L.polyline([startCoords, endCoords], {color: '#000000', weight: 4, opacity: 0.8, dashArray: '10, 10'}).addTo(map);
+    }
+    map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
 }
 
 function updateMap(lat, lng) {
@@ -637,9 +671,8 @@ function updateMap(lat, lng) {
         const latlng = [lat, lng];
         riderMarker.setLatLng(latlng);
         
-        if (routeLine && customerMarker) {
-            routeLine.setLatLngs([latlng, customerMarker.getLatLng()]);
-            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+        if (customerMarker) {
+            drawRoute(riderMarker.getLatLng(), customerMarker.getLatLng());
         } else {
             map.setView(latlng, 15);
         }

@@ -20,6 +20,23 @@ try {
     $orders = [];
 }
 
+$currentTab = $_GET['tab'] ?? 'active';
+$filteredOrders = [];
+foreach ($orders as $o) {
+    $status = strtolower($o['order_status']);
+    $stepMap = ['pending'=>1, 'confirmed'=>2, 'preparing'=>3, 'ready'=>4, 'completed'=>5, 'cancelled'=>0];
+    $s = $stepMap[$status] ?? 1;
+    
+    if ($currentTab == 'active' && $s > 0 && $s < 5) {
+        $filteredOrders[] = $o;
+    } elseif ($currentTab == 'past' && $s == 5) {
+        $filteredOrders[] = $o;
+    } elseif ($currentTab == 'cancelled' && $s == 0) {
+        $filteredOrders[] = $o;
+    }
+}
+$orders = $filteredOrders;
+
 // Fetch user coupons
 require_once __DIR__ . '/api/CouponService.php';
 $userCoupons = [];
@@ -34,822 +51,1024 @@ try {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders - Medusa Luxury</title>
-    <!-- Global Theme Controller -->
-    <script src="assets/js/theme-toggle.js"></script>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - Medusa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #C09B5B;
+      --formal-garden: #132F20;
+      --formal-garden-deep: #0B1C13;
+      --rosewood: #5A1827;
+      --warm-ivory: #F6F4EB;
+      --card-bg: #112519;
+      --card-border: #1C3B2B;
+    }
+
+    body {
+      background-color: var(--formal-garden-deep);
+      color: var(--warm-ivory);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+
+    /* NAVBAR */
+    .lux-navbar {
+      background-color: transparent;
+      padding: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 90px;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .lux-navbar-brand {
+      color: var(--gold) !important;
+      font-size: 1.5rem;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-left: 40px;
+    }
+
+    .lux-navbar-brand img {
+      height: 90px;
+      margin-left: 0;
+    }
+
+    .lux-nav-links {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .lux-nav-link {
+      color: white;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      transition: color 0.2s;
+      position: relative;
+      font-family: 'Lato', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .lux-nav-link:hover {
+      color: var(--gold);
+    }
+
+    .lux-nav-link.active {
+      color: var(--gold);
+      text-decoration: underline;
+      text-underline-offset: 8px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: var(--gold);
+    }
+
+    .lux-nav-actions {
+      display: flex;
+      align-items: center;
+      padding-right: 40px;
+      gap: 20px;
+    }
+
+    .nav-icon {
+      color: white;
+      font-size: 1.2rem;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .nav-icon:hover {
+      color: var(--gold);
+    }
+
+    .nav-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* NOTIFICATIONS DROPDOWN */
+    .nav-icon-container {
+      position: relative;
+    }
+    .notif-badge {
+      position: absolute;
+      top: -5px; right: -5px;
+      background: var(--rosewood);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: bold;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: none;
+    }
+    .notif-dropdown {
+      position: absolute;
+      top: 40px; right: -10px;
+      width: 320px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      z-index: 200;
+      overflow: hidden;
+      text-align: left;
+    }
+    .notif-dropdown.show {
+      display: flex;
+    }
+    .notif-header {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-family: 'Playfair Display', serif;
+      color: var(--gold);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .notif-item {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      text-decoration: none;
+      transition: background 0.2s;
+      display: flex;
+      gap: 15px;
+    }
+    .notif-item:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .notif-icon {
+      color: var(--gold);
+      font-size: 1.2rem;
+      margin-top: 3px;
+    }
+    .notif-content h5 {
+      color: white;
+      font-size: 0.85rem;
+      margin: 0 0 5px 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .notif-content p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      margin: 0 0 5px 0;
+    }
+    .notif-time {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.65rem;
+    }
+    .notif-footer {
+      padding: 12px;
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      color: var(--gold);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .notif-footer:hover {
+      background: rgba(0,0,0,0.4);
+      color: white;
+    }
+
+    /* HERO SECTION */
+    .hero-section {
+      position: relative;
+      height: 40vh;
+      min-height: 350px;
+      background: url('assets/images/restaurant_interior.png') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding-top: 90px;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to bottom, rgba(11,28,19,0.8) 0%, rgba(11,28,19,1) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      font-weight: 400;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .hero-title span {
+      color: var(--gold);
+    }
+
+    .hero-subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 25px;
+    }
+
+    .hero-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 25px;
+    }
     
-    <style>
-        :root {
-            --bg-dark: #0D2016;
-            --bg-secondary: #132F20;
-            --bg-card: rgba(19, 47, 32, 0.65);
-            --gold: #dfba86;
-            --gold-light: #f3dfc1;
-            --white: #FAF7F0;
-            --gray: #A8A196;
-            --rosewood: #5A1827;
-            --rosewood-light: #7E2638;
-            --border-glass: rgba(223, 186, 134, 0.12);
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+    .hero-divider img {
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+      opacity: 0.9;
+    }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--white);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    /* TABS SECTION */
+    .tabs-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
 
-        /* Navbar Styling */
-        .luxury-navbar {
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-glass);
-            padding: 1.2rem 2rem;
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+    .tabs {
+      display: flex;
+      gap: 30px;
+    }
 
-        .navbar-brand {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--gold) !important;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .tab-item {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding-bottom: 15px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
 
-        .nav-link-custom {
-            color: var(--gray);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .tab-item:hover {
+      color: white;
+    }
 
-        .nav-link-custom:hover {
-            color: var(--gold);
-        }
+    .tab-item.active {
+      color: var(--gold);
+    }
 
-        /* Container & Header */
-        .dashboard-container {
-            padding: 3rem 1.5rem;
-            flex: 1;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--gold);
+    }
 
-        .welcome-section {
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.6s ease-out;
-        }
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
 
-        .welcome-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 0.5rem;
-        }
+    .btn-refresh:hover {
+      background: rgba(255,255,255,0.05);
+      color: white;
+      border-color: rgba(255,255,255,0.5);
+    }
 
-        .welcome-subtitle {
-            color: var(--gray);
-            font-size: 1rem;
-        }
+    /* ORDERS CONTAINER */
+    .orders-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
 
-        /* Order Summary Status Cards */
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-            animation: fadeIn 0.8s ease-out;
-        }
+    .order-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 30px;
+    }
 
-        .status-card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: var(--transition);
-        }
+    .oc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+    }
 
-        .status-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(223, 186, 134, 0.3);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        }
+    .oc-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
 
-        .status-info h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0;
-            color: var(--gold);
-        }
+    .oc-badge {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge-confirmed { background: rgba(30, 90, 40, 0.2); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.3); }
+    .badge-preparing { background: rgba(180, 80, 20, 0.2); color: #FF9800; border: 1px solid rgba(255, 152, 0, 0.3); }
+    .badge-pending { background: rgba(255, 255, 255, 0.1); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.2); }
+    .badge-completed { background: rgba(192, 155, 91, 0.1); color: var(--gold); border: 1px solid rgba(192, 155, 91, 0.3); }
 
-        .status-info p {
-            color: var(--gray);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0;
-            margin-top: 0.25rem;
-        }
+    .oc-meta {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
 
-        .status-icon {
-            font-size: 1.8rem;
-            color: var(--gray);
-            opacity: 0.5;
-        }
+    .oc-time {
+      text-align: right;
+    }
 
-        /* Orders Section */
-        .orders-section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 0.5rem;
-        }
+    .oc-time span {
+      display: block;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
 
-        /* Order List Item Row */
-        .order-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(15px);
-            transition: var(--transition);
-            animation: fadeInUp 0.5s ease-out;
-        }
+    .oc-time div {
+      color: var(--gold);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .order-card:hover {
-            border-color: rgba(223, 186, 134, 0.25);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            transform: translateY(-2px);
-        }
+    /* STEPPER */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 40px;
+    }
 
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 1rem;
-        }
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 15px; left: 30px; right: 30px;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+      z-index: 1;
+    }
 
-        .order-meta h4 {
-            font-size: 1.15rem;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .step {
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 80px;
+    }
 
-        .order-number {
-            color: var(--gold);
-        }
+    .step-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.85rem;
+    }
 
-        .order-date {
-            font-size: 0.85rem;
-            color: var(--gray);
-            margin-top: 0.25rem;
-        }
+    .step-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+    }
+    
+    .step-time {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.4);
+    }
 
-        /* Status Badges */
-        .status-badge {
-            padding: 0.4rem 1rem;
-            border-radius: 50px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+    .step.active .step-icon {
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 10px rgba(192,155,91,0.3);
+    }
+    .step.active .step-label {
+      color: var(--gold);
+    }
 
-        .status-pending {
-            background-color: rgba(255, 193, 7, 0.1);
-            color: #ffc107;
-            border: 1px solid rgba(255, 193, 7, 0.25);
-        }
+    .step.done .step-icon {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: var(--card-bg);
+    }
 
-        .status-preparing {
-            background-color: rgba(13, 110, 253, 0.1);
-            color: #0d6efd;
-            border: 1px solid rgba(13, 110, 253, 0.25);
-        }
+    /* PROGRESS BAR FILL */
+    .stepper-fill {
+      position: absolute;
+      top: 15px; left: 30px;
+      height: 2px;
+      background: var(--gold);
+      z-index: 1;
+      transition: width 0.5s;
+    }
 
-        .status-ready {
-            background-color: rgba(25, 135, 84, 0.1);
-            color: #198754;
-            border: 1px solid rgba(25, 135, 84, 0.25);
-        }
+    /* ORDER ITEMS */
+    .order-items {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 20px;
+      margin-bottom: 20px;
+    }
 
-        .status-completed {
-            background-color: rgba(223, 186, 134, 0.1);
-            color: var(--gold);
-            border: 1px solid rgba(223, 186, 134, 0.25);
-        }
+    .oi-title {
+      font-size: 0.75rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
 
-        .status-cancelled {
-            background-color: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.25);
-        }
+    .oi-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
 
-        /* Order Details */
-        .order-body {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-        }
+    .oi-img {
+      width: 60px; height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #222;
+    }
 
-        .order-items-summary {
-            flex: 1;
-            min-width: 250px;
-        }
+    .oi-info {
+      flex: 1;
+    }
 
-        .item-row {
-            font-size: 0.92rem;
-            color: var(--white);
-            margin-bottom: 0.4rem;
-            display: flex;
-            justify-content: space-between;
-        }
+    .oi-name {
+      font-size: 0.95rem;
+      color: white;
+      margin-bottom: 5px;
+    }
 
-        .item-qty {
-            color: var(--gold);
-            font-weight: 600;
-            margin-right: 8px;
-        }
+    .diet-badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .diet-veg { border: 1px solid #4CAF50; color: #4CAF50; }
+    .diet-nonveg { border: 1px solid #F44336; color: #F44336; }
+    .diet-bar { border: 1px solid #2196F3; color: #2196F3; }
 
-        .order-financials {
-            text-align: right;
-            min-width: 150px;
-        }
+    .oi-price {
+      color: white;
+      font-size: 0.95rem;
+      width: 100px;
+      text-align: right;
+    }
 
-        .total-label {
-            font-size: 0.8rem;
-            color: var(--gray);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .oi-qty {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.9rem;
+      width: 40px;
+      text-align: right;
+    }
 
-        .total-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gold);
-            margin-top: 0.15rem;
-        }
+    /* ORDER FOOTER */
+    .oc-footer {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .btn-view-invoice {
-            background-color: var(--rosewood);
-            border: 1px solid var(--rosewood);
-            color: var(--gold);
-            border-radius: 8px;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.88rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 0.8rem;
-        }
+    .btn-details {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    .btn-details:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
 
-        .btn-view-invoice:hover {
-            background-color: var(--rosewood-light);
-            border-color: var(--rosewood-light);
-            color: var(--gold-light);
-            transform: translateY(-1px);
-        }
+    .total-display {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-        /* Empty State */
-        .empty-orders {
-            text-align: center;
-            padding: 5rem 2rem;
-            background: var(--bg-card);
-            border: 1px dashed var(--border-glass);
-            border-radius: 16px;
-            animation: fadeIn 1s;
-        }
+    .total-display span {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+    }
 
-        .empty-icon {
-            font-size: 4rem;
-            color: var(--gold);
-            opacity: 0.4;
-            margin-bottom: 1.5rem;
-        }
+    .total-display strong {
+      color: var(--gold);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
 
-        .empty-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            margin-bottom: 0.8rem;
-        }
+    /* EXPLORE MORE SECTION */
+    .explore-section {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
 
-        .empty-text {
-            color: var(--gray);
-            max-width: 400px;
-            margin: 0 auto 2rem auto;
-            font-size: 0.95rem;
-        }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .section-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    
+    .section-divider img {
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+      opacity: 0.9;
+    }
 
-        .btn-order-now {
-            background-color: var(--rosewood);
-            color: var(--gold);
-            border: 1px solid var(--rosewood);
-            border-radius: 8px;
-            padding: 0.8rem 2rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .explore-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
 
-        .btn-order-now:hover {
-            background-color: var(--rosewood-light);
-            border-color: var(--rosewood-light);
-            color: var(--gold-light);
-            transform: translateY(-2px);
-        }
+    .explore-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
-        /* Animations */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* ── Mini Tracker ── */
-        .mini-track {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            position: relative;
-            margin: 16px 0 4px;
-        }
-        .mini-track::before {
-            content: '';
-            position: absolute;
-            top: 14px; left: 14px; right: 14px;
-            height: 2px;
-            background: rgba(255,255,255,0.06);
-            z-index: 0;
-        }
-        .mini-track-fill {
-            position: absolute;
-            top: 14px; left: 14px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--gold), rgba(223,186,134,0.4));
-            z-index: 1;
-            transition: width 0.6s ease;
-        }
-        .mts {
-            display: flex; flex-direction: column;
-            align-items: center; gap: 6px;
-            z-index: 2; flex: 1;
-        }
-        .mts-dot {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.08);
-            background: var(--bg-dark);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.18);
-            transition: all 0.4s ease;
-        }
-        .mts-dot.done { border-color: var(--gold); background: rgba(223,186,134,0.12); color: var(--gold); }
-        .mts-dot.active { border-color: var(--gold); background: var(--gold); color: #000; box-shadow: 0 0 12px rgba(223,186,134,0.35); }
-        .mts-lbl { font-size: 0.58rem; font-weight: 500; color: rgba(168,161,150,0.7); text-align: center; text-transform: uppercase; max-width: 48px; }
-        .mts-lbl.active { color: var(--gold); }
-        .mts-lbl.done { color: rgba(250,247,240,0.6); }
+    .explore-icon {
+      color: var(--gold);
+      font-size: 1.5rem;
+    }
 
-        /* Track live button */
-        .btn-track-live {
-            background: transparent;
-            border: 1px solid rgba(223,186,134,0.35);
-            color: var(--gold);
-            border-radius: 8px;
-            padding: 0.5rem 1.1rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            transition: var(--transition);
-            margin-top: 0.8rem;
-        }
-        .btn-track-live:hover {
-            background: rgba(223,186,134,0.08);
-            border-color: var(--gold);
-            color: var(--gold-light);
-            transform: translateY(-1px);
-        }
-        .live-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: var(--gold);
-            animation: livePulse 1.8s ease-in-out infinite;
-        }
-        @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .explore-title {
+      color: white;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      margin: 0;
+    }
 
-        @media (max-width: 768px) {
-            .order-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .order-body {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .order-financials {
-                text-align: left;
-                border-top: 1px solid rgba(255, 255, 255, 0.05);
-                padding-top: 1rem;
-            }
-        }
-    </style>
+    .explore-desc {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .explore-link {
+      color: white;
+      font-size: 0.8rem;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .explore-link:hover { color: var(--gold); }
+
+    /* NEED HELP */
+    .help-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto 60px;
+    }
+    .help-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .help-icon {
+      color: var(--gold);
+      font-size: 2rem;
+    }
+    .help-title { color: var(--gold); margin: 0 0 5px 0; font-size: 1.1rem; }
+    .help-desc { color: white; margin: 0; font-size: 0.85rem; }
+    
+    /* FOOTER */
+    .lux-footer {
+      background-color: var(--formal-garden);
+      color: white;
+      padding: 60px 40px 30px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .lux-footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 40px;
+    }
+    .lux-footer h4 { color: var(--gold); margin-bottom: 20px; font-size: 1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;}
+    .lux-footer p, .lux-footer a { color: #A0C1B0; font-size: 0.85rem; line-height: 1.8; margin-bottom: 10px; text-decoration: none; display: block; }
+    .lux-footer-socials { display: flex; gap: 16px; margin-top: 20px; }
+    .lux-footer-socials a { color: white; transition: 0.2s; }
+    .lux-footer-socials a:hover { color: var(--gold); }
+    .lux-footer-bottom { text-align: center; padding-top: 24px; color: rgba(255,255,255,0.4); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .oc-header { flex-direction: column; gap: 15px; }
+      .oc-time { text-align: left; margin-top: 10px; }
+      .stepper { overflow-x: auto; padding-bottom: 10px; }
+      .stepper::before { width: 300px; }
+      .stepper-fill { width: 0 !important; } /* Simplify on mobile if needed */
+      .explore-grid { grid-template-columns: 1fr; }
+      .help-card { flex-direction: column; text-align: center; gap: 20px; }
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Luxury Top Header Bar -->
-    <header class="luxury-navbar">
-        <div class="d-flex justify-content-between align-items-center w-100 max-width-1200 mx-auto">
-            <a href="menutest.html" class="navbar-brand" style="display: flex; align-items: center; gap: 8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-                <span>Medusa</span>
-            </a>
-            <div class="d-flex align-items-center gap-4">
-                <a href="menutest.html" class="nav-link-custom">
-                    <i class="fa-solid fa-utensils"></i>
-                    <span>Browse Menu</span>
-                </a>
-                <a href="#my-rewards-section" class="nav-link-custom">
-                    <i class="fa-solid fa-gift"></i>
-                    <span>My Rewards</span>
-                </a>
-                <a href="api/logout.php" class="nav-link-custom text-danger">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span>Logout</span>
-                </a>
+  <!-- LUXURY NAVBAR -->
+  <nav class="lux-navbar">
+    <a class="lux-navbar-brand" href="index.html">
+      <img src="assets/images/logo.png" alt="Medusa Logo">
+    </a>
+
+    <div class="lux-nav-links d-none d-lg-flex">
+      <a href="index.html" class="lux-nav-link">HOME</a>
+      <a href="menutest.html" class="lux-nav-link">MENU</a>
+      <a href="book-table-test.html" class="lux-nav-link">BOOK TABLE</a>
+      <a href="about.html" class="lux-nav-link">ABOUT US</a>
+      <a href="career.html" class="lux-nav-link">CAREERS</a>
+      <a href="my-orders.php" class="lux-nav-link active">MY ORDERS</a>
+    </div>
+
+    <div class="lux-nav-actions">
+      <div class="nav-icon-container" id="notif-bell">
+        <a href="javascript:void(0)" class="nav-icon"><i class="fa-regular fa-bell"></i></a>
+        <div class="notif-badge">2</div>
+        
+        <!-- Dropdown -->
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header">Notifications</div>
+          <a href="#" class="notif-item">
+            <i class="fa-solid fa-circle-check notif-icon"></i>
+            <div class="notif-content">
+              <h5>Order Confirmed</h5>
+              <p>Your recent order has been confirmed by the kitchen.</p>
+              <span class="notif-time">10 mins ago</span>
             </div>
+          </a>
+          <a href="#" class="notif-item">
+            <i class="fa-solid fa-gift notif-icon"></i>
+            <div class="notif-content">
+              <h5>Special Offer</h5>
+              <p>Enjoy a complimentary dessert on your next visit.</p>
+              <span class="notif-time">2 hours ago</span>
+            </div>
+          </a>
+          <a href="#" class="notif-footer">View All Notifications</a>
         </div>
-    </header>
+      </div>
+      <a href="profile.php" class="nav-avatar"><?php echo substr($user_name, 0, 1); ?></a>
+    </div>
+  </nav>
 
-    <main class="dashboard-container">
-        <!-- Welcome Banner -->
-        <section class="welcome-section">
-            <h1 class="welcome-title">Welcome back, <?php echo htmlspecialchars($user_name); ?></h1>
-            <p class="welcome-subtitle">Track your active orders and review your fine dining history below.</p>
-        </section>
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">My <span>Orders</span></h1>
+      <p class="hero-subtitle">Track and view your dining experiences</p>
+      <div class="hero-divider">
+        <img src="assets/images/wix_divider.png" alt="divider">
+      </div>
+    </div>
+  </section>
 
-        <?php if (!empty($orders)): ?>
-            <?php
-            // Calculate helper metrics
-            $total_spent = 0;
-            $active_orders = 0;
-            $completed_orders = 0;
-            foreach ($orders as $o) {
-                if ($o['order_status'] === 'completed') {
-                    $total_spent += floatval($o['total_amount']);
-                    $completed_orders++;
-                } else if ($o['order_status'] !== 'cancelled') {
-                    $active_orders++;
-                }
+  <!-- TABS -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <a href="?tab=active" class="tab-item <?php echo $currentTab == 'active' ? 'active' : ''; ?>"><i class="fa-solid fa-clipboard-list"></i> ACTIVE ORDERS</a>
+      <a href="?tab=past" class="tab-item <?php echo $currentTab == 'past' ? 'active' : ''; ?>"><i class="fa-solid fa-clock-rotate-left"></i> PAST ORDERS</a>
+      <a href="?tab=cancelled" class="tab-item <?php echo $currentTab == 'cancelled' ? 'active' : ''; ?>"><i class="fa-regular fa-circle-xmark"></i> CANCELLED ORDERS</a>
+    </div>
+    <button class="btn-refresh" onclick="location.reload();">
+      <i class="fa-solid fa-rotate-right"></i> Refresh
+    </button>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div class="orders-container">
+    <?php if (empty($orders)): ?>
+      <div class="order-card" style="text-align: center; padding: 60px 20px;">
+        <i class="fa-solid fa-utensils" style="font-size: 3rem; color: var(--gold); opacity: 0.5; margin-bottom: 20px;"></i>
+        <h3 style="color: white; margin-bottom: 10px;">No <?php echo ucfirst($currentTab); ?> Orders</h3>
+        <p style="color: rgba(255,255,255,0.5);">You don't have any <?php echo $currentTab; ?> orders to show right now.</p>
+      </div>
+    <?php else: ?>
+      <?php foreach ($orders as $order): 
+        // Logic for Stepper & Badges
+        $status = strtolower($order['order_status']);
+        $stepMap = ['pending'=>1, 'confirmed'=>2, 'preparing'=>3, 'ready'=>4, 'completed'=>5, 'cancelled'=>0];
+        $curStep = $stepMap[$status] ?? 1;
+        
+        $badgeClass = 'badge-pending';
+        $badgeText = 'Pending';
+        if ($curStep == 2) { $badgeClass = 'badge-confirmed'; $badgeText = 'Confirmed'; }
+        if ($curStep == 3) { $badgeClass = 'badge-preparing'; $badgeText = 'Preparing'; }
+        if ($curStep == 4) { $badgeClass = 'badge-confirmed'; $badgeText = 'Ready'; }
+        if ($curStep == 5) { $badgeClass = 'badge-completed'; $badgeText = 'Completed'; }
+        if ($curStep == 0) { $badgeClass = 'badge-pending'; $badgeText = 'Cancelled'; }
+
+        // Time logic
+        $orderDate = date('d M Y, h:i A', strtotime($order['order_date']));
+        $type = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 'Dine-in' : 'Delivery';
+        
+        // Mock est time based on status
+        $estTime = '10-15 mins';
+        if ($curStep == 1) $estTime = '20-25 mins';
+        if ($curStep >= 4) $estTime = '--';
+      ?>
+      <div class="order-card">
+        <!-- HEADER -->
+        <div class="oc-header">
+          <div>
+            <h3 class="oc-title">ORDER #<?php echo htmlspecialchars($order['order_number']); ?> <span class="oc-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></span></h3>
+            <div class="oc-meta">Placed on <?php echo $orderDate; ?> &bull; <?php echo $type; ?></div>
+          </div>
+          <?php if ($curStep > 0 && $curStep < 5): ?>
+          <div class="oc-time">
+            <span>ESTIMATED TIME</span>
+            <div><i class="fa-regular fa-clock"></i> <?php echo $estTime; ?></div>
+          </div>
+          <?php endif; ?>
+        </div>
+
+        <!-- STEPPER -->
+        <div class="stepper">
+          <?php $fillPct = ($curStep > 1) ? (($curStep - 1) / 4) * 100 : 0; ?>
+          <div class="stepper-fill" style="width: <?php echo $fillPct; ?>%;"></div>
+          
+          <?php
+          $steps = [
+            1 => ['icon'=>'fa-check', 'label'=>'Order Placed'],
+            2 => ['icon'=>'fa-check', 'label'=>'Confirmed'],
+            3 => ['icon'=>'fa-fire-burner', 'label'=>'Preparing'],
+            4 => ['icon'=>'fa-bell-concierge', 'label'=>'Ready'],
+            5 => ['icon'=>'fa-user', 'label'=>'Served']
+          ];
+
+          foreach ($steps as $i => $s):
+            $stateClass = '';
+            if ($i < $curStep) $stateClass = 'done';
+            if ($i == $curStep) $stateClass = 'active';
+            if ($curStep == 0) $stateClass = ''; // Cancelled
+          ?>
+          <div class="step <?php echo $stateClass; ?>">
+            <div class="step-icon"><i class="fa-solid <?php echo $s['icon']; ?>"></i></div>
+            <div class="step-label"><?php echo $s['label']; ?></div>
+            <!-- mock time -->
+            <div class="step-time"><?php echo ($stateClass == 'done') ? date('h:i A', strtotime($order['order_date']) + ($i*120)) : ''; ?></div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- ITEMS -->
+        <div class="order-items">
+          <div class="oi-title">ORDER ITEMS</div>
+          
+          <?php foreach ($order['items'] as $item): 
+            // Mock dietary badge logic based on name
+            $dClass = 'diet-veg'; $dText = 'Veg';
+            $lname = strtolower($item['item_name']);
+            if (strpos($lname, 'chicken') !== false || strpos($lname, 'lamb') !== false || strpos($lname, 'prawn') !== false || strpos($lname, 'fish') !== false) {
+                $dClass = 'diet-nonveg'; $dText = 'Non-Veg';
             }
-            ?>
-            <!-- Stats Dashboard Row -->
-            <section class="status-grid">
-                <div class="status-card">
-                    <div class="status-info">
-                        <h3><?php echo count($orders); ?></h3>
-                        <p>Total Orders</p>
-                    </div>
-                    <div class="status-icon">
-                        <i class="fa-solid fa-receipt"></i>
-                    </div>
-                </div>
-                <div class="status-card">
-                    <div class="status-info">
-                        <h3><?php echo $active_orders; ?></h3>
-                        <p>Active Orders</p>
-                    </div>
-                    <div class="status-icon">
-                        <i class="fa-solid fa-spinner fa-spin-slow"></i>
-                    </div>
-                </div>
-                <div class="status-card">
-                    <div class="status-info">
-                        <h3>₹<?php echo number_format($total_spent, 2); ?></h3>
-                        <p>Total Spent</p>
-                    </div>
-                    <div class="status-icon">
-                        <i class="fa-solid fa-wallet"></i>
-                    </div>
-                </div>
-            </section>
-
-            <!-- My Coupons & Rewards Section -->
-            <section id="my-rewards-section" class="mb-5" style="animation: fadeIn 0.8s ease-out;">
-                <h2 class="orders-section-title"><i class="fa-solid fa-gift me-2 text-gold"></i>My Rewards & Coupons</h2>
-                <?php if (empty($userCoupons)): ?>
-                    <div class="empty-orders" style="padding: 3rem 2rem;">
-                        <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">
-                            <i class="fa-solid fa-tag"></i>
-                        </div>
-                        <h4 style="color: var(--gray);">No coupons available yet</h4>
-                        <p class="empty-text" style="font-size: 0.88rem; max-width: 320px; margin-bottom: 0;">Submit a 5-star review after ordering to unlock a special discount coupon!</p>
-                    </div>
-                <?php else: ?>
-                    <div class="row g-4">
-                        <?php foreach ($userCoupons as $coupon): ?>
-                            <?php
-                            $statusBadge = '';
-                            $cardOpacity = '1';
-                            switch (strtolower($coupon->status)) {
-                                case 'active':
-                                    $statusBadge = '<span class="badge bg-success text-white">Active</span>';
-                                    break;
-                                case 'redeemed':
-                                    $statusBadge = '<span class="badge bg-secondary text-white">Redeemed</span>';
-                                    $cardOpacity = '0.6';
-                                    break;
-                                case 'expired':
-                                    $statusBadge = '<span class="badge bg-danger text-white">Expired</span>';
-                                    $cardOpacity = '0.5';
-                                    break;
-                            }
-                            ?>
-                            <div class="col-md-6 col-lg-4" style="opacity: <?php echo $cardOpacity; ?>;">
-                                <div class="status-card" style="flex-direction: column; align-items: stretch; gap: 1rem; border-style: dashed;">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-gold" style="font-weight: 700; font-size: 1.2rem;"><?php echo intval($coupon->discount_value); ?>% OFF</span>
-                                        <?php echo $statusBadge; ?>
-                                    </div>
-                                    <p class="text-white-50 m-0" style="font-size: 0.85rem;">Campaign: <?php echo htmlspecialchars($coupon->campaign_code); ?></p>
-                                    
-                                    <div class="d-flex align-items-center justify-content-between bg-dark p-2 rounded border border-secondary" style="margin-top: 0.25rem;">
-                                        <code style="font-family: monospace; font-size: 0.95rem; color: var(--gold); font-weight: bold;"><?php echo htmlspecialchars($coupon->coupon_code); ?></code>
-                                        <?php if ($coupon->status === 'active'): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-light copy-btn-orders" data-code="<?php echo htmlspecialchars($coupon->coupon_code); ?>" style="font-size: 0.72rem; padding: 0.2rem 0.4rem;">Copy</button>
-                                        <?php endif; ?>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
-                                        <span>Expires: <?php echo date('d M Y', strtotime($coupon->expires_at)); ?></span>
-                                        <?php if ($coupon->redeemed_at): ?>
-                                            <span class="text-white-50">Used: <?php echo date('d M Y', strtotime($coupon->redeemed_at)); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </section>
-
-            <!-- Order Cards List -->
-            <section class="orders-list-wrapper">
-                <h2 class="orders-section-title">Order History</h2>
-                
-                <?php foreach ($orders as $order): ?>
-                    <?php
-                    $status_class = 'status-pending';
-                    $status_label = 'Pending';
-                    $status_icon = 'fa-clock';
-                    
-                    switch (strtolower($order['order_status'])) {
-                        case 'pending':
-                            $status_class = 'status-pending';
-                            $status_label = 'Pending';
-                            $status_icon = 'fa-clock';
-                            break;
-                        case 'preparing':
-                            $status_class = 'status-preparing';
-                            $status_label = 'Preparing';
-                            $status_icon = 'fa-fire-burner';
-                            break;
-                        case 'ready':
-                            $status_class = 'status-ready';
-                            $status_label = 'Ready to Serve';
-                            $status_icon = 'fa-bell';
-                            break;
-                        case 'completed':
-                            $status_class = 'status-completed';
-                            $status_label = 'Completed';
-                            $status_icon = 'fa-circle-check';
-                            break;
-                        case 'cancelled':
-                            $status_class = 'status-cancelled';
-                            $status_label = 'Cancelled';
-                            $status_icon = 'fa-circle-xmark';
-                            break;
-                    }
-                    ?>
-                    
-                    <div class="order-card" id="order-<?php echo $order['id']; ?>">
-                        <div class="order-header">
-                            <div class="order-meta">
-                                <h4>Order <span class="order-number"><?php echo htmlspecialchars($order['order_number']); ?></span></h4>
-                                <div class="order-date">
-                                    <i class="fa-regular fa-calendar-days me-1"></i>
-                                    <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>
-                                    <?php if (strpos(strtolower($order['delivery_address']), 'table') !== false): ?>
-                                        <span class="badge bg-secondary ms-2"><i class="fa-solid fa-utensils me-1"></i> Dine-In</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-dark ms-2"><i class="fa-solid fa-motorcycle me-1"></i> Online Delivery</span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <span class="status-badge <?php echo $status_class; ?>">
-                                <i class="fa-solid <?php echo $status_icon; ?>"></i>
-                                <?php echo $status_label; ?>
-                            </span>
-                        </div>
-                        
-                        <div class="order-body">
-                            <div class="order-items-summary">
-                                <?php foreach ($order['items'] as $item): ?>
-                                    <div class="item-row">
-                                        <span>
-                                            <span class="item-qty"><?php echo $item['quantity']; ?>x</span>
-                                            <?php echo htmlspecialchars($item['item_name']); ?>
-                                        </span>
-                                        <span class="text-white-50">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-
-                                <?php
-                                // ── Mini Tracker (active orders with tracking token) ──
-                                $ts = $order['tracking_status'] ?? 'placed';
-                                $tk = $order['tracking_token'] ?? null;
-                                $isActive = !in_array($order['order_status'], ['completed','cancelled']);
-                                $tsStepMap = ['placed'=>1,'confirmed'=>2,'preparing'=>3,'out_for_delivery'=>4,'delivered'=>5,'cancelled'=>0];
-                                $tsCurStep = $tsStepMap[$ts] ?? 1;
-                                $tsSteps = [
-                                    ['label'=>'Placed',    'icon'=>'fa-receipt'],
-                                    ['label'=>'Confirmed', 'icon'=>'fa-circle-check'],
-                                    ['label'=>'Preparing', 'icon'=>'fa-fire-burner'],
-                                    ['label'=>'On Way',    'icon'=>'fa-motorcycle'],
-                                    ['label'=>'Done',      'icon'=>'fa-house'],
-                                ];
-                                if ($isActive && $tk):
-                                    $fillPct = $tsCurStep <= 1 ? 0 : (($tsCurStep-1)/4)*100;
-                                ?>
-                                <div class="mini-track" data-token="<?php echo htmlspecialchars($tk); ?>" data-step="<?php echo $tsCurStep; ?>">
-                                    <div class="mini-track-fill" style="width:<?php echo $fillPct; ?>%;"></div>
-                                    <?php foreach ($tsSteps as $si => $ss):
-                                        $sn = $si+1;
-                                        $sc = $sn < $tsCurStep ? 'done' : ($sn === $tsCurStep ? 'active' : '');
-                                    ?>
-                                    <div class="mts">
-                                        <div class="mts-dot <?php echo $sc; ?>"><i class="fas <?php echo $ss['icon']; ?>"></i></div>
-                                        <div class="mts-lbl <?php echo $sc; ?>"><?php echo $ss['label']; ?></div>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-
-                                <a href="track.php?token=<?php echo htmlspecialchars($tk); ?>" class="btn-track-live">
-                                    <span class="live-dot"></span> Track Live
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                                <?php endif; ?>
-                            </div>
-                            <div class="order-financials">
-                                <span class="total-label">Grand Total</span>
-                                <div class="total-value">₹<?php echo number_format($order['total_amount'], 2); ?></div>
-                                <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-view-invoice">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                    <span>View Invoice</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </section>
-            
-        <?php else: ?>
-            <!-- Empty State -->
-            <section class="empty-orders">
-                <div class="empty-icon">
-                    <i class="fa-solid fa-utensils"></i>
-                </div>
-                <h2 class="empty-title">No Orders Yet</h2>
-                <p class="empty-text">You haven't placed any culinary orders with us yet. Visit our interactive menu to select your favorite dishes.</p>
-                <a href="menutest.html" class="btn-order-now">
-                    <span>Order Something Delicious</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </section>
-        <?php endif; ?>
-    </main>
-
-    <!-- Optional Polling Script for Active Orders Status -->
-    <script>
-        // Poll status of active (non-completed) orders every 8 seconds to show changes without full-page reloads
-        const activeOrders = <?php 
-            $active_ids = [];
-            foreach($orders as $o) {
-                if ($o['order_status'] !== 'completed' && $o['order_status'] !== 'cancelled') {
-                    $active_ids[] = $o['order_number'];
-                }
+            if (strpos($lname, 'mojito') !== false || strpos($lname, 'wine') !== false || strpos($lname, 'beer') !== false || strpos($lname, 'cola') !== false) {
+                $dClass = 'diet-bar'; $dText = 'Bar';
             }
-            echo json_encode($active_ids);
-        ?>;
+            // Image mock
+            $imgSrc = 'assets/images/placeholder_food.png';
+            if (strpos($lname, 'risotto') !== false) $imgSrc = 'assets/images/gallery_2.png';
+            if (strpos($lname, 'lamb') !== false) $imgSrc = 'assets/images/gallery_4.png';
+            if (strpos($lname, 'pasta') !== false) $imgSrc = 'assets/images/gallery_3.png';
+          ?>
+          <div class="oi-row">
+            <img src="<?php echo $imgSrc; ?>" alt="item" class="oi-img" onerror="this.src='assets/images/logo.png'">
+            <div class="oi-info">
+              <div class="oi-name"><?php echo htmlspecialchars($item['item_name']); ?></div>
+              <span class="diet-badge <?php echo $dClass; ?>"><?php echo $dText; ?></span>
+            </div>
+            <div class="oi-price">₹<?php echo number_format($item['price'], 2); ?></div>
+            <div class="oi-qty">× <?php echo $item['quantity']; ?></div>
+          </div>
+          <?php endforeach; ?>
+        </div>
 
-        if (activeOrders.length > 0) {
-            setInterval(async () => {
-                try {
-                    const res = await fetch('api/get-my-orders.php');
-                    const data = await res.json();
-                    if (data.success) {
-                        // Scan for changes in active orders and reload if a status update is detected
-                        let statusChanged = false;
-                        data.orders.forEach(updatedOrder => {
-                            const matchCard = document.getElementById(`order-${updatedOrder.id}`);
-                            if (matchCard) {
-                                const currentBadge = matchCard.querySelector('.status-badge');
-                                let newClass = 'status-pending';
-                                switch(updatedOrder.order_status.toLowerCase()) {
-                                    case 'pending': newClass = 'status-pending'; break;
-                                    case 'preparing': newClass = 'status-preparing'; break;
-                                    case 'ready': newClass = 'status-ready'; break;
-                                    case 'completed': newClass = 'status-completed'; break;
-                                    case 'cancelled': newClass = 'status-cancelled'; break;
-                                }
-                                if (!currentBadge.classList.contains(newClass)) {
-                                    statusChanged = true;
-                                }
-                            }
-                        });
-                        if (statusChanged) {
-                            window.location.reload();
-                        }
-                    }
-                } catch(e) {
-                    console.warn('Poller failed to reach status API', e);
-                }
-            }, 8000);
-        }
+        <!-- FOOTER -->
+        <div class="oc-footer">
+          <div style="display: flex; gap: 15px;">
+            <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details">View Details</a>
+            <?php if ($curStep > 0 && $curStep < 5): ?>
+            <a href="order-tracking.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details" style="background: var(--gold); color: var(--card-bg); border-color: var(--gold); font-weight: 600;">Track Order <i class="fa-solid fa-location-arrow" style="margin-left: 5px;"></i></a>
+            <a href="javascript:void(0);" class="btn-details" style="border-color: #ff4d4d; color: #ff4d4d;">Cancel Order</a>
+            <?php endif; ?>
+          </div>
+          <div class="total-display">
+            <span>Estimated Total</span>
+            <strong>₹ <?php echo number_format($order['total_amount'], 2); ?></strong>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
 
-        // Copy coupon code to clipboard from My Rewards section
-        document.querySelectorAll('.copy-btn-orders').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const code = this.getAttribute('data-code');
-                navigator.clipboard.writeText(code).then(() => {
-                    const originalText = this.textContent;
-                    this.textContent = 'Copied!';
-                    setTimeout(() => {
-                        this.textContent = originalText;
-                    }, 2000);
-                }).catch(err => {
-                    alert('Coupon Code: ' + code);
-                });
-            });
-        });
-    </script>
+  <!-- EXPLORE MORE -->
+  <div class="explore-section">
+    <h2 class="section-title">Explore More</h2>
+    <div class="section-divider"><img src="assets/images/wix_divider.png" alt="divider"></div>
+    
+    <div class="explore-grid">
+      <div class="explore-card">
+        <i class="fa-regular fa-calendar-check explore-icon"></i>
+        <h4 class="explore-title">Book a Table</h4>
+        <p class="explore-desc">Reserve your perfect spot for a memorable experience.</p>
+        <a href="book-table-test.html" class="explore-link">Book Now &rarr;</a>
+      </div>
+      <div class="explore-card">
+        <i class="fa-solid fa-utensils explore-icon"></i>
+        <h4 class="explore-title">Our Menu</h4>
+        <p class="explore-desc">Discover our curated menu crafted with passion.</p>
+        <a href="menutest.html" class="explore-link">View Menu &rarr;</a>
+      </div>
+      <div class="explore-card">
+        <i class="fa-solid fa-users explore-icon"></i>
+        <h4 class="explore-title">Private Events</h4>
+        <p class="explore-desc">Celebrate your special moments with us.</p>
+        <a href="#" class="explore-link">Enquire Now &rarr;</a>
+      </div>
+    </div>
+  </div>
 
-<?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
-<?php require_once __DIR__ . '/includes/order_toast.php'; ?>
+  <!-- NEED HELP -->
+  <div class="help-card">
+    <div class="help-left">
+      <i class="fa-solid fa-headset help-icon"></i>
+      <div>
+        <h4 class="help-title">Need Help?</h4>
+        <p class="help-desc">Our team is here to assist you with your orders.</p>
+      </div>
+    </div>
+    <a href="#" class="btn-details">Contact Support</a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="lux-footer">
+    <div class="lux-footer-grid">
+      <div>
+        <img src="assets/images/logo_right.png" alt="Medusa Logo" style="width: 220px; height: auto; margin: 0; margin-bottom: 0  px;">
+        <p>Experience culinary excellence, handcrafted cocktails, and unforgettable moments.</p>
+        <div class="lux-footer-socials">
+          <a href="#"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4>Navigation</h4>
+        <a href="index.html">Home</a>
+        <a href="menutest.html">Menu</a>
+        <a href="book-table-test.html">Book Table</a>
+        <a href="about.html">About Us</a>
+        <a href="career.html">Careers</a>
+        <a href="#">Contact Us</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p>SCO 44-45, Sector 68, SAS Nagar<br>Mohali, Punjab 160308</p>
+        <p><i class="fa-solid fa-phone" style="margin-right:8px; color:var(--gold);"></i>+91 84272 27398</p>
+        <p><i class="fa-regular fa-envelope" style="margin-right:8px; color:var(--gold);"></i>contact@medusa.com</p>
+        <p style="margin-top: 15px;"><a href="#" style="color:var(--gold);"><i class="fa-solid fa-location-dot me-2"></i> View on Map &rarr;</a></p>
+      </div>
+      <div>
+        <h4>Newsletter</h4>
+        <p>Stay updated with our latest events and offers.</p>
+        <div style="display:flex; margin-top:15px;">
+          <input type="email" placeholder="Enter your email" style="background:transparent; border:1px solid rgba(255,255,255,0.2); padding:10px 15px; color:white; width:100%; border-radius:4px 0 0 4px; outline:none;">
+          <button style="background:var(--formal-garden-deep); border:1px solid rgba(255,255,255,0.2); border-left:none; color:var(--gold); padding:10px 15px; border-radius:0 4px 4px 0; cursor:pointer;"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="lux-footer-bottom">
+      &copy; 2026 Medusa Restaurant, Bar & Lounge. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('notif-bell').addEventListener('click', function(e) {
+      document.getElementById('notif-dropdown').classList.toggle('show');
+      e.stopPropagation();
+    });
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#notif-bell')) {
+        const dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) dropdown.classList.remove('show');
+      }
+    });
+  </script>
 </body>
 </html>

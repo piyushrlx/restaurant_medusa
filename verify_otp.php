@@ -34,12 +34,6 @@ try {
         exit;
     }
 
-    if ($user['is_active']) {
-        unset($_SESSION['otp_verify_user_id']);
-        header('Location: login.html');
-        exit;
-    }
-
     $isEmailVerified = (int)$user['is_email_verified'] === 1;
     $isPhoneVerified = (int)$user['is_phone_verified'] === 1;
 
@@ -95,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
 
                 // Check if fully verified
                 if ($isEmailVerified && $isPhoneVerified) {
-                    $activate = $pdo->prepare("UPDATE users SET is_active = 1, email_otp = NULL, phone_otp = NULL, otp_expires_at = NULL WHERE id = ?");
+                    $activate = $pdo->prepare("UPDATE users SET email_otp = NULL, phone_otp = NULL, otp_expires_at = NULL WHERE id = ?");
                     $activate->execute([$userId]);
 
                     // Send welcome and account confirmation emails

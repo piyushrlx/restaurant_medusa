@@ -59,7 +59,7 @@ function requireLogin() {
             exit;
         } else {
             // Redirect HTML pages to login
-            header('Location: ../login.html');
+            header('Location: login.html');
             exit;
         }
     }
@@ -90,7 +90,7 @@ function requireLogin() {
                     echo json_encode(['success' => false, 'message' => 'Session expired or logged out from other devices. Please login again.']);
                     exit;
                 } else {
-                    header('Location: ../login.html');
+                    header('Location: login.html');
                     exit;
                 }
             }

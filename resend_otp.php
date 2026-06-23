@@ -21,11 +21,7 @@ try {
         exit;
     }
 
-    if ($user['is_active']) {
-        unset($_SESSION['otp_verify_user_id']);
-        header('Location: login.html');
-        exit;
-    }
+
 
     // Check resend timer (30 seconds)
     $lastSent = $_SESSION['last_otp_sent_time'] ?? 0;

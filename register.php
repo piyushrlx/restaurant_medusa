@@ -49,23 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $goToStep2 = true;   // keep step 2 open on DB errors
         try {
             if (!empty($email)) {
-                $stmt = $pdo->prepare("SELECT id, is_active FROM users WHERE email = ?");
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                 $stmt->execute([$email]);
                 $existing_user = $stmt->fetch();
 
                 if ($existing_user) {
-                    if ($existing_user['is_active']) {
-                        $error     = 'An account with this email already exists. Please login.';
-                        $goToStep2 = false;
-                    } else {
-                        $del = $pdo->prepare("DELETE FROM users WHERE id = ?");
-                        $del->execute([$existing_user['id']]);
-                    }
+                    $error     = 'An account with this email already exists. Please login.';
+                    $goToStep2 = false;
                 }
             }
 
             if (empty($error)) {
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? AND is_active = 1");
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
                 $stmt->execute([$phone]);
                 if ($stmt->fetch()) {
                     $error     = 'An account with this mobile number already exists.';
@@ -86,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INSERT INTO users
                     (full_name, email, phone, password, address, city, state, pincode,
                      email_otp, phone_otp, otp_expires_at,
-                     is_email_verified, is_phone_verified, is_active, role)
-                    VALUES (?, ?, ?, ?, '', '', '', '', ?, ?, ?, ?, 0, 0, 'customer')
+                     is_email_verified, is_phone_verified, role)
+                    VALUES (?, ?, ?, ?, '', '', '', '', ?, ?, ?, ?, 0, 'customer')
                 ");
                 $ins->execute([$fullName, $dbEmail, $phone, $hashedPassword,
                                $emailOtp, $phoneOtp, $otpExpiresAt, $isEmailVerified]);

@@ -1,1254 +1,810 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medusa - Careers</title>
-
-    <!-- Global Theme Controller -->
-    <script src="assets/js/theme-toggle.js"></script>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <!-- FontAwesome for professional icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        :root {
-            --gold: #dfba86;
-            --gold-hover: #f3dfc1;
-            --formal-garden: #132F20;
-            --formal-garden-light: #1C3B2B;
-            --formal-garden-deep: #0D2016;
-            --rosewood: #5A1827;
-            --rosewood-light: #7E2638;
-            --warm-ivory: #FAF7F0;
-            --dark: #0D2016;
-            --card-bg: rgba(13, 32, 22, 0.6);
-            --border-light: rgba(223, 186, 134, 0.12);
-            --border-hover: rgba(223, 186, 134, 0.35);
-            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        body {
-            background: var(--dark);
-            color: #f7f5f2;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-            letter-spacing: 0.2px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* NAVBAR */
-        .navbar {
-            background: rgba(11, 10, 9, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.12);
-            padding: 16px 0;
-            transition: var(--transition-smooth);
-        }
-
-        .navbar-brand {
-            color: var(--gold) !important;
-            font-size: 2rem;
-            font-family: 'Cormorant Garamond', serif;
-            letter-spacing: 2px;
-        }
-
-        .navbar-brand:hover img {
-            transform: rotate(360deg) scale(1.08);
-        }
-
-        .nav-link {
-            color: #eae5df !important;
-            margin-left: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            position: relative;
-            transition: var(--transition-smooth);
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 8px;
-            right: 8px;
-            height: 1px;
-            background: var(--gold);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: var(--gold) !important;
-        }
-
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            transform: scaleX(1);
-            transform-origin: left;
-        }
-
-        /* HERO SECTION */
-        .ambitions-hero {
-            position: relative;
-            padding: 220px 0 140px;
-            background: linear-gradient(rgba(13, 32, 22, 0.65), rgba(13, 32, 22, 0.95)),
-                url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            text-align: center;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .hero-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: var(--gold);
-            margin-bottom: 25px;
-            display: inline-block;
-            border: 1px solid rgba(223, 186, 134, 0.3);
-            padding: 6px 22px;
-            border-radius: 50px;
-            background: rgba(223, 186, 134, 0.02);
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .hero-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4.5rem;
-            color: #ffffff;
-            font-weight: 600;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            line-height: 1.1;
-            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .hero-subtitle {
-            font-size: 1.15rem;
-            color: #a09a93;
-            max-width: 750px;
-            margin: 0 auto;
-            line-height: 1.8;
-            font-weight: 300;
-            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        /* SECTION INTROS */
-        .section-header {
-            text-align: center;
-            margin-bottom: 70px;
-        }
-
-        .section-header h2 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3rem;
-            color: var(--gold);
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            position: relative;
-            display: inline-block;
-            padding-bottom: 15px;
-        }
-
-        .section-header h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 25%;
-            width: 50%;
-            height: 1.5px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        }
-
-        .section-header p {
-            font-size: 0.95rem;
-            color: #a09a93;
-            max-width: 600px;
-            margin: 20px auto 0;
-            line-height: 1.7;
-        }
-
-        /* AMBITION CARDS */
-        .ambition-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-light);
-            border-radius: 24px;
-            overflow: hidden;
-            height: 100%;
-            transition: var(--transition-smooth);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-        }
-
-        .ambition-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--border-hover);
-            box-shadow: 0 20px 45px rgba(223, 186, 134, 0.05);
-        }
-
-        .card-img-wrapper {
-            position: relative;
-            height: 280px;
-            overflow: hidden;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .card-img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .ambition-card:hover .card-img-wrapper img {
-            transform: scale(1.05);
-        }
-
-        .card-tag {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(13, 32, 22, 0.85);
-            border: 1.5px solid var(--gold);
-            color: var(--gold);
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding: 6px 16px;
-            border-radius: 50px;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            z-index: 2;
-        }
-
-        .card-body-content {
-            padding: 40px;
-        }
-
-        .card-icon {
-            font-size: 2.2rem;
-            color: var(--gold);
-            margin-bottom: 25px;
-            display: inline-block;
-            transition: var(--transition-smooth);
-        }
-
-        .ambition-card:hover .card-icon {
-            transform: scale(1.1);
-            color: var(--gold-hover);
-            text-shadow: 0 0 15px rgba(223, 186, 134, 0.4);
-        }
-
-        .card-body-content h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.85rem;
-            color: #ffffff;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .card-body-content p {
-            font-size: 0.92rem;
-            line-height: 1.8;
-            color: #a09a93;
-            margin-bottom: 0;
-        }
-
-        /* METRICS COUNTERS */
-        .metrics-section {
-            background: linear-gradient(90deg, rgba(13, 32, 22, 0.95) 0%, rgba(20, 40, 28, 0.95) 100%);
-            border-top: 1px solid var(--border-light);
-            border-bottom: 1px solid var(--border-light);
-            padding: 80px 0;
-            position: relative;
-        }
-
-        .metric-item {
-            text-align: center;
-        }
-
-        .metric-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4rem;
-            color: var(--gold);
-            font-weight: 300;
-            line-height: 1;
-            margin-bottom: 8px;
-            text-shadow: 0 0 12px rgba(223, 186, 134, 0.15);
-        }
-
-        .metric-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-            color: #eae5df;
-            font-weight: 500;
-        }
-
-        /* MAIN CONTENT AREA */
-        .careers-container {
-            padding: 80px 0 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(223, 186, 134, 0.04) 0%, rgba(11, 10, 9, 0) 70%);
-        }
-
-        /* BOXLESS FORM CONTAINER */
-        .careers-card {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            color: #f7f5f2;
-            padding: 20px;
-            max-width: 850px;
-            width: 100%;
-        }
-
-        .careers-header {
-            border-bottom: 1px solid rgba(223, 186, 134, 0.15);
-            padding-bottom: 25px;
-            margin-bottom: 45px;
-            text-align: center;
-        }
-
-        .careers-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3.2rem;
-            color: var(--gold);
-            font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-        }
-
-        .careers-subtitle {
-            font-size: 0.95rem;
-            color: #a09a93;
-            letter-spacing: 0.5px;
-            font-weight: 400;
-        }
-
-        /* PREMIUM LABELS & INPUTS */
-        .form-label {
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--gold);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition-smooth);
-        }
-
-        .form-label i {
-            font-size: 0.85rem;
-            opacity: 0.85;
-            transition: var(--transition-smooth);
-        }
-
-        /* Parent container highlight on focus */
-        .col-md-6:focus-within .form-label,
-        .col-md-4:focus-within .form-label,
-        .col-12:focus-within .form-label {
-            color: var(--gold-hover) !important;
-            text-shadow: 0 0 8px rgba(223, 186, 134, 0.35);
-        }
-
-        .col-md-6:focus-within .form-label i,
-        .col-md-4:focus-within .form-label i,
-        .col-12:focus-within .form-label i {
-            transform: scale(1.1);
-            color: #ffffff;
-        }
-
-        /* UNDERLINED SLEEK INPUTS */
-        .form-control,
-        .form-select {
-            background: transparent !important;
-            border: none !important;
-            border-bottom: 1.5px solid rgba(223, 186, 134, 0.2) !important;
-            border-radius: 0 !important;
-            padding: 10px 4px !important;
-            color: #ffffff !important;
-            font-size: 0.95rem;
-            transition: var(--transition-smooth);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-bottom-color: var(--gold) !important;
-            box-shadow: none !important;
-        }
-
-        /* Custom dropdown arrow for form-select */
-        .form-select {
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dfba86' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
-            background-repeat: no-repeat !important;
-            background-position: right 4px center !important;
-            background-size: 14px 14px !important;
-            padding-right: 30px !important;
-        }
-
-        /* Select option color support on dark background dropdowns */
-        .form-select option {
-            background-color: #121110;
-            color: #ffffff;
-        }
-
-        .invalid-feedback {
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            margin-top: 5px;
-        }
-
-        /* File Upload Area */
-        .file-upload-wrapper {
-            position: relative;
-            border: 1.5px dashed rgba(223, 186, 134, 0.3);
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            background: rgba(223, 186, 134, 0.01);
-            cursor: pointer;
-            transition: var(--transition-smooth);
-        }
-
-        .file-upload-wrapper:hover {
-            border-color: var(--gold);
-            background: rgba(223, 186, 134, 0.04);
-            box-shadow: inset 0 0 20px rgba(223, 186, 134, 0.03);
-        }
-
-        .file-upload-wrapper:hover i {
-            color: var(--gold) !important;
-            transform: translateY(-4px) scale(1.08);
-            text-shadow: 0 0 12px rgba(223, 186, 134, 0.3);
-        }
-
-        .file-upload-input {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .file-upload-text {
-            font-size: 0.88rem;
-            color: #a09a93;
-            margin: 0;
-        }
-
-        .file-upload-text strong {
-            color: var(--gold);
-        }
-
-        /* PREMIUM BUTTON WITH HOVER EFFECT */
-        .btn-gold {
-            background: var(--rosewood);
-            color: var(--gold) !important;
-            border: 2px solid var(--gold);
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            padding: 16px 40px;
-            border-radius: 12px;
-            transition: var(--transition-smooth);
-            width: auto;
-            min-width: 280px;
-            margin: 20px auto 0;
-            display: block;
-        }
-
-        .btn-gold:hover {
-            background: var(--rosewood-light);
-            color: #ffffff !important;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(90, 24, 39, 0.45);
-        }
-
-        /* FOOTER */
-        footer {
-            padding: 80px 0 40px;
-            background: #07120D;
-            border-top: 1px solid rgba(223, 186, 134, 0.12);
-            color: #a09a93;
-        }
-
-        footer h2 {
-            margin-bottom: 20px;
-        }
-
-        footer h5 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            color: #ffffff;
-            letter-spacing: 1.5px;
-        }
-
-        footer ul li a {
-            font-size: 0.9rem;
-            transition: var(--transition-smooth);
-        }
-
-        footer ul li a:hover {
-            color: var(--gold) !important;
-            padding-left: 5px;
-        }
-
-        footer input.form-control {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border: 1px solid rgba(223, 186, 134, 0.2) !important;
-            color: white !important;
-            border-radius: 8px 0 0 8px !important;
-            padding: 12px 18px !important;
-            font-size: 0.9rem !important;
-            transition: var(--transition-smooth);
-        }
-
-        /* Spinner */
-        .spinner-gold {
-            display: inline-block;
-            width: 1.2rem;
-            height: 1.2rem;
-            border: 2px solid currentColor;
-            border-right-color: transparent;
-            border-radius: 50%;
-            animation: spinner-border .75s linear infinite;
-        }
-
-        /* SCROLL REVEAL */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Light Mode Styling Overrides */
-        html.light-mode body {
-            background: #f8f9fa;
-            color: #333333;
-        }
-
-        html.light-mode .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            border-bottom: 1px solid rgba(223, 186, 134, 0.25);
-        }
-
-        html.light-mode .nav-link {
-            color: #333333 !important;
-        }
-
-        html.light-mode .careers-card {
-            color: #333333;
-        }
-
-        html.light-mode .careers-subtitle {
-            color: #666666;
-        }
-
-        html.light-mode .form-label {
-            color: #555555;
-        }
-
-        html.light-mode .form-control,
-        html.light-mode .form-select {
-            border-bottom-color: rgba(223, 186, 134, 0.4) !important;
-            color: #333333 !important;
-        }
-
-        html.light-mode .form-control:focus,
-        html.light-mode .form-select:focus {
-            border-bottom-color: var(--gold) !important;
-        }
-
-        html.light-mode .form-select option {
-            background-color: #ffffff;
-            color: #333333;
-        }
-
-        html.light-mode .file-upload-wrapper {
-            background: rgba(0, 0, 0, 0.01);
-            border-color: rgba(223, 186, 134, 0.4);
-        }
-
-        html.light-mode .file-upload-text {
-            color: #666666;
-        }
-
-        html.light-mode .btn-gold {
-            color: #0b0a09 !important;
-            background: var(--gold);
-            border-color: var(--gold);
-        }
-
-        html.light-mode .btn-gold:hover {
-            background: #0b0a09;
-            color: var(--gold) !important;
-            border-color: #0b0a09;
-        }
-
-        html.light-mode .ambitions-hero {
-            background: linear-gradient(rgba(248, 249, 250, 0.75), rgba(248, 249, 250, 0.98)),
-                url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1800&auto=format&fit=crop');
-        }
-
-        html.light-mode .hero-title {
-            color: #111111;
-        }
-
-        html.light-mode .hero-subtitle {
-            color: #555555;
-        }
-
-        html.light-mode .ambition-card {
-            background: #ffffff;
-            border-color: rgba(223, 186, 134, 0.25);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-        }
-
-        html.light-mode .ambition-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 15px 40px rgba(223, 186, 134, 0.15);
-        }
-
-        html.light-mode .card-body-content h3 {
-            color: #111111;
-        }
-
-        html.light-mode .card-body-content p {
-            color: #555555;
-        }
-
-        html.light-mode .metrics-section {
-            background: linear-gradient(90deg, #eae5df 0%, #f7f5f2 100%);
-            border-top-color: rgba(223, 186, 134, 0.25);
-            border-bottom-color: rgba(223, 186, 134, 0.25);
-        }
-
-        html.light-mode .metric-label {
-            color: #555555;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Careers - Medusa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #C09B5B;
+      --formal-garden: #132F20;
+      --formal-garden-deep: #0B1C13;
+      --rosewood: #5A1827;
+      --rosewood-light: #7E2638;
+      --warm-ivory: #F6F4EB;
+    }
+
+    body {
+      background-color: var(--formal-garden-deep);
+      color: var(--warm-ivory);
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      margin: 0;
+    }
+
+    /* NAVBAR */
+    .lux-navbar {
+      background-color: #2F1317;
+      padding: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 110px;
+      position: relative;
+    }
+
+    .lux-navbar-brand {
+      color: var(--gold) !important;
+      font-size: 1.8rem;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-left: 30px;
+    }
+
+    .lux-navbar-brand img {
+      height: 90px;
+      margin-left: 0;
+    }
+
+    .lux-nav-links {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .lux-nav-link {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      transition: color 0.2s;
+      position: relative;
+      font-family: 'Lato', 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.5px;
+    }
+
+    .lux-nav-link:hover {
+      color: var(--gold);
+    }
+
+    .lux-nav-link.active {
+      color: var(--gold);
+      text-decoration: underline;
+      text-underline-offset: 8px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: var(--gold);
+    }
+
+    .lux-nav-actions {
+      display: flex;
+      align-items: center;
+      padding-right: 30px;
+    }
+
+    .btn-outline-light-custom {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 10px 24px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: 'Lato', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .btn-outline-light-custom:hover {
+      background: white;
+      color: #2F1317;
+    }
+
+    /* HERO SECTION */
+    .hero-section {
+      position: relative;
+      height: 70vh;
+      min-height: 500px;
+      background: url('assets/images/restaurant_interior.png') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to right, rgba(11,28,19,0.95) 0%, rgba(11,28,19,0.7) 50%, rgba(11,28,19,0.3) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      padding-left: 10%;
+      max-width: 800px;
+    }
+
+    .hero-subtitle {
+      color: var(--gold);
+      font-family: 'Lato', sans-serif;
+      letter-spacing: 3px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.8rem;
+      font-weight: 400;
+      color: white;
+      line-height: 1.1;
+      margin-bottom: 25px;
+    }
+    
+    .hero-title span {
+      color: var(--gold);
+    }
+
+    .hero-text {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+
+    .btn-gold-outline {
+      display: inline-block;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      background: transparent;
+      padding: 14px 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.3s;
+      border-radius: 4px;
+    }
+
+    .btn-gold-outline:hover {
+      background: var(--gold);
+      color: var(--formal-garden-deep);
+    }
+
+    /* STATS SECTION */
+    .stats-section {
+      background: var(--formal-garden-deep);
+      padding: 60px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .stat-item i {
+      font-size: 2rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+    }
+
+    /* VISIONARY PILLARS */
+    .pillars-section {
+      padding: 80px 20px;
+      background: var(--formal-garden);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .section-header p {
+      max-width: 600px;
+      margin: 0 auto;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.6;
+    }
+
+    .section-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .section-divider::before, .section-divider::after {
+      content: '';
+      height: 1px;
+      width: 40px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+
+    .section-divider i {
+      color: var(--gold);
+      font-size: 0.8rem;
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 992px) {
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pillar-card {
+      background: var(--formal-garden-deep);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .pillar-img {
+      width: 45%;
+      min-height: 280px;
+      object-fit: cover;
+    }
+
+    .pillar-content {
+      padding: 40px 30px;
+      width: 55%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .pillar-icon {
+      width: 45px;
+      height: 45px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+    }
+
+    .pillar-subtitle {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+
+    .pillar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: white;
+      margin-bottom: 12px;
+    }
+
+    .pillar-desc {
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+      font-size: 0.9rem;
+      margin-bottom: 25px;
+    }
+
+    .pillar-link {
+      color: var(--gold);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pillar-link i {
+      transition: transform 0.3s;
+    }
+
+    .pillar-link:hover i {
+      transform: translateX(5px);
+    }
+
+    /* FORM SECTION */
+    .form-section {
+      background: var(--formal-garden-deep);
+      padding: 100px 20px;
+    }
+
+    .medusa-form {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .form-label {
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-label i {
+      color: var(--gold);
+    }
+
+    .form-control, .form-select {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 14px 20px;
+      color: white;
+      font-size: 0.95rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: none;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .form-select {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .form-select option {
+      background: var(--formal-garden-deep);
+      color: white;
+    }
+
+    .form-control::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+
+    .file-drop-area {
+      border: 1px dashed rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 40px;
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-drop-area:hover {
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .file-drop-area i {
+      font-size: 1.8rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .file-drop-area span {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn-submit {
+      background: var(--rosewood);
+      color: white;
+      border: none;
+      width: 100%;
+      max-width: 300px;
+      margin: 40px auto 0;
+      display: block;
+      padding: 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: 0.3s;
+    }
+
+    .btn-submit:hover {
+      background: var(--rosewood-light);
+    }
+
+    /* FOOTER */
+    .lux-footer {
+      background-color: var(--formal-garden);
+      color: white;
+      padding: 60px 40px 30px;
+      margin-top: 0;
+    }
+
+    .lux-footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 40px;
+    }
+
+    .lux-footer h4 {
+      font-family: 'Playfair Display', serif;
+      color: var(--gold);
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+
+    .lux-footer p, .lux-footer a {
+      color: #A0C1B0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .lux-footer-socials {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .lux-footer-socials a {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    .lux-footer-socials a:hover {
+      background: var(--gold);
+      color: var(--formal-garden);
+    }
+
+    .lux-footer-bottom {
+      text-align: center;
+      padding-top: 24px;
+      color: #A0C1B0;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 576px) {
+      .pillar-card {
+        flex-direction: column;
+      }
+      .pillar-img {
+        width: 100%;
+        height: 200px;
+        min-height: 200px;
+      }
+      .pillar-content {
+        width: 100%;
+        padding: 25px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html"
-                style="font-family:'Playfair Display', serif; letter-spacing: 2px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo"
-                    style="height: 40px; width: 40px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 2px; background: rgba(0,0,0,0.3); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
-                <span style="font-size: 1.8rem; font-weight: 600; color: var(--gold);">Medusa</span>
-            </a>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+  <!-- LUXURY NAVBAR -->
+  <nav class="lux-navbar">
+    <a class="lux-navbar-brand" href="index.html">
+      <img src="assets/images/logo.png" alt="Medusa Logo">
+    </a>
 
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link auth-required" href="menutest.html">Menu</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="book-table-test.html">Book Table</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="about.html">About Us</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="register.html">Create Account</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#ambitions-section">Ambitions</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#career-form">Career</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html" id="authLink">Login</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- HERO SECTION -->
-    <header class="ambitions-hero">
-        <div class="container">
-            <span class="hero-badge">Pioneering Luxury & Careers</span>
-            <h1 class="hero-title">Ambitions & Careers</h1>
-            <p class="hero-subtitle">Redefining the fine dining paradigm by synthesizing eco-luxury gastronomy, global
-                expansion, sensory technology, and nurturing local talent. Join our vision and grow with us.</p>
-        </div>
-    </header>
-
-    <!-- METRICS BANNER -->
-    <section id="ambitions-section" class="metrics-section">
-        <div class="container">
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-3 col-6 reveal">
-                    <div class="metric-item">
-                        <div class="metric-number">2028</div>
-                        <div class="metric-label">Carbon Neutral</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 reveal">
-                    <div class="metric-item">
-                        <div class="metric-number">3+</div>
-                        <div class="metric-label">Global Cities</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 reveal">
-                    <div class="metric-item">
-                        <div class="metric-number">100%</div>
-                        <div class="metric-label">Organic Sourcing</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 reveal">
-                    <div class="metric-item">
-                        <div class="metric-number">₹10M+</div>
-                        <div class="metric-label">Scholarship Fund</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- VISIONARY PILLARS -->
-    <section class="py-5 my-5">
-        <div class="container">
-            <div class="section-header reveal">
-                <h2>Our Visionary Pillars</h2>
-                <p>An inside look at our roadmap to shape the future of luxury hospitality and high gastronomy.</p>
-            </div>
-
-            <div class="row g-5">
-                <!-- Ambition 1: Culinary Innovation Lab & Eco-Luxury -->
-                <div class="col-md-6 reveal">
-                    <div class="ambition-card">
-                        <div class="card-img-wrapper">
-                            <span class="card-tag">Sustainability</span>
-                            <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=800&auto=format&fit=crop"
-                                alt="Culinary Innovation Lab">
-                        </div>
-                        <div class="card-body-content">
-                            <div class="card-icon">
-                                <i class="fas fa-leaf"></i>
-                            </div>
-                            <h3>Eco-Luxury & Innovation Lab</h3>
-                            <p>We are establishing a Culinary Innovation Lab dedicated to designing sustainable haute
-                                cuisine. Our ambition is to build direct-trade farm partnerships with biodynamic family
-                                estates, completely eliminate single-use plastics, and transition to a fully
-                                carbon-neutral kitchen operation by 2028.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ambition 2: Global Footprint -->
-                <div class="col-md-6 reveal">
-                    <div class="ambition-card">
-                        <div class="card-img-wrapper">
-                            <span class="card-tag">Expansion</span>
-                            <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=800&auto=format&fit=crop"
-                                alt="Global Cities">
-                        </div>
-                        <div class="card-body-content">
-                            <div class="card-icon">
-                                <i class="fas fa-globe"></i>
-                            </div>
-                            <h3>Global Footprint & Expansion</h3>
-                            <p>We believe that Medusa's signature palatial design and bespoke hospitality belong on the
-                                global stage. Our development roadmap targets establishing new fine dining landmarks in
-                                Dubai (Downtown), London (Mayfair), and Mumbai (Colaba) between 2027 and 2029.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ambition 3: Sensory Dining Chambers -->
-                <div class="col-md-6 reveal">
-                    <div class="ambition-card">
-                        <div class="card-img-wrapper">
-                            <span class="card-tag">Technology</span>
-                            <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=800&auto=format&fit=crop"
-                                alt="Sensory Dining">
-                        </div>
-                        <div class="card-body-content">
-                            <div class="card-icon">
-                                <i class="fas fa-wand-magic-sparkles"></i>
-                            </div>
-                            <h3>Sensory Dining Chambers</h3>
-                            <p>Gastronomy is a multisensory art. We are designing immersive, projection-mapped dining
-                                rooms where acoustic choreography, custom spatial scent diffusion, and lighting systems
-                                synchronize with chef Giovanni Vance’s tasting menus to create a theatrical
-                                three-dimensional dining experience.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ambition 4: Medusa Culinary Foundation -->
-                <div class="col-md-6 reveal">
-                    <div class="ambition-card">
-                        <div class="card-img-wrapper">
-                            <span class="card-tag">Academy</span>
-                            <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=800&auto=format&fit=crop"
-                                alt="Culinary Academy">
-                        </div>
-                        <div class="card-body-content">
-                            <div class="card-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <h3>Culinary Arts Foundation</h3>
-                            <p>Our final pillar is dedicated to giving back. The Medusa Culinary Arts Foundation will
-                                provide full scholarships and mentorship programs to support talented, aspiring young
-                                chefs across India, enabling them to study and apprentice at top-tier culinary academies
-                                in Italy and France.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- MAIN FORM CONTAINER -->
-    <main class="careers-container reveal" id="career-form">
-        <div class="container d-flex justify-content-center">
-            <div class="careers-card">
-                <div class="careers-header">
-                    <h1 class="careers-title">Join Team Medusa</h1>
-                    <p class="careers-subtitle">Build your career with one of the most premium dining destinations.</p>
-                </div>
-
-                <form id="careerForm" onsubmit="submitApplication(event)" novalidate>
-                    <div class="row g-5">
-                        <!-- Full Name -->
-                        <div class="col-md-6">
-                            <label for="full_name" class="form-label"><i class="fas fa-user"></i> Full Name</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" required
-                                placeholder="E.g. Vikram Malhotra">
-                            <div class="invalid-feedback">Please enter your full name (minimum 2 characters).</div>
-                        </div>
-
-                        <!-- Mobile Number -->
-                        <div class="col-md-6">
-                            <label for="mobile" class="form-label"><i class="fas fa-phone"></i> Mobile Number</label>
-                            <input type="tel" class="form-control" id="mobile" name="mobile" required
-                                placeholder="E.g. 9876543210">
-                            <div class="invalid-feedback">Please enter a valid mobile number (10-15 digits).</div>
-                        </div>
-
-                        <!-- Email Address -->
-                        <div class="col-md-6">
-                            <label for="email" class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" required
-                                placeholder="E.g. vikram@example.com">
-                            <div class="invalid-feedback">Please enter a valid email address.</div>
-                        </div>
-
-                        <!-- Position Selector -->
-                        <div class="col-md-6">
-                            <label for="position" class="form-label"><i class="fas fa-briefcase"></i> Position Applying
-                                For</label>
-                            <select class="form-select" id="position" name="position" required>
-                                <option value="" disabled selected>Select Position</option>
-                                <option value="Waiter">Waiter</option>
-                                <option value="Captain">Captain</option>
-                                <option value="Head Chef">Head Chef</option>
-                                <option value="Supervisor">Supervisor</option>
-                                <option value="Cleaning Staff">Cleaning Staff</option>
-                                <option value="CDP (Chef de Partie)">CDP (Chef de Partie)</option>
-                                <option value="Barista">Barista</option>
-                                <option value="Commis 1">Commis 1</option>
-                                <option value="Commis 2">Commis 2</option>
-                            </select>
-                            <div class="invalid-feedback">Please select the position you are applying for.</div>
-                        </div>
-
-                        <!-- Years of Experience -->
-                        <div class="col-md-4">
-                            <label for="experience" class="form-label"><i class="fas fa-history"></i> Years of
-                                Experience</label>
-                            <input type="number" class="form-control" id="experience" name="experience" min="0" required
-                                placeholder="E.g. 3">
-                            <div class="invalid-feedback">Please specify years of experience (minimum 0).</div>
-                        </div>
-
-                        <!-- Current City -->
-                        <div class="col-md-4">
-                            <label for="city" class="form-label"><i class="fas fa-map-marker-alt"></i> Current
-                                City</label>
-                            <input type="text" class="form-control" id="city" name="city" required
-                                placeholder="E.g. Chandigarh">
-                            <div class="invalid-feedback">Please enter your current city.</div>
-                        </div>
-
-                        <!-- Expected Salary -->
-                        <div class="col-md-4">
-                            <label for="expected_salary" class="form-label"><i class="fas fa-indian-rupee-sign"></i>
-                                Expected Salary (₹ / Month)</label>
-                            <input type="number" class="form-control" id="expected_salary" name="expected_salary"
-                                min="1" required placeholder="E.g. 25000">
-                            <div class="invalid-feedback">Please enter your expected salary.</div>
-                        </div>
-
-                        <!-- Resume Upload -->
-                        <div class="col-12">
-                            <label class="form-label"><i class="fas fa-file-arrow-up"></i> Resume Upload (PDF/DOC/DOCX -
-                                Max 5MB)</label>
-                            <div class="file-upload-wrapper" id="uploadArea">
-                                <input type="file" class="file-upload-input" id="resume" name="resume"
-                                    accept=".pdf,.doc,.docx" required onchange="handleFileSelected(this)">
-                                <div class="upload-icon-wrapper mb-2">
-                                    <i class="fas fa-cloud-arrow-up"
-                                        style="font-size: 2.2rem; color: rgba(223, 186, 134, 0.6); transition: var(--transition-smooth);"></i>
-                                </div>
-                                <p class="file-upload-text" id="uploadText">
-                                    Drag & drop your resume file here or <strong>browse files</strong>
-                                </p>
-                            </div>
-                            <div class="invalid-feedback" id="fileFeedback" style="display:none;">Please upload a valid
-                                resume in PDF, DOC, or DOCX format (Max 5MB).</div>
-                        </div>
-
-                        <!-- Cover Letter -->
-                        <div class="col-12">
-                            <label for="cover_letter" class="form-label"><i class="fas fa-comment-dots"></i> Cover
-                                Letter / Message (Optional)</label>
-                            <textarea class="form-control" id="cover_letter" name="cover_letter" rows="4"
-                                placeholder="Describe why you are a great fit for Medusa..."></textarea>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="col-12 mt-5">
-                            <button type="submit" class="btn btn-gold" id="submitBtn">Submit Application</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="container">
-            <div class="row g-5">
-                <div class="col-lg-3">
-                    <h2 class="d-flex align-items-center gap-2"
-                        style="color:var(--gold); font-family:'Playfair Display',serif; font-size: 1.8rem; font-weight: 600;">
-                        <img src="assets/images/versace_logo.png" alt="Medusa Logo"
-                            style="height: 36px; border-radius: 50%; border: 1px solid var(--gold); padding: 1.5px; background: rgba(0,0,0,0.3);">
-                        <span>Medusa</span>
-                    </h2>
-                    <p class="mt-4 text-secondary">
-                        Luxury dining experience crafted for unforgettable moments.
-                    </p>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Navigation</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3"><a href="index.html" class="text-secondary text-decoration-none">Home</a>
-                        </li>
-                        <li class="mb-3"><a href="menutest.html"
-                                class="text-secondary text-decoration-none auth-required">Our Menu</a></li>
-                        <li class="mb-3"><a href="book-table-test.html"
-                                class="text-secondary text-decoration-none">Reservations</a></li>
-                        <li class="mb-3"><a href="about.html" class="text-secondary text-decoration-none">About Us</a>
-                        </li>
-                        <li class="mb-3"><a href="register.html" class="text-secondary text-decoration-none">Create
-                                Account</a></li>
-                        <li class="mb-3"><a href="#ambitions-section"
-                                class="text-secondary text-decoration-none">Ambitions</a></li>
-                        <li class="mb-3"><a href="#career-form"
-                                class="text-secondary text-decoration-none text-gold">Career</a></li>
-                        <li class="mb-3"><a href="login.html" class="text-secondary text-decoration-none"
-                                id="footerAuthLink">Login</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Contact</h5>
-                    <p class="text-secondary">SCO 44,45, District One Market<br>Sector 68, SAS Nagar<br>Punjab 140308
-                    </p>
-                    <p class="text-secondary">+91 94272 72798</p>
-                    <p class="text-secondary">contact@medusa.com</p>
-                    <button class="btn btn-outline-warning btn-sm mt-2"
-                        style="border-color: var(--gold); color: var(--gold); border-radius: 8px; letter-spacing: 1px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; padding: 8px 16px;"
-                        onclick="openMapModal()">
-                        <i class="fas fa-location-dot me-1"></i> View on Map
-                    </button>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="mb-4">Join Our Circle</h5>
-                    <p class="text-secondary mb-4">Get exclusive offers and premium updates.</p>
-                    <div class="d-flex">
-                        <input type="email" class="form-control" placeholder="Email Address"
-                            style="border-radius: 8px 0 0 8px; border-color: rgba(223, 186, 134, 0.2); background: transparent; color: white;">
-                        <button class="btn btn-outline-warning"
-                            style="border-radius: 0 8px 8px 0; border-color: var(--gold); color: var(--gold); width: 60px; min-width: auto; margin: 0;">→</button>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-5" style="border-color:rgba(255,255,255,0.1);">
-            <p class="text-center text-secondary mb-0">
-                © 2026 Medusa. All Rights Reserved.
-            </p>
-        </div>
-    </footer>
-
-    <!-- GOOGLE MAPS LOCATION MODAL -->
-    <div id="mapModal"
-        style="position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:10000;opacity:0;visibility:hidden;display:flex;align-items:center;justify-content:center;transition:opacity 0.35s ease,visibility 0.35s ease;">
-        <button onclick="closeMapModal()"
-            style="position:absolute;top:30px;right:40px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;z-index:10010;">&times;</button>
-        <div style="max-width:700px;width:95%;text-align:center;transform:scale(0.95);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);"
-            id="mapContent">
-            <div
-                style="border-radius:16px;overflow:hidden;border:1px solid rgba(223,186,134,0.2);box-shadow:0 25px 60px rgba(0,0,0,0.8);">
-                <iframe id="mapIframe" src="" width="100%" height="400" style="border:0;display:block;" allowfullscreen
-                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
-            <h4 style="font-family:'Cormorant Garamond',serif;color:#fff;margin-top:16px;font-size:1.3rem;">Medusa
-                Restaurant</h4>
-            <p style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
-                SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
-            <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308"
-                target="_blank" rel="noopener"
-                style="display:inline-block;margin-top:12px;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Open
-                in Google Maps <i class="fas fa-arrow-up-right-from-square ms-1" style="font-size:0.75rem;"></i></a>
-        </div>
+    <div class="lux-nav-links d-none d-lg-flex">
+      <a href="index.html" class="lux-nav-link">HOME</a>
+      <a href="#" class="lux-nav-link">ABOUT US</a>
+      <a href="menutest.html" class="lux-nav-link">MENU</a>
+      <a href="book-table-test.html" class="lux-nav-link">BOOK TABLE</a>
+      <a href="career.html" class="lux-nav-link active">CAREER</a>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="lux-nav-actions">
+      <a href="profile.php" class="btn-outline-light-custom">MY ACCOUNT</a>
+    </div>
+  </nav>
 
-    <script>
-        // --- Map Modal Logic ---
-        const MAP_EMBED_URL = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2885.413030890794!2d76.71954153075983!3d30.680322781741616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fef0030d303dd%3A0xc81adde575ebd2ce!2sMedusa-bar%20and%20lounge!5e0!3m2!1sen!2sin!4v1780853698088!5m2!1sen!2sin';
-        function openMapModal() {
-            const modal = document.getElementById('mapModal');
-            document.getElementById('mapIframe').src = MAP_EMBED_URL;
-            modal.style.opacity = '1'; modal.style.visibility = 'visible';
-            document.getElementById('mapContent').style.transform = 'scale(1)';
-            document.body.style.overflow = 'hidden';
-        }
-        function closeMapModal() {
-            const modal = document.getElementById('mapModal');
-            modal.style.opacity = '0'; modal.style.visibility = 'hidden';
-            document.getElementById('mapContent').style.transform = 'scale(0.95)';
-            document.body.style.overflow = '';
-            setTimeout(() => { document.getElementById('mapIframe').src = ''; }, 350);
-        }
-        document.getElementById('mapModal').addEventListener('click', (e) => { if (e.target.id === 'mapModal') closeMapModal(); });
-        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('mapModal').style.visibility === 'visible') closeMapModal(); });
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-subtitle">JOIN OUR JOURNEY</div>
+      <h1 class="hero-title">Ambitions <span>&</span><br>Careers</h1>
+      <p class="hero-text">At Medusa, we blend passion, innovation and hospitality to create unforgettable experiences. Join a team that's redefining dining, drinks and the art of luxury service.</p>
+      <a href="#open-positions" class="btn-gold-outline">EXPLORE OPEN POSITIONS</a>
+    </div>
+  </section>
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            // Check session to update Login/Logout link
-            try {
-                const res = await fetch('api/check-session.php');
-                const data = await res.json();
-                if (data.success && data.logged_in) {
-                    const authLink = document.getElementById('authLink');
-                    if (authLink) {
-                        authLink.textContent = 'Logout';
-                        authLink.href = 'api/logout.php';
-                    }
-                    const footerAuthLink = document.getElementById('footerAuthLink');
-                    if (footerAuthLink) {
-                        footerAuthLink.textContent = 'Logout';
-                        footerAuthLink.href = 'api/logout.php';
-                    }
-                }
-            } catch (e) {
-                console.error("Session check failed:", e);
-            }
+  <!-- STATS SECTION -->
+  <section class="stats-section">
+    <div class="stats-container">
+      <div class="stat-item">
+        <i class="fa-solid fa-globe"></i>
+        <div class="stat-value">2028</div>
+        <div class="stat-label">CARBON NEUTRAL</div>
+      </div>
+      <div class="stat-item">
+        <i class="fa-solid fa-users"></i>
+        <div class="stat-value">3+</div>
+        <div class="stat-label">GLOBAL CITIES</div>
+      </div>
+      <div class="stat-item">
+        <i class="fa-solid fa-leaf"></i>
+        <div class="stat-value">100%</div>
+        <div class="stat-label">ORGANIC SOURCING</div>
+      </div>
+      <div class="stat-item">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <div class="stat-value">₹10M+</div>
+        <div class="stat-label">SCHOLARSHIP FUND</div>
+      </div>
+    </div>
+  </section>
 
-            // Scroll Reveal Observer
-            const revealCallback = (entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            };
+  <!-- PILLARS SECTION -->
+  <section class="pillars-section">
+    <div class="section-header">
+      <h2>Our Visionary Pillars</h2>
+      <div class="section-divider">
+        <i class="fa-solid fa-gem"></i>
+      </div>
+      <p>We are more than a restaurant — we are a culture of excellence, where people grow, ideas flourish and guests are inspired.</p>
+    </div>
 
-            const revealObserver = new IntersectionObserver(revealCallback, {
-                root: null,
-                threshold: 0.1,
-                rootMargin: "0px 0px -50px 0px"
-            });
+    <div class="pillars-grid">
+      <!-- Card 1 -->
+      <div class="pillar-card">
+        <img src="assets/images/gallery_1.png" alt="Sustainability" class="pillar-img">
+        <div class="pillar-content">
+          <div class="pillar-icon"><i class="fa-solid fa-leaf"></i></div>
+          <div class="pillar-subtitle">Sustainability</div>
+          <h3 class="pillar-title">Eco-Luxury & Innovation Lab</h3>
+          <p class="pillar-desc">We are establishing a culinary innovation lab dedicated to designing sustainable haute cuisine and exploring the future of eco-luxury dining.</p>
+          <a href="#" class="pillar-link">LEARN MORE <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
 
-            document.querySelectorAll('.reveal').forEach(element => {
-                revealObserver.observe(element);
-            });
+      <!-- Card 2 -->
+      <div class="pillar-card">
+        <img src="assets/images/medusa_outdoor_dining.png" alt="Expansion" class="pillar-img">
+        <div class="pillar-content">
+          <div class="pillar-icon"><i class="fa-solid fa-globe"></i></div>
+          <div class="pillar-subtitle">Expansion</div>
+          <h3 class="pillar-title">Global Footprint & Expansion</h3>
+          <p class="pillar-desc">We are expanding to iconic destinations, bringing the Medusa experience to the world while staying true to our roots.</p>
+          <a href="#" class="pillar-link">LEARN MORE <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
 
-            // Smooth scroll for hash links on the same page
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
-                    if (href.startsWith('#')) {
-                        const target = document.querySelector(href);
-                        if (target) {
-                            e.preventDefault();
-                            target.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
-                            // Update URL hash without causing page jump
-                            history.pushState(null, null, href);
-                        }
-                    }
-                });
-            });
+      <!-- Card 3 -->
+      <div class="pillar-card">
+        <img src="assets/images/restaurant_interior.png" alt="Technology" class="pillar-img">
+        <div class="pillar-content">
+          <div class="pillar-icon"><i class="fa-solid fa-microchip"></i></div>
+          <div class="pillar-subtitle">Technology</div>
+          <h3 class="pillar-title">Sensory Dining Chambers</h3>
+          <p class="pillar-desc">Our multisensory dining concepts combine technology, ambience and gastronomy to create unforgettable experiences.</p>
+          <a href="#" class="pillar-link">LEARN MORE <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
 
-            // Smooth scroll when landing on page with hash link
-            if (window.location.hash) {
-                setTimeout(() => {
-                    const target = document.querySelector(window.location.hash);
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                }, 300);
-            }
-        });
+      <!-- Card 4 -->
+      <div class="pillar-card">
+        <img src="assets/images/chef_portrait.png" alt="Academy" class="pillar-img">
+        <div class="pillar-content">
+          <div class="pillar-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="pillar-subtitle">Academy</div>
+          <h3 class="pillar-title">Culinary Arts Foundation</h3>
+          <p class="pillar-desc">We invest in talent through our academy, nurturing the next generation of culinary and hospitality leaders.</p>
+          <a href="#" class="pillar-link">LEARN MORE <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        // File upload visual selector
-        function handleFileSelected(input) {
-            const uploadText = document.getElementById('uploadText');
-            const fileFeedback = document.getElementById('fileFeedback');
-            const uploadArea = document.getElementById('uploadArea');
+  <!-- FORM SECTION -->
+  <section class="form-section" id="open-positions">
+    <div class="section-header">
+      <h2>Join Team Medusa</h2>
+      <div class="section-divider">
+        <i class="fa-solid fa-gem"></i>
+      </div>
+      <p>Build your career with one of the most premium dining destinations.</p>
+    </div>
 
-            if (input.files && input.files.length > 0) {
-                const file = input.files[0];
-                const extension = file.name.split('.').pop().toLowerCase();
-                const allowed = ['pdf', 'doc', 'docx'];
+    <form class="medusa-form" onsubmit="event.preventDefault(); alert('Application Submitted! Thank you for applying to Medusa.');">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-user"></i> FULL NAME</label>
+          <input type="text" class="form-control" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-phone"></i> MOBILE NUMBER</label>
+          <input type="tel" class="form-control" placeholder="Enter your number" required>
+        </div>
+      </div>
 
-                if (!allowed.includes(extension) || file.size > 5 * 1024 * 1024) {
-                    uploadArea.style.borderColor = '#dc3545';
-                    uploadText.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> Invalid file: ${file.name}</span>`;
-                    fileFeedback.style.display = 'block';
-                    input.value = ''; // Reset input value
-                } else {
-                    uploadArea.style.borderColor = '#2ec4b6';
-                    uploadText.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Selected: <strong>${file.name}</strong> (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>`;
-                    fileFeedback.style.display = 'none';
-                }
-            } else {
-                uploadArea.style.borderColor = 'rgba(223, 186, 134, 0.3)';
-                uploadText.innerHTML = 'Drag & drop your resume file here or <strong>browse files</strong>';
-                fileFeedback.style.display = 'none';
-            }
-        }
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-envelope"></i> EMAIL ADDRESS</label>
+          <input type="email" class="form-control" placeholder="Enter your email address" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-briefcase"></i> POSITION APPLYING FOR</label>
+          <select class="form-select" required>
+            <option value="" selected disabled>Select Position</option>
+            <option>Executive Chef</option>
+            <option>Sous Chef</option>
+            <option>Sommelier</option>
+            <option>Mixologist</option>
+            <option>Restaurant Manager</option>
+            <option>Luxury Server</option>
+            <option>Host / Hostess</option>
+          </select>
+        </div>
+      </div>
 
-        // Form Submission with client validation & spinner feedback
-        async function submitApplication(event) {
-            event.preventDefault();
-            const form = document.getElementById('careerForm');
-            const resumeInput = document.getElementById('resume');
-            const fileFeedback = document.getElementById('fileFeedback');
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-clock"></i> YEARS OF EXPERIENCE</label>
+          <input type="text" class="form-control" placeholder="e.g. 2-5 years">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-location-dot"></i> CURRENT CITY</label>
+          <input type="text" class="form-control" placeholder="Enter your city">
+        </div>
+      </div>
+      
+      <div class="form-row" style="grid-template-columns: 1fr;">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-wallet"></i> EXPECTED SALARY (₹ / MONTH)</label>
+          <input type="text" class="form-control" placeholder="e.g. 50,000">
+        </div>
+      </div>
 
-            let isFileValid = true;
-            if (!resumeInput.files || resumeInput.files.length === 0) {
-                isFileValid = false;
-                document.getElementById('uploadArea').style.borderColor = '#dc3545';
-                fileFeedback.style.display = 'block';
-            }
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label class="form-label"><i class="fa-regular fa-file-pdf"></i> RESUME (UPLOAD PDF/DOC/DOCX - MAX 5MB)</label>
+        <div class="file-drop-area">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          Drag & drop your resume file here or <span>browse files</span>
+        </div>
+      </div>
 
-            if (!form.checkValidity() || !isFileValid) {
-                form.classList.add('was-validated');
-                return;
-            }
+      <div class="form-group">
+        <label class="form-label"><i class="fa-regular fa-comment-dots"></i> COVER LETTER / MESSAGE (OPTIONAL)</label>
+        <textarea class="form-control" placeholder="Tell us why you'd be a great fit for Medusa."></textarea>
+      </div>
 
-            const submitBtn = document.getElementById('submitBtn');
-            const originalBtnText = submitBtn.innerHTML;
+      <button type="submit" class="btn-submit">SUBMIT APPLICATION</button>
+    </form>
+  </section>
 
-            // Set Loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-gold me-2"></span>Submitting...';
+  <!-- FOOTER -->
+  <footer class="lux-footer">
+    <div class="lux-footer-grid">
+      <div>
+        <img src="assets/images/logo_right.png" alt="Medusa Logo" style="width: 220px; height: auto; margin: 0; margin-bottom: 15px;">
+        <p>Luxury dining and curated experiences crafted for unforgettable moments.</p>
+        <div class="lux-footer-socials">
+          <a href="#"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4>Navigation</h4>
+        <p><a href="index.html">Home</a></p>
+        <p><a href="menutest.html">Our Menu</a></p>
+        <p><a href="book-table-test.html">Book Table</a></p>
+        <p><a href="#">About Us</a></p>
+        <p><a href="career.html">Careers</a></p>
+        <p><a href="login.php">Login</a></p>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p>SCO 44-45, District One Market<br>Sector 68, SAS Nagar<br>Punjab 140 308</p>
+        <p>+91 94272 27398</p>
+        <p>contact@medusa.com</p>
+        <p style="margin-top: 15px;"><a href="#" style="color:var(--gold); font-weight:600;"><i class="fa-solid fa-location-dot"></i> VIEW ON MAP &rarr;</a></p>
+      </div>
+      <div>
+        <h4>Join Our Circle</h4>
+        <p>Get exclusive offers and premium updates.</p>
+        <div style="display:flex; margin-top:15px;">
+          <input type="email" placeholder="Enter your email" style="background:transparent; border:1px solid rgba(255,255,255,0.2); padding:10px 15px; color:white; width:100%; border-radius:4px 0 0 4px; outline:none;">
+          <button style="background:var(--formal-garden-deep); border:1px solid rgba(255,255,255,0.2); border-left:none; color:var(--gold); padding:10px 15px; border-radius:0 4px 4px 0; cursor:pointer;"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="lux-footer-bottom">
+      &copy; 2026 Medusa. All Rights Reserved.
+    </div>
+  </footer>
 
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetch('api/submit-career.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    // Custom Alert Modal trigger (via theme-toggle.js override)
-                    alert('Success! ' + data.message);
-                    form.reset();
-                    form.classList.remove('was-validated');
-
-                    // Reset file upload styles
-                    document.getElementById('uploadArea').style.borderColor = 'rgba(223, 186, 134, 0.3)';
-                    document.getElementById('uploadText').innerHTML = 'Drag & drop your resume file here or <strong>browse files</strong>';
-                    document.getElementById('fileFeedback').style.display = 'none';
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (error) {
-                console.error("Submission failed:", error);
-                alert('An error occurred during submission. Please check your network connection.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        }
-    </script>
 </body>
-
 </html>

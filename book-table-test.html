@@ -41,15 +41,15 @@
       margin: 0;
     }
 
-    /* LUXURY NAVBAR */
     .lux-navbar {
-      background-color: var(--formal-garden);
+      background-color: #2F1317;
       padding: 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 80px;
+      height: 110px;
+      position: relative;
     }
 
     .lux-navbar-brand {
@@ -63,20 +63,18 @@
       gap: 12px;
       padding-left: 30px;
     }
-    
+
     .lux-navbar-brand img {
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid rgba(192, 155, 91, 0.5);
-      padding: 2px;
+      height: 90px;
+      margin-left: 0;
     }
-    
+
     .lux-navbar-brand div {
       display: flex;
       flex-direction: column;
       line-height: 1.1;
     }
-    
+
     .lux-navbar-brand .brand-sub {
       font-size: 0.65rem;
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -89,37 +87,40 @@
       display: flex;
       height: 100%;
       align-items: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     .lux-nav-link {
       color: white;
       text-decoration: none;
       font-size: 0.95rem;
-      font-weight: 500;
+      font-weight: 600;
       height: 100%;
       display: flex;
       align-items: center;
       padding: 0 20px;
       transition: color 0.2s;
       position: relative;
+      font-family: 'Lato', 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.5px;
     }
 
     .lux-nav-link:hover {
       color: var(--gold);
     }
-    
+
     .lux-nav-link.active {
       color: var(--gold);
+      text-decoration: underline;
+      text-underline-offset: 8px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: var(--gold);
     }
-    
+
     .lux-nav-link.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 20px;
-      right: 20px;
-      height: 3px;
-      background-color: var(--gold);
+      display: none;
     }
 
     .lux-nav-actions {
@@ -128,28 +129,28 @@
       padding-right: 30px;
     }
 
-    .btn-new-res {
-      background-color: var(--rosewood);
+    .btn-outline-light-custom {
+      background: transparent;
       color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 10px 24px;
+      font-size: 0.85rem;
       font-weight: 600;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: background-color 0.2s;
-      cursor: pointer;
-    }
-    
-    .btn-new-res:hover {
-      background-color: var(--rosewood-light);
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: 'Lato', 'Plus Jakarta Sans', sans-serif;
     }
 
+    .btn-outline-light-custom:hover {
+      background: white;
+      color: #2F1317;
+    }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -157,24 +158,19 @@
   <!-- LUXURY NAVBAR -->
   <nav class="lux-navbar">
     <a class="lux-navbar-brand" href="index.html">
-      <img src="assets/images/versace_logo.png" alt="Medusa Logo">
-      <div>
-        <span>Medusa</span>
-        <span class="brand-sub">Restaurant</span>
-      </div>
+      <img src="assets/images/logo.png" alt="Medusa Logo">
     </a>
-    
+
     <div class="lux-nav-links d-none d-lg-flex">
-      <a href="index.html" class="lux-nav-link">Home</a>
-      <a href="menutest.html" class="lux-nav-link">Menu</a>
-      <a href="book-table-test.html" class="lux-nav-link active">Table Layout</a>
-      <a href="profile.php" class="lux-nav-link">My Account</a>
+      <a href="index.html" class="lux-nav-link">HOME</a>
+      <a href="#" class="lux-nav-link">ABOUT US</a>
+      <a href="menutest.html" class="lux-nav-link">MENU</a>
+      <a href="book-table-test.html" class="lux-nav-link active">BOOK TABLE</a>
+      <a href="career.html" class="lux-nav-link">CAREER</a>
     </div>
-    
+
     <div class="lux-nav-actions">
-      <a href="profile.php" class="btn-new-res" style="text-decoration: none;">
-        <i class="fa-solid fa-user"></i> Profile
-      </a>
+      <a href="profile.php" class="btn-outline-light-custom">MY ACCOUNT</a>
     </div>
   </nav>
 
@@ -218,7 +214,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.1);
+      border: 1px solid rgba(0, 0, 0, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -249,7 +245,7 @@
       margin-top: 10px;
     }
 
-    .tl-legend > span {
+    .tl-legend>span {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -264,14 +260,26 @@
       border-radius: 50%;
       flex-shrink: 0;
     }
-    .tl-dot.av { background: var(--formal-garden); }
-    .tl-dot.rs { background: var(--rosewood); }
-    .tl-dot.oc { background: var(--gold); }
-    .tl-dot.sl { background: #dcdcdc; }
+
+    .tl-dot.av {
+      background: var(--formal-garden);
+    }
+
+    .tl-dot.rs {
+      background: var(--rosewood);
+    }
+
+    .tl-dot.oc {
+      background: var(--gold);
+    }
+
+    .tl-dot.sl {
+      background: #dcdcdc;
+    }
 
     .tl-refresh-btn {
       background: #fff;
-      border: 1px solid rgba(0,0,0,0.1);
+      border: 1px solid rgba(0, 0, 0, 0.1);
       color: #666;
       width: 36px;
       height: 36px;
@@ -283,6 +291,7 @@
       justify-content: center;
       transition: all 0.2s;
     }
+
     .tl-refresh-btn:hover {
       background: #f0f0f0;
       color: #333;
@@ -293,13 +302,13 @@
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 24px;
-      border: 1px solid rgba(0,0,0,0.06);
+      border: 1px solid rgba(0, 0, 0, 0.06);
       background: #fff;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     }
-    
+
     .tl-zone::before {
       content: '';
       position: absolute;
@@ -345,6 +354,7 @@
       font-size: 0.8rem;
       color: #888;
     }
+
     .tl-zone-desc::before {
       content: '— ';
     }
@@ -360,7 +370,7 @@
 
     .tl-group {
       background: #fafafa;
-      border: 1px solid rgba(0,0,0,0.04);
+      border: 1px solid rgba(0, 0, 0, 0.04);
       border-radius: 10px;
       padding: 16px;
       flex: 1;
@@ -427,7 +437,7 @@
       background: #e6e0d4;
       border-radius: 4px;
       flex-shrink: 0;
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .tl-c.h {
@@ -456,7 +466,7 @@
       justify-content: center;
       font-weight: 700;
       transition: all 0.25s;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 4px 10px rgba(0, 0, 0, 0.15);
       border: none;
       position: relative;
       color: #fff;
@@ -534,12 +544,20 @@
       background: var(--rosewood);
       border-radius: 6px 6px 0 0;
       margin-bottom: 2px;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,0.1);
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
     }
-    
-    .tl-item.available .tl-booth-back { background: var(--formal-garden); }
-    .tl-item.reserved .tl-booth-back { background: var(--rosewood); }
-    .tl-item.occupied .tl-booth-back { background: var(--gold); }
+
+    .tl-item.available .tl-booth-back {
+      background: var(--formal-garden);
+    }
+
+    .tl-item.reserved .tl-booth-back {
+      background: var(--rosewood);
+    }
+
+    .tl-item.occupied .tl-booth-back {
+      background: var(--gold);
+    }
 
     /* ---- RIGHT PANEL ---- */
     .tl-panel {
@@ -552,7 +570,7 @@
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       color: white;
     }
 
@@ -561,8 +579,8 @@
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
       color: var(--text-main);
       padding: 20px;
       display: flex;
@@ -594,7 +612,7 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -710,9 +728,17 @@
       font-size: 1rem;
     }
 
-    .tl-sum-val.av { color: #6fc276; }
-    .tl-sum-val.rs { color: #ff6b6b; }
-    .tl-sum-val.oc { color: var(--gold); }
+    .tl-sum-val.av {
+      color: #6fc276;
+    }
+
+    .tl-sum-val.rs {
+      color: #ff6b6b;
+    }
+
+    .tl-sum-val.oc {
+      color: var(--gold);
+    }
 
     .help-icon {
       width: 44px;
@@ -725,24 +751,24 @@
       font-size: 1.2rem;
       color: #555;
     }
-    
+
     .help-content {
       flex: 1;
     }
-    
+
     .help-content h4 {
       margin: 0 0 4px;
       font-size: 0.95rem;
       font-weight: 700;
       color: var(--text-main);
     }
-    
+
     .help-content p {
       margin: 0 0 10px;
       font-size: 0.8rem;
       color: var(--text-muted);
     }
-    
+
     .btn-help {
       background: transparent;
       border: 1px solid var(--formal-garden);
@@ -754,7 +780,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    
+
     .btn-help:hover {
       background: var(--formal-garden);
       color: white;
@@ -765,6 +791,7 @@
       .tl-wrapper {
         grid-template-columns: 1fr;
       }
+
       .tl-panel {
         position: static;
       }
@@ -774,9 +801,11 @@
       .tl-main-title {
         font-size: 1.8rem;
       }
+
       .tl-groups {
         flex-direction: column;
       }
+
       .tl-face.bnq {
         width: 160px;
       }
@@ -802,17 +831,18 @@
             <span><span class="tl-dot rs"></span>Reserved</span>
             <span><span class="tl-dot oc"></span>Occupied</span>
             <span><span class="tl-dot sl"></span>Selected</span>
-            
+
             <!-- Date Filter -->
             <input type="date" id="tlFilterDate" onchange="tlSyncFromDB()"
-                   style="margin-left: 10px; background: transparent; border: 1px solid #dcdcdc; color: #4a4a4a; border-radius: 6px; padding: 4px 8px; font-size: 0.85rem; font-family: inherit;" 
-                   title="View floor plan for a specific date">
+              style="margin-left: 10px; background: transparent; border: 1px solid #dcdcdc; color: #4a4a4a; border-radius: 6px; padding: 4px 8px; font-size: 0.85rem; font-family: inherit;"
+              title="View floor plan for a specific date">
 
             <span class="tl-sync-badge" style="margin-left:4px;">
               <span class="tl-sync-dot" id="tlSyncDot"></span>
               <span id="tlSyncLbl" style="font-size:0.75rem;color:#888;">Syncing...</span>
             </span>
-            <button class="tl-refresh-btn" onclick="tlRefresh()" title="Refresh &amp; re-sync from database"><i class="fa-solid fa-rotate-right"></i></button>
+            <button class="tl-refresh-btn" onclick="tlRefresh()" title="Refresh &amp; re-sync from database"><i
+                class="fa-solid fa-rotate-right"></i></button>
           </div>
         </div>
         <div id="tlZones"></div>
@@ -820,7 +850,7 @@
 
       <!-- RIGHT: Side Panel -->
       <div class="tl-panel">
-      
+
         <!-- Selected Table Card -->
         <div class="tl-card">
           <div class="tl-panel-hd">Selected Table</div>
@@ -857,7 +887,7 @@
             <span class="tl-sum-val">0</span>
           </div>
         </div>
-        
+
         <!-- Assistance Card -->
         <div class="tl-card-light">
           <div class="help-icon">
@@ -869,7 +899,7 @@
             <button class="btn-help">Contact Staff</button>
           </div>
         </div>
-        
+
       </div>
     </div>
   </section>
@@ -1070,9 +1100,9 @@
       }
 
       const clickAttr = canClick ? `onclick="tlSelect('${t.id}')"` : '';
-      const selCls  = isSel  ? ' tl-selected'  : '';
-      const occCls  = isOcc  ? ' tl-occupied'  : '';
-      const resCls  = isRes  ? ' tl-reserved-item' : '';
+      const selCls = isSel ? ' tl-selected' : '';
+      const occCls = isOcc ? ' tl-occupied' : '';
+      const resCls = isRes ? ' tl-reserved-item' : '';
       let titleAttr = `Click to select table ${t.lbl}`;
       if (isOcc) titleAttr = '⛔ This table is currently occupied';
       if (isRes) titleAttr = '🔒 This table is reserved for today — choose another';
@@ -1187,7 +1217,7 @@
       const typeLabel = TL_TYPE_LABELS[type] || 'Table';
       document.getElementById('modalTableTitle').innerText = `Book Table ${lbl} — ${typeLabel}`;
       document.getElementById('m_seats').value = seats;
-      
+
       const filterDateEl = document.getElementById('tlFilterDate');
       if (filterDateEl && filterDateEl.value) {
         document.getElementById('m_date').value = filterDateEl.value;
@@ -1235,7 +1265,7 @@
     // ============================================================
     //  DB SYNC ENGINE
     // ============================================================
-    
+
     /**
      * Fetches table statuses from api/get-table-status.php for the selected date
      * and applies them to TL_ZONES + tlAllTables, then re-renders.
@@ -1243,7 +1273,7 @@
     async function tlSyncFromDB() {
       const syncDot = document.getElementById('tlSyncDot');
       const syncLbl = document.getElementById('tlSyncLbl');
-      
+
       const filterDateEl = document.getElementById('tlFilterDate');
       let dateParam = '';
       if (filterDateEl && filterDateEl.value) {
@@ -1251,7 +1281,7 @@
       }
 
       try {
-        const res  = await fetch('api/get-table-status.php' + dateParam);
+        const res = await fetch('api/get-table-status.php' + dateParam);
         const json = await res.json();
 
         if (json.success) {
@@ -1284,7 +1314,7 @@
           // Update sync badge
           if (syncDot) { syncDot.className = 'tl-sync-dot live'; }
           const t = new Date();
-          if (syncLbl) syncLbl.textContent = `Live · ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+          if (syncLbl) syncLbl.textContent = `Live · ${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}`;
         } else {
           if (syncDot) syncDot.className = 'tl-sync-dot error';
         }
@@ -1306,7 +1336,7 @@
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         fd.value = `${yyyy}-${mm}-${dd}`;
-        
+
         // Ensure modal date matches filter date
         const mDate = document.getElementById('m_date');
         if (mDate) mDate.value = fd.value;
@@ -1330,29 +1360,37 @@
       <form id="modalBookingForm" onsubmit="submitBooking(event)">
         <div class="tl-modal-body">
           <div style="margin-bottom: 12px;">
-            <label style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Full Name</label>
+            <label
+              style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Full
+              Name</label>
             <input type="text" id="m_name" required
               style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdcdc; background: #fafafa; color: #333; transition: all 0.2s;">
           </div>
           <div style="margin-bottom: 12px;">
-            <label style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Phone Number</label>
+            <label
+              style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Phone
+              Number</label>
             <input type="text" id="m_phone" required
               style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdcdc; background: #fafafa; color: #333; transition: all 0.2s;">
           </div>
           <div style="display: flex; gap: 12px; margin-bottom: 12px;">
             <div style="flex: 1;">
-              <label style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Date</label>
+              <label
+                style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Date</label>
               <input type="date" id="m_date" required
                 style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdcdc; background: #fafafa; color: #333; transition: all 0.2s;">
             </div>
             <div style="flex: 1;">
-              <label style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Time</label>
+              <label
+                style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Time</label>
               <input type="time" id="m_time" required
                 style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdcdc; background: #fafafa; color: #333; transition: all 0.2s;">
             </div>
           </div>
           <div style="margin-bottom: 15px;">
-            <label style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Special Request</label>
+            <label
+              style="color: #4a4a4a; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: 600;">Special
+              Request</label>
             <textarea id="m_request" rows="2"
               style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdcdc; background: #fafafa; color: #333; transition: all 0.2s;"></textarea>
           </div>
@@ -1392,8 +1430,15 @@
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .tl-modal-header {
@@ -1428,7 +1473,7 @@
     .tl-modal-body {
       padding: 24px;
     }
-    
+
     .tl-modal-body label {
       color: var(--text-main);
       font-size: 0.85rem;
@@ -1436,18 +1481,20 @@
       margin-bottom: 6px;
       display: block;
     }
-    
-    .tl-modal-body input, .tl-modal-body textarea {
-      width: 100%; 
-      padding: 12px; 
-      border-radius: 8px; 
-      border: 1px solid rgba(0,0,0,0.1); 
-      background: #fdfcfb; 
+
+    .tl-modal-body input,
+    .tl-modal-body textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #fdfcfb;
       color: var(--text-main);
       font-family: inherit;
     }
-    
-    .tl-modal-body input:focus, .tl-modal-body textarea:focus {
+
+    .tl-modal-body input:focus,
+    .tl-modal-body textarea:focus {
       outline: none;
       border-color: var(--gold);
       box-shadow: 0 0 0 3px rgba(192, 155, 91, 0.1);
@@ -1479,13 +1526,13 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Booking...'; }
 
       const data = {
-        customer_name:    document.getElementById('m_name').value,
-        customer_phone:   document.getElementById('m_phone').value,
-        guests:           document.getElementById('m_seats').value,
+        customer_name: document.getElementById('m_name').value,
+        customer_phone: document.getElementById('m_phone').value,
+        guests: document.getElementById('m_seats').value,
         reservation_date: document.getElementById('m_date').value,
         reservation_time: document.getElementById('m_time').value,
-        special_request:  document.getElementById('m_request').value,
-        table_label:      (document.getElementById('m_table_label') || {}).value || ''
+        special_request: document.getElementById('m_request').value,
+        table_label: (document.getElementById('m_table_label') || {}).value || ''
       };
 
       fetch('api/book-table.php', {
@@ -1501,14 +1548,14 @@
             document.getElementById('modalBookingForm').reset();
             const ref = result.booking_ref ? ` (Ref: ${result.booking_ref})` : '';
             showBookingToast('Booking Confirmed!', `Your table has been reserved${ref}. We look forward to seeing you!`, false, 'profile.php#pill-reservations');
-            
+
             // Auto-switch the date filter to the date just booked so the user sees their reservation!
             const bookedDate = data.reservation_date;
             const filterEl = document.getElementById('tlFilterDate');
             if (filterEl && bookedDate) {
               filterEl.value = bookedDate;
             }
-            
+
             // Re-sync the floor plan immediately so the booked table shows as reserved
             setTimeout(tlSyncFromDB, 800);
           } else {
@@ -1578,17 +1625,17 @@
       padding: 60px 40px 30px;
       margin-top: 40px;
     }
-    
+
     .lux-footer-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 40px;
       max-width: 1400px;
       margin: 0 auto;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 40px;
     }
-    
+
     .lux-footer-brand {
       display: flex;
       align-items: center;
@@ -1599,36 +1646,35 @@
       font-weight: 700;
       margin-bottom: 20px;
     }
-    
+
     .lux-footer-brand img {
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid rgba(192, 155, 91, 0.5);
+      height: 80px;
+      /* removed border and border-radius for transparent logo */
     }
-    
+
     .lux-footer h4 {
       font-family: 'Playfair Display', serif;
       color: var(--gold);
       margin-bottom: 20px;
       font-size: 1.2rem;
     }
-    
+
     .lux-footer p {
       color: #A0C1B0;
       font-size: 0.9rem;
       line-height: 1.6;
       margin-bottom: 10px;
     }
-    
+
     .lux-footer-socials {
       display: flex;
       gap: 16px;
       margin-top: 20px;
     }
-    
+
     .lux-footer-socials a {
       color: white;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       width: 40px;
       height: 40px;
       display: flex;
@@ -1638,12 +1684,12 @@
       text-decoration: none;
       transition: 0.2s;
     }
-    
+
     .lux-footer-socials a:hover {
       background: var(--gold);
       color: var(--formal-garden);
     }
-    
+
     .lux-footer-bottom {
       text-align: center;
       padding-top: 24px;
@@ -1655,13 +1701,12 @@
   <footer class="lux-footer">
     <div class="lux-footer-grid">
       <div>
-        <div class="lux-footer-brand">
-          <img src="assets/images/versace_logo.png" alt="Medusa Logo">
-          <span>Medusa</span>
-        </div>
-        <p>A premium dining experience crafted for the finest tastes. Elegance in every detail, perfection in every bite.</p>
+        <img src="assets/images/logo_right.png" alt="Medusa Logo" style="width: 220px; height: auto; margin: 0; margin-bottom: 15px;">
+        <p>A premium dining experience crafted for the finest tastes. Elegance in every detail, perfection in every
+          bite.</p>
         <div class="lux-footer-socials">
-          <a href="#"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://www.instagram.com/la_medusaa_mohali?igsh=MXVwcHA3Nm9wbXV1dQ=="><i
+              class="fa-brands fa-instagram"></i></a>
           <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
           <a href="#"><i class="fa-brands fa-twitter"></i></a>
         </div>
@@ -1673,9 +1718,10 @@
       </div>
       <div>
         <h4>Contact</h4>
-        <p><i class="fa-solid fa-location-dot" style="margin-right:8px;color:var(--gold)"></i> 123 Culinary Avenue, Food District</p>
-        <p><i class="fa-solid fa-phone" style="margin-right:8px;color:var(--gold)"></i> +1 (555) 123-4567</p>
-        <p><i class="fa-solid fa-envelope" style="margin-right:8px;color:var(--gold)"></i> reservations@medusa.com</p>
+        <p><i class="fa-solid fa-location-dot" style="margin-right:8px;color:var(--gold)"></i> SCO 44,45, District One
+          Market, Sector 68, SAS Nagar, Punjab 140308</p>
+        <p><i class="fa-solid fa-phone" style="margin-right:8px;color:var(--gold)"></i> +91 94272 72798</p>
+        <p><i class="fa-solid fa-envelope" style="margin-right:8px;color:var(--gold)"></i> contact@medusa.com</p>
       </div>
     </div>
     <div class="lux-footer-bottom">
