@@ -8,19 +8,16 @@ $order_items = [];
 
 if (!empty($order_number)) {
     try {
-        // Query the database for this order, joining users table to get the correct email
         $stmt = $pdo->prepare("SELECT o.*, u.email AS user_email FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.order_number = ?");
         $stmt->execute([$order_number]);
         $order = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($order) {
-            // Access control check: ensure this order belongs to the logged-in customer, or current user is an admin
             $is_admin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
             if (!$is_admin && intval($order['user_id']) !== intval($_SESSION['user_id'])) {
                 $error_msg = "Access Denied: You do not have permission to view this invoice.";
                 $order = null;
             } else {
-                // Fetch the items for this order
                 $item_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
                 $item_stmt->execute([$order['id']]);
                 $order_items = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -44,21 +41,19 @@ if (!$order) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Error - Medusa Luxury</title>
-        <!-- Global Theme Controller -->
-        <script src="assets/js/theme-toggle.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
         <style>
-            body { background: #000000; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-            .error-card { background: #0a0a0a; border: 1px solid rgba(223, 186, 134, 0.15); border-radius: 16px; padding: 3rem; text-align: center; max-width: 500px; width: 90%; }
-            .btn-back { background: #dfba86; color: #000; font-weight: 600; text-decoration: none; padding: 0.8rem 1.5rem; border-radius: 8px; display: inline-block; margin-top: 1.5rem; }
+            body { background: #050a07; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+            .error-card { background: #0b1c13; border: 1px solid rgba(192, 155, 91, 0.15); border-radius: 12px; padding: 3rem; text-align: center; max-width: 500px; width: 90%; }
+            .btn-back { background: #C09B5B; color: #0b1c13; font-weight: 600; text-decoration: none; padding: 0.8rem 1.5rem; border-radius: 8px; display: inline-block; margin-top: 1.5rem; }
         </style>
     </head>
     <body>
         <div class="error-card">
             <h2 class="text-danger mb-3">Error</h2>
             <p><?php echo htmlspecialchars($error_msg ?? 'An unknown error occurred.'); ?></p>
-            <a href="profile.php" class="btn-back">Return to Dashboard</a>
+            <a href="my-orders.php" class="btn-back">Return to Dashboard</a>
         </div>
     </body>
     </html>
@@ -72,25 +67,13 @@ foreach ($order_items as $item) {
     $subtotal += floatval($item['price']) * intval($item['quantity']);
 }
 
-// Load Settings
-$settings_file = __DIR__ . '/admintest/settings.json';
-$settings = [
-    'restaurant_name' => 'Medusa',
-    'gst_rate' => 18,
-    'packing_charge' => 0.00,
-    'opening_hours' => '11:00 AM - 11:00 PM'
-];
-if (file_exists($settings_file)) {
-    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
-}
-$gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
-$packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
+// Settings
+$gst_rate = 16;
+$packing_charge = 4.06;
+$delivery_charge = 40.00;
 
 $gst = $subtotal * ($gst_rate / 100);
-$delivery_charge = floatval(get_env_var('DELIVERY_CHARGE', '40.00'));
 $delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $delivery_charge;
-
-// Apply packing charge only if order is not dine-in (not at a Table)
 $packing = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $packing_charge;
 
 $grand_total = $subtotal + $gst + $delivery + $packing;
@@ -101,404 +84,753 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - <?php echo htmlspecialchars($order['order_number']); ?> - Medusa</title>
-    <!-- Global Theme Controller -->
-    <script src="assets/js/theme-toggle.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg-dark: #0D2016;
-            --bg-secondary: #132F20;
-            --gold: #dfba86;
-            --gold-light: #f3dfc1;
-            --white: #FAF7F0;
-            --gray: #A8A196;
-            --success-color: #2ec4b6;
+            --bg-body: #050a07;
+            --bg-card: #0b1c13;
+            --bg-box: #0e2217;
+            --gold: #C09B5B;
             --rosewood: #5A1827;
-            --rosewood-light: #7E2638;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            --border-glass: rgba(223, 186, 134, 0.12);
+            --rosewood-hover: #7E2638;
+            --white: #FAF7F0;
+            --gray: #8d9a93;
+            --border-glass: rgba(192, 155, 91, 0.2);
+            --border-light: rgba(255, 255, 255, 0.05);
         }
 
         body {
-            background-color: var(--bg-dark) !important;
-            color: var(--white) !important;
+            background-color: var(--bg-body);
+            color: var(--white);
             font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 3rem 0;
-        }
-
-        /* Invoice Glassmorphic Card */
-        .invoice-container {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 3.5rem;
-            max-width: 720px;
-            width: 95%;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-            position: relative;
-            animation: slideUp 0.5s ease-out forwards;
-        }
-
-        .brand-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .brand-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--gold);
-            letter-spacing: 2px;
+            align-items: flex-start;
+            padding: 3rem 1rem;
             margin: 0;
-        }
-
-        .brand-subtitle {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: var(--gray);
-            margin-top: 0.3rem;
-        }
-
-        /* Receipt styling */
-        .receipt-card {
-            background: rgba(255, 255, 255, 0.015);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .receipt-meta-row {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 1.2rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.88rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .meta-col strong {
-            color: #ffffff;
-        }
-
-        .meta-col span {
-            display: block;
-            color: var(--gray);
-            margin-top: 0.2rem;
-        }
-
-        .address-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 1.5rem;
-            font-size: 0.88rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 1.5rem;
-        }
-
-        .address-title {
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            color: var(--gold);
-            margin-bottom: 0.5rem;
-        }
-
-        .address-text {
-            color: #ffffff;
             line-height: 1.5;
         }
 
-        /* Order Items Table */
+        /* Container */
+        .invoice-wrapper {
+            background-color: var(--bg-card);
+            max-width: 800px;
+            width: 100%;
+            border-radius: 4px;
+            padding: 40px;
+        }
+
+        /* Top Header */
+        .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            background: var(--bg-box);
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid var(--gold);
+            padding: 2px;
+        }
+
+        .brand-text h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin: 0 0 2px 0;
+            letter-spacing: 1px;
+        }
+
+        .brand-text p {
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gray);
+            margin: 0;
+        }
+
+        .inv-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-print-icon {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-glass);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            background: transparent;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-print-icon:hover {
+            background: rgba(192, 155, 91, 0.1);
+        }
+
+        .inv-number-block {
+            text-align: right;
+        }
+
+        .inv-number-block span {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .inv-number-block strong {
+            font-size: 1.2rem;
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 1px;
+        }
+
+        /* Status & Meta Block */
+        .meta-container {
+            display: flex;
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background: var(--bg-box);
+            min-height: 160px;
+        }
+
+        .status-block {
+            background-color: var(--rosewood);
+            width: 35%;
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Floral pattern using generated leaf watermark */
+        .status-block::before {
+            content: '';
+            position: absolute;
+            bottom: -50px; left: -100px; width: 400px; height: 400px;
+            background-image: url('assets/images/leaf_watermark.png');
+            background-size: contain;
+            background-position: bottom left;
+            background-repeat: no-repeat;
+            opacity: 0.25;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .status-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: white;
+            margin: 0 0 10px 0;
+            position: relative;
+        }
+
+        .status-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            margin: 0;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .meta-grid-wrap {
+            width: 65%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .meta-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .meta-icon {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-top: 2px;
+        }
+
+        .meta-item-content span {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .meta-item-content strong {
+            display: block;
+            font-size: 0.9rem;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Two Cards Grid */
+        .info-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: var(--bg-box);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        .info-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .info-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: white;
+            margin: 0 0 15px 0;
+        }
+
+        .info-card-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+
+        .info-card-line i {
+            width: 14px;
+            color: var(--gold);
+            opacity: 0.8;
+        }
+
+        /* Order Items */
+        .items-box {
+            background: var(--bg-box);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .items-header-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 25px;
+            color: var(--gold);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
         .items-table {
             width: 100%;
-            margin-bottom: 1.5rem;
             border-collapse: collapse;
         }
 
         .items-table th {
+            background: var(--rosewood);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.65rem;
             text-transform: uppercase;
-            font-size: 0.75rem;
             letter-spacing: 1px;
-            color: var(--gray);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 0.8rem 0;
+            padding: 12px 25px;
             text-align: left;
             font-weight: 600;
         }
 
+        .items-table th.text-center { text-align: center; }
+        .items-table th.text-right { text-align: right; }
+
         .items-table td {
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            font-size: 0.92rem;
-            color: #ffffff;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
         }
 
-        .items-table .text-right {
-            text-align: right;
+        .item-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        /* Financial Breakdown */
-        .breakdown-list {
-            margin-left: auto;
-            max-width: 320px;
-            font-size: 0.9rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 1rem;
+        .item-img {
+            width: 50px; height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .breakdown-row {
+        .item-name {
+            font-size: 0.95rem;
+            color: white;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .diet-badge {
+            font-size: 0.55rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+        .diet-veg { border: 1px solid rgba(76, 175, 80, 0.5); color: #4CAF50; }
+        .diet-nonveg { border: 1px solid rgba(244, 67, 54, 0.5); color: #F44336; }
+        .diet-bar { border: 1px solid rgba(33, 150, 243, 0.5); color: #2196F3; }
+
+        .qty-cell { text-align: center; font-size: 0.9rem; color: white; }
+        .price-cell { text-align: right; font-size: 0.9rem; color: var(--gray); }
+        .total-cell { text-align: right; font-size: 0.95rem; color: white; font-weight: 500; }
+
+        /* Summary Box */
+        .summary-box {
+            background: var(--bg-box);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 30px 40px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-box::before {
+            content: '';
+            position: absolute;
+            bottom: -120px; left: -150px; width: 500px; height: 500px;
+            background-image: url('assets/images/leaf_watermark.png');
+            background-size: contain;
+            background-position: bottom left;
+            background-repeat: no-repeat;
+            opacity: 0.25;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            filter: contrast(1.5) brightness(0.8);
+        }
+
+        .summary-content {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .summary-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.6rem;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
             color: var(--gray);
         }
+        
+        .summary-row span:last-child {
+            color: white;
+            font-weight: 500;
+        }
 
-        .breakdown-row.grand-total {
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px dashed rgba(255,255,255,0.15);
+        }
+
+        .grand-total-row span:first-child {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             color: var(--gold);
-            font-size: 1.25rem;
-            font-weight: 700;
-            border-top: 1px dashed rgba(255, 255, 255, 0.15);
-            margin-top: 0.8rem;
-            padding-top: 0.8rem;
+            font-weight: 600;
+        }
+
+        .grand-total-row span:last-child {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            font-weight: 600;
         }
 
         /* Action Buttons */
-        .actions-row {
-            display: flex;
-            justify-content: center;
-            gap: 1.2rem;
-            flex-wrap: wrap;
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
-        .btn-luxury {
-            background-color: var(--rosewood);
-            color: var(--gold);
-            border: 1px solid var(--gold);
-            border-radius: 8px;
-            padding: 0.8rem 1.8rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
+        .btn-action {
+            display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: 0.3s;
             cursor: pointer;
         }
 
-        .btn-luxury:hover {
-            background-color: var(--rosewood-light);
-            color: #ffffff;
-            transform: translateY(-1px);
+        .btn-primary {
+            background: var(--rosewood);
+            border: 1px solid var(--rosewood);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--rosewood-hover);
+            border-color: var(--rosewood-hover);
         }
 
-        .btn-luxury-outline {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+        }
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Footer Msg */
+        .footer-msg {
+            background: var(--bg-box);
+            border: 1px solid var(--border-glass);
             border-radius: 8px;
-            padding: 0.8rem 1.8rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
+            padding: 25px 30px;
+            display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-luxury-outline:hover {
-            border-color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.05);
+        .footer-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        .footer-text p {
+            margin: 0 0 3px 0;
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        .footer-text p:first-child {
+            color: white;
+            font-size: 0.95rem;
         }
 
-        /* Print Media Styles */
+        .footer-msg::before {
+            content: '';
+            position: absolute;
+            right: -20px; bottom: -50px; width: 200px; height: 200px;
+            background-image: url('assets/images/leaf_watermark.png');
+            background-size: contain;
+            background-position: bottom right;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            transform: rotate(-15deg);
+        }
         @media print {
-            body {
-                background: #ffffff !important;
-                color: #000000 !important;
-                padding: 0;
-            }
-            .invoice-container {
-                box-shadow: none;
-                border: none;
-                background: #ffffff !important;
-                color: #000000 !important;
-                width: 100%;
-                max-width: 100%;
-                padding: 0;
-            }
-            .receipt-card {
-                border: 1px solid #ddd;
-                background: #fff !important;
-            }
-            .actions-row, header {
-                display: none !important;
-            }
-            .items-table td, .items-table th, .breakdown-row {
-                color: #000000 !important;
-            }
-            .breakdown-row.grand-total {
-                color: #000000 !important;
-                border-top: 1px dashed #000;
-            }
-            .brand-title, .address-title {
-                color: #000000 !important;
-            }
+            body { background: white !important; color: black !important; padding: 0; }
+            .invoice-wrapper { background: white; padding: 0; border: none; max-width: 100%; }
+            .status-block { background: transparent; color: black; border: 1px solid #ddd; }
+            .status-text, .status-header { color: black; }
+            .action-buttons { display: none; }
+            .items-table th { background: #eee; color: black; }
+            .btn-print-icon { display: none; }
+            .meta-item-content strong, .info-card-title, .item-name, .qty-cell, .total-cell { color: black; }
+            .info-card, .items-box, .summary-box, .footer-msg, .meta-container, .inv-header { border-color: #ddd; background: white; }
+            .grand-total-row span:last-child { color: black; }
         }
-        
-        @media (max-width: 576px) {
-            .address-grid {
-                grid-template-columns: 1fr;
-            }
-            .invoice-container {
-                padding: 2rem 1.5rem;
-            }
+
+        @media (max-width: 768px) {
+            .meta-container { flex-direction: column; }
+            .status-block, .meta-grid-wrap { width: 100%; }
+            .info-cards { grid-template-columns: 1fr; }
+            .action-buttons { grid-template-columns: 1fr; }
+            .items-table th:nth-child(3), .items-table td:nth-child(3) { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="invoice-container">
-        <!-- Brand Title Header -->
-        <div class="brand-header" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 60px; border-radius: 50%; border: 1.5px solid var(--gold); padding: 3px;">
-            <h1 class="brand-title">Medusa</h1>
-            <div class="brand-subtitle">Fine Dining & Luxury Catering</div>
+    <div class="invoice-wrapper">
+        
+        <!-- Header -->
+        <div class="inv-header">
+            <div class="brand-info">
+                <img src="assets/images/logo.png" alt="Medusa" class="brand-logo" onerror="this.src='assets/images/logo_right.png'">
+                <div class="brand-text">
+                    <h1>Medusa</h1>
+                    <p>Restaurant, Bar & Lounge</p>
+                </div>
+            </div>
+            <div class="inv-info">
+                <button onclick="window.print()" class="btn-print-icon"><i class="fa-solid fa-print"></i></button>
+                <div class="inv-number-block">
+                    <span>Invoice</span>
+                    <strong><?php echo htmlspecialchars($order['order_number']); ?></strong>
+                </div>
+            </div>
         </div>
 
-        <div class="receipt-card">
-            <!-- Receipt Metadata Block -->
-            <div class="receipt-meta-row">
-                <div class="meta-col">
-                    <strong>Invoice Number</strong>
-                    <span><?php echo htmlspecialchars($order['order_number']); ?></span>
+        <!-- Status & Meta -->
+        <div class="meta-container">
+            <div class="status-block">
+                <div class="status-header">
+                    <i class="fa-solid fa-clipboard-check"></i> Order Status
                 </div>
-                <div class="meta-col">
-                    <strong>Date & Time</strong>
-                    <span><?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></span>
-                </div>
-                <div class="meta-col">
-                    <strong>Payment ID</strong>
-                    <span><?php echo htmlspecialchars($order['payment_id'] ?: 'MOCK_PAYMENT'); ?></span>
-                </div>
-                <div class="meta-col">
-                    <strong>Order Status</strong>
-                    <span class="text-uppercase" style="color: var(--gold); font-weight: 700;"><?php echo htmlspecialchars($order['order_status']); ?></span>
-                </div>
+                <h2 class="status-text"><?php echo ucfirst(htmlspecialchars($order['order_status'])); ?></h2>
+                <p class="status-desc">Thank you! Your order has been processed successfully.</p>
             </div>
-
-            <!-- Address Information Grid -->
-            <div class="address-grid">
-                <div>
-                    <div class="address-title">Customer Details</div>
-                    <div class="address-text">
-                        <strong><?php echo htmlspecialchars($order['customer_name']); ?></strong><br>
-                        Phone: <?php echo htmlspecialchars($order['customer_phone'] ?: 'N/A'); ?><br>
-                        Email: <?php echo htmlspecialchars($order['user_email'] ?: 'N/A'); ?>
+            <div class="meta-grid-wrap">
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <i class="fa-regular fa-calendar meta-icon"></i>
+                        <div class="meta-item-content">
+                            <span>Date & Time</span>
+                            <strong><?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?></strong>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <div class="address-title">Fulfillment Mode</div>
-                    <div class="address-text">
-                        <?php if (strpos(strtolower($order['delivery_address']), 'table') !== false): ?>
-                            <strong>Dine-In Order</strong><br>
-                            Location: <?php echo htmlspecialchars($order['delivery_address']); ?>
-                        <?php else: ?>
-                            <strong>Home Delivery</strong><br>
-                            Address: <?php echo htmlspecialchars($order['delivery_address']); ?>
-                        <?php endif; ?>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-download meta-icon"></i>
+                        <div class="meta-item-content">
+                            <span>Invoice Number</span>
+                            <strong><?php echo htmlspecialchars($order['order_number']); ?></strong>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-regular fa-credit-card meta-icon"></i>
+                        <div class="meta-item-content">
+                            <span>Payment ID</span>
+                            <strong><?php echo htmlspecialchars($order['payment_id'] ?? 'MOCK_PAYMENT'); ?></strong>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-money-check-dollar meta-icon"></i>
+                        <div class="meta-item-content">
+                            <span>Payment Method</span>
+                            <strong>Online Payment</strong>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Order Items Details Table -->
+        <!-- Customer & Delivery -->
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fa-regular fa-user"></i> Customer Details
+                </div>
+                <h3 class="info-card-title"><?php echo htmlspecialchars($order['customer_name']); ?></h3>
+                <div class="info-card-line">
+                    <i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars($order['customer_phone'] ?: 'N/A'); ?>
+                </div>
+                <div class="info-card-line">
+                    <i class="fa-regular fa-envelope"></i> <?php echo htmlspecialchars($order['user_email'] ?: 'N/A'); ?>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fa-solid fa-motorcycle"></i> Fulfillment Mode
+                </div>
+                <?php if (strpos(strtolower($order['delivery_address']), 'table') !== false): ?>
+                    <h3 class="info-card-title">Dine-In Service</h3>
+                    <div class="info-card-line">
+                        <i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($order['delivery_address']); ?>
+                    </div>
+                <?php else: ?>
+                    <h3 class="info-card-title">Home Delivery</h3>
+                    <div class="info-card-line">
+                        <i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($order['delivery_address']); ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="items-box">
+            <div class="items-header-bar">
+                <i class="fa-solid fa-bell-concierge"></i> Order Items
+            </div>
             <table class="items-table">
                 <thead>
                     <tr>
                         <th>Dish / Item Name</th>
-                        <th class="text-right">Qty</th>
+                        <th class="text-center">Qty</th>
                         <th class="text-right">Price</th>
                         <th class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($order_items as $item): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($item['item_name']); ?></td>
-                            <td class="text-right"><?php echo $item['quantity']; ?></td>
-                            <td class="text-right">₹<?php echo number_format($item['price'], 2); ?></td>
-                            <td class="text-right">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
-                        </tr>
+                    <?php foreach ($order_items as $item): 
+                        // Mock diet badge
+                        $dClass = 'diet-veg'; $dText = 'Veg';
+                        $lname = strtolower($item['item_name']);
+                        if (strpos($lname, 'chicken') !== false || strpos($lname, 'lamb') !== false || strpos($lname, 'ribs') !== false || strpos($lname, 'prawn') !== false) {
+                            $dClass = 'diet-nonveg'; $dText = 'Non-Veg';
+                        }
+                        // Mock image
+                        $imgSrc = 'assets/images/placeholder_food.png';
+                        if (strpos($lname, 'ribs') !== false) $imgSrc = 'assets/images/gallery_4.png';
+                        if (strpos($lname, 'chicken') !== false) $imgSrc = 'assets/images/gallery_2.png';
+                        if (strpos($lname, 'cake') !== false || strpos($lname, 'dessert') !== false) $imgSrc = 'assets/images/gallery_3.png';
+                    ?>
+                    <tr>
+                        <td>
+                            <div class="item-cell">
+                                <img src="<?php echo $imgSrc; ?>" alt="item" class="item-img" onerror="this.src='assets/images/logo.png'">
+                                <div>
+                                    <div class="item-name"><?php echo htmlspecialchars($item['item_name']); ?></div>
+                                    <span class="diet-badge <?php echo $dClass; ?>"><?php echo $dText; ?></span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="qty-cell"><?php echo $item['quantity']; ?></td>
+                        <td class="price-cell">₹<?php echo number_format($item['price'], 2); ?></td>
+                        <td class="total-cell">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
+                    </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
 
-            <!-- Financial Breakdown Summaries -->
-            <div class="breakdown-list">
-                <div class="breakdown-row">
+        <!-- Summary -->
+        <div class="summary-box">
+            <div class="summary-content">
+                <div class="summary-row">
                     <span>Subtotal</span>
                     <span>₹<?php echo number_format($subtotal, 2); ?></span>
                 </div>
-                <div class="breakdown-row">
+                <div class="summary-row">
                     <span>GST (<?php echo $gst_rate; ?>%)</span>
                     <span>₹<?php echo number_format($gst, 2); ?></span>
                 </div>
                 <?php if ($packing > 0): ?>
-                <div class="breakdown-row">
+                <div class="summary-row">
                     <span>Packing Charges</span>
                     <span>₹<?php echo number_format($packing, 2); ?></span>
                 </div>
                 <?php endif; ?>
-                <div class="breakdown-row">
+                <div class="summary-row">
                     <span>Delivery / Table Service</span>
                     <span>₹<?php echo number_format($delivery, 2); ?></span>
                 </div>
-                <div class="breakdown-row grand-total">
+                
+                <div class="grand-total-row">
                     <span>Grand Total</span>
                     <span>₹<?php echo number_format($grand_total, 2); ?></span>
                 </div>
             </div>
         </div>
 
-        <!-- Action Links -->
-        <div class="actions-row">
-            <button onclick="window.print();" class="btn-luxury">
-                <i class="fa-solid fa-print"></i>
-                <span>Print Bill</span>
-            </button>
-            <a href="profile.php" class="btn-luxury-outline">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>My Dashboard</span>
+        <!-- Actions -->
+        <div class="action-buttons">
+            <a href="javascript:void(0)" onclick="window.print()" class="btn-action btn-primary">
+                <i class="fa-solid fa-print"></i> Print Bill
             </a>
-            <a href="menutest.html" class="btn-luxury-outline">
-                <i class="fa-solid fa-utensils"></i>
-                <span>Order More</span>
+            <a href="profile.php" class="btn-action btn-outline">
+                <i class="fa-solid fa-arrow-left"></i> My Dashboard
+            </a>
+            <a href="menutest.html" class="btn-action btn-outline">
+                <i class="fa-solid fa-utensils"></i> Order More
             </a>
         </div>
+
+        <!-- Footer Msg -->
+        <div class="footer-msg">
+            <div class="footer-icon"><i class="fa-regular fa-heart"></i></div>
+            <div class="footer-text">
+                <p>We appreciate your order. See you again soon!</p>
+                <p>Medusa Restaurant, Bar & Lounge</p>
+            </div>
+        </div>
+
     </div>
 
 </body>

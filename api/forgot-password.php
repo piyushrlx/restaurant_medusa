@@ -29,9 +29,9 @@ try {
 
         // Check if user exists
         if ($is_email) {
-            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, is_active FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone FROM users WHERE email = ?");
         } else {
-            $stmt = $pdo->prepare("SELECT id, full_name, email, phone, is_active FROM users WHERE phone = ?");
+            $stmt = $pdo->prepare("SELECT id, full_name, email, phone FROM users WHERE phone = ?");
         }
         $stmt->execute([$identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -41,10 +41,7 @@ try {
             exit;
         }
         
-        if (!(int)$user['is_active']) {
-            echo json_encode(['success' => false, 'message' => 'This account is currently inactive.']);
-            exit;
-        }
+
 
         // Throttle OTP generation
         if (isset($_SESSION['last_pwd_reset_otp_time']) && (time() - $_SESSION['last_pwd_reset_otp_time']) < 30) {

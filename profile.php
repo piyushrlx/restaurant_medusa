@@ -2226,295 +2226,507 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <?php endif; ?>
 
-                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
-                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
+                <!-- ══ TAB *: MEMBERSHIP PASS ══ -->
                 <div class="tab-pane fade" id="pill-membership" role="tabpanel">
-                    
-                    <!-- Header -->
+                    <style>
+                    .membership-card-wrapper {
+                        width: 400px;
+                        height: 250px;
+                        border-radius: 16px;
+                        background: linear-gradient(135deg, #143628 0%, #0a1f16 100%);
+                        position: relative;
+                        overflow: hidden;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+                        border: 1px solid rgba(223, 186, 134, 0.3);
+                        color: #fff;
+                        padding: 24px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        margin: 0 auto;
+                    }
+                    .membership-card-wrapper::before {
+                        content: '';
+                        position: absolute;
+                        top: -50%;
+                        left: -50%;
+                        width: 200%;
+                        height: 200%;
+                        background: radial-gradient(circle, rgba(223, 186, 134, 0.1) 0%, transparent 60%);
+                        pointer-events: none;
+                    }
+                    .mc-logo {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .mc-logo img {
+                        width: 40px;
+                        height: 40px;
+                        filter: brightness(1.2);
+                    }
+                    .mc-title {
+                        font-family: 'Playfair Display', serif;
+                        font-size: 1.2rem;
+                        font-weight: 700;
+                        color: #C09B5B;
+                        letter-spacing: 2px;
+                        text-transform: uppercase;
+                    }
+                    .mc-chip {
+                        width: 45px;
+                        height: 35px;
+                        background: linear-gradient(135deg, #d4af37, #f9f5e8, #c59b27);
+                        border-radius: 6px;
+                        margin-top: 20px;
+                        border: 1px solid rgba(0,0,0,0.2);
+                    }
+                    .mc-number {
+                        font-family: 'Courier New', Courier, monospace;
+                        font-size: 1.6rem;
+                        letter-spacing: 3px;
+                        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+                        margin-top: 15px;
+                    }
+                    .mc-details {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        margin-top: 20px;
+                    }
+                    .mc-label {
+                        font-size: 0.6rem;
+                        text-transform: uppercase;
+                        color: rgba(255,255,255,0.6);
+                        letter-spacing: 1px;
+                        margin-bottom: 2px;
+                    }
+                    .mc-value {
+                        font-family: 'Plus Jakarta Sans', sans-serif;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                    }
+                    @media (max-width: 500px) {
+                        .membership-card-wrapper {
+                            width: 100%;
+                            height: auto;
+                            min-height: 220px;
+                            padding: 15px;
+                        }
+                        .mc-number { font-size: 1.2rem; }
+                        .mc-value { font-size: 0.85rem; }
+                    }
+                    </style>
+
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h2 class="section-title mb-1" style="border: none; padding: 0;"><i class="fa-solid fa-id-card text-gold me-2"></i> Membership Pass</h2>
-                            <p class="text-muted" style="font-size: 0.9rem;">View and manage your membership details and benefits.</p>
+                            <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: var(--text-dark); font-size: 1.8rem;">
+                                <i class="fa-solid fa-id-badge me-2" style="color: #d4af37;"></i> Membership Pass
+                            </h2>
+                            <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Your exclusive Medusa dining card.</p>
                         </div>
-                        <button class="btn btn-outline-secondary btn-sm" style="color: var(--text-dark); border-color: rgba(0,0,0,0.15); border-radius: 8px; font-weight: 500;">
-                            <i class="fa-regular fa-circle-question me-1 text-danger"></i> How It Works
-                        </button>
-                    </div>
-
-                    <!-- 3D Card Area -->
-                    <div class="d-flex justify-content-center align-items-center mb-5 position-relative" style="min-height: 420px; perspective: 1000px; cursor: pointer;">
-                        
-                        <!-- Glowing Shadow underneath the card -->
-                        <div style="position: absolute; bottom: 20px; width: 60%; height: 20px; background: rgba(223,186,134,0.4); filter: blur(20px); border-radius: 50%; pointer-events: none;"></div>
-
-                        <!-- Tilt Container -->
-                        <div id="atm-card-3d" style="width: 660px; height: 360px; transform-style: preserve-3d; transition: transform 0.1s; position: relative; z-index: 2;">
-                            <!-- Flip Container -->
-                            <div id="card-flipper" style="width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); transform-style: preserve-3d;">
-                                
-                                <!-- ================= FRONT SIDE ================= -->
-                                <div class="membership-card card-front" style="
-                                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden;
-                                    background: linear-gradient(135deg, #091712 0%, #10211a 50%, #060e0a 100%);
-                                    border-radius: 20px; padding: 35px 40px;
-                                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
-                                    border: 1px solid rgba(223, 186, 134, 0.2);
-                                    overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
-                                ">
-                                    <!-- Medusa Background Watermark -->
-                                    <div style="position: absolute; top: -10%; right: -5%; width: 60%; height: 120%; background-image: url('assets/images/medusaa2(onlylogo).png'); background-size: contain; background-repeat: no-repeat; background-position: right center; opacity: 0.08; transform: scale(1.3); pointer-events: none; filter: sepia(1) hue-rotate(90deg) saturate(2);"></div>
-                                    
-                                    <!-- Top Row -->
-                                    <div class="d-flex justify-content-between align-items-start" style="position: relative; z-index: 1;">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa" style="height: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
-                                            <div>
-                                                <h5 class="m-0" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; letter-spacing: 2px; color: #dfba86;">MEDUSA</h5>
-                                                <span style="font-size: 0.7rem; letter-spacing: 6px; color: rgba(223, 186, 134, 0.7); font-weight: 400;">PREMIUM</span>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <div style="font-family: 'Playfair Display', serif; font-size: 1.6rem; letter-spacing: 2px; color: #fff; text-transform: uppercase;"><?php echo htmlspecialchars($user_tier_name); ?></div>
-                                            <div style="font-size: 0.75rem; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase;">Member</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Middle Row: Chip & Contactless -->
-                                    <div class="d-flex align-items-center gap-3 mt-4" style="position: relative; z-index: 1;">
-                                        <div style="width: 55px; height: 40px; background: linear-gradient(135deg, #e3c58f 0%, #b8973a 100%); border-radius: 6px; position: relative; overflow: hidden; box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.5);">
-                                            <div style="position: absolute; width: 1px; height: 100%; background: rgba(0,0,0,0.2); left: 30%;"></div>
-                                            <div style="position: absolute; width: 1px; height: 100%; background: rgba(0,0,0,0.2); right: 30%;"></div>
-                                            <div style="position: absolute; width: 100%; height: 1px; background: rgba(0,0,0,0.2); top: 50%;"></div>
-                                            <div style="position: absolute; width: 20px; height: 14px; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-                                        </div>
-                                        <i class="fa-solid fa-wifi" style="transform: rotate(90deg); font-size: 1.5rem; color: rgba(255,255,255,0.7);"></i>
-                                    </div>
-
-                                    <!-- Bottom Area: Numbers and Details -->
-                                    <div style="position: relative; z-index: 1; margin-top: auto;">
-                                        <div style="font-family: 'Inter', monospace; font-size: 2rem; letter-spacing: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: 300; margin-bottom: 10px;">
-                                            8824 4590 1200 <?php echo sprintf("%04d", $user_id); ?>
-                                        </div>
-                                        
-                                        <!-- Valid Thru (floating left-ish) -->
-                                        <div class="d-flex mb-3" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; align-items: center;">
-                                            <div style="line-height: 1; text-align: left; margin-right: 8px; color: rgba(255,255,255,0.6);">Valid<br>Thru</div>
-                                            <div style="font-family: 'Inter', monospace; font-size: 1.1rem; color: #dfba86; font-weight: 500; letter-spacing: 2px;"><?php echo date('m/y', strtotime('+5 years')); ?></div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-end">
-                                            <div>
-                                                <div style="font-size: 0.6rem; letter-spacing: 2px; color: rgba(223, 186, 134, 0.7); text-transform: uppercase; margin-bottom: 4px;">Member Name</div>
-                                                <div style="font-size: 1.3rem; letter-spacing: 3px; color: #fff; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 400; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                                                    <?php echo htmlspecialchars($user_name); ?>
-                                                </div>
-                                            </div>
-                                            <div class="text-end">
-                                                <div style="font-size: 0.6rem; letter-spacing: 2px; color: rgba(223, 186, 134, 0.7); text-transform: uppercase; margin-bottom: 4px;">Member Since</div>
-                                                <div style="font-size: 1.1rem; letter-spacing: 2px; color: #dfba86; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 500;">
-                                                    <?php echo date('M Y', strtotime('-2 months')); ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- ================= BACK SIDE ================= -->
-                                <div class="membership-card card-back" style="
-                                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg);
-                                    background: linear-gradient(135deg, #091712 0%, #10211a 100%);
-                                    border-radius: 20px; box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
-                                    border: 1px solid rgba(223, 186, 134, 0.2);
-                                    display: flex; flex-direction: column; overflow: hidden;
-                                ">
-                                    <!-- Magnetic Stripe -->
-                                    <div style="width: 100%; height: 60px; background-color: #000; margin-top: 40px; position: relative; z-index: 1;"></div>
-                                    <div style="padding: 20px 40px; position: relative; z-index: 1; flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start;">
-                                        <!-- Signature Strip -->
-                                        <div class="d-flex align-items-center mt-3">
-                                            <div style="background-color: #eef1f5; width: 75%; height: 45px; display: flex; align-items: center; padding-left: 15px; color: #000; font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.5rem; border-radius: 4px; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);">
-                                                <?php echo htmlspecialchars($user_name); ?>
-                                            </div>
-                                            <div style="background-color: #fff; height: 35px; padding: 0 15px; margin-left: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-family: 'Courier New', monospace; font-size: 1.1rem; font-style: italic; border-radius: 4px; border: 1px solid #ccc;">
-                                                3<?php echo sprintf("%02d", rand(10, 99)); ?>
-                                            </div>
-                                        </div>
-                                        <!-- Legal Text -->
-                                        <div class="mt-auto mb-2" style="font-size: 0.65rem; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.5;">
-                                            This card is the property of Medusa Restaurant & Lounge. If found, please return to any Medusa location.<br>
-                                            Use of this card is governed by the Member Terms and Conditions.<br>
-                                            <div class="mt-2 text-white-50"><i class="fa-solid fa-phone me-1 text-gold"></i> +1 (800) MEDUSA-VIP &nbsp;&nbsp;|&nbsp;&nbsp; <i class="fa-solid fa-globe me-1 text-gold"></i> www.medusarestaurant.com</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4 Statistics Boxes -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
-                                    <i class="fa-solid fa-crown"></i>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #777;">Current Tier</div>
-                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($user_tier_name); ?> Member</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
-                                    <i class="fa-regular fa-star"></i>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #777;">Points Balance</div>
-                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;">1,250 pts</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
-                                    <i class="fa-regular fa-calendar-check"></i>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #777;">Member Since</div>
-                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo date('M Y', strtotime('-2 months')); ?></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bg-white rounded p-3 border d-flex align-items-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem;">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.75rem; color: #777;">Valid Thru</div>
-                                    <div style="font-weight: 700; color: #5a2a35; font-size: 0.95rem; font-family: 'Playfair Display', serif;"><?php echo date('M Y', strtotime('+5 years')); ?></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Benefits & Management Section -->
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <div class="bg-white rounded-4 p-4 border h-100" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <h5 class="mb-4" style="color: #5a2a35; font-family: 'Playfair Display', serif; font-weight: 700;">Your Benefits</h5>
-                                <ul class="list-unstyled mb-0" style="font-size: 0.95rem; color: #444;">
-                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Priority Reservations</li>
-                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Exclusive Offers & Discounts</li>
-                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Complimentary Welcome Drink</li>
-                                    <li class="mb-3 d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Birthday Treats</li>
-                                    <li class="d-flex align-items-center"><i class="fa-solid fa-circle-check me-3" style="color: #2b4c3e; font-size: 1.1rem;"></i> Invitations to Special Events</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="bg-white rounded-4 p-4 border h-100" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <h5 class="mb-4" style="color: #5a2a35; font-family: 'Playfair Display', serif; font-weight: 700;">Manage Membership</h5>
-                                <div class="list-group list-group-flush border-0">
-                                    <a href="#" onclick="document.getElementById('pill-loyalty-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 mb-2 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
-                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-gift me-3 text-muted"></i> View Tier Benefits</span>
-                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
-                                    </a>
-                                    <a href="#" onclick="document.getElementById('pill-orders-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 mb-2 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
-                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-file-invoice-dollar me-3 text-muted"></i> Transaction History</span>
-                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
-                                    </a>
-                                    <a href="#" onclick="document.getElementById('pill-terms-tab').click(); return false;" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 rounded" style="background-color: #fcfcfc; border: 1px solid rgba(0,0,0,0.05);">
-                                        <span style="color: #333; font-weight: 500;"><i class="fa-solid fa-file-contract me-3 text-muted"></i> Terms & Conditions</span>
-                                        <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.8rem;"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Banner -->
-                    <div class="bg-white rounded-4 p-4 border d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="border-color: rgba(0,0,0,0.05) !important;">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px; background-color: rgba(223, 186, 134, 0.15); color: var(--gold-dark); font-size: 1.2rem; flex-shrink: 0;">
-                                <i class="fa-solid fa-info"></i>
-                            </div>
-                            <div>
-                                <h6 class="m-0 mb-1" style="color: #5a2a35; font-weight: bold; font-family: 'Playfair Display', serif;">Stay Active, Stay Privileged</h6>
-                                <div style="font-size: 0.85rem; color: #666;">Keep exploring and dining with us to enjoy continuous benefits and unlock higher tiers.</div>
-                            </div>
-                        </div>
-                        <button class="btn" style="background-color: #5a2a35; color: white; padding: 0.6rem 1.5rem; font-weight: 500; border-radius: 6px; white-space: nowrap;">Explore Rewards</button>
                     </div>
                     
-                    <!-- 3D Tilt & Flip Script for the Card -->
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            const cardTilt = document.getElementById("atm-card-3d");
-                            const flipper = document.getElementById("card-flipper");
-                            let isFlipped = false;
+                    <div class="d-flex justify-content-center align-items-center py-5 flex-column" id="membership-card-container">
+                        <div class="spinner-border text-gold" role="status" id="mc-spinner">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        
+                        <!-- Purchase / Renew Section -->
+                        <div id="mc-purchase" style="display:none; text-align: center; max-width: 400px; margin-top: 20px;">
+                            <i class="fas fa-crown mb-3" style="font-size: 3rem; color: var(--gold);"></i>
+                            <h4 class="text-gold" id="mc-purchase-title">Get Your Medusa Elite Pass</h4>
+                            <p class="text-muted mb-4" id="mc-purchase-desc">Unlock premium features, seamless billing, and exclusive rewards for just ₹599.</p>
+                            <button class="btn btn-gold w-100 py-3" id="mc-buy-btn" onclick="buyMembership()" style="border-radius: 8px; font-weight: bold;">
+                                <i class="fas fa-lock"></i> Buy Now for ₹599
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center align-items-center position-relative w-100" style="perspective: 1000px; cursor: pointer; display: none;" id="mc-card">
+                            <!-- Glowing Shadow underneath the card -->
+                            <div style="position: absolute; bottom: -20px; width: 60%; height: 20px; background: rgba(223,186,134,0.4); filter: blur(20px); border-radius: 50%; pointer-events: none;"></div>
+
+                            <!-- Tilt Container -->
+                            <div class="membership-card-3d" id="membership-card-3d" style="width: 540px; height: 340px; transform-style: preserve-3d; transition: transform 0.1s ease-out; position: relative;">
+                                
+                                <!-- Card Face (Front) -->
+                                <div class="card-face card-front position-absolute w-100 h-100" style="background-color: #0b1712; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255, 255, 255, 0.03); padding: 35px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; backface-visibility: hidden;">
+                                    
+                                    <!-- Medusa Watermark -->
+                                    <img src="assets/images/medusaa2(onlylogo).png" alt="" style="position: absolute; right: -15%; top: -15%; width: 85%; opacity: 0.08; filter: grayscale(100%) sepia(100%) hue-rotate(90deg) brightness(1.5) contrast(1.2); pointer-events: none;">
+                                    
+                                    <!-- Top Row -->
+                                    <div class="d-flex justify-content-between align-items-start position-relative z-1">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" style="width: 48px; height: 48px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                                            <div class="d-flex flex-column mt-1">
+                                                <span style="font-family: 'Cinzel', 'Playfair Display', serif; font-size: 1.45rem; font-weight: 700; color: #d4b572; letter-spacing: 2px;">MEDUSA</span>
+                                                <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #d4b572; letter-spacing: 5px; opacity: 0.8; margin-top: 2px;">PREMIUM</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-column text-end mt-1">
+                                            <span style="font-family: 'Cinzel', 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: #ffffff; letter-spacing: 2.5px;" id="mc-tier">SILVER</span>
+                                            <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.6); letter-spacing: 4px; margin-top: 2px;">MEMBER</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Chip & NFC -->
+                                    <div class="d-flex align-items-center gap-4 position-relative z-1" style="margin-top: 20px;">
+                                        <!-- Chip -->
+                                        <div style="width: 52px; height: 38px; background: linear-gradient(135deg, #d8b86d 0%, #b38b22 100%); border-radius: 6px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.4); box-shadow: 0 2px 5px rgba(0,0,0,0.4);">
+                                            <div style="position: absolute; width: 100%; height: 1px; background: rgba(0,0,0,0.15); top: 35%;"></div>
+                                            <div style="position: absolute; width: 100%; height: 1px; background: rgba(0,0,0,0.15); top: 65%;"></div>
+                                            <div style="position: absolute; height: 100%; width: 1px; background: rgba(0,0,0,0.15); left: 35%;"></div>
+                                            <div style="position: absolute; height: 100%; width: 1px; background: rgba(0,0,0,0.15); right: 35%;"></div>
+                                            <div style="position: absolute; width: 30%; height: 30%; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px; top: 35%; left: 35%;"></div>
+                                        </div>
+                                        <!-- NFC -->
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.85;">
+                                            <circle cx="7" cy="12" r="2.5" fill="white"/>
+                                            <path d="M12 16.5C13.8 14.5 13.8 9.5 12 7.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                                            <path d="M15.5 19.5C18.5 15.5 18.5 8.5 15.5 4.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                                        </svg>
+                                    </div>
+                                    
+                                    <!-- Card Number -->
+                                    <div class="position-relative z-1" style="margin-top: 15px; margin-bottom: 10px;">
+                                        <div style="font-family: 'Consolas', 'Courier New', monospace; font-size: 1.95rem; color: #ffffff; letter-spacing: 6.5px; text-shadow: 0px 2px 4px rgba(0,0,0,0.4);">
+                                            <span id="mc-number">XXXX XXXX XXXX XXXX</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bottom Details -->
+                                    <div class="d-flex flex-column position-relative z-1">
+                                        <!-- Valid Row -->
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="d-flex flex-column text-start me-2" style="font-size: 0.45rem; color: #6a8276; font-weight: 700; line-height: 1.2; letter-spacing: 1px;">
+                                                <span>VALID</span>
+                                                <span>THRU</span>
+                                            </div>
+                                            <div style="font-family: 'Consolas', 'Courier New', monospace; font-size: 1.05rem; color: #d4b572; font-weight: bold; letter-spacing: 1.5px;" id="mc-valid">
+                                                XX/XX
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Names Row -->
+                                        <div class="d-flex justify-content-between align-items-end w-100">
+                                            <div>
+                                                <div style="font-size: 0.55rem; color: #d4b572; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 600;">Member Name</div>
+                                                <div style="font-family: 'Inter', sans-serif; font-size: 1.15rem; color: #ffffff; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;" id="mc-name">Loading...</div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div style="font-size: 0.55rem; color: #d4b572; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 600;">Member Since</div>
+                                                <div style="font-family: 'Inter', sans-serif; font-size: 1.15rem; color: #d4b572; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;" id="mc-since">MMM YYYY</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="mc-cvv" style="display: none;"></div>
+                                </div>
+                                
+                                <!-- Card Face (Back) -->
+                                <div class="card-face card-back position-absolute w-100 h-100" style="background-color: #0b1712; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255, 255, 255, 0.03); display: flex; flex-direction: column; overflow: hidden; backface-visibility: hidden; transform: rotateY(180deg);">
+                                    <!-- Magnetic Stripe -->
+                                    <div style="width: 100%; height: 50px; background-color: #000; margin-top: 30px;"></div>
+                                    
+                                    <div style="padding: 20px 40px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between;">
+                                        
+                                        <!-- Signature & CVV Row -->
+                                        <div class="d-flex align-items-center mt-3">
+                                            <div style="background-color: #e0e0e0; height: 45px; flex-grow: 1; border-radius: 4px; position: relative; overflow: hidden;">
+                                                <div style="background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 10px); width: 100%; height: 100%;"></div>
+                                                <span style="font-family: 'Inter', sans-serif; font-style: italic; font-weight: 500; font-size: 1.2rem; color: #333; position: absolute; top: 50%; left: 20px; transform: translateY(-50%); letter-spacing: 1px;" id="mc-signature">Loading...</span>
+                                            </div>
+                                            <div class="d-flex flex-column align-items-center ms-3">
+                                                <div style="font-size: 0.5rem; color: #7f938b; letter-spacing: 1px; margin-bottom: 3px; font-weight: bold;">CVV</div>
+                                                <div style="background-color: #fff; height: 35px; width: 55px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Consolas', monospace; font-size: 1.1rem; font-weight: bold; color: #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);" id="mc-cvv-back">
+                                                    XXX
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- QR Code & Info -->
+                                        <div class="d-flex align-items-center justify-content-center" style="margin-top: auto; margin-bottom: auto;">
+                                            <div style="width: 65px; height: 65px; background-color: #fff; border-radius: 6px; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&color=0b1712&bgcolor=ffffff&data=https://medusarestaurant.com/elite-portal" alt="QR Code" style="width: 100%; height: 100%;">
+                                            </div>
+                                            <div class="ms-4 text-start">
+                                                <div style="color: #d4b572; font-size: 0.75rem; font-family: 'Cinzel', serif; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 3px;"><i class="fa-solid fa-qrcode me-2"></i> SCAN FOR PORTAL</div>
+                                                <div style="color: rgba(255,255,255,0.5); font-size: 0.6rem; max-width: 200px; line-height: 1.4;">Access your digital portfolio, exclusive menus, track your reward points, and manage reservations.</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Fine Print -->
+                                        <div style="font-size: 0.55rem; color: rgba(255,255,255,0.4); text-align: center; margin-top: auto; line-height: 1.4; padding: 0 10px;">
+                                            This card is the property of Medusa Restaurant. If found, please return to:<br>
+                                            <strong style="color: rgba(255,255,255,0.6);">SCO 44,45, District One Market, Sector 68, SAS Nagar, Punjab 140308</strong><br>
+                                            <strong style="color: #d4b572; font-size: 0.65rem; display: inline-block; margin-top: 6px; letter-spacing: 0.5px;">contact@medusa.com | +91 94272 72798</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="mc-info" style="display:none; width: 100%; max-width: 1200px; margin: 40px auto 0;">
+                            <div class="row g-3 text-start">
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="p-3" style="background-color: #ffffff; border: 1px solid rgba(212, 181, 114, 0.4); border-radius: 12px; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                                        <h6 style="color: #b8912e; font-family: 'Cinzel', serif; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;"><i class="fa-solid fa-gem me-2"></i> How to Use</h6>
+                                        <p style="font-size: 0.8rem; color: #555555; margin-bottom: 0; line-height: 1.5;">Present this digital pass at the restaurant or tap it during checkout to automatically apply your tier benefits and earn reward points.</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="p-3" style="background-color: #ffffff; border: 1px solid rgba(212, 181, 114, 0.4); border-radius: 12px; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                                        <h6 style="color: #b8912e; font-family: 'Cinzel', serif; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;"><i class="fa-solid fa-location-dot me-2"></i> Where to Use</h6>
+                                        <p style="font-size: 0.8rem; color: #555555; margin-bottom: 0; line-height: 1.5;">Valid at all Medusa physical locations, exclusive dining lounges, and our online ordering platform.</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="p-3" style="background-color: #ffffff; border: 1px solid rgba(212, 181, 114, 0.4); border-radius: 12px; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                                        <h6 style="color: #b8912e; font-family: 'Cinzel', serif; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;"><i class="fa-regular fa-clock me-2"></i> Validity</h6>
+                                        <p style="font-size: 0.8rem; color: #555555; margin-bottom: 0; line-height: 1.5;">This card is valid until <strong id="mc-info-valid" style="color: #333333;">XX/XX</strong>. Renew before expiration to maintain your tier status.</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="p-3" style="background-color: #ffffff; border: 1px solid rgba(212, 181, 114, 0.4); border-radius: 12px; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                                        <h6 style="color: #b8912e; font-family: 'Cinzel', serif; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px;"><i class="fa-solid fa-headset me-2"></i> Support</h6>
+                                        <p style="font-size: 0.8rem; color: #555555; margin-bottom: 0; line-height: 1.5;">Experiencing issues? Email us at <a href="mailto:contact@medusa.com" style="color: #b8912e; text-decoration: none;">contact@medusa.com</a> or call <strong style="color: #333333;">+91 94272 72798</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
                             
-                            if (cardTilt && flipper) {
-                                cardTilt.addEventListener("mousemove", (e) => {
-                                    const rect = cardTilt.getBoundingClientRect();
-                                    const x = e.clientX - rect.left;
-                                    const y = e.clientY - rect.top;
-                                    const centerX = rect.width / 2;
-                                    const centerY = rect.height / 2;
-                                    const mult = isFlipped ? -1 : 1;
-                                    const rotateX = ((y - centerY) / centerY) * -8 * mult; // softer tilt for larger card
-                                    const rotateY = ((x - centerX) / centerX) * 8 * mult;
-                                    cardTilt.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-                                });
+                            <!-- Additional Membership Guide Data -->
+                            <div class="mt-5 text-start w-100 mx-auto" style="max-width: 1200px;">
+                                <h5 style="font-family: 'Cinzel', serif; color: #b8912e; border-bottom: 1px solid rgba(212, 181, 114, 0.3); padding-bottom: 10px; margin-bottom: 25px; font-weight: bold;"><i class="fa-solid fa-crown me-2"></i> Membership Privileges & Usage Guide</h5>
                                 
-                                cardTilt.addEventListener("mouseleave", () => {
-                                    cardTilt.style.transition = "transform 0.5s ease"; 
-                                    cardTilt.style.transform = "rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
-                                });
+                                <div class="d-flex flex-column gap-4 px-2">
+                                    <!-- Privilege Item 1 -->
+                                    <div class="d-flex align-items-start pb-4" style="border-bottom: 1px dashed rgba(212, 181, 114, 0.3);">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, #fdfbf7, #f4ecd8); border: 1px solid rgba(212, 181, 114, 0.4); color: #b8912e; font-size: 1.4rem;">
+                                            <i class="fa-solid fa-mobile-screen-button"></i>
+                                        </div>
+                                        <div class="ms-4">
+                                            <h6 style="color: #111; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; letter-spacing: 0.5px;">Digital & Physical Usage</h6>
+                                            <ul style="font-size: 0.85rem; color: #555555; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                                                <li class="mb-1"><strong>In-Person Dining:</strong> Simply present this digital pass on your smartphone to your server, or use the physical Medusa NFC card to tap and instantly sync your profile.</li>
+                                                <li class="mb-1"><strong>Online Ordering:</strong> Your membership tier is securely linked to your account. Log in to automatically receive tier discounts and earn points on deliveries.</li>
+                                                <li><strong>Exclusive Lounges:</strong> Flash your elite pass at the entrance of our Medusa VIP lounges for immediate priority access.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Privilege Item 2 -->
+                                    <div class="d-flex align-items-start pb-4" style="border-bottom: 1px dashed rgba(212, 181, 114, 0.3);">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, #fdfbf7, #f4ecd8); border: 1px solid rgba(212, 181, 114, 0.4); color: #b8912e; font-size: 1.4rem;">
+                                            <i class="fa-solid fa-star"></i>
+                                        </div>
+                                        <div class="ms-4">
+                                            <h6 style="color: #111; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; letter-spacing: 0.5px;">Earning & Redeeming Rewards</h6>
+                                            <ul style="font-size: 0.85rem; color: #555555; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                                                <li class="mb-1"><strong>Points Accumulation:</strong> Earn 10 points for every ₹100 spent. Points are credited within 24 hours of your dining experience.</li>
+                                                <li class="mb-1"><strong>Reward Redemption:</strong> Redeem points for complimentary premium appetizers, exclusive cocktails, or direct discounts on your final bill.</li>
+                                                <li><strong>Special Occasions:</strong> Enjoy a complimentary premium dessert and a complimentary bottle of house wine during your birthday month.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- Privilege Item 3 -->
+                                    <div class="d-flex align-items-start pb-4" style="border-bottom: 1px dashed rgba(212, 181, 114, 0.3);">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, #fdfbf7, #f4ecd8); border: 1px solid rgba(212, 181, 114, 0.4); color: #b8912e; font-size: 1.4rem;">
+                                            <i class="fa-solid fa-wine-glass"></i>
+                                        </div>
+                                        <div class="ms-4">
+                                            <h6 style="color: #111; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; letter-spacing: 0.5px;">Fine Dining & Culinary Perks</h6>
+                                            <ul style="font-size: 0.85rem; color: #555555; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                                                <li class="mb-1"><strong>Priority Reservations:</strong> Skip the waitlist. Medusa Elite members get priority seating, even on our busiest weekend evenings.</li>
+                                                <li class="mb-1"><strong>Chef's Tasting Menu:</strong> Gain exclusive access to seasonal, off-menu culinary creations prepared specially by our head chef.</li>
+                                                <li><strong>Sommelier Service:</strong> Receive complimentary expert wine pairings for your multi-course meals.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- Privilege Item 4 -->
+                                    <div class="d-flex align-items-start pb-2">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, #fdfbf7, #f4ecd8); border: 1px solid rgba(212, 181, 114, 0.4); color: #b8912e; font-size: 1.4rem;">
+                                            <i class="fa-solid fa-car"></i>
+                                        </div>
+                                        <div class="ms-4">
+                                            <h6 style="color: #111; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; letter-spacing: 0.5px;">Valet & Luxury Hospitality</h6>
+                                            <ul style="font-size: 0.85rem; color: #555555; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                                                <li class="mb-1"><strong>Complimentary Valet:</strong> Arrive in style. Show your digital card to our valet staff for complimentary premium parking.</li>
+                                                <li class="mb-1"><strong>Dedicated Concierge:</strong> Enjoy the personalized service of a dedicated table concierge throughout your entire dining experience.</li>
+                                                <li><strong>Private Events:</strong> Receive VIP invitations to our closed-door wine tasting events, mixology masterclasses, and gala dinners.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const tab = document.getElementById('pill-membership-tab');
+                            if (tab) {
+                                tab.addEventListener('shown.bs.tab', loadMembershipCard);
+                            }
+                            
+                            const card3d = document.getElementById('membership-card-3d');
+                            let isCardFlipped = false;
+                            
+                            if (card3d) {
+                                card3d.style.cursor = 'pointer';
+                                card3d.title = 'Click to flip card';
                                 
-                                cardTilt.addEventListener("mouseenter", () => {
-                                    cardTilt.style.transition = "transform 0.1s ease-out"; 
+                                card3d.addEventListener('click', () => {
+                                    isCardFlipped = !isCardFlipped;
+                                    card3d.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                                    card3d.style.transform = `rotateY(${isCardFlipped ? 180 : 0}deg)`;
+                                    
+                                    setTimeout(() => {
+                                        card3d.style.transition = 'transform 0.1s ease-out';
+                                    }, 500);
                                 });
 
-                                cardTilt.addEventListener("click", () => {
-                                    isFlipped = !isFlipped;
-                                    flipper.style.transform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
+                                document.addEventListener('mousemove', (e) => {
+                                    if (document.getElementById('mc-card').style.display === 'none') return;
+                                    
+                                    const rect = card3d.getBoundingClientRect();
+                                    const cardCenterX = rect.left + rect.width / 2;
+                                    const cardCenterY = rect.top + rect.height / 2;
+                                    
+                                    const mouseX = e.clientX;
+                                    const mouseY = e.clientY;
+                                    
+                                    const rotateX = ((cardCenterY - mouseY) / (window.innerHeight / 2)) * 15;
+                                    let rotateY = ((mouseX - cardCenterX) / (window.innerWidth / 2)) * 15;
+                                    
+                                    if (isCardFlipped) {
+                                        rotateY += 180;
+                                    }
+                                    
+                                    card3d.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                                });
+                                
+                                document.addEventListener('mouseleave', () => {
+                                    card3d.style.transform = `rotateX(0deg) rotateY(${isCardFlipped ? 180 : 0}deg)`;
                                 });
                             }
                         });
+
+                        async function loadMembershipCard() {
+                            document.getElementById('mc-spinner').style.display = 'block';
+                            document.getElementById('mc-card').style.display = 'none';
+                            document.getElementById('mc-info').style.display = 'none';
+                            document.getElementById('mc-purchase').style.display = 'none';
+
+                            try {
+                                const res = await fetch('api/get-membership-card.php');
+                                const data = await res.json();
+                                if (data.success) {
+                                    document.getElementById('mc-spinner').style.display = 'none';
+                                    
+                                    if (data.has_card && !data.expired) {
+                                        // Valid card
+                                        document.getElementById('mc-card').style.display = 'flex';
+                                        document.getElementById('mc-card').style.opacity = '1';
+                                        document.getElementById('mc-info').style.display = 'block';
+                                        
+                                        document.getElementById('mc-number').innerText = data.card.card_number;
+                                        document.getElementById('mc-name').innerText = data.card.member_name;
+                                        document.getElementById('mc-valid').innerText = data.card.valid_thru;
+                                        document.getElementById('mc-cvv').innerText = data.card.cvv;
+                                        if (document.getElementById('mc-cvv-back')) document.getElementById('mc-cvv-back').innerText = data.card.cvv;
+                                        if (document.getElementById('mc-signature')) document.getElementById('mc-signature').innerText = data.card.member_name;
+                                        if (document.getElementById('mc-since') && data.card.member_since) {
+                                            document.getElementById('mc-since').innerText = data.card.member_since;
+                                        }
+                                        if (document.getElementById('mc-tier') && data.card.member_tier) {
+                                            document.getElementById('mc-tier').innerText = data.card.member_tier;
+                                        }
+                                        if (document.getElementById('mc-info-valid')) {
+                                            document.getElementById('mc-info-valid').innerText = data.card.valid_thru;
+                                        }
+                                    } else {
+                                        // No card or expired
+                                        document.getElementById('mc-purchase').style.display = 'block';
+                                        if (data.expired) {
+                                            document.getElementById('mc-purchase-title').innerText = 'Renew Your Medusa Elite Pass';
+                                            document.getElementById('mc-purchase-desc').innerText = 'Your membership has expired. Renew now to continue enjoying exclusive benefits for just ₹599.';
+                                            document.getElementById('mc-buy-btn').innerHTML = '<i class="fas fa-sync"></i> Renew Now for ₹599';
+                                            
+                                            // Show expired card in background slightly dimmed
+                                            document.getElementById('mc-card').style.display = 'flex';
+                                            document.getElementById('mc-card').style.opacity = '0.4';
+                                            document.getElementById('mc-number').innerText = data.card.card_number;
+                                            document.getElementById('mc-name').innerText = data.card.member_name;
+                                            document.getElementById('mc-valid').innerText = data.card.valid_thru;
+                                            document.getElementById('mc-cvv').innerText = data.card.cvv;
+                                            if (document.getElementById('mc-cvv-back')) document.getElementById('mc-cvv-back').innerText = data.card.cvv;
+                                            if (document.getElementById('mc-signature')) document.getElementById('mc-signature').innerText = data.card.member_name;
+                                        } else {
+                                            document.getElementById('mc-purchase-title').innerText = 'Get Your Medusa Elite Pass';
+                                            document.getElementById('mc-purchase-desc').innerText = 'Unlock premium features, seamless billing, and exclusive rewards for just ₹599.';
+                                            document.getElementById('mc-buy-btn').innerHTML = '<i class="fas fa-lock"></i> Buy Now for ₹599';
+                                        }
+                                    }
+                                }
+                            } catch(err) {
+                                if(typeof showToast === 'function') showToast('Error loading membership card', 'error');
+                            }
+                        }
+
+                        function buyMembership() {
+                            const razorpayKey = "<?php echo get_env_var('RAZORPAY_KEY_ID'); ?>";
+                            if (!razorpayKey) {
+                                alert("Payment configuration missing. Please try again later.");
+                                return;
+                            }
+                            const options = {
+                                "key": razorpayKey,
+                                "amount": 59900, // ₹599
+                                "currency": "INR",
+                                "name": "Medusa Elite Pass",
+                                "description": "Membership Pass Purchase/Renewal",
+                                "handler": async function (response) {
+                                    document.getElementById('mc-buy-btn').disabled = true;
+                                    document.getElementById('mc-buy-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                                    
+                                    try {
+                                        const res = await fetch('api/buy-membership-card.php', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id })
+                                        });
+                                        const result = await res.json();
+                                        if (result.success) {
+                                            if(typeof showToast === 'function') showToast(result.message, 'success');
+                                            loadMembershipCard();
+                                        } else {
+                                            alert(result.message || 'Payment processing failed.');
+                                        }
+                                    } catch(e) {
+                                        alert('Error verifying payment.');
+                                    }
+                                    
+                                    document.getElementById('mc-buy-btn').disabled = false;
+                                },
+                                "prefill": {
+                                    "name": "<?php echo addslashes((string)$user_name); ?>",
+                                    "email": "<?php echo addslashes((string)$user_email); ?>"
+                                },
+                                "theme": {
+                                    "color": "#dfba86"
+                                }
+                            };
+
+                            const rzp = new window.Razorpay(options);
+                            rzp.open();
+                        }
                     </script>
                 </div>
-
-                <!-- ══ TAB: TERMS & CONDITIONS ══ -->
-                <div class="tab-pane fade" id="pill-terms" role="tabpanel">
-                    <h2 class="section-title"><i class="fa-solid fa-file-contract text-gold"></i> Membership Terms & Conditions</h2>
-                    <div class="bg-white rounded-4 p-5 border" style="border-color: rgba(0,0,0,0.05) !important;">
-                        
-                        <h5 class="mb-3" style="color: #5a2a35; font-family: 'Playfair Display', serif;">1. Program Overview</h5>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">The Medusa Premium Membership is an exclusive loyalty program offered by Medusa Restaurant & Lounge. By participating in the program, members agree to these terms and conditions. Membership is subject to approval and may be revoked at the discretion of management.</p>
-                        
-                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">2. Earning and Redeeming Points</h5>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Points are earned on eligible purchases at any Medusa location when the digital membership pass is presented. Points have no cash value, cannot be exchanged for cash, and cannot be transferred to another member. Medusa reserves the right to adjust point balances due to system errors or fraudulent activity.</p>
-                        
-                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">3. Tier Progression</h5>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">Member tiers (e.g., Bronze, Silver, Gold, Platinum) are determined based on annual spending and points accumulated. Your tier status is evaluated annually on your membership anniversary. Medusa reserves the right to modify tier thresholds, benefits, and rewards at any time without prior notice.</p>
-
-                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">4. Digital Card Usage</h5>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">The digital membership pass is strictly personal and non-transferable. The member must present the digital card upon request when redeeming benefits, points, or discounts. Lost access to the account should be reported immediately.</p>
-                        
-                        <h5 class="mb-3 mt-4" style="color: #5a2a35; font-family: 'Playfair Display', serif;">5. Privacy and Data</h5>
-                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">By joining the membership program, you consent to the collection and use of your personal data for the purpose of managing your account and providing tailored offers. We prioritize your privacy and will never sell your information to third parties.</p>
-
-                        <div class="mt-5 text-center border-top pt-4">
-                            <button class="btn" style="background-color: #5a2a35; color: white; padding: 0.6rem 1.5rem; font-weight: 500; border-radius: 6px;" onclick="document.getElementById('pill-membership-tab').click()">
-                                <i class="fa-solid fa-arrow-left me-2"></i> Back to Membership Pass
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
                 <?php else: ?>
                 <div class="tab-pane fade show active" id="pill-settings" role="tabpanel">

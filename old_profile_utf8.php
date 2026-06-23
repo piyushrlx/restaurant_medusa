@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 /**
- * ══════════════════════════════════════════════════════════════
- *  MEDUSA RESTAURANT — CUSTOMER ACCOUNT DASHBOARD
+ * ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+ *  MEDUSA RESTAURANT ΓÇö CUSTOMER ACCOUNT DASHBOARD
  *  Unified hub for profiles, orders, settings, rewards, and support.
- * ══════════════════════════════════════════════════════════════
+ * ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
  */
-$account_section = 'settings';
+$account_section = 'profile';
 $settings_tabs = ['settings', 'security', 'feedback', 'support'];
 $account_section = $account_section ?? (in_array($_GET['tab'] ?? '', $settings_tabs, true) ? 'settings' : 'profile');
 $account_section = ($account_section === 'settings') ? 'settings' : 'profile';
@@ -46,14 +46,12 @@ try {
     ");
 } catch (PDOException $ex) {}
 
-// Ensure users table has dob, preferred_ambience and social ids
+// Ensure users table has dob and preferred_ambience
 try {
     $pdo->exec("ALTER TABLE `users` ADD COLUMN `dob` DATE NULL DEFAULT NULL");
+} catch (PDOException $ex) {}
+try {
     $pdo->exec("ALTER TABLE `users` ADD COLUMN `preferred_ambience` VARCHAR(100) NULL DEFAULT NULL");
-    $pdo->exec("ALTER TABLE `users` ADD COLUMN `google_id` VARCHAR(100) NULL DEFAULT NULL");
-    $pdo->exec("ALTER TABLE `users` ADD COLUMN `facebook_id` VARCHAR(100) NULL DEFAULT NULL");
-    $pdo->exec("ALTER TABLE `users` ADD COLUMN `apple_id` VARCHAR(100) NULL DEFAULT NULL");
-    $pdo->exec("ALTER TABLE `users` ADD COLUMN `recovery_email` VARCHAR(255) NULL DEFAULT NULL");
 } catch (PDOException $ex) {}
 
 $has_liquor_quota = false;
@@ -820,13 +818,13 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: #212529; /* Dark background so white text is always visible */
-            border: 1px solid var(--gold, #dfba86);
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold);
             border-radius: 8px;
             padding: 1rem 1.5rem;
-            color: #ffffff !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 9999;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 2000;
             display: none;
             align-items: center;
             gap: 12px;
@@ -1077,7 +1075,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
             <main class="main-content tab-content">
                 <?php if (!$is_settings_page): ?>
                 
-                <!-- ══ TAB 1: PROFILE DETAILS ══ -->
+                <!-- ΓòÉΓòÉ TAB 1: PROFILE DETAILS ΓòÉΓòÉ -->
                 <div class="tab-pane fade show active" id="pill-profile" role="tabpanel">
                     <!-- Welcome Header & Rewards Card -->
                     <div class="row mb-5 align-items-center">
@@ -1331,13 +1329,13 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <p class="text-muted mb-4" style="font-size: 0.85rem;">Keep your account safe and secure.</p>
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Password</span>
-                                    <span class="text-dark fw-bold flex-grow-1">••••••••••••</span>
+                                    <span class="text-dark fw-bold flex-grow-1">ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó</span>
                                     <a href="settings.php?tab=security" class="text-success text-decoration-none" style="font-size: 0.85rem; font-weight: 500;">Change</a>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="text-muted" style="font-size: 0.85rem; width: 100px;">Last Login</span>
                                     <span class="text-dark flex-grow-1" style="font-size: 0.85rem;">
-                                        <?php echo !empty($login_logs) ? date('M d, Y • h:i A', strtotime($login_logs[0]['login_time'])) : 'N/A'; ?>
+                                        <?php echo !empty($login_logs) ? date('M d, Y ΓÇó h:i A', strtotime($login_logs[0]['login_time'])) : 'N/A'; ?>
                                     </span>
                                 </div>
                             </div>
@@ -1345,7 +1343,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB 2: ORDER HISTORY ══ -->
+                <!-- ΓòÉΓòÉ TAB 2: ORDER HISTORY ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-orders" role="tabpanel">
                     
                     <!-- Header -->
@@ -1477,7 +1475,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                         </div>
                                                     </div>
                                                     <div class="text-muted" style="font-size: 0.95rem;">
-                                                        ₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
+                                                        Γé╣<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>
@@ -1493,7 +1491,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="text-end position-relative h-100 d-flex flex-column justify-content-center" style="z-index: 1;">
                                                 <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Grand Total</div>
                                                 <div class="mb-4" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.8rem; font-weight: 600;">
-                                                    ₹<?php echo number_format($order['total_amount'], 2); ?>
+                                                    Γé╣<?php echo number_format($order['total_amount'], 2); ?>
                                                 </div>
                                                 
                                                 <div class="d-flex justify-content-end gap-2 flex-wrap mt-auto">
@@ -1522,7 +1520,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB: TABLE RESERVATIONS ══ -->
+                <!-- ΓòÉΓòÉ TAB: TABLE RESERVATIONS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-reservations" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-5">
                         <div>
@@ -1588,7 +1586,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB: MY TIER & REWARDS ══ -->
+                <!-- ΓòÉΓòÉ TAB: MY TIER & REWARDS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-loyalty" role="tabpanel">
                     <?php
                     $next_tier_name = '';
@@ -1701,7 +1699,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 <div>
                                     <div class="text-muted mb-1" style="font-size: 0.8rem;">Lifetime Spend</div>
-                                    <div style="font-family: 'Playfair Display', serif; color: #143628; font-size: 1.4rem; font-weight: 600;">₹<?php echo number_format($tier_spend, 2); ?></div>
+                                    <div style="font-family: 'Playfair Display', serif; color: #143628; font-size: 1.4rem; font-weight: 600;">Γé╣<?php echo number_format($tier_spend, 2); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -1870,7 +1868,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </script>
                 </div>
 
-                <!-- ══ TAB: NOTIFICATIONS LOG ══ -->
+                <!-- ΓòÉΓòÉ TAB: NOTIFICATIONS LOG ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-notifications" role="tabpanel">
                     <div class="d-flex flex-column mb-5">
                         <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
@@ -1927,7 +1925,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB 3: COUPONS & REWARDS ══ -->
+                <!-- ΓòÉΓòÉ TAB 3: COUPONS & REWARDS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-coupons" role="tabpanel">
                     <div class="d-flex flex-column mb-4">
                         <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
@@ -1946,7 +1944,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div>
                                     <p class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">Loyalty Points</p>
                                     <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 2rem; font-weight: 600;"><?php echo number_format($loyalty_points); ?> <span style="font-size: 1.2rem; font-family: 'Plus Jakarta Sans', sans-serif;">pts</span></h3>
-                                    <p class="text-muted m-0" style="font-size: 0.8rem;">Earn 1 point for every ₹100 spent.</p>
+                                    <p class="text-muted m-0" style="font-size: 0.8rem;">Earn 1 point for every Γé╣100 spent.</p>
                                 </div>
                             </div>
                         </div>
@@ -1957,7 +1955,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 <div>
                                     <p class="text-muted text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">Total Spent</p>
-                                    <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 2rem; font-weight: 600;">₹<?php echo number_format($total_spent, 2); ?></h3>
+                                    <h3 class="mb-1" style="font-family: 'Playfair Display', serif; color: #222; font-size: 2rem; font-weight: 600;">Γé╣<?php echo number_format($total_spent, 2); ?></h3>
                                     <p class="text-muted m-0" style="font-size: 0.8rem;">Calculated from <?php echo $completed_count; ?> completed orders.</p>
                                 </div>
                             </div>
@@ -2084,7 +2082,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </script>
                 </div>
 
-                <!-- ══ TAB: LIQUOR QUOTA ══ -->
+                <!-- ΓòÉΓòÉ TAB: LIQUOR QUOTA ΓòÉΓòÉ -->
                 <?php if ($has_liquor_quota): ?>
                 <div class="tab-pane fade" id="pill-quota" role="tabpanel">
                     
@@ -2228,8 +2226,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <?php endif; ?>
 
-                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
-                <!-- ══ TAB: MEMBERSHIP PASS ══ -->
+                <!-- ΓòÉΓòÉ TAB: MEMBERSHIP PASS ΓòÉΓòÉ -->
+                <!-- ΓòÉΓòÉ TAB: MEMBERSHIP PASS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-membership" role="tabpanel">
                     
                     <!-- Header -->
@@ -2489,7 +2487,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </script>
                 </div>
 
-                <!-- ══ TAB: TERMS & CONDITIONS ══ -->
+                <!-- ΓòÉΓòÉ TAB: TERMS & CONDITIONS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-terms" role="tabpanel">
                     <h2 class="section-title"><i class="fa-solid fa-file-contract text-gold"></i> Membership Terms & Conditions</h2>
                     <div class="bg-white rounded-4 p-5 border" style="border-color: rgba(0,0,0,0.05) !important;">
@@ -2517,7 +2515,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB 4: ACCOUNT SETTINGS ══ -->
+                <!-- ΓòÉΓòÉ TAB 4: ACCOUNT SETTINGS ΓòÉΓòÉ -->
                 <?php else: ?>
                 <div class="tab-pane fade show active" id="pill-settings" role="tabpanel">
                     <h2 class="section-title mb-1" style="border:none; padding-bottom:0;">Account Settings</h2>
@@ -2626,18 +2624,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <i class="fa-solid fa-user-group"></i>
                                     </div>
                                     <h5 class="text-dark" style="font-size: 1rem; font-weight: 600;">Linked Accounts</h5>
-                                    <?php
-                                        $connected_count = (!empty($user['google_id']) ? 1 : 0) + (!empty($user['facebook_id']) ? 1 : 0) + (!empty($user['apple_id']) ? 1 : 0);
-                                    ?>
-                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">
-                                        Manage your connected accounts and services.
-                                        <?php if ($connected_count > 0): ?>
-                                            <br><span class="badge bg-success bg-opacity-10 text-success mt-2" style="font-size: 0.75rem;"><i class="fa-solid fa-link me-1"></i><?php echo $connected_count; ?> Connected</span>
-                                        <?php else: ?>
-                                            <br><span class="badge bg-secondary bg-opacity-10 text-muted mt-2" style="font-size: 0.75rem;"><i class="fa-solid fa-link-slash me-1"></i>None Connected</span>
-                                        <?php endif; ?>
-                                    </p>
-                                    <button class="btn btn-outline-dark btn-sm text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.5rem;" data-bs-toggle="modal" data-bs-target="#linkedAccountsModal">Manage Accounts <i class="fa-solid fa-chevron-right ms-1"></i></button>
+                                    <p class="text-muted flex-grow-1" style="font-size: 0.8rem; line-height: 1.5; margin-bottom: 1.5rem;">Manage your connected accounts and services.</p>
+                                    <button class="btn btn-outline-dark btn-sm text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.5rem;">Manage Accounts <i class="fa-solid fa-chevron-right ms-1"></i></button>
                                 </div>
                             </div>
                             <!-- Login Activity -->
@@ -2667,7 +2655,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     </div> <!-- End of subnav-account -->
 
-                        <!-- ══ TAB: NOTIFICATIONS ══ -->
+                        <!-- ΓòÉΓòÉ TAB: NOTIFICATIONS ΓòÉΓòÉ -->
                         <div class="tab-pane fade" id="subnav-notifications" role="tabpanel">
                             <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Notification Preferences</h4>
@@ -2691,7 +2679,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </div>
 
-                        <!-- ══ TAB: PREFERENCES ══ -->
+                        <!-- ΓòÉΓòÉ TAB: PREFERENCES ΓòÉΓòÉ -->
                         <div class="tab-pane fade" id="subnav-preferences" role="tabpanel">
                             <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">System Preferences</h4>
@@ -2699,7 +2687,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
                                             <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="pref_lang">Language Preference</label>
-                                            <select id="pref_lang" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;">
+                                            <select id="pref_lang" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
                                                 <option value="en" <?php echo $settings['language'] === 'en' ? 'selected' : ''; ?>>English</option>
                                                 <option value="hi" <?php echo $settings['language'] === 'hi' ? 'selected' : ''; ?>>Hindi</option>
                                                 <option value="es" <?php echo $settings['language'] === 'es' ? 'selected' : ''; ?>>Spanish</option>
@@ -2708,7 +2696,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </div>
                                         <div class="col-md-6">
                                             <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="pref_theme">Theme Preference</label>
-                                            <select id="pref_theme" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;">
+                                            <select id="pref_theme" class="form-select" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
                                                 <option value="dark" <?php echo $settings['theme'] === 'dark' ? 'selected' : ''; ?>>Medusa Dark (Gold)</option>
                                                 <option value="light" <?php echo $settings['theme'] === 'light' ? 'selected' : ''; ?>>Medusa Light</option>
                                             </select>
@@ -2719,7 +2707,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </div>
 
-                        <!-- ══ TAB: PRIVACY ══ -->
+                        <!-- ΓòÉΓòÉ TAB: PRIVACY ΓòÉΓòÉ -->
                         <div class="tab-pane fade" id="subnav-privacy" role="tabpanel">
                             <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <h4 class="text-dark mb-1" style="font-size: 1.1rem; font-weight: 600;">Privacy Controls</h4>
@@ -2740,7 +2728,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div> <!-- End of settings-tabContent -->
                 </div> <!-- End of pill-settings -->
 
-                <!-- ══ NEW TAB 5: SECURITY & SESSIONS ══ -->
+                <!-- ΓòÉΓòÉ NEW TAB 5: SECURITY & SESSIONS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-security" role="tabpanel">
                     <h2 class="section-title mb-1" style="border:none; padding-bottom:0;"><i class="fa-solid fa-shield-halved"></i> Security & Sessions</h2>
                     <p class="text-muted mb-4" style="font-size: 0.9rem;">Manage your password, 2FA, and trusted devices.</p>
@@ -2753,11 +2741,11 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <form id="passwordForm" onsubmit="submitPasswordForm(event)">
                                     <div class="mb-3">
                                         <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="cur_pass">Current Password *</label>
-                                        <input type="password" id="cur_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;" required>
+                                        <input type="password" id="cur_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="new_pass">New Password *</label>
-                                        <input type="password" id="new_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;" oninput="checkPassStrength(this.value)" required>
+                                        <input type="password" id="new_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" oninput="checkPassStrength(this.value)" required>
                                         <div class="strength-bar mt-2">
                                             <div class="seg" id="seg1"></div>
                                             <div class="seg" id="seg2"></div>
@@ -2767,7 +2755,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     <div class="mb-3">
                                         <label class="text-muted d-block mb-1" style="font-size: 0.8rem;" for="conf_pass">Confirm New Password *</label>
-                                        <input type="password" id="conf_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;" required>
+                                        <input type="password" id="conf_pass" class="form-control" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);" required>
                                     </div>
                                     <button type="submit" class="btn btn-dark text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px; border-radius: 6px; padding: 0.6rem 1.2rem;">Update Password</button>
                                 </form>
@@ -2805,48 +2793,20 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Trusted Devices</h4>
                                 <ul class="list-group list-group-flush mb-3">
-                                    <?php 
-                                    $trusted_devices = [];
-                                    if (!empty($login_logs)) {
-                                        foreach ($login_logs as $log) {
-                                            $ua = $log['user_agent'];
-                                            if (!isset($trusted_devices[$ua])) {
-                                                $parsed_ua = "Browser";
-                                                if (preg_match('/(Chrome|Safari|Firefox|Edge|MSIE|Trident|Opera)/i', $ua, $matches)) {
-                                                    $parsed_ua = $matches[0];
-                                                }
-                                                $parsed_ua .= (strpos(strtolower($ua), 'mobile') !== false) ? " (Mobile)" : " (Desktop)";
-                                                
-                                                $trusted_devices[$ua] = [
-                                                    'name' => $parsed_ua,
-                                                    'last_used' => $log['login_time'],
-                                                    'is_active' => empty($trusted_devices) // First one is considered active
-                                                ];
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (empty($trusted_devices)): ?>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
-                                            <div class="text-muted small">No devices found.</div>
-                                        </li>
-                                    <?php else: ?>
-                                        <?php foreach ($trusted_devices as $idx => $device): ?>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 <?php echo $device['is_active'] ? 'border-0' : 'border-top'; ?>">
-                                                <div>
-                                                    <div style="font-size: 0.95rem; font-weight: 500;"><?php echo htmlspecialchars($device['name']); ?></div>
-                                                    <small class="text-muted">
-                                                        <?php echo $device['is_active'] ? 'Currently active' : 'Last used ' . date('d M Y', strtotime($device['last_used'])); ?>
-                                                    </small>
-                                                </div>
-                                                <?php if ($device['is_active']): ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
-                                                <?php else: ?>
-                                                    <button class="btn btn-sm btn-outline-danger">Revoke</button>
-                                                <?php endif; ?>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">iPhone 14 Pro Max</div>
+                                            <small class="text-muted">Currently active</small>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-top">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">MacBook Pro (Chrome)</div>
+                                            <small class="text-muted">Last used 2 days ago</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                                    </li>
                                 </ul>
                             </div>
 
@@ -2855,8 +2815,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Account Recovery</h4>
                                 <p class="text-muted mb-3" style="font-size: 0.85rem;">Add a fallback email in case you lose access.</p>
                                 <div class="input-group">
-                                    <input type="email" id="recovery_email_input" class="form-control" placeholder="Recovery Email" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;" value="<?php echo htmlspecialchars($user['recovery_email'] ?? ''); ?>">
-                                    <button class="btn btn-dark" type="button" onclick="saveRecoveryEmail()">Save</button>
+                                    <input type="email" class="form-control" placeholder="Recovery Email" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
+                                    <button class="btn btn-dark" type="button">Save</button>
                                 </div>
                             </div>
                         </div>
@@ -2869,36 +2829,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="logoutOtherDevices()">Logout Other Devices</button>
                         </div>
                         <div class="table-responsive">
-                            <?php
-                            if (!function_exists('getIpLocation')) {
-                                function getIpLocation($ip) {
-                                    if ($ip === '::1' || $ip === '127.0.0.1') return 'Local Session';
-                                    
-                                    // Simple cache mechanism
-                                    $cache_file = sys_get_temp_dir() . '/ip_loc_' . md5($ip);
-                                    if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 86400) {
-                                        return file_get_contents($cache_file);
-                                    }
-                                    
-                                    // Fetch from IP API with 1 second timeout to prevent slow loading
-                                    $ctx = stream_context_create(['http' => ['timeout' => 1]]);
-                                    $data = @file_get_contents("http://ip-api.com/json/{$ip}", false, $ctx);
-                                    if ($data) {
-                                        $json = json_decode($data, true);
-                                        if ($json && $json['status'] === 'success') {
-                                            $loc = $json['city'] . ', ' . $json['region']; // e.g. "Mumbai, MH"
-                                            @file_put_contents($cache_file, $loc);
-                                            return $loc;
-                                        }
-                                    }
-                                    return 'Unknown Location';
-                                }
-                            }
-                            ?>
                             <table class="table table-hover align-middle" style="font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
                                 <thead style="background: rgba(0,0,0,0.02);">
                                     <tr>
-                                        <th class="text-muted">Location</th>
+                                        <th class="text-muted">IP Address</th>
                                         <th class="text-muted">Device / Browser</th>
                                         <th class="text-muted">Timestamp</th>
                                         <th class="text-muted">Status</th>
@@ -2912,9 +2846,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php else: ?>
                                         <?php foreach ($login_logs as $log): ?>
                                             <tr>
-                                                <td class="text-dark" style="font-weight: 500;">
-                                                    <?php echo htmlspecialchars(getIpLocation($log['ip_address'])); ?>
-                                                </td>
+                                                <td class="text-dark" style="font-family: monospace;"><?php echo htmlspecialchars($log['ip_address']); ?></td>
                                                 <td class="text-muted" title="<?php echo htmlspecialchars($log['user_agent']); ?>">
                                                     <?php 
                                                         $ua = $log['user_agent'];
@@ -2927,10 +2859,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     ?>
                                                 </td>
                                                 <td class="text-muted"><?php echo date('d M Y, H:i:s', strtotime($log['login_time'])); ?></td>
-                                                <td>
-                                                    <span class="badge bg-success bg-opacity-10 text-success mb-1">Success</span>
-                                                    <br><a href="api/logout.php" class="text-danger text-decoration-underline" style="font-size: 0.75rem;">Not you? Logout</a>
-                                                </td>
+                                                <td><span class="badge bg-success bg-opacity-10 text-success">Success</span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -2940,7 +2869,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- -- TAB 6: CUSTOMER FEEDBACK -- -->
+                <!-- ΓòÉΓòÉ TAB 6: CUSTOMER FEEDBACK ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-feedback" role="tabpanel">
                     <h2 class="section-title"><i class="fa-solid fa-star"></i> Customer Feedback & Reviews</h2>
                     
@@ -3008,7 +2937,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- ══ TAB 7: SUPPORT & FAQS ══ -->
+                <!-- ΓòÉΓòÉ TAB 7: SUPPORT & FAQS ΓòÉΓòÉ -->
                 <div class="tab-pane fade" id="pill-support" role="tabpanel">
                     <h2 class="section-title"><i class="fa-solid fa-headset"></i> Support & Help Desk</h2>
                     
@@ -3097,7 +3026,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </h2>
                                     <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                         <div class="accordion-body accordion-body-medusa">
-                                            For every ₹100 spent on completed orders with Medusa, you earn 1 point automatically. Accumulating points unlocks Bronze, Silver Premium, and Gold Elite tiers, qualifying you for exclusive promotions.
+                                            For every Γé╣100 spent on completed orders with Medusa, you earn 1 point automatically. Accumulating points unlocks Bronze, Silver Premium, and Gold Elite tiers, qualifying you for exclusive promotions.
                                         </div>
                                     </div>
                                 </div>
@@ -3121,7 +3050,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </h2>
                                     <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                         <div class="accordion-body accordion-body-medusa">
-                                            We deliver culinary creations from 11:00 AM to 11:30 PM daily within a 15km radius of Chandigarh. Order values above ₹2000 qualify for free luxury delivery.
+                                            We deliver culinary creations from 11:00 AM to 11:30 PM daily within a 15km radius of Chandigarh. Order values above Γé╣2000 qualify for free luxury delivery.
                                         </div>
                                     </div>
                                 </div>
@@ -3135,7 +3064,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- ══ MODALS ══ -->
+    <!-- ΓòÉΓòÉ MODALS ΓòÉΓòÉ -->
 
     <!-- OTP Verification Modal -->
     <div class="modal fade" id="otpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -3160,86 +3089,6 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="modal-footer border-secondary justify-content-center">
                     <button type="button" class="btn btn-outline-medusa" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-gold-medusa" onclick="verifyOTPCode()">Verify Code</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Linked Accounts Modal -->
-    <?php
-        $is_google = !empty($user['google_id']);
-        $is_fb = !empty($user['facebook_id']);
-        $is_apple = !empty($user['apple_id']);
-    ?>
-    <div class="modal fade" id="linkedAccountsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-white text-dark border-0 shadow-lg" style="border-radius: 12px;">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title text-dark fw-bold" style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-link text-gold me-2" style="color: #dfba86;"></i>Linked Accounts</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <p class="text-muted mb-4" style="font-size: 0.9rem;">Connect your social accounts to enable 1-click login and unified experiences across devices.</p>
-                    
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3" style="background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm" style="width: 40px; height: 40px;">
-                                <i class="fa-brands fa-google fs-4" style="color: #ea4335;"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-dark fw-bold">Google</h6>
-                                <?php if ($is_google): ?>
-                                    <small class="text-success fw-bold"><i class="fa-solid fa-check me-1"></i>Connected</small>
-                                <?php else: ?>
-                                    <small class="text-muted">Not connected</small>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm <?php echo $is_google ? 'btn-danger' : 'btn-outline-dark'; ?>" style="border-radius: 20px; padding: 0.3rem 1rem; width: 100px;" onclick="toggleSocialAccount('google')">
-                            <?php echo $is_google ? 'Disconnect' : 'Connect'; ?>
-                        </button>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3" style="background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm" style="width: 40px; height: 40px;">
-                                <i class="fa-brands fa-facebook fs-4" style="color: #1877f2;"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-dark fw-bold">Facebook</h6>
-                                <?php if ($is_fb): ?>
-                                    <small class="text-success fw-bold"><i class="fa-solid fa-check me-1"></i>Connected</small>
-                                <?php else: ?>
-                                    <small class="text-muted">Not connected</small>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm <?php echo $is_fb ? 'btn-danger' : 'btn-outline-dark'; ?>" style="border-radius: 20px; padding: 0.3rem 1rem; width: 100px;" onclick="toggleSocialAccount('facebook')">
-                            <?php echo $is_fb ? 'Disconnect' : 'Connect'; ?>
-                        </button>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center p-3" style="background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm" style="width: 40px; height: 40px;">
-                                <i class="fa-brands fa-apple fs-4 text-dark"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-dark fw-bold">Apple ID</h6>
-                                <?php if ($is_apple): ?>
-                                    <small class="text-success fw-bold"><i class="fa-solid fa-check me-1"></i>Connected</small>
-                                <?php else: ?>
-                                    <small class="text-muted">Not connected</small>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm <?php echo $is_apple ? 'btn-danger' : 'btn-outline-dark'; ?>" style="border-radius: 20px; padding: 0.3rem 1rem; width: 100px;" onclick="toggleSocialAccount('apple')">
-                            <?php echo $is_apple ? 'Disconnect' : 'Connect'; ?>
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-dark w-100" style="border-radius: 8px;" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -4021,44 +3870,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 });
             });
         });
-        async function toggleSocialAccount(provider) {
-            try {
-                const response = await fetch('api/account-api.php?action=toggle_social_account', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ provider })
-                });
-                const result = await response.json();
-                showToast(result.message, result.success ? 'success' : 'error');
-                if (result.success) {
-                    setTimeout(() => location.reload(), 1500);
-                }
-            } catch (err) {
-                showToast('Network error while toggling account.', 'error');
-            }
-        }
-        async function saveRecoveryEmail() {
-            const email = document.getElementById('recovery_email_input').value.trim();
-            if (!email) {
-                showToast('Please enter an email address', 'error');
-                return;
-            }
-            try {
-                const response = await fetch('api/account-api.php?action=save_recovery_email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recovery_email: email })
-                });
-                const result = await response.json();
-                showToast(result.message, result.success ? 'success' : 'error');
-            } catch (err) {
-                showToast('Network error while saving recovery email.', 'error');
-            }
-        }
     </script>
 
 <style>
-/* ── Track Order Button ── */
+/* ΓöÇΓöÇ Track Order Button ΓöÇΓöÇ */
 .btn-track-live-acc {
     background: transparent;
     border: 1px solid rgba(201,168,76,0.4);
@@ -4093,5 +3908,3 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 <?php require_once __DIR__ . '/includes/order_toast.php'; ?>
 </body>
 </html>
-
-
