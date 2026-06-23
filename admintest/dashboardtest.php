@@ -43,6 +43,96 @@ function isVegItem($name, $description = '') {
     return true;
 }
 
+// Helper to resolve dish image URLs for admin view
+function getDishImage($image_url) {
+    if (empty($image_url)) {
+        return '../uploads/default.jpg';
+    }
+    if (strpos($image_url, 'http://') === 0 || strpos($image_url, 'https://') === 0 || strpos($image_url, '//') === 0) {
+        return $image_url;
+    }
+    if (strpos($image_url, 'uploads/') === 0) {
+        return '../' . $image_url;
+    }
+    return '../uploads/' . $image_url;
+}
+
+// Helper to download external or Google Drive images locally and save to uploads folder
+function downloadImageFromUrl($url) {
+    if (empty($url)) return null;
+    
+    // Check if it's already a local path
+    if (strpos($url, 'http://') !== 0 && strpos($url, 'https://') !== 0) {
+        return $url;
+    }
+    
+    // Resolve Google Drive links (convert preview/open links to direct download links)
+    if (strpos($url, 'drive.google.com') !== false) {
+        $file_id = null;
+        if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            $file_id = $matches[1];
+        } elseif (preg_match('/id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            $file_id = $matches[1];
+        }
+        if ($file_id) {
+            $url = "https://lh3.googleusercontent.com/d/" . $file_id;
+        }
+    }
+    
+    // Initialize cURL to fetch the image from URL
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3');
+    
+    $data = curl_exec($ch);
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode !== 200 || empty($data)) {
+        return $url; // Return original URL as fallback if download fails
+    }
+    
+    // Map mime types to extensions
+    $mime_map = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'image/svg+xml' => 'svg',
+        'image/bmp' => 'bmp',
+        'image/x-icon' => 'ico',
+        'image/avif' => 'avif',
+        'image/heic' => 'heic',
+        'image/heif' => 'heif'
+    ];
+    
+    // Get clean mime type
+    $cleanMime = strtolower(explode(';', $contentType)[0]);
+    if (!isset($mime_map[$cleanMime])) {
+        // If content-type is not a supported image format, return the original URL
+        return $url;
+    }
+    
+    $ext = $mime_map[$cleanMime];
+    $uploadDir = dirname(__DIR__) . '/uploads/menu/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    $newFileName = uniqid('url_dish_', true) . '.' . $ext;
+    $destPath = $uploadDir . $newFileName;
+    
+    if (file_put_contents($destPath, $data) !== false) {
+        return 'uploads/menu/' . $newFileName;
+    }
+    
+    return $url;
+}
+
 // Helper to determine date boundaries for report filtering
 function getDateBounds($range, $start_custom = null, $end_custom = null) {
     date_default_timezone_set('Asia/Kolkata');
@@ -192,8 +282,51 @@ if (file_exists($settings_file)) {
 
 // 3. API Handlers
 if (isset($_REQUEST['action'])) {
-    header('Content-Type: application/json');
     $action = $_REQUEST['action'];
+    
+    // Proxy external images locally to resolve CORS and hotlinking restrictions in preview
+    if ($action === 'proxy_image') {
+        $url = $_GET['url'] ?? '';
+        if (empty($url)) {
+            http_response_code(400);
+            exit;
+        }
+        
+        // Resolve Google Drive links if needed
+        if (strpos($url, 'drive.google.com') !== false) {
+            $file_id = null;
+            if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                $file_id = $matches[1];
+            } elseif (preg_match('/id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                $file_id = $matches[1];
+            }
+            if ($file_id) {
+                $url = "https://lh3.googleusercontent.com/d/" . $file_id;
+            }
+        }
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3');
+        
+        $data = curl_exec($ch);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200 && !empty($data) && strpos($contentType, 'image/') === 0) {
+            header("Content-Type: " . $contentType);
+            echo $data;
+        } else {
+            http_response_code(404);
+        }
+        exit;
+    }
+    
+    header('Content-Type: application/json');
     
     // Get all active user quotas action
     if ($action === 'load_active_quotas') {
@@ -355,15 +488,15 @@ if (isset($_REQUEST['action'])) {
         $fileTmpName = $file['tmp_name'];
         $fileSize = $file['size'];
         
-        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'bmp', 'tiff', 'tif', 'ico', 'avif', 'heic', 'heif'];
         $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
         if (!in_array($ext, $allowed_extensions)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid file extension. Only JPG, JPEG, PNG, WEBP, and GIF are allowed.']);
+            echo json_encode(['success' => false, 'message' => 'Invalid file extension. Allowed formats: ' . implode(', ', array_map('strtoupper', $allowed_extensions))]);
             exit;
         }
         
-        if ($fileSize > 5 * 1024 * 1024) {
-            echo json_encode(['success' => false, 'message' => 'File size is too large (maximum 5MB).']);
+        if ($fileSize > 20 * 1024 * 1024) {
+            echo json_encode(['success' => false, 'message' => 'File size is too large (maximum 20MB).']);
             exit;
         }
         
@@ -959,6 +1092,8 @@ if (isset($_REQUEST['action'])) {
         $category = $_POST['category'];
         $image_url = $_POST['image_url'] ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
         
+        $image_url = downloadImageFromUrl($image_url);
+        
         $stmt = $pdo->prepare("INSERT INTO food_items (name, description, price, category, image_url, is_available) VALUES (?, ?, ?, ?, ?, 1)");
         $stmt->execute([$name, $desc, $price, $category, $image_url]);
         
@@ -974,6 +1109,8 @@ if (isset($_REQUEST['action'])) {
         $price = $_POST['price'];
         $category = $_POST['category'];
         $image_url = $_POST['image_url'];
+        
+        $image_url = downloadImageFromUrl($image_url);
         
         $stmt = $pdo->prepare("UPDATE food_items SET name = ?, description = ?, price = ?, category = ?, image_url = ? WHERE id = ?");
         $stmt->execute([$name, $desc, $price, $category, $image_url, $id]);
@@ -2732,6 +2869,152 @@ html:not(.light-mode) .form-select:focus{
         html.light-mode .dropzone-text {
             color: #0f172a;
         }
+
+        /* Luxury Action Buttons Styles */
+        .btn-luxury-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 38px;
+            width: 42px;
+            padding: 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        /* Customization manager button width override to contain badge */
+        .btn-luxury-action.btn-luxury-custom {
+            border-color: rgba(223, 186, 134, 0.3);
+            background: rgba(223, 186, 134, 0.05);
+            color: var(--gold);
+            width: auto;
+            padding: 0 14px;
+        }
+        .btn-luxury-action.btn-luxury-custom:hover {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.15);
+            color: var(--gold-light);
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.15);
+        }
+        .btn-luxury-action.btn-luxury-custom.active {
+            background-color: var(--gold);
+            color: #000000;
+            border-color: var(--gold);
+        }
+        .btn-luxury-action.btn-luxury-custom.active:hover {
+            background-color: var(--gold-light);
+            border-color: var(--gold-light);
+        }
+
+        /* Customization count badge */
+        .luxury-badge.bg-gold-badge {
+            background-color: var(--gold);
+            color: #0a0a0a;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            display: inline-block;
+            line-height: 1;
+            transition: var(--transition);
+        }
+        .btn-luxury-action.btn-luxury-custom.active .luxury-badge.bg-gold-badge {
+            background-color: #000000;
+            color: var(--gold);
+        }
+
+        /* Edit action button */
+        .btn-luxury-action.btn-luxury-edit {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--white);
+        }
+        .btn-luxury-action.btn-luxury-edit:hover {
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+        }
+
+        /* Delete action button */
+        .btn-luxury-action.btn-luxury-delete {
+            border-color: rgba(239, 68, 68, 0.25);
+            background: rgba(239, 68, 68, 0.05);
+            color: #fca5a5;
+        }
+        .btn-luxury-action.btn-luxury-delete:hover {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.18);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Custom switch styling */
+        .premium-switch .form-check-input {
+            width: 2.6em;
+            height: 1.3em;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .premium-switch .form-check-input:checked {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        /* Responsive Alignment: Prevent wrap in Actions column */
+        .premium-table td:last-child {
+            white-space: nowrap;
+            width: 1%; /* Shrink column to fit contents without wrapping */
+        }
+
+        /* LIGHT MODE OVERRIDES FOR ACTIONS */
+        html.light-mode .btn-luxury-action.btn-luxury-edit {
+            border-color: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.03);
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-edit:hover {
+            border-color: var(--white);
+            background: rgba(0, 0, 0, 0.08);
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-custom {
+            border-color: rgba(184, 134, 11, 0.3);
+            background: rgba(184, 134, 11, 0.04);
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-custom:hover {
+            border-color: #b8860b;
+            background: rgba(184, 134, 11, 0.12);
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-custom.active {
+            background-color: #b8860b;
+            color: #ffffff;
+            border-color: #b8860b;
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-custom.active:hover {
+            background-color: #9b7008;
+            border-color: #9b7008;
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-custom.active .luxury-badge.bg-gold-badge {
+            background-color: #ffffff;
+            color: #b8860b;
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-delete {
+            border-color: rgba(220, 38, 38, 0.25);
+            background: rgba(220, 38, 38, 0.04);
+            color: #dc2626;
+        }
+        html.light-mode .btn-luxury-action.btn-luxury-delete:hover {
+            border-color: #b91c1c;
+            background: rgba(220, 38, 38, 0.12);
+            color: #ffffff;
+        }
 </style>
 </head>
 <body>
@@ -3347,6 +3630,7 @@ html:not(.light-mode) .form-select:focus{
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
+                                <option value="Liquor">Liquor</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -3442,44 +3726,47 @@ html:not(.light-mode) .form-select:focus{
                                 <th>Category</th>
                                 <th>Price</th>
                                 <th>Description</th>
-                                <th>Customizations</th>
-                                <th>Available</th>
-                                <th>Actions</th>
+                                <th class="text-center">Available</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($menu_list as $dish): ?>
                             <tr>
                                 <td>
-                                    <img src="<?php echo htmlspecialchars($dish['image_url']); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                                    <img src="<?php echo htmlspecialchars(getDishImage($dish['image_url'])); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($dish['name']); ?></strong></td>
                                 <td><span class="text-uppercase"><?php echo htmlspecialchars($dish['category']); ?></span></td>
                                 <td>₹<?php echo number_format($dish['price'], 2); ?></td>
                                 <td><small class="text-muted"><?php echo htmlspecialchars($dish['description']); ?></small></td>
-                                <td>
-                                    <div class="form-check form-switch">
+                                <td class="text-center">
+                                    <div class="form-check form-switch premium-switch d-inline-block">
                                         <input class="form-check-input" type="checkbox" role="switch" <?php echo $dish['is_available'] ? 'checked' : ''; ?> onchange="toggleMenuAvailability(<?php echo $dish['id']; ?>, this.checked)">
                                     </div>
                                 </td>
                                 <td>
-                                    <?php
-                                    // Count customization groups for this dish
-                                    $cust_count = 0;
-                                    try {
-                                        $cc = $pdo->prepare("SELECT COUNT(*) FROM dish_customizations WHERE food_item_id = ?");
-                                        $cc->execute([$dish['id']]);
-                                        $cust_count = (int)$cc->fetchColumn();
-                                    } catch(Exception $e) { $cust_count = 0; }
-                                    ?>
-                                    <button class="btn btn-sm <?php echo $cust_count > 0 ? 'btn-gold-action' : 'btn-outline-secondary'; ?>" onclick="openCustomizationManager(<?php echo $dish['id']; ?>, '<?php echo htmlspecialchars(addslashes($dish['name'])); ?>')" title="Manage Customizations">
-                                        <i class="fas fa-sliders-h"></i> 
-                                        <span class="badge bg-dark ms-1"><?php echo $cust_count; ?></span>
-                                    </button>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-light" onclick="openEditMenuModal(<?php echo htmlspecialchars(json_encode($dish)); ?>)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteMenuItem(<?php echo $dish['id']; ?>)"><i class="fas fa-trash-alt"></i></button>
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <?php
+                                        // Count customization groups for this dish
+                                        $cust_count = 0;
+                                        try {
+                                            $cc = $pdo->prepare("SELECT COUNT(*) FROM dish_customizations WHERE food_item_id = ?");
+                                            $cc->execute([$dish['id']]);
+                                            $cust_count = (int)$cc->fetchColumn();
+                                        } catch(Exception $e) { $cust_count = 0; }
+                                        ?>
+                                        <button class="btn btn-sm btn-luxury-action btn-luxury-custom <?php echo $cust_count > 0 ? 'active' : ''; ?>" onclick="openCustomizationManager(<?php echo $dish['id']; ?>, '<?php echo htmlspecialchars(addslashes($dish['name'])); ?>')" title="Manage Customizations">
+                                            <i class="fas fa-sliders-h"></i> 
+                                            <span class="luxury-badge bg-gold-badge ms-1"><?php echo $cust_count; ?></span>
+                                        </button>
+                                        <button class="btn btn-sm btn-luxury-action btn-luxury-edit" onclick="openEditMenuModal(<?php echo htmlspecialchars(json_encode($dish)); ?>)" title="Edit Item">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-luxury-action btn-luxury-delete" onclick="deleteMenuItem(<?php echo $dish['id']; ?>)" title="Delete Item">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -4409,6 +4696,7 @@ html:not(.light-mode) .form-select:focus{
                         <div class="mb-3">
                             <label class="form-label text-muted">Category</label>
                             <select id="menu_category" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="Liquor">Liquor</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -4454,13 +4742,14 @@ html:not(.light-mode) .form-select:focus{
                             <div id="image_upload_container" class="image-dropzone-premium" onclick="document.getElementById('dish_image_file').click()">
                                 <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
                                 <div class="dropzone-text">Drag & drop image here, or <span>browse</span></div>
-                                <div class="dropzone-subtext">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</div>
-                                <input type="file" id="dish_image_file" accept="image/*" style="display: none;" onchange="handleImageFileSelect(this)">
+                                <div class="dropzone-subtext">Supports all image formats (Max 20MB)</div>
                             </div>
+                            <input type="file" id="dish_image_file" accept="image/*" style="display: none;" onchange="handleImageFileSelect(this)">
                             
                             <!-- Text Input for URL -->
                             <div id="image_url_container" style="display: none;">
                                 <input type="text" id="menu_image_url" class="form-control bg-dark text-white border-secondary" placeholder="https://example.com/image.jpg" oninput="updateImagePreview(this.value)">
+                                <div id="image_url_warning" class="text-danger small mt-1" style="display: none;"><i class="fas fa-exclamation-circle me-1"></i>Unable to load image preview. Please make sure this is a direct image link or Google Drive file sharing link (folders are not supported).</div>
                             </div>
                             
                             <!-- Dynamic Preview Thumbnail -->
@@ -5151,25 +5440,43 @@ html:not(.light-mode) .form-select:focus{
             const previewWrapper = document.getElementById('image_preview_wrapper');
             const previewImg = document.getElementById('dish_image_preview');
             const dropzone = document.getElementById('image_upload_container');
+            const warningEl = document.getElementById('image_url_warning');
             
+            if (warningEl) warningEl.style.display = 'none';
+
             if (!url) {
                 if (previewWrapper) previewWrapper.style.display = 'none';
                 return;
             }
             
             let displayUrl = url;
-            if (url.startsWith('uploads/')) {
-                displayUrl = '../' + url;
+            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                // Pipe external links through local proxy to bypass browser-side CORS and referrer policies
+                displayUrl = 'dashboardtest.php?action=proxy_image&url=' + encodeURIComponent(url);
+            } else if (url && !url.startsWith('//')) {
+                if (url.startsWith('uploads/')) {
+                    displayUrl = '../' + url;
+                } else {
+                    displayUrl = '../uploads/' + url;
+                }
             }
 
-            if (previewImg) previewImg.src = displayUrl;
+            if (previewImg) {
+                previewImg.onload = function() {
+                    if (warningEl) warningEl.style.display = 'none';
+                };
+                previewImg.onerror = function() {
+                    if (warningEl) warningEl.style.display = 'block';
+                };
+                previewImg.src = displayUrl;
+            }
             if (previewWrapper) previewWrapper.style.display = 'block';
             
             if (dropzone) {
                 dropzone.innerHTML = `
                     <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
                     <div class="dropzone-text">Drag & drop image here, or <span>browse</span></div>
-                    <div class="dropzone-subtext">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</div>
+                    <div class="dropzone-subtext">Supports all image formats (Max 20MB)</div>
                 `;
             }
         }
@@ -5206,15 +5513,70 @@ html:not(.light-mode) .form-select:focus{
 
             dropzone.addEventListener('drop', (e) => {
                 const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files.length > 0) {
+                
+                // 1. Handle dragged files
+                if (dt.files && dt.files.length > 0) {
                     const fileInput = document.getElementById('dish_image_file');
                     if (fileInput) {
-                        fileInput.files = files;
+                        fileInput.files = dt.files;
                         handleImageFileSelect(fileInput);
+                    }
+                } 
+                // 2. Handle dragged URLs from other tabs
+                else {
+                    const url = dt.getData('text/uri-list') || dt.getData('text/plain');
+                    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/'))) {
+                        const urlInput = document.getElementById('menu_image_url');
+                        if (urlInput) {
+                            urlInput.value = url;
+                            switchImageSource('url');
+                            updateImagePreview(url);
+                        }
                     }
                 }
             }, false);
+
+            // 3. Handle Clipboard Paste (Ctrl+V) anywhere inside the CRUD Modal
+            const modalEl = document.getElementById('menuCrudModal');
+            if (modalEl) {
+                modalEl.addEventListener('paste', (e) => {
+                    // Check if current focused element is a text input/textarea (like Name or Description)
+                    // and allow default paste behavior for those fields
+                    const activeEl = document.activeElement;
+                    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                        if (activeEl.id !== 'menu_image_url') {
+                            return; // Let standard text inputs handle text paste normally
+                        }
+                    }
+
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    if (!clipboardData) return;
+
+                    // A. Check for pasted files (e.g. screenshots, copied local image file)
+                    if (clipboardData.files && clipboardData.files.length > 0) {
+                        e.preventDefault();
+                        const fileInput = document.getElementById('dish_image_file');
+                        if (fileInput) {
+                            fileInput.files = clipboardData.files;
+                            switchImageSource('upload');
+                            handleImageFileSelect(fileInput);
+                        }
+                    } 
+                    // B. Check for pasted URLs/links
+                    else {
+                        const pastedText = clipboardData.getData('text').trim();
+                        if (pastedText && (pastedText.startsWith('http://') || pastedText.startsWith('https://') || pastedText.startsWith('data:image/'))) {
+                            e.preventDefault();
+                            const urlInput = document.getElementById('menu_image_url');
+                            if (urlInput) {
+                                urlInput.value = pastedText;
+                                switchImageSource('url');
+                                updateImagePreview(pastedText);
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function openAddMenuModal() {
@@ -5566,7 +5928,17 @@ html:not(.light-mode) .form-select:focus{
                 return;
             }
 
-            tbody.innerHTML = menu.map(dish => {
+             tbody.innerHTML = menu.map(dish => {
+                let imgSrc = dish.image_url || '';
+                if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
+                    if (imgSrc.startsWith('uploads/')) {
+                        imgSrc = '../' + imgSrc;
+                    } else {
+                        imgSrc = '../uploads/' + imgSrc;
+                    }
+                }
+                if (!imgSrc) imgSrc = '../uploads/default.jpg';
+
                 const vegBadge = dish.is_veg
                     ? '<span class="badge" style="background:#16a34a; color:#fff; font-size:0.7rem;">VEG</span>'
                     : '<span class="badge" style="background:#dc2626; color:#fff; font-size:0.7rem;">NON-VEG</span>';
@@ -5578,7 +5950,7 @@ html:not(.light-mode) .form-select:focus{
                     : '<span class="status-badge bg-danger text-white">Unavailable</span>';
 
                 return `<tr>
-                    <td><img src="${dish.image_url || ''}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
+                    <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
                     <td><strong>${dish.name}</strong> ${vegBadge}${bestBadge}</td>
                     <td class="text-uppercase"><small>${dish.category || '—'}</small></td>
                     <td class="text-gold">${fmtINR(dish.price)}</td>
