@@ -67,10 +67,19 @@ foreach ($order_items as $item) {
     $subtotal += floatval($item['price']) * intval($item['quantity']);
 }
 
-// Settings
-$gst_rate = 16;
-$packing_charge = 4.06;
-$delivery_charge = 40.00;
+// Load Settings
+$settings_file = __DIR__ . '/admintest/settings.json';
+$settings = [
+    'restaurant_name' => 'Medusa',
+    'gst_rate' => 18,
+    'packing_charge' => 0.00,
+    'opening_hours' => '11:00 AM - 11:00 PM'
+];
+if (file_exists($settings_file)) {
+    $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
+}
+$gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
+$packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
 
 $gst = $subtotal * ($gst_rate / 100);
 $delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $delivery_charge;
