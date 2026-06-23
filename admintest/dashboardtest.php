@@ -279,6 +279,11 @@ $settings = [
 if (file_exists($settings_file)) {
     $settings = array_merge($settings, json_decode(file_get_contents($settings_file), true) ?: []);
 }
+// Override with .env configurations
+$settings['restaurant_name'] = get_env_var('RESTAURANT_NAME', $settings['restaurant_name']);
+$settings['gst_rate'] = intval(get_env_var('GST_RATE', $settings['gst_rate']));
+$settings['opening_hours'] = get_env_var('OPENING_HOURS', $settings['opening_hours']);
+$settings['inactivity_months'] = intval(get_env_var('INACTIVITY_MONTHS', $settings['inactivity_months'] ?? 3));
 
 // 3. API Handlers
 if (isset($_REQUEST['action'])) {

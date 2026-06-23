@@ -63,6 +63,11 @@ $settings = [
 if (file_exists($settings_file)) {
     $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
 }
+// Override with .env configurations
+$settings['restaurant_name'] = get_env_var('RESTAURANT_NAME', $settings['restaurant_name']);
+$settings['gst_rate'] = intval(get_env_var('GST_RATE', $settings['gst_rate']));
+$settings['opening_hours'] = get_env_var('OPENING_HOURS', $settings['opening_hours']);
+
 $gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
 $packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
 

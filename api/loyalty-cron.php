@@ -89,6 +89,8 @@ $rules = [
 if (file_exists($settings_file)) {
     $rules = array_merge($rules, json_decode(file_get_contents($settings_file), true) ?: []);
 }
+// Override with .env configurations
+$rules['inactivity_months'] = intval(get_env_var('INACTIVITY_MONTHS', $rules['inactivity_months'] ?? 3));
 
 $inactivity_months = intval($rules['inactivity_months']);
 $penalty_percent   = floatval($rules['inactivity_deduction_percent']);
