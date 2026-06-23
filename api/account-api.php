@@ -24,13 +24,16 @@ try {
     // ── 1. UPDATE PROFILE ──
     if ($action === 'update_profile') {
         $name = trim($data['name'] ?? '');
+        $dob = trim($data['dob'] ?? '');
+        $ambience = trim($data['preferred_ambience'] ?? '');
+
         if (empty($name)) {
             echo json_encode(['success' => false, 'message' => 'Full Name is required']);
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE users SET full_name = ? WHERE id = ?");
-        $stmt->execute([$name, $user_id]);
+        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, dob = ?, preferred_ambience = ? WHERE id = ?");
+        $stmt->execute([$name, $dob ?: null, $ambience, $user_id]);
         $_SESSION['user_name'] = $name;
 
         echo json_encode(['success' => true, 'message' => 'Profile name updated successfully']);
@@ -126,7 +129,7 @@ try {
         }
 
         // Check duplicate active phone
-        $check = $pdo->prepare("SELECT id FROM users WHERE phone = ? AND id != ? AND is_active = 1");
+        $check = $pdo->prepare("SELECT id FROM users WHERE phone = ? AND id != ?");
         $check->execute([$new_phone, $user_id]);
         if ($check->fetch()) {
             echo json_encode(['success' => false, 'message' => 'Mobile number is already registered to another active account']);
@@ -430,6 +433,62 @@ try {
         session_destroy();
 
         echo json_encode(['success' => true, 'message' => 'Your account has been deleted permanently. We are sad to see you go!']);
+        exit;
+    }
+
+    // ── 14. TOGGLE SOCIAL ACCOUNT ──
+    if ($action === 'toggle_social_account') {
+        $provider = $data['provider'] ?? '';
+        
+        if (!in_array($provider, ['google', 'facebook', 'apple'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid provider']);
+            exit;
+        }
+
+        $col = $provider . '_id';
+        
+        // Ensure columns exist just in case
+        try {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `google_id` VARCHAR(100) NULL DEFAULT NULL");
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `facebook_id` VARCHAR(100) NULL DEFAULT NULL");
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `apple_id` VARCHAR(100) NULL DEFAULT NULL");
+        } catch (Exception $ex) {}
+        
+        $stmt = $pdo->prepare("SELECT $col FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $val = $stmt->fetchColumn();
+        
+        if ($val) {
+            // Disconnect
+            $pdo->prepare("UPDATE users SET $col = NULL WHERE id = ?")->execute([$user_id]);
+            echo json_encode(['success' => true, 'status' => 'disconnected', 'message' => ucfirst($provider) . ' account disconnected.']);
+        } else {
+            // Connect (Mock ID)
+            $mock_id = $provider . '_' . bin2hex(random_bytes(8));
+            $pdo->prepare("UPDATE users SET $col = ? WHERE id = ?")->execute([$mock_id, $user_id]);
+            echo json_encode(['success' => true, 'status' => 'connected', 'message' => ucfirst($provider) . ' account successfully connected!']);
+        }
+        exit;
+    }
+
+    // ── 15. SAVE RECOVERY EMAIL ──
+    if ($action === 'save_recovery_email') {
+        $recovery_email = trim($data['recovery_email'] ?? '');
+        
+        if (empty($recovery_email) || !filter_var($recovery_email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'message' => 'Please enter a valid email address']);
+            exit;
+        }
+
+        // Ensure column exists
+        try {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `recovery_email` VARCHAR(255) NULL DEFAULT NULL");
+        } catch (Exception $ex) {}
+        
+        $stmt = $pdo->prepare("UPDATE users SET recovery_email = ? WHERE id = ?");
+        $stmt->execute([$recovery_email, $user_id]);
+        
+        echo json_encode(['success' => true, 'message' => 'Recovery email saved successfully!']);
         exit;
     }
 

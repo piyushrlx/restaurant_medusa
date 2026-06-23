@@ -34,12 +34,6 @@ try {
         exit;
     }
 
-    if ($user['is_active']) {
-        unset($_SESSION['otp_verify_user_id']);
-        header('Location: login.html');
-        exit;
-    }
-
     $isEmailVerified = (int)$user['is_email_verified'] === 1;
     $isPhoneVerified = (int)$user['is_phone_verified'] === 1;
 
@@ -95,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
 
                 // Check if fully verified
                 if ($isEmailVerified && $isPhoneVerified) {
-                    $activate = $pdo->prepare("UPDATE users SET is_active = 1, email_otp = NULL, phone_otp = NULL, otp_expires_at = NULL WHERE id = ?");
+                    $activate = $pdo->prepare("UPDATE users SET email_otp = NULL, phone_otp = NULL, otp_expires_at = NULL WHERE id = ?");
                     $activate->execute([$userId]);
 
                     // Send welcome and account confirmation emails
@@ -187,40 +181,13 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
         .nav-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
             text-decoration: none;
-            color: var(--text-light);
         }
 
-        .logo-img {
-            width: 42px;
-            height: 42px;
+        .nav-logo img {
+            max-height: 70px;
+            width: auto;
             object-fit: contain;
-            border-radius: 50%;
-            border: 1px solid var(--gold);
-            padding: 1px;
-            background: rgba(0,0,0,0.3);
-            transition: var(--transition);
-        }
-
-        .nav-logo:hover .logo-img {
-            transform: scale(1.05);
-        }
-
-        .nav-brand {
-            font-family: var(--serif);
-            font-size: 1.25rem;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-
-        .nav-brand small {
-            font-size: 0.68rem;
-            letter-spacing: 1px;
-            color: var(--gold);
-            font-weight: 400;
         }
 
         .nav-links {
@@ -656,8 +623,7 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
     <nav class="top-nav">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">
-                <img class="logo-img" src="assets/images/medusaa 2 ( only logo).png" alt="La-Medusaa Logo" onerror="this.src='assets/images/versace_logo.png'">
-                <span class="nav-brand">La-Medusaa<br><small>Bar & Lounge</small></span>
+                <img src="assets/images/logo.png" alt="La-Medusaa Logo">
             </a>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">Home</a>
@@ -791,8 +757,7 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
         <div class="footer-container">
             <div class="footer-col footer-about">
                 <a href="index.html" class="footer-logo">
-                    <img class="logo-img" src="assets/images/medusaa 2 ( only logo).png" alt="La-Medusaa Logo" onerror="this.src='assets/images/versace_logo.png'">
-                    <span class="footer-brand">La-Medusaa<br><small>Bar & Lounge</small></span>
+                    <img src="assets/images/logo.png" alt="La-Medusaa Logo" style="max-height: 90px; width: auto;">
                 </a>
                 <p class="footer-desc">Sahibzada Ajit Singh Nagar's premier luxury dining experience.</p>
             </div>

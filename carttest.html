@@ -323,14 +323,14 @@
 
         async function loadSettings() {
             try {
-                const response = await fetch('admintest/settings.json');
+                const response = await fetch('api/get-settings.php');
                 if (response.ok) {
                     const settings = await response.json();
                     GST_RATE = (settings.gst_rate !== undefined) ? parseInt(settings.gst_rate) : 18;
                     PACKING_CHARGE = (settings.packing_charge !== undefined) ? parseFloat(settings.packing_charge) : 0.00;
                 }
             } catch (e) {
-                console.warn('Failed to load settings from settings.json, using defaults.', e);
+                console.warn('Failed to load settings from get-settings.php, using defaults.', e);
             }
         }
 

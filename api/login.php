@@ -18,7 +18,7 @@ if (empty($login_id) || empty($password)) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, full_name, email, password, role, is_active FROM users WHERE email = ? OR phone = ?");
+    $stmt = $pdo->prepare("SELECT id, full_name, email, password, role FROM users WHERE email = ? OR phone = ?");
     $stmt->execute([$login_id, $login_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -27,18 +27,7 @@ try {
         exit;
     }
 
-    if (!(int)$user['is_active']) {
-        $_SESSION['otp_verify_user_id'] = $user['id'];
-        if (empty($_SESSION['last_otp_sent_time'])) {
-            $_SESSION['last_otp_sent_time'] = time() - 60;
-        }
-        echo json_encode([
-            'success' => false, 
-            'inactive' => true, 
-            'message' => 'Your account is inactive. Please verify your OTP codes first.'
-        ]);
-        exit;
-    }
+
     
     // Clear existing session variables and regenerate ID to prevent contamination/session fixation
     $_SESSION = array();

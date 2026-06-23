@@ -12,7 +12,12 @@ if (!function_exists('get_env_var')) {
                     if (strpos($line, '#') === 0 || empty($line)) continue;
                     $parts = explode('=', $line, 2);
                     if (count($parts) === 2) {
-                        $env[trim($parts[0])] = trim($parts[1]);
+                        $val = trim($parts[1]);
+                        // Strip surrounding single/double quotes
+                        if (preg_match('/^"([^"]*)"$/', $val, $m) || preg_match('/^\'([^\']*)\'$/', $val, $m)) {
+                            $val = $m[1];
+                        }
+                        $env[trim($parts[0])] = $val;
                     }
                 }
             }
@@ -59,7 +64,7 @@ function requireLogin() {
             exit;
         } else {
             // Redirect HTML pages to login
-            header('Location: ../login.html');
+            header('Location: login.html');
             exit;
         }
     }
@@ -90,7 +95,7 @@ function requireLogin() {
                     echo json_encode(['success' => false, 'message' => 'Session expired or logged out from other devices. Please login again.']);
                     exit;
                 } else {
-                    header('Location: ../login.html');
+                    header('Location: login.html');
                     exit;
                 }
             }

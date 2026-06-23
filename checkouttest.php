@@ -60,6 +60,11 @@ $settings = [
 if (file_exists($settings_file)) {
     $settings = json_decode(file_get_contents($settings_file), true) ?: $settings;
 }
+// Override with .env configurations
+$settings['restaurant_name'] = get_env_var('RESTAURANT_NAME', $settings['restaurant_name']);
+$settings['gst_rate'] = intval(get_env_var('GST_RATE', $settings['gst_rate']));
+$settings['opening_hours'] = get_env_var('OPENING_HOURS', $settings['opening_hours']);
+
 $gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
 $packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
 
@@ -787,43 +792,676 @@ $csrf_token = "dummy_test_token";
             0%, 100% { transform: scale(0.85); opacity: 0.5; }
             50% { transform: scale(1.15); opacity: 0.8; }
         }
-    </style>
+    
+        /* Redesign Styles */
+        body {
+            background-color: #0b1110 !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .navbar-medusa-checkout {
+            background-color: #0b1110;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .navbar-medusa-checkout .nav-link {
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 1rem;
+        }
+        .navbar-medusa-checkout .nav-link:hover, .navbar-medusa-checkout .nav-link.active {
+            color: var(--gold);
+        }
+
+        .checkout-page-title {
+            text-align: center;
+            margin: 3rem 0 1rem 0;
+        }
+        .checkout-page-title h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .checkout-page-title p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+        }
+
+        .checkout-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0 4rem 0;
+            gap: 15px;
+        }
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #151e1b;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .step-item.completed .step-circle {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .step-item.active .step-circle {
+            background: #5A1827;
+            border-color: #5A1827;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(90, 24, 39, 0.5);
+        }
+        .step-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+        }
+        .step-item.completed .step-label {
+            color: var(--gold);
+        }
+        .step-item.active .step-label {
+            color: #ffffff;
+        }
+        .step-connector {
+            width: 80px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            margin-bottom: 25px;
+        }
+        .step-connector.completed {
+            background: var(--gold);
+        }
+        .step-connector.active {
+            background: linear-gradient(90deg, var(--gold) 50%, rgba(255,255,255,0.1) 50%);
+        }
+
+        .checkout-layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-bottom: 120px;
+        }
+
+        .medusa-card {
+            background-color: #0f1714;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .medusa-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+        .medusa-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #5A1827;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .medusa-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .medusa-card-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin: 0;
+        }
+
+        .medusa-input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .medusa-input-group input, .medusa-input-group select {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 1.5rem 1rem 0.5rem 1rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .medusa-input-group input:focus, .medusa-input-group select:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(223, 186, 134, 0.3);
+        }
+        .medusa-input-group label {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+        .medusa-input-group input:focus ~ label,
+        .medusa-input-group input:not(:placeholder-shown) ~ label,
+        .medusa-input-group select:focus ~ label,
+        .medusa-input-group select:not([value=""]) ~ label {
+            top: 0.8rem;
+            font-size: 0.7rem;
+            color: var(--gold);
+        }
+        
+        .medusa-square-btn {
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(223, 186, 134, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0;
+            background: rgba(0,0,0,0.2);
+        }
+        .medusa-square-btn:hover {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.1);
+        }
+
+        .selectable-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media(max-width: 768px){
+            .selectable-boxes { grid-template-columns: 1fr; }
+        }
+        .option-box {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .option-box:hover {
+            border-color: rgba(223, 186, 134, 0.5);
+            background: rgba(255,255,255,0.02);
+        }
+        .option-box.active {
+            border-color: var(--gold);
+            background: rgba(223, 186, 134, 0.05);
+        }
+        .option-box-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .option-radio {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            margin: 0;
+            position: relative;
+            cursor: pointer;
+        }
+        .option-box.active .option-radio {
+            border-color: var(--gold);
+        }
+        .option-box.active .option-radio::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .option-title {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .option-desc {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+            padding-left: 28px;
+            margin-bottom: 5px;
+        }
+        .option-meta {
+            padding-left: 28px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .text-red { color: #dc3545; }
+        .text-green { color: #2ecc71; }
+        
+        .option-icon-right {
+            position: absolute;
+            right: 1.2rem;
+            top: 1.2rem;
+            color: rgba(255,255,255,0.2);
+            font-size: 1.2rem;
+        }
+
+        .secure-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+        }
+        .secure-note i {
+            color: var(--gold);
+        }
+
+        .summary-card {
+            background-color: #0b1a13;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 2rem;
+        }
+        .summary-header {
+            background-color: #3b0d19;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .summary-header-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .summary-header i {
+            color: #b54256;
+            font-size: 1.4rem;
+            opacity: 0.9;
+        }
+        .summary-header h3 {
+            color: #f3efe6;
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+        .summary-body {
+            padding: 1.5rem;
+        }
+        .summary-order-id {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .summary-order-id span {
+            color: #d8c8a7;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .summary-items-badge {
+            border: 1px solid #d8c8a7;
+            color: #d8c8a7 !important;
+            font-size: 0.75rem !important;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .summary-item-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .summary-item-img-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: rgba(223, 186, 134, 0.1);
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid rgba(223, 186, 134, 0.2);
+        }
+        .summary-item-details {
+            flex-grow: 1;
+        }
+        .summary-item-name {
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .summary-item-qty {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
+        .summary-item-price {
+            color: #ffffff;
+            font-size: 0.95rem;
+        }
+
+        .summary-totals {
+            margin-top: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .summary-row.grand-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+            font-size: 1.4rem;
+            font-family: 'Playfair Display', serif;
+        }
+        .summary-row.grand-total .lbl {
+            color: var(--gold);
+        }
+        .summary-row.grand-total .val {
+            color: var(--gold);
+            font-weight: 500;
+        }
+        .summary-row .lbl {
+            color: rgba(255,255,255,0.6);
+        }
+        .summary-row .val {
+            color: rgba(255,255,255,0.8);
+            font-weight: 400;
+        }
+        
+        .coupon-container {
+            margin-top: 1.5rem;
+            border: 1px dashed rgba(223, 186, 134, 0.4);
+            border-radius: 8px;
+            padding: 1.2rem;
+            background-color: transparent;
+        }
+        .coupon-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        .coupon-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        .coupon-input-wrapper input {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ffffff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .coupon-input-wrapper button {
+            background: #3b0d19;
+            color: #ffffff;
+            border: none;
+            padding: 0 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .coupon-input-wrapper button:hover {
+            background: #7E2638;
+        }
+
+        .eta-callout {
+            background: #0f1714;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .eta-icon {
+            color: var(--gold);
+            font-size: 2rem;
+        }
+        .eta-text {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
+        .eta-text strong {
+            display: block;
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-family: 'Playfair Display', serif;
+            margin: 2px 0;
+        }
+
+        .sticky-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #0b1110;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 1.5rem 0;
+            z-index: 100;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+        }
+        .sticky-action-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+        .btn-back-cart {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-back-cart:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .secure-badge {
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .btn-proceed {
+            background: #5A1827;
+            color: #ffffff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-proceed:hover {
+            background: #7E2638;
+            transform: translateY(-2px);
+        }
+
+        /* Map Modal Styles */
+        .map-modal {
+            display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+        }
+        .map-modal-content {
+            background-color: #0f1714; border: 1px solid var(--gold); border-radius: 12px;
+            margin: 5% auto; padding: 20px; width: 90%; max-width: 600px;
+            position: relative; box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+        }
+        #leafletMap { height: 400px; width: 100%; border-radius: 8px; margin-bottom: 15px; }
+        .map-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .map-modal-title { color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.5rem; margin: 0; }
+        .map-modal-close { color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none; }
+        .btn-confirm-map { background: var(--gold); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+
+</style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_env_var('GOOGLE_MAPS_API_KEY', ''); ?>&libraries=places"></script>
 </head>
 <body>
-    <nav class="navbar navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="menutest.html" style="display: flex; align-items: center; gap: 8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-                Medusa
+    
+    <nav class="navbar-medusa-checkout">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="menutest.html" class="text-decoration-none d-flex align-items-center gap-3">
+                <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="width: 40px; filter: brightness(1.2);">
+                <div>
+                    <div style="color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.2rem; line-height: 1;">Medusa</div>
+                    <div style="color: rgba(223, 186, 134, 0.7); font-size: 0.5rem; letter-spacing: 2px;">RESTAURANT, BAR & LOUNGE</div>
+                </div>
             </a>
-            <a href="carttest.html" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Back to Cart</a>
+            <div class="d-none d-md-flex align-items-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="menutest.html" class="nav-link">Menu</a>
+                <a href="book-table-test.html" class="nav-link">Book Table</a>
+                <a href="about.html" class="nav-link">About Us</a>
+                <a href="career.html" class="nav-link">Careers</a>
+                <a href="my-orders.php" class="nav-link active" style="color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 4px;">My Orders</a>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="profile.php#pill-notifications" class="text-white text-decoration-none position-relative" title="Notifications">
+                    <i class="fa-regular fa-bell" style="font-size: 1.2rem;"></i>
+                </a>
+                <a href="carttest.html" class="text-white text-decoration-none position-relative ms-2" title="Cart">
+                    <i class="fa-solid fa-cart-shopping" style="font-size: 1.2rem;"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem;" id="cart-nav-count">0</span>
+                </a>
+                <a href="profile.php" class="text-decoration-none ms-2" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; color: var(--gold); font-weight: 600; font-size: 0.85rem;">
+                    <?php echo substr($user_details['first_name'] ?: 'U', 0, 1); ?>
+                </a>
+            </div>
         </div>
     </nav>
 
-    <div class="checkout-hero">
-        <div class="container">
+    <form id="orderForm">
+        <input type="hidden" id="name" value="">
+        <input type="hidden" id="address" value="">
+        <input type="hidden" id="csrf_token" value="<?php echo $csrf_token; ?>">
+
+        <div class="checkout-page-title">
             <h1>Checkout</h1>
-            <p>Medusa Premium Theme</p>
+            <p>Almost there! Please review your order<br>and complete the payment.</p>
         </div>
-    </div>
 
-    <div class="container my-5 fade-up">
-        <form id="orderForm">
-            <!-- Hidden inputs for legacy API compatibility -->
-            <input type="hidden" id="name" value="">
-            <input type="hidden" id="address" value="">
-            <input type="hidden" id="csrf_token" value="<?php echo $csrf_token; ?>">
+        <div class="checkout-steps">
+            <div class="step-item completed">
+                <div class="step-circle"><i class="fas fa-check"></i></div>
+                <div class="step-label">Cart</div>
+            </div>
+            <div class="step-connector completed"></div>
+            <div class="step-item active">
+                <div class="step-circle">2</div>
+                <div class="step-label">Checkout</div>
+            </div>
+            <div class="step-connector active"></div>
+            <div class="step-item">
+                <div class="step-circle">3</div>
+                <div class="step-label">Payment</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item">
+                <div class="step-circle">4</div>
+                <div class="step-label">Confirmation</div>
+            </div>
+        </div>
 
-            <div class="row g-5">
-                <!-- Left Column: Billing Details Form -->
+        <div class="container checkout-layout">
+            <div class="row g-4">
+                
                 <div class="col-lg-7">
-                    <div class="checkout-form-card">
-                        <h2 class="checkout-section-title">Billing Details</h2>
-                        
-                        <?php if (!empty($_SESSION['user_id']) && !empty($saved_addresses)): ?>
-                            <div class="mb-4" id="saved-addresses-section">
-                                <label class="form-label-checkout"><i class="fas fa-address-book text-gold me-2"></i>Saved Addresses</label>
-                                <select id="saved_address_id" class="form-control-checkout">
+                    <div class="medusa-card">
+                        <div class="medusa-card-header">
+                            <div class="medusa-card-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h2 class="medusa-card-title">Delivery Details</h2>
+                                <p class="medusa-card-subtitle">Where should we deliver your order?</p>
+                            </div>
+                        </div>
+
+                        <?php if (!empty($_SESSION['user_id'])): ?>
+                            <div class="medusa-input-group mb-4">
+                                <select id="saved_address_id">
                                     <option value="">-- Use a new address --</option>
                                     <?php foreach ($saved_addresses as $addr): ?>
                                         <option value="<?php echo $addr['id']; ?>" 
@@ -838,243 +1476,253 @@ $csrf_token = "dummy_test_token";
                                                 data-state="<?php echo htmlspecialchars($addr['state']); ?>"
                                                 data-zip="<?php echo htmlspecialchars($addr['zip']); ?>"
                                                 <?php echo $addr['is_default'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($addr['first_name'] . ' ' . $addr['last_name'] . ' - ' . $addr['street'] . ', ' . $addr['city'] . ' (' . $addr['zip'] . ')'); ?>
+                                            <?php echo htmlspecialchars($addr['street'] . ', ' . $addr['city']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <label>Saved Addresses</label>
                             </div>
                         <?php endif; ?>
-                        
+
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="billing_first_name" class="form-label-checkout">First Name<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_first_name" class="form-control-checkout" placeholder="First Name" value="<?php echo htmlspecialchars($user_details['first_name']); ?>" required>
+                            <div class="col-md-4">
+                                <div class="medusa-input-group mb-0">
+                                    <input type="text" id="billing_first_name" placeholder=" " value="<?php echo htmlspecialchars($user_details['first_name'] . ' ' . $user_details['last_name']); ?>" required>
+                                    <label>Full Name*</label>
+                                    <input type="hidden" id="billing_last_name" value="">
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="billing_last_name" class="form-label-checkout">Last Name<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_last_name" class="form-control-checkout" placeholder="Last Name" value="<?php echo htmlspecialchars($user_details['last_name']); ?>" required>
+                            <div class="col-md-4">
+                                <div class="medusa-input-group mb-0">
+                                    <input type="tel" id="billing_phone" placeholder=" " value="<?php echo htmlspecialchars($user_details['phone']); ?>" required>
+                                    <label>Phone Number*</label>
+                                </div>
                             </div>
-
-                            <div class="col-12">
-                                <label for="billing_country" class="form-label-checkout">Country / Region<span class="required-asterisk">*</span></label>
-                                <select id="billing_country" class="form-control-checkout" required>
-                                    <option value="India" selected>India</option>
-                                    <option value="United States (US)">United States (US)</option>
-                                    <option value="United Kingdom (UK)">United Kingdom (UK)</option>
-                                    <option value="Canada">Canada</option>
-                                    <option value="Australia">Australia</option>
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_street" class="form-label-checkout">Street address<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_street" class="form-control-checkout mb-2" placeholder="House number and street name" value="" required>
-                                <input type="text" id="billing_apartment" class="form-control-checkout" placeholder="Apartment, suite, unit, etc. (optional)" value="">
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_city" class="form-label-checkout">Town / City<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_city" class="form-control-checkout" placeholder="Town / City" value="" required>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_state" class="form-label-checkout">State<span class="required-asterisk">*</span></label>
-                                <select id="billing_state" class="form-control-checkout" required>
-                                    <!-- Populated dynamically via JS -->
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_zip" class="form-label-checkout">ZIP Code<span class="required-asterisk">*</span></label>
-                                <input type="text" id="billing_zip" class="form-control-checkout" placeholder="ZIP Code" value="" required>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_phone" class="form-label-checkout">Phone<span class="required-asterisk">*</span></label>
-                                <input type="tel" id="billing_phone" class="form-control-checkout" placeholder="Phone" value="<?php echo htmlspecialchars($user_details['phone']); ?>" required pattern="[0-9]{10}" maxlength="10" minlength="10" title="Phone number must be exactly 10 digits">
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_email" class="form-label-checkout">Email Address<span class="required-asterisk">*</span></label>
-                                <input type="email" id="billing_email" class="form-control-checkout" placeholder="Email Address" value="<?php echo htmlspecialchars($user_details['email']); ?>" required>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="billing_message" class="form-label-checkout">Order Notes / Message (Optional)</label>
-                                <textarea id="billing_message" class="form-control-checkout" rows="4" placeholder="Notes about your order, e.g. special notes for delivery."></textarea>
+                            <div class="col-md-4">
+                                <div class="medusa-input-group mb-0">
+                                    <input type="email" id="billing_email" placeholder=" " value="<?php echo htmlspecialchars($user_details['email']); ?>" required>
+                                    <label>Email Address*</label>
+                                </div>
                             </div>
                             
+                            <div class="col-12 mt-3 d-flex gap-2">
+                                <div class="medusa-input-group mb-0 flex-grow-1">
+                                    <input type="text" id="billing_street" placeholder=" " required>
+                                    <label>Delivery Address*</label>
+                                </div>
+                                <div class="medusa-square-btn" id="btnChooseFromMap">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <div class="medusa-input-group mb-0">
+                                    <input type="text" id="billing_apartment" placeholder=" ">
+                                    <label>Apartment, suite, etc. (optional)</label>
+                                </div>
+                            </div>
                             <?php if (!empty($_SESSION['user_id'])): ?>
-                                <div class="col-12 mt-3">
-                                    <div class="form-check custom-checkout-check" style="display: flex; align-items: center; gap: 10px; padding-left: 0;">
-                                        <input class="form-check-input" type="checkbox" id="save_address" name="save_address" checked style="width: 18px; height: 18px; border: 1.5px solid rgba(255, 255, 255, 0.3); border-radius: 4px; background-color: rgba(0, 0, 0, 0.3); cursor: pointer; accent-color: var(--gold); margin: 0;">
-                                        <label class="form-check-label" for="save_address" style="color: var(--gray); font-size: 0.92rem; cursor: pointer; user-select: none;">
-                                            Save/update this address in my account for future use
-                                        </label>
-                                    </div>
+                            <div class="col-12 mt-2">
+                                <div class="form-check" style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                                    <input class="form-check-input" type="checkbox" id="save_address" value="1" style="background-color: transparent; border-color: rgba(255,255,255,0.2);">
+                                    <label class="form-check-label" for="save_address">
+                                        Save this address for future use
+                                    </label>
                                 </div>
+                            </div>
                             <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Sticky Order & Payment Sidebar -->
-                <div class="col-lg-5">
-                    <div class="sticky-sidebar">
-                        <!-- Your Order Box -->
-                        <div class="order-summary-box">
-                            <h2 class="checkout-section-title">Your Order</h2>
-                            <table class="checkout-table">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th class="header-total">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="order-items-list">
-                                    <!-- Dynamic order items will be inserted here -->
-                                </tbody>
-                            </table>
-
-                            <div class="mt-3">
-                                <div class="summary-totals-row">
-                                    <span>Subtotal</span>
-                                    <span id="checkout-subtotal">₹0.00</span>
+                            <div class="col-12 mt-3">
+                                <div class="medusa-input-group mb-0">
+                                    <input type="text" id="billing_message" placeholder=" ">
+                                    <label>Order Instructions (optional)</label>
                                 </div>
-                                <div class="summary-totals-row">
-                                    <span>GST (<?php echo $gst_rate; ?>%)</span>
-                                    <span id="checkout-gst">₹0.00</span>
-                                </div>
-                                <div class="summary-totals-row">
-                                    <span>Packing Charges</span>
-                                    <span id="checkout-packing">₹<?php echo number_format($packing_charge, 2); ?></span>
-                                </div>
-                                <div class="summary-totals-row">
-                                    <span>Delivery Charge</span>
-                                    <span id="checkout-delivery">₹40.00</span>
-                                </div>
-                                <div class="summary-totals-row" id="coupon-discount-row" style="display: none; color: #dfba86;">
-                                    <span>Coupon Discount (<span id="coupon-percent-label">0</span>%)</span>
-                                    <span id="checkout-discount">-₹0.00</span>
-                                </div>
-                                <div class="summary-totals-row" id="tier-discount-row" style="display: none; color: #dfba86;">
-                                    <span>Tier Discount (<span id="tier-name-label">Silver</span> <span id="tier-percent-label">10</span>%)</span>
-                                    <span id="checkout-tier-discount">-₹0.00</span>
-                                </div>
-                                <div class="summary-totals-row" id="points-discount-row" style="display: none; color: #dfba86;">
-                                    <span>Points Redeemed (<span id="redeemed-points-label">0</span> pts)</span>
-                                    <span id="checkout-points-discount">-₹0.00</span>
-                                </div>
-                                <div class="summary-totals-row grand-total">
-                                    <span>Total</span>
-                                    <span id="checkout-total">₹0.00</span>
-                                </div>
-                                <div class="mt-2 text-end text-success small" id="points-earned-tracker" style="display: none; font-weight: 600;">
-                                    <i class="fa-solid fa-gift"></i> You will earn <span id="earned-points-value">0</span> reward points!
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Coupon Code Toggle Box -->
-                        <div class="coupon-toggle-box">
-                            Have a coupon? <span class="coupon-link" id="couponToggle">Click here to enter your coupon code</span>
-                            <div class="coupon-input-group" id="couponInputGroup">
-                                <input type="text" id="couponCodeInput" class="form-control-checkout" placeholder="Coupon Code">
-                                <button type="button" class="btn-premium" style="padding: 0 20px; font-size: 0.9rem;" id="applyCouponBtn">Apply</button>
-                            </div>
-                        </div>
-
-                        <!-- Loyalty Points Redemption Box -->
-                        <?php if (!empty($_SESSION['user_id']) && $user_points_balance > 0): ?>
-                        <div class="coupon-toggle-box" style="margin-top: 1rem;">
-                            <i class="fa-solid fa-gem text-gold me-2"></i> You have <strong><?php echo $user_points_balance; ?></strong> reward points (Value: ₹<?php echo $user_points_balance; ?>)
-                            <div class="form-check custom-checkout-check d-flex justify-content-center align-items-center gap-2 mt-2">
-                                <input class="form-check-input" type="checkbox" id="redeem_loyalty_points" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--gold);">
-                                <label class="form-check-label text-white-50" for="redeem_loyalty_points" style="cursor: pointer; user-select: none;">
-                                    Redeem all reward points for ₹<?php echo $user_points_balance; ?> discount
-                                </label>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- Payment & Submission Box -->
-                        <div class="payment-box">
-                            <div class="payment-method-title">
-                                <i class="fas fa-wallet"></i> Payment Methods
                             </div>
                             
-                            <div class="payment-options-list">
-                                <!-- Google Pay -->
-                                <div class="payment-option-item active" data-target="gpay-panel">
-                                    <input type="radio" name="payment_method" value="gpay" id="payment_gpay" class="payment-option-radio" checked>
-                                    <div class="payment-option-content">
-                                        <label for="payment_gpay" class="payment-option-text" style="cursor: pointer;">Google Pay</label>
-                                        <div class="payment-option-icons">
-                                            <i class="fab fa-google-pay" style="font-size: 1.8rem; color: #ffffff;"></i>
-                                        </div>
-                                    </div>
+                            <input type="hidden" id="billing_city" value="Kolkata">
+                            <input type="hidden" id="billing_state" value="West Bengal">
+                            <input type="hidden" id="billing_zip" value="700019">
+                            <input type="hidden" id="billing_country" value="India">
+                        </div>
+                    </div>
+
+                    <div class="medusa-card">
+                        <div class="medusa-card-header">
+                            <div class="medusa-card-icon" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div>
+                                <h2 class="medusa-card-title">Delivery Options</h2>
+                                <p class="medusa-card-subtitle">Choose how you want your order</p>
+                            </div>
+                        </div>
+
+                        <div class="selectable-boxes">
+                            <label class="option-box active" onclick="setDeliveryMode('home', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="delivery_option" value="home" class="option-radio" checked>
+                                    <span class="option-title">Home Delivery</span>
                                 </div>
-
-                                <!-- UPI -->
-                                <div class="payment-option-item" data-target="upi-panel">
-                                    <input type="radio" name="payment_method" value="upi" id="payment_upi" class="payment-option-radio">
-                                    <div class="payment-option-content">
-                                        <label for="payment_upi" class="payment-option-text" style="cursor: pointer;">UPI (PhonePe, Paytm, BHIM)</label>
-                                        <div class="payment-option-icons">
-                                            <i class="fas fa-mobile-alt"></i>
-                                        </div>
-                                    </div>
+                                <div class="option-desc">Delivered to your doorstep</div>
+                                <div class="option-meta text-red">20-25 mins</div>
+                            </label>
+                            <label class="option-box" onclick="setDeliveryMode('pickup', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="delivery_option" value="pickup" class="option-radio">
+                                    <span class="option-title">Self Pickup</span>
                                 </div>
+                                <div class="option-desc">Pick up your order from restaurant</div>
+                                <div class="option-meta text-green">15 mins</div>
+                            </label>
+                        </div>
+                    </div>
 
-                                <!-- Other Banking Options -->
-                                <div class="payment-option-item" data-target="banking-panel">
-                                    <input type="radio" name="payment_method" value="banking" id="payment_banking" class="payment-option-radio">
-                                    <div class="payment-option-content">
-                                        <label for="payment_banking" class="payment-option-text" style="cursor: pointer;">Cards & Net Banking</label>
-                                        <div class="payment-option-icons">
-                                            <i class="fas fa-credit-card"></i>
-                                        </div>
-                                    </div>
+                    <div class="medusa-card mb-0">
+                        <div class="medusa-card-header">
+                            <div class="medusa-card-icon" style="background: #5A1827; color: #ffffff;">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div>
+                                <h2 class="medusa-card-title">Payment Method</h2>
+                                <p class="medusa-card-subtitle">Select a payment method</p>
+                            </div>
+                        </div>
+
+                        <div class="selectable-boxes">
+                            <label class="option-box active" onclick="setPaymentMode('online', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="payment_method" value="online" class="option-radio" checked>
+                                    <span class="option-title text-gold">Online Payment</span>
                                 </div>
-                            </div>
-
-                            <!-- Payment Details Panels -->
-                            <div id="gpay-panel" class="payment-details-panel active">
-                                Pay instantly using your Google Pay app or registered Google Account. Safe and encrypted transaction.
-                            </div>
-                            <div id="upi-panel" class="payment-details-panel">
-                                Enter your UPI ID (e.g. username@upi) to receive a payment request on your phone.
-                                <div class="mt-2">
-                                    <input type="text" id="upi_id" class="form-control-checkout" placeholder="Enter UPI ID (e.g. user@bank)">
+                                <div class="option-desc" style="padding-left: 0;">Pay securely online</div>
+                            </label>
+                            <label class="option-box" onclick="setPaymentMode('upi', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="payment_method" value="upi" class="option-radio">
+                                    <span class="option-title">UPI</span>
                                 </div>
-                            </div>
-                            <div id="banking-panel" class="payment-details-panel">
-                                Pay securely using Credit/Debit Cards, Net Banking, or other supported wallets.
-                            </div>
+                                <div class="option-desc" style="padding-left: 0;">Google Pay, PhonePe</div>
+                                <i class="fas fa-qrcode option-icon-right"></i>
+                            </label>
+                            <label class="option-box" onclick="setPaymentMode('card', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="payment_method" value="card" class="option-radio">
+                                    <span class="option-title">Card</span>
+                                </div>
+                                <div class="option-desc" style="padding-left: 0;">Visa, MasterCard, Rupay</div>
+                                <i class="far fa-credit-card option-icon-right"></i>
+                            </label>
+                            <label class="option-box" onclick="setPaymentMode('cod', this)">
+                                <div class="option-box-header">
+                                    <input type="radio" name="payment_method" value="cod" class="option-radio">
+                                    <span class="option-title">Cash on Delivery</span>
+                                </div>
+                                <div class="option-desc" style="padding-left: 0;">Pay upon delivery</div>
+                                <i class="fas fa-wallet option-icon-right"></i>
+                            </label>
+                        </div>
 
-                            <p class="privacy-policy-text">
-                                Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.
-                            </p>
-
-                            <!-- Place Order Button -->
-                            <button type="submit" class="btn-place-order w-100">
-                                <span>Place order</span>
-                            </button>
-
-                            <!-- Center-aligned Modify Order -->
-                            <div class="modify-order-container">
-                                <a href="carttest.html" class="modify-order-link">
-                                    <i class="fas fa-edit"></i> Modify Order
-                                </a>
-                            </div>
+                        <div class="secure-note">
+                            <i class="fas fa-lock"></i> Your payment information is secure and encrypted.
                         </div>
                     </div>
                 </div>
+
+                <div class="col-lg-5">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <div class="summary-header-top">
+                                <i class="fas fa-shopping-bag"></i>
+                                <h3>Order Summary</h3>
+                            </div>
+                            <div class="summary-order-id">
+                                <span>ORDER #<span id="order-id-display">ORD-A1022</span></span>
+                                <span class="summary-items-badge"><span id="item-count">0</span> Items</span>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div id="order-items-list"></div>
+
+                            <div class="summary-totals">
+                                <div class="summary-row">
+                                    <span class="lbl">Subtotal</span>
+                                    <span class="val" id="checkout-subtotal">₹0.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="lbl">GST (<span id="gst-rate-display"><?php echo $gst_rate; ?></span>%)</span>
+                                    <span class="val" id="checkout-gst">₹0.00</span>
+                                </div>
+                                <div class="summary-row" id="packing-row">
+                                    <span class="lbl">Packing Charges</span>
+                                    <span class="val" id="checkout-packing">₹<?php echo number_format($packing_charge, 2); ?></span>
+                                </div>
+                                <div class="summary-row" id="delivery-row">
+                                    <span class="lbl">Delivery Fee</span>
+                                    <span class="val" id="checkout-delivery">₹40.00</span>
+                                </div>
+                                <div class="summary-row" id="coupon-discount-row" style="display: none;">
+                                    <span class="lbl">Coupon Discount (<span id="coupon-percent-label">0</span>%)</span>
+                                    <span class="val text-success" id="checkout-discount">-₹0.00</span>
+                                </div>
+                                <div class="summary-row grand-total">
+                                    <span class="lbl">Grand Total</span>
+                                    <span class="val" id="checkout-total">₹0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="coupon-container">
+                                <div class="coupon-title">
+                                    <i class="fas fa-tag"></i> Have a coupon code?
+                                </div>
+                                <div class="coupon-input-wrapper">
+                                    <input type="text" id="couponCodeInput" placeholder="Enter coupon code">
+                                    <button type="button" id="applyCouponBtn">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="eta-callout">
+                        <i class="fas fa-concierge-bell eta-icon"></i>
+                        <div class="eta-text">
+                            Expect your order in
+                            <strong id="eta-time-display">20-25 mins</strong>
+                            We'll notify you when it's on the way!
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </form>
+        </div>
+
+        <div class="sticky-action-bar">
+            <div class="sticky-action-container">
+                <a href="carttest.html" class="btn-back-cart">
+                    <i class="fas fa-arrow-left"></i> Back to Cart
+                </a>
+                
+                <div class="d-none d-md-flex secure-badge">
+                    <i class="fas fa-lock"></i> Secure Checkout
+                </div>
+
+                <button type="submit" class="btn-proceed" id="submitOrderBtn">
+                    Proceed to Payment <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div id="mapModal" class="map-modal">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3 class="map-modal-title"><i class="fas fa-map-marked-alt"></i> Select Location</h3>
+                <button id="closeMapModal" class="map-modal-close">&times;</button>
+            </div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Drag the marker to your exact delivery location.</p>
+            <div id="leafletMap"></div>
+            <button id="confirmLocationBtn" class="btn-confirm-map">Confirm Location</button>
+        </div>
     </div>
 
-    <!-- Footer Section -->
+<!-- Footer Section -->
     <footer class="main-footer py-5 mt-5">
         <div class="container">
             <div class="row g-4">
@@ -1226,9 +1874,11 @@ let appliedCouponDiscountPercent = 0;
 // Coupon input toggle
 const couponToggle = document.getElementById('couponToggle');
 const couponInputGroup = document.getElementById('couponInputGroup');
-couponToggle.addEventListener('click', () => {
-    couponInputGroup.classList.toggle('active');
-});
+if (couponToggle) {
+    couponToggle.addEventListener('click', () => {
+        if (couponInputGroup) couponInputGroup.classList.toggle('active');
+    });
+}
 
 document.getElementById('applyCouponBtn').addEventListener('click', () => {
     const code = document.getElementById('couponCodeInput').value.trim();
@@ -1297,7 +1947,7 @@ async function loadCheckoutSummary() {
             // Compute subtotal from items — API doesn't return a separate total field
             const subtotal = result.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
             const gst = subtotal * (GST_RATE / 100);
-            const delivery = DELIVERY_CHARGE;
+            const delivery = currentDeliveryMode === 'home' ? DELIVERY_CHARGE : 0;
             const packing = PACKING_CHARGE;
             const total = subtotal + gst + delivery + packing;
 
@@ -1317,7 +1967,7 @@ async function loadCheckoutSummary() {
             if (items && items.length > 0) {
                 const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
                 const gst = subtotal * (GST_RATE / 100);
-                const delivery = DELIVERY_CHARGE;
+                const delivery = currentDeliveryMode === 'home' ? DELIVERY_CHARGE : 0;
                 const packing = PACKING_CHARGE;
                 const total = subtotal + gst + delivery + packing;
                 
@@ -1333,6 +1983,22 @@ async function loadCheckoutSummary() {
 }
 
 function renderOrderItems(items) {
+    const listContainer = document.getElementById('order-items-list');
+    listContainer.innerHTML = items.map(item => {
+        const imgSrc = item.image_url || item.image;
+        return `
+        <div class="summary-item">
+            ${imgSrc ? `<img src="${imgSrc}" class="summary-item-img" onerror="this.outerHTML='<div class=\\'summary-item-img-placeholder\\'><i class=\\'fas fa-utensils\\'></i></div>'">` : `<div class="summary-item-img-placeholder"><i class="fas fa-utensils"></i></div>`}
+            <div class="summary-item-details">
+                <div class="summary-item-name">${item.name}</div>
+                <div class="summary-item-qty">Qty: ${item.quantity}</div>
+            </div>
+            <div class="summary-item-price">₹${(item.price * item.quantity).toFixed(2)}</div>
+        </div>
+        `;
+    }).join('');
+}
+function _old_renderOrderItems(items) {
     const listContainer = document.getElementById('order-items-list');
     listContainer.innerHTML = items.map(item => `
         <tr>
@@ -1354,23 +2020,32 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     let couponDiscount = 0;
     if (typeof appliedCouponCode !== 'undefined' && appliedCouponCode && appliedCouponDiscountPercent > 0) {
         couponDiscount = subtotal * (appliedCouponDiscountPercent / 100);
-        document.getElementById('coupon-percent-label').textContent = appliedCouponDiscountPercent;
-        document.getElementById('checkout-discount').textContent = `-₹${couponDiscount.toFixed(2)}`;
-        document.getElementById('coupon-discount-row').style.display = 'flex';
+        const cpLabel = document.getElementById('coupon-percent-label');
+        if(cpLabel) cpLabel.textContent = appliedCouponDiscountPercent;
+        const cDiscount = document.getElementById('checkout-discount');
+        if(cDiscount) cDiscount.textContent = `-₹${couponDiscount.toFixed(2)}`;
+        const cRow = document.getElementById('coupon-discount-row');
+        if(cRow) cRow.style.display = 'flex';
     } else {
-        document.getElementById('coupon-discount-row').style.display = 'none';
+        const cRow = document.getElementById('coupon-discount-row');
+        if(cRow) cRow.style.display = 'none';
     }
 
     // 2. Tier Discount
     let tierDiscount = 0;
     if (typeof USER_TIER_DISCOUNT_PERCENT !== 'undefined' && USER_TIER_DISCOUNT_PERCENT > 0) {
         tierDiscount = subtotal * (USER_TIER_DISCOUNT_PERCENT / 100);
-        document.getElementById('tier-name-label').textContent = USER_TIER_NAME;
-        document.getElementById('tier-percent-label').textContent = USER_TIER_DISCOUNT_PERCENT;
-        document.getElementById('checkout-tier-discount').textContent = `-₹${tierDiscount.toFixed(2)}`;
-        document.getElementById('tier-discount-row').style.display = 'flex';
+        const nameLabel = document.getElementById('tier-name-label');
+        if(nameLabel) nameLabel.textContent = USER_TIER_NAME;
+        const pctLabel = document.getElementById('tier-percent-label');
+        if(pctLabel) pctLabel.textContent = USER_TIER_DISCOUNT_PERCENT;
+        const tDiscount = document.getElementById('checkout-tier-discount');
+        if(tDiscount) tDiscount.textContent = `-₹${tierDiscount.toFixed(2)}`;
+        const tRow = document.getElementById('tier-discount-row');
+        if(tRow) tRow.style.display = 'flex';
     } else {
-        document.getElementById('tier-discount-row').style.display = 'none';
+        const tRow = document.getElementById('tier-discount-row');
+        if(tRow) tRow.style.display = 'none';
     }
 
     // 3. Points Discount
@@ -1379,11 +2054,15 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     const baseTotal = subtotal + gst + delivery + packing - couponDiscount - tierDiscount;
     if (redeemCheckbox && redeemCheckbox.checked && typeof USER_POINTS_BALANCE !== 'undefined') {
         pointsDiscount = Math.min(USER_POINTS_BALANCE, Math.max(0, baseTotal));
-        document.getElementById('redeemed-points-label').textContent = pointsDiscount;
-        document.getElementById('checkout-points-discount').textContent = `-₹${pointsDiscount.toFixed(2)}`;
-        document.getElementById('points-discount-row').style.display = 'flex';
+        const ptsLabel = document.getElementById('redeemed-points-label');
+        if(ptsLabel) ptsLabel.textContent = pointsDiscount;
+        const pDiscount = document.getElementById('checkout-points-discount');
+        if(pDiscount) pDiscount.textContent = `-₹${pointsDiscount.toFixed(2)}`;
+        const pRow = document.getElementById('points-discount-row');
+        if(pRow) pRow.style.display = 'flex';
     } else {
-        document.getElementById('points-discount-row').style.display = 'none';
+        const pRow = document.getElementById('points-discount-row');
+        if(pRow) pRow.style.display = 'none';
     }
     
     const finalTotal = Math.max(0, baseTotal - pointsDiscount);
@@ -1495,7 +2174,17 @@ document.getElementById('orderForm').onsubmit = async (e) => {
     const selectedMethodElement = document.querySelector('input[name="payment_method"]:checked');
     if (selectedMethodElement) {
         const selectedMethod = selectedMethodElement.value;
-        if (selectedMethod === 'upi') {
+        if (selectedMethod === 'membership') {
+            const cardNum = document.getElementById('membership_card_number').value.trim();
+            const cvv = document.getElementById('membership_cvv').value.trim();
+            if (!cardNum || !cvv) {
+                alert('Please enter your Membership Card Number and CVV.');
+                return;
+            }
+            showLoaderOverlay();
+            submitBackendOrder(compiledName, phone, compiledAddress, 'MEMBERSHIP_PASS');
+            return;
+        } else if (selectedMethod === 'upi') {
             options.prefill.method = 'upi';
             const upiIdVal = document.getElementById('upi_id').value.trim();
             if (upiIdVal) {
@@ -1560,7 +2249,9 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         state: state,
         zip: zip,
         coupon_code: appliedCouponCode,
-        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false
+        redeem_loyalty_points: document.getElementById('redeem_loyalty_points') ? document.getElementById('redeem_loyalty_points').checked : false,
+        membership_card_number: document.getElementById('membership_card_number') ? document.getElementById('membership_card_number').value.trim() : '',
+        membership_cvv: document.getElementById('membership_cvv') ? document.getElementById('membership_cvv').value.trim() : ''
     };
 
     try {
@@ -1661,6 +2352,51 @@ scrollToTopBtn.addEventListener('click', () => {
         behavior: 'smooth'
     });
 });
+
+// Geolocation - Choose from Map
+const btnChooseMap = document.getElementById('btnChooseFromMap');
+if(btnChooseMap) {
+    btnChooseMap.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            btnChooseMap.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                    const data = await res.json();
+                    
+                    if (data && data.address) {
+                        const addr = data.address;
+                        const street = (addr.road || addr.suburb || '') + (addr.house_number ? ' ' + addr.house_number : '');
+                        document.getElementById('billing_street').value = street.trim() + ` [${lat}, ${lng}]`;
+                        
+                        if(addr.city || addr.town || addr.village) {
+                            document.getElementById('billing_city').value = addr.city || addr.town || addr.village;
+                        }
+                        if(addr.postcode) {
+                            document.getElementById('billing_zip').value = addr.postcode;
+                        }
+                    } else {
+                        document.getElementById('billing_street').value = `Coordinates: [${lat}, ${lng}]`;
+                    }
+                } catch (err) {
+                    console.error("Geocoding failed:", err);
+                    alert("Failed to get address from map, but coordinates captured.");
+                    document.getElementById('billing_street').value = `[${lat}, ${lng}]`;
+                }
+                btnChooseMap.innerHTML = '<i class="fas fa-check"></i> Found';
+                setTimeout(() => { btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map'; }, 3000);
+            }, (error) => {
+                alert('Location access denied or unavailable.');
+                btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map';
+            });
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+}
 </script>
 
 <!-- Premium Payment Loading Overlay -->
@@ -1725,6 +2461,147 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide "Pay with cash on delivery" text in payment panel if needed, but the main goal is just hiding address fields!
     }
 });
+
+// UI Toggles for Redesign
+let currentDeliveryMode = 'home';
+let currentPaymentMode = 'online';
+
+function setDeliveryMode(mode, element) {
+    currentDeliveryMode = mode;
+    document.querySelectorAll('input[name="delivery_option"]').forEach(radio => radio.closest('.option-box').classList.remove('active'));
+    element.classList.add('active');
+    element.querySelector('input').checked = true;
+    loadCheckoutSummary();
+}
+
+function setPaymentMode(mode, element) {
+    currentPaymentMode = mode;
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => radio.closest('.option-box').classList.remove('active'));
+    element.classList.add('active');
+    element.querySelector('input').checked = true;
+}
+
+// Map Modal Logic
+let map, marker;
+const mapModal = document.getElementById('mapModal');
+const btnChooseFromMap = document.getElementById('btnChooseFromMap');
+const closeMapModalBtn = document.getElementById('closeMapModal');
+const confirmLocationBtn = document.getElementById('confirmLocationBtn');
+
+let selectedLat = 22.5726; // Default: Kolkata
+let selectedLon = 88.3639;
+
+if(btnChooseFromMap) {
+    btnChooseFromMap.addEventListener('click', function() {
+        mapModal.style.display = 'block';
+        
+        if (!map) {
+            // Google Maps Styling (Dark theme)
+            const darkTheme = [
+              {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+              {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+              {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+              {featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{color: '#d59563'}]},
+              {featureType: 'road', elementType: 'geometry', stylers: [{color: '#38414e'}]},
+              {featureType: 'road', elementType: 'geometry.stroke', stylers: [{color: '#212a37'}]},
+              {featureType: 'road', elementType: 'labels.text.fill', stylers: [{color: '#9ca5b3'}]},
+              {featureType: 'water', elementType: 'geometry', stylers: [{color: '#17263c'}]},
+              {featureType: 'water', elementType: 'labels.text.fill', stylers: [{color: '#515c6d'}]},
+              {featureType: 'water', elementType: 'labels.text.stroke', stylers: [{color: '#17263c'}]}
+            ];
+
+            const mapOptions = {
+                zoom: 13,
+                center: {lat: selectedLat, lng: selectedLon},
+                styles: darkTheme,
+                disableDefaultUI: true,
+                zoomControl: true
+            };
+            map = new google.maps.Map(document.getElementById('leafletMap'), mapOptions);
+
+            marker = new google.maps.Marker({
+                position: {lat: selectedLat, lng: selectedLon},
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP
+            });
+
+            google.maps.event.addListener(marker, 'dragend', function() {
+                const position = marker.getPosition();
+                selectedLat = position.lat();
+                selectedLon = position.lng();
+            });
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    selectedLat = position.coords.latitude;
+                    selectedLon = position.coords.longitude;
+                    const pos = {lat: selectedLat, lng: selectedLon};
+                    map.setCenter(pos);
+                    map.setZoom(15);
+                    marker.setPosition(pos);
+                });
+            }
+        }
+        
+        // Trigger resize so it renders correctly inside the modal
+        setTimeout(() => { 
+            google.maps.event.trigger(map, 'resize'); 
+            map.setCenter({lat: selectedLat, lng: selectedLon}); 
+        }, 200);
+    });
+}
+
+if(closeMapModalBtn) {
+    closeMapModalBtn.addEventListener('click', () => { mapModal.style.display = 'none'; });
+}
+
+if(confirmLocationBtn) {
+    confirmLocationBtn.addEventListener('click', function() {
+        const originalText = confirmLocationBtn.innerHTML;
+        confirmLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+        
+        const geocoder = new google.maps.Geocoder();
+        const latlng = {lat: selectedLat, lng: selectedLon};
+        
+        geocoder.geocode({ location: latlng }, function(results, status) {
+            confirmLocationBtn.innerHTML = originalText;
+            if (status === 'OK' && results[0]) {
+                let street = 'Selected Location';
+                let city = '';
+                let state = '';
+                let zip = '';
+                
+                results[0].address_components.forEach(comp => {
+                    if (comp.types.includes('route') || comp.types.includes('neighborhood')) street = comp.long_name;
+                    if (comp.types.includes('locality')) city = comp.long_name;
+                    if (comp.types.includes('administrative_area_level_1')) state = comp.long_name;
+                    if (comp.types.includes('postal_code')) zip = comp.long_name;
+                });
+                
+                if (street === 'Selected Location') {
+                    street = results[0].formatted_address.split(',')[0];
+                }
+                
+                document.getElementById('billing_street').value = street + (city ? ', ' + city : '');
+                
+                const cityInput = document.getElementById('billing_city');
+                if(cityInput) cityInput.value = city;
+                
+                const stateInput = document.getElementById('billing_state');
+                if(stateInput) stateInput.value = state;
+                
+                const zipInput = document.getElementById('billing_zip');
+                if(zipInput) zipInput.value = zip;
+                
+                mapModal.style.display = 'none';
+            } else {
+                alert('Could not determine address from maps API. Status: ' + status);
+            }
+        });
+    });
+}
+
 </script>
 <?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
 <?php require_once __DIR__ . '/includes/order_toast.php'; ?>
