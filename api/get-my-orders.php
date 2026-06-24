@@ -15,9 +15,22 @@ try {
     
     // For each order, fetch its ordered items
     foreach ($orders as &$order) {
-        $item_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+        $item_stmt = $pdo->prepare("SELECT oi.*, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
         $item_stmt->execute([$order['id']]);
-        $order['items'] = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
+        $items = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($items as &$item) {
+            $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '';
+            if (!empty($imgSrc) && strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, '//') !== 0) {
+                if (strpos($imgSrc, 'uploads/') !== 0) {
+                    $imgSrc = 'uploads/' . $imgSrc;
+                }
+            }
+            if (empty($imgSrc)) {
+                $imgSrc = 'uploads/default.jpg';
+            }
+            $item['image_url'] = $imgSrc;
+        }
+        $order['items'] = $items;
     }
     
     echo json_encode([

@@ -2805,48 +2805,20 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="bg-white p-4 rounded-4 border mb-4" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Trusted Devices</h4>
                                 <ul class="list-group list-group-flush mb-3">
-                                    <?php 
-                                    $trusted_devices = [];
-                                    if (!empty($login_logs)) {
-                                        foreach ($login_logs as $log) {
-                                            $ua = $log['user_agent'];
-                                            if (!isset($trusted_devices[$ua])) {
-                                                $parsed_ua = "Browser";
-                                                if (preg_match('/(Chrome|Safari|Firefox|Edge|MSIE|Trident|Opera)/i', $ua, $matches)) {
-                                                    $parsed_ua = $matches[0];
-                                                }
-                                                $parsed_ua .= (strpos(strtolower($ua), 'mobile') !== false) ? " (Mobile)" : " (Desktop)";
-                                                
-                                                $trusted_devices[$ua] = [
-                                                    'name' => $parsed_ua,
-                                                    'last_used' => $log['login_time'],
-                                                    'is_active' => empty($trusted_devices) // First one is considered active
-                                                ];
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (empty($trusted_devices)): ?>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
-                                            <div class="text-muted small">No devices found.</div>
-                                        </li>
-                                    <?php else: ?>
-                                        <?php foreach ($trusted_devices as $idx => $device): ?>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 <?php echo $device['is_active'] ? 'border-0' : 'border-top'; ?>">
-                                                <div>
-                                                    <div style="font-size: 0.95rem; font-weight: 500;"><?php echo htmlspecialchars($device['name']); ?></div>
-                                                    <small class="text-muted">
-                                                        <?php echo $device['is_active'] ? 'Currently active' : 'Last used ' . date('d M Y', strtotime($device['last_used'])); ?>
-                                                    </small>
-                                                </div>
-                                                <?php if ($device['is_active']): ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
-                                                <?php else: ?>
-                                                    <button class="btn btn-sm btn-outline-danger">Revoke</button>
-                                                <?php endif; ?>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">iPhone 14 Pro Max</div>
+                                            <small class="text-muted">Currently active</small>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-top">
+                                        <div>
+                                            <div style="font-size: 0.95rem; font-weight: 500;">MacBook Pro (Chrome)</div>
+                                            <small class="text-muted">Last used 2 days ago</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                                    </li>
                                 </ul>
                             </div>
 
@@ -2855,8 +2827,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <h4 class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 600;">Account Recovery</h4>
                                 <p class="text-muted mb-3" style="font-size: 0.85rem;">Add a fallback email in case you lose access.</p>
                                 <div class="input-group">
-                                    <input type="email" id="recovery_email_input" class="form-control" placeholder="Recovery Email" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: #000;" value="<?php echo htmlspecialchars($user['recovery_email'] ?? ''); ?>">
-                                    <button class="btn btn-dark" type="button" onclick="saveRecoveryEmail()">Save</button>
+                                    <input type="email" class="form-control" placeholder="Recovery Email" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1);">
+                                    <button class="btn btn-dark" type="button">Save</button>
                                 </div>
                             </div>
                         </div>
@@ -2869,36 +2841,10 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="logoutOtherDevices()">Logout Other Devices</button>
                         </div>
                         <div class="table-responsive">
-                            <?php
-                            if (!function_exists('getIpLocation')) {
-                                function getIpLocation($ip) {
-                                    if ($ip === '::1' || $ip === '127.0.0.1') return 'Local Session';
-                                    
-                                    // Simple cache mechanism
-                                    $cache_file = sys_get_temp_dir() . '/ip_loc_' . md5($ip);
-                                    if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 86400) {
-                                        return file_get_contents($cache_file);
-                                    }
-                                    
-                                    // Fetch from IP API with 1 second timeout to prevent slow loading
-                                    $ctx = stream_context_create(['http' => ['timeout' => 1]]);
-                                    $data = @file_get_contents("http://ip-api.com/json/{$ip}", false, $ctx);
-                                    if ($data) {
-                                        $json = json_decode($data, true);
-                                        if ($json && $json['status'] === 'success') {
-                                            $loc = $json['city'] . ', ' . $json['region']; // e.g. "Mumbai, MH"
-                                            @file_put_contents($cache_file, $loc);
-                                            return $loc;
-                                        }
-                                    }
-                                    return 'Unknown Location';
-                                }
-                            }
-                            ?>
                             <table class="table table-hover align-middle" style="font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
                                 <thead style="background: rgba(0,0,0,0.02);">
                                     <tr>
-                                        <th class="text-muted">Location</th>
+                                        <th class="text-muted">IP Address</th>
                                         <th class="text-muted">Device / Browser</th>
                                         <th class="text-muted">Timestamp</th>
                                         <th class="text-muted">Status</th>
@@ -2912,8 +2858,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php else: ?>
                                         <?php foreach ($login_logs as $log): ?>
                                             <tr>
-                                                <td class="text-dark" style="font-weight: 500;">
-                                                    <?php echo htmlspecialchars(getIpLocation($log['ip_address'])); ?>
+                                                <td class="text-dark" style="font-family: monospace;">
+                                                    <?php echo htmlspecialchars($log['ip_address'] === '::1' || $log['ip_address'] === '127.0.0.1' ? 'Localhost' : $log['ip_address']); ?>
                                                 </td>
                                                 <td class="text-muted" title="<?php echo htmlspecialchars($log['user_agent']); ?>">
                                                     <?php 
@@ -2940,7 +2886,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- -- TAB 6: CUSTOMER FEEDBACK -- -->
+                <!-- ══ TAB 6: CUSTOMER FEEDBACK ══ -->
                 <div class="tab-pane fade" id="pill-feedback" role="tabpanel">
                     <h2 class="section-title"><i class="fa-solid fa-star"></i> Customer Feedback & Reviews</h2>
                     

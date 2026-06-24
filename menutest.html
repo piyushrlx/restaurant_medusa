@@ -518,7 +518,11 @@
 
                 items.forEach((item, index) => {
                     let imgSrc = item.image_url || '';
-                    if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) imgSrc = 'uploads/' + imgSrc;
+                    if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+                        if (!imgSrc.startsWith('uploads/')) {
+                            imgSrc = 'uploads/' + imgSrc;
+                        }
+                    }
                     if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'; // Default placeholder
 
                     const hasCust = item.customizations && item.customizations.length > 0;
@@ -766,7 +770,11 @@
             const basePrice = parseFloat(item.price);
 
             let imgSrc = item.image_url || '';
-            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) imgSrc = 'uploads/' + imgSrc;
+            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+                if (!imgSrc.startsWith('uploads/')) {
+                    imgSrc = 'uploads/' + imgSrc;
+                }
+            }
             if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop';
 
             document.getElementById('custDishImg').src = imgSrc;
