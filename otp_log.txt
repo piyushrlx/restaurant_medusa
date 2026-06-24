@@ -804,3 +804,56 @@ Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=95&token
 ----------------------------------------
 
 [2026-06-24 14:37:15] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_95_20260624_143659.pdf
+[2026-06-24 07:03:30] [SMS] OTP for 7814585430: 250774
+[2026-06-24 07:03:53] [SMS] OTP for 1234567890: 359662
+[2026-06-24 08:33:11] [SMS] OTP for 8712345634: 175920
+[2026-06-24 08:39:49] [SMS] OTP for 7814585430: 625262
+[2026-06-24 08:46:17] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.2 port 8080 after 2463 ms: Couldn't connect to server
+[2026-06-24 08:46:20] [ORDER_BILL_ATTACHMENT] Email queued/sent to p08122004@gmail.com:
+----------------------------------------
+Name: Piyush Bhatt
+Email: p08122004@gmail.com
+Phone: 7814585430
+Order ID: ORD-9B69D
+PDF Path: bills/order_73_20260624_084617.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=73&token=91ffa6085f55e60d2a10e52ee2c60a6a8a5df1212926a40fdd8ef1ee528898b0
+----------------------------------------
+
+[2026-06-24 08:46:20] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_73_20260624_084617.pdf
+[2026-06-24 09:10:56] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.2 port 8080 after 2044 ms: Couldn't connect to server
+[2026-06-24 09:10:58] [ORDER_BILL_ATTACHMENT] Email queued/sent to p08122004@gmail.com:
+----------------------------------------
+Name: Piyush Bhatt
+Email: p08122004@gmail.com
+Phone: 7814585430
+Order ID: ORD-07736
+PDF Path: bills/order_74_20260624_091056.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=74&token=4f04a74e4f0a82925001f8529011e5fad1b4d3d8771398e42ce07da8928f3746
+----------------------------------------
+
+[2026-06-24 09:10:58] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_74_20260624_091056.pdf
+[2026-06-24 09:21:44] [SMS] OTP for 7814585430: 724550
+[2026-06-24 09:29:58] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.2 port 8080 after 3014 ms: Timeout was reached
+[2026-06-24 09:30:01] [ORDER_BILL_ATTACHMENT] Email queued/sent to p08122004@gmail.com:
+----------------------------------------
+Name: Piyush Bhatt
+Email: p08122004@gmail.com
+Phone: 7814585430
+Order ID: ORD-671D1
+PDF Path: bills/order_83_20260624_092958.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=83&token=701cc73159cac25e133d8dd7af8c2ea5842972a2d1a2d674067ce20c49badfe0
+----------------------------------------
+
+[2026-06-24 09:30:01] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_83_20260624_092958.pdf
+[2026-06-24 09:46:46] [SMS_GATEWAY_ERROR] SMS failed for 9876543210: cURL Error: Failed to connect to 192.168.1.2 port 8080 after 2203 ms: Couldn't connect to server
+[2026-06-24 09:46:48] [ORDER_BILL_ATTACHMENT] Email queued/sent to p08122004@gmail.com:
+----------------------------------------
+Name: System Admin
+Email: p08122004@gmail.com
+Phone: 9876543210
+Order ID: ORD-604C5
+PDF Path: bills/order_86_20260624_094646.pdf
+Download URL: http://192.168.1.4/restaurant_medusa/download_bill.php?id=86&token=a9a6b15349af6e527b2b33789607b75653824dabd6254daad81024ee851d214d
+----------------------------------------
+
+[2026-06-24 09:46:48] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543210 with attachment: bills/order_86_20260624_094646.pdf
