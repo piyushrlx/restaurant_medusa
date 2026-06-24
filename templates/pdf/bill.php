@@ -2,13 +2,19 @@
     <!-- Header Logo & Brand Name -->
     <tr>
         <td style="width: 20%; vertical-align: middle;">
-            <?php if (file_exists($logo_path)): ?>
-                <img src="<?php echo $logo_path; ?>" width="60" height="60" style="border-radius: 50%;">
+            <?php 
+                // Use the JPG version of the logo to avoid TCPDF PNG alpha channel errors without GD
+                $custom_logo = __DIR__ . '/../../assets/images/medusaa2_pdf.jpg';
+                if (!file_exists($custom_logo)) $custom_logo = __DIR__ . '/../../assets/images/versace_logo.jpg';
+                if (file_exists($custom_logo)): 
+                    $img_base64 = base64_encode(file_get_contents($custom_logo));
+            ?>
+                <img src="@<?php echo $img_base64; ?>" width="60" height="60" style="border-radius: 50%;">
             <?php endif; ?>
         </td>
         <td style="width: 80%; text-align: right; vertical-align: middle;">
-            <span style="font-size: 22px; font-weight: bold; color: #b89225;"><?php echo htmlspecialchars(strtoupper($website_name)); ?></span><br>
-            <span style="font-size: 10px; color: #666666;">Artisanal Dining & Delivery Experience<br>SCO 44,45, Sector 68, SAS Nagar | Support: support@medusarestaurant.com</span>
+            <span style="font-size: 22px; font-weight: bold; color: #b89225;">LA-MEDUSAA <span style="font-size: 14px; font-weight: normal; color: #888888; font-style: italic;">bar & lounge</span></span><br>
+            <span style="font-size: 10px; color: #666666;">The Signature of Elegance<br>SCO 44,45, Sector 68, SAS Nagar | Support: support@medusarestaurant.com</span>
         </td>
     </tr>
     
@@ -22,13 +28,11 @@
             <strong style="color: #b89225; font-size: 12px;">DELIVER TO:</strong><br>
             <strong>Name:</strong> <?php echo htmlspecialchars($order['customer_name']); ?><br>
             <strong>Phone:</strong> <?php echo htmlspecialchars($order['customer_phone']); ?><br>
-            <strong>Address:</strong> <?php echo htmlspecialchars($order['delivery_address']); ?><br>
+            <strong>Address:</strong> <?php echo htmlspecialchars(trim(preg_replace('/\[[\d.-]+,\s*[\d.-]+\]/', '', $order['delivery_address']))); ?><br>
             <?php if (!empty($order['delivery_city'])): ?>
                 <strong>City:</strong> <?php echo htmlspecialchars($order['delivery_city']); ?><br>
             <?php endif; ?>
-            <?php if (!empty($order['delivery_state'])): ?>
-                <strong>State:</strong> <?php echo htmlspecialchars($order['delivery_state']); ?> (Pin: <?php echo htmlspecialchars($order['delivery_pincode']); ?>)
-            <?php endif; ?>
+
         </td>
         <td style="width: 50%; padding-top: 15px; text-align: right; font-size: 11px; line-height: 1.5;">
             <strong style="color: #b89225; font-size: 12px;">ORDER DETAILS:</strong><br>
@@ -112,11 +116,14 @@
                 <?php endif; ?>
 
                 <!-- Discount -->
-                <?php if (floatval($order['discount']) > 0): ?>
+                <?php 
+                $total_discount = floatval($order['discount'] ?? 0) + floatval($order['coupon_discount'] ?? 0) + floatval($order['tier_discount_amount'] ?? 0) + floatval($order['points_redeemed_discount'] ?? 0);
+                if ($total_discount > 0): 
+                ?>
                 <tr>
                     <td colspan="2"></td>
                     <td style="text-align: right; font-size: 10px; color: #d9534f; font-weight: bold;">Discount:</td>
-                    <td style="text-align: right; font-size: 10px; color: #d9534f; font-weight: bold;">-Rs. <?php echo number_format(floatval($order['discount']), 2); ?></td>
+                    <td style="text-align: right; font-size: 10px; color: #d9534f; font-weight: bold;">-Rs. <?php echo number_format($total_discount, 2); ?></td>
                 </tr>
                 <?php endif; ?>
                 

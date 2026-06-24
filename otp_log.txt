@@ -661,3 +661,144 @@ Phone: 1234567890
 Status: Activated
 ----------------------------------------
 
+[2026-06-24 12:12:13] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 3002 ms: Timeout was reached
+[2026-06-24 12:12:16] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-D3194
+PDF Path: bills/order_83_20260624_121213.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=83&token=701cc73159cac25e133d8dd7af8c2ea5842972a2d1a2d674067ce20c49badfe0
+----------------------------------------
+
+[2026-06-24 12:12:23] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_83_20260624_121213.pdf
+[2026-06-24 13:02:30] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 3004 ms: Timeout was reached
+[2026-06-24 13:02:33] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-6AA65
+PDF Path: bills/order_84_20260624_130230.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=84&token=427955bd60e385611f7cccdb0a095c3a2ffec65fe49640920c4729ebb1931161
+----------------------------------------
+
+[2026-06-24 13:02:44] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_84_20260624_130230.pdf
+[2026-06-24 13:10:50] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 3003 ms: Timeout was reached
+[2026-06-24 13:10:53] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-9E1A6
+PDF Path: bills/order_85_20260624_131050.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=85&token=f1e13a5427511a985e1472c026fe629376640eb6ad40a92ad9cd811222368d7b
+----------------------------------------
+
+[2026-06-24 13:11:02] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_85_20260624_131050.pdf
+[2026-06-24 13:43:45] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 2789 ms: Couldn't connect to server
+[2026-06-24 13:43:47] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-0C428
+PDF Path: bills/order_88_20260624_134345.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=88&token=b273346bcf724de1e1da4c0abb17b1c0e1d09a4991742f634fd3f124097fa31c
+----------------------------------------
+
+[2026-06-24 13:43:56] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_88_20260624_134345.pdf
+[2026-06-24 13:48:36] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 3007 ms: Timeout was reached
+[2026-06-24 13:48:39] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-3B9DB
+PDF Path: bills/order_89_20260624_134836.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=89&token=fdc95b2f526faa609c83b47a1d9d8841e9893cc9e23ebf6e27ae239fe9b194d8
+----------------------------------------
+
+[2026-06-24 13:48:48] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_89_20260624_134836.pdf
+[2026-06-24 14:12:32] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Failed to connect to 192.168.1.8 port 8080 after 3016 ms: Timeout was reached
+[2026-06-24 14:12:35] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-049E7
+PDF Path: bills/order_90_20260624_141232.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=90&token=f26552dd74edc9d71d74842793a79c5d67129ea21c6f68b9b9809c5cf19c737e
+----------------------------------------
+
+[2026-06-24 14:12:42] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_90_20260624_141232.pdf
+[2026-06-24 14:25:23] [SMS_GATEWAY_SUCCESS] SMS sent to 9876543211: Dear Test Customer, your order #ORD-33359 is confirmed!
+Download your bill here: http://192.168.1.6/restaurant_medusa/download_bill.php?id=91&token=9fd8c4f285c6494679314b62f5213b63de8eeed809d054cde3169709b25f069c
+Thank you! - Medusa
+[2026-06-24 14:25:24] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-33359
+PDF Path: bills/order_91_20260624_142523.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=91&token=9fd8c4f285c6494679314b62f5213b63de8eeed809d054cde3169709b25f069c
+----------------------------------------
+
+[2026-06-24 14:25:35] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_91_20260624_142523.pdf
+[2026-06-24 14:26:42] [SMS_GATEWAY_SUCCESS] SMS sent to 9876543211: Dear Test Customer, your order #ORD-25577 is confirmed!
+Download your bill here: http://192.168.1.6/restaurant_medusa/download_bill.php?id=92&token=9a22b3194a3adc91069726278890dbf3adfea8455bcbe888cbf5e9432b5111bb
+Thank you! - Medusa
+[2026-06-24 14:26:43] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-25577
+PDF Path: bills/order_92_20260624_142642.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=92&token=9a22b3194a3adc91069726278890dbf3adfea8455bcbe888cbf5e9432b5111bb
+----------------------------------------
+
+[2026-06-24 14:26:53] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_92_20260624_142642.pdf
+[2026-06-24 14:27:47] [SMS] OTP for 7814585430: 333319
+[2026-06-24 14:29:28] [SMS_GATEWAY_SUCCESS] SMS sent to 9876543211: Dear Test Customer, your order #ORD-7EFC4 is confirmed!
+Download your bill here: http://192.168.1.6/restaurant_medusa/download_bill.php?id=93&token=cd85b18fb16a4c28dba4c515688a44ad9ee9e27a49d5f64b3acf69cb3ff22c0f
+Thank you! - Medusa
+[2026-06-24 14:29:29] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-7EFC4
+PDF Path: bills/order_93_20260624_142928.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=93&token=cd85b18fb16a4c28dba4c515688a44ad9ee9e27a49d5f64b3acf69cb3ff22c0f
+----------------------------------------
+
+[2026-06-24 14:29:39] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_93_20260624_142928.pdf
+[2026-06-24 14:30:21] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.3 port 8080 after 3002 ms: Timeout was reached
+[2026-06-24 14:30:24] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 7814585430
+Order ID: ORD-CA5ED
+PDF Path: bills/order_94_20260624_143020.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=94&token=a1f2996fa3854847f72a2476ff1c804baf7760bcc7d46d65a1ae9264a4dfbc1d
+----------------------------------------
+
+[2026-06-24 14:30:36] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_94_20260624_143020.pdf
+[2026-06-24 14:36:59] [SMS_GATEWAY_SUCCESS] SMS sent to 7814585430: Dear Test Customer, your order #ORD-AEC9D is confirmed!
+Download your bill here: http://192.168.1.6/restaurant_medusa/download_bill.php?id=95&token=04872f40ebf54e3dadbb6d4b7ab92446b7cee141f40a7eab60231c76c6537b10
+Thank you! - Medusa
+[2026-06-24 14:37:01] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 7814585430
+Order ID: ORD-AEC9D
+PDF Path: bills/order_95_20260624_143659.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=95&token=04872f40ebf54e3dadbb6d4b7ab92446b7cee141f40a7eab60231c76c6537b10
+----------------------------------------
+
+[2026-06-24 14:37:15] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_95_20260624_143659.pdf

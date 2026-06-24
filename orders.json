@@ -1545,5 +1545,335 @@
         "sms_status": "failed",
         "sms_response": "",
         "created_at": "2026-06-23 21:00:10"
+    },
+    "ORD-D3194": {
+        "order_id": "ORD-D3194",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "pay_T5QmLAr7PurEPE",
+        "cart_items": [
+            {
+                "id": 6,
+                "food_item_id": 6,
+                "quantity": 2,
+                "name": "Lemon Coriander Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \u2014 healthy and filling lemon coriander soup",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 850,
+        "gst": 153,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 962.06,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 12:12:23"
+    },
+    "ORD-6AA65": {
+        "order_id": "ORD-6AA65",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "pay_T5RdSq5xqHJ0xs",
+        "cart_items": [
+            {
+                "id": 3,
+                "food_item_id": 3,
+                "quantity": 1,
+                "name": "Vietnamese Pho Soup",
+                "price": 425,
+                "image_url": "uploads\/vietnamese_pho.png",
+                "description": "Veg \/ chicken \u2014 flat vietnamese noodles simmered in aromatic broth",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 13:02:44"
+    },
+    "ORD-9E1A6": {
+        "order_id": "ORD-9E1A6",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 7,
+                "food_item_id": 7,
+                "quantity": 1,
+                "name": "Roasted Tomato Basil Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Oven-roasted plum tomato soup with a fresh hint of basil",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 13:11:02"
+    },
+    "ORD-0C428": {
+        "order_id": "ORD-0C428",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "pay_T5SKssOygMaNHS",
+        "cart_items": [
+            {
+                "id": 18,
+                "food_item_id": 18,
+                "quantity": 1,
+                "name": "Naan",
+                "price": 85,
+                "image_url": "",
+                "description": "Plain \/ butter \/ missi roti \/ garlic parmesan \/ olive naan",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 85,
+        "gst": 15.299999999999999,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 135.86,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 13:43:56"
+    },
+    "ORD-3B9DB": {
+        "order_id": "ORD-3B9DB",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "pay_T5SQ8wsQKWxtbF",
+        "cart_items": [
+            {
+                "id": 6,
+                "food_item_id": 6,
+                "quantity": 1,
+                "name": "Lemon Coriander Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \u2014 healthy and filling lemon coriander soup",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 13:48:48"
+    },
+    "ORD-049E7": {
+        "order_id": "ORD-049E7",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "pay_T5SpPcW06cRLex",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \/ prawns \u2014 mild asian minced vegetable soup with crispy noodles",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:12:42"
+    },
+    "ORD-33359": {
+        "order_id": "ORD-33359",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \/ prawns \u2014 mild asian minced vegetable soup with crispy noodles",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "success",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:25:35"
+    },
+    "ORD-25577": {
+        "order_id": "ORD-25577",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \/ prawns \u2014 mild asian minced vegetable soup with crispy noodles",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "success",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:26:53"
+    },
+    "ORD-7EFC4": {
+        "order_id": "ORD-7EFC4",
+        "customer_name": "Test Customer",
+        "customer_phone": "9876543211",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \/ prawns \u2014 mild asian minced vegetable soup with crispy noodles",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "success",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:29:39"
+    },
+    "ORD-CA5ED": {
+        "order_id": "ORD-CA5ED",
+        "customer_name": "Test Customer",
+        "customer_phone": "7814585430",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 2,
+                "food_item_id": 2,
+                "quantity": 1,
+                "name": "Manchow Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Veg \/ chicken \/ prawns \u2014 mild asian minced vegetable soup with crispy noodles",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "failed",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:30:36"
+    },
+    "ORD-AEC9D": {
+        "order_id": "ORD-AEC9D",
+        "customer_name": "Test Customer",
+        "customer_phone": "7814585430",
+        "customer_email": "customer@example.com",
+        "delivery_address": "Plot number F-547 3rd floor Industrial Area, 8A, Sector 75, Sahibzada Ajit Singh Nagar, Punjab 160055, , West Bengal - , India",
+        "message": "",
+        "payment_id": "COD",
+        "cart_items": [
+            {
+                "id": 7,
+                "food_item_id": 7,
+                "quantity": 1,
+                "name": "Roasted Tomato Basil Soup",
+                "price": 425,
+                "image_url": "",
+                "description": "Oven-roasted plum tomato soup with a fresh hint of basil",
+                "is_veg": 0
+            }
+        ],
+        "subtotal": 425,
+        "gst": 76.5,
+        "packing": 4.06,
+        "delivery": 40,
+        "total": 503.05999999999995,
+        "status": "Paid",
+        "sms_status": "success",
+        "sms_response": "",
+        "created_at": "2026-06-24 14:37:15"
     }
 }
