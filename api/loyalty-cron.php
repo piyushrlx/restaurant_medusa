@@ -31,6 +31,7 @@ function sendLoyaltyNotification($user_id, $title, $message) {
                 if (function_exists('sendWelcomeEmail')) {
                     // Send custom transactional email using PHPMailer
                     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                    $mail->CharSet = 'UTF-8';
                     $smtp_host = get_env_var('SMTP_HOST');
                     $smtp_port = get_env_var('SMTP_PORT', 587);
                     $smtp_user = get_env_var('SMTP_USER');

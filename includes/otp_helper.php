@@ -26,6 +26,7 @@ if (!function_exists('sendOTPEmail')) {
         logOTPDebug($toEmail, $otp, 'EMAIL');
 
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
 
         $smtp_host = get_env_var('SMTP_HOST');
         $smtp_port = get_env_var('SMTP_PORT', 587);
@@ -61,30 +62,19 @@ if (!function_exists('sendOTPEmail')) {
             // Professional HTML Template with Inline CSS
             $mail->Body = "
             <html>
-            <head>
-                <style>
-                    body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; background-color: #0a0a0a; color: #f3f3f3; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 2rem; background-color: #121111; border: 1px solid rgba(223, 186, 134, 0.2); border-radius: 16px; }
-                    .header { text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 1rem; }
-                    .title { font-family: 'Playfair Display', Georgia, serif; color: #dfba86; font-size: 1.6rem; margin-top: 1rem; }
-                    .content { padding: 2rem 0; line-height: 1.6; font-size: 1rem; }
-                    .otp-box { background-color: rgba(223, 186, 134, 0.08); border: 1.5px dashed #dfba86; border-radius: 12px; text-align: center; padding: 1.5rem; font-size: 2.2rem; font-weight: bold; letter-spacing: 6px; color: #dfba86; margin: 1.5rem 0; }
-                    .footer { text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem; font-size: 0.8rem; color: #a09f9f; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h2 class='title'>MEDUSA RESTAURANT</h2>
+            <body style=\"font-family: 'Plus Jakarta Sans', Arial, sans-serif; background-color: #0a0a0a; color: #f3f3f3; margin: 0; padding: 2rem 0;\">
+                <div style=\"max-width: 600px; margin: 0 auto; padding: 2rem; background-color: #121111; border: 1px solid rgba(223, 186, 134, 0.2); border-radius: 16px;\">
+                    <div style=\"text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 1rem;\">
+                        <h2 style=\"font-family: 'Playfair Display', Georgia, serif; color: #dfba86; font-size: 1.6rem; margin: 0; letter-spacing: 2px;\">MEDUSA RESTAURANT</h2>
                     </div>
-                    <div class='content'>
-                        <p>Dear {$toName},</p>
-                        <p>Thank you for registering at Medusa. To activate your account and complete your registration, please verify your email address using the 6-digit One-Time Password (OTP) below:</p>
-                        <div class='otp-box'>{$otp}</div>
-                        <p>This verification code is valid for <strong>10 minutes</strong>. If you did not request this code, please ignore this email.</p>
+                    <div style=\"padding: 2rem 0; line-height: 1.6; font-size: 1rem; color: #f3f3f3;\">
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">Dear {$toName},</p>
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">Thank you for registering at Medusa. To activate your account and complete your registration, please verify your email address using the 6-digit One-Time Password (OTP) below:</p>
+                        <div style=\"background-color: rgba(223, 186, 134, 0.08); border: 1.5px dashed #dfba86; border-radius: 12px; text-align: center; padding: 1.5rem; font-size: 2.2rem; font-weight: bold; letter-spacing: 6px; color: #dfba86; margin: 1.5rem 0;\">{$otp}</div>
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">This verification code is valid for <strong>10 minutes</strong>. If you did not request this code, please ignore this email.</p>
                     </div>
-                    <div class='footer'>
-                        <p>&copy; 2026 Medusa Restaurant. SCO 44,45, Sector 68, SAS Nagar, Punjab 140308. All Rights Reserved.</p>
+                    <div style=\"text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem; font-size: 0.8rem; color: #a09f9f;\">
+                        <p style=\"color: #a09f9f; margin: 0;\">&copy; 2026 Medusa Restaurant. SCO 44,45, Sector 68, SAS Nagar, Punjab 140308. All Rights Reserved.</p>
                     </div>
                 </div>
             </body>
@@ -183,6 +173,7 @@ if (!function_exists('sendOTPSMS')) {
 if (!function_exists('sendWelcomeEmail')) {
     function sendWelcomeEmail($toEmail, $toName) {
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
 
         $smtp_host = get_env_var('SMTP_HOST');
         $smtp_port = get_env_var('SMTP_PORT', 587);
@@ -211,32 +202,21 @@ if (!function_exists('sendWelcomeEmail')) {
             $mail->Subject = "Welcome to Medusa Restaurant!";
             $mail->Body = "
             <html>
-            <head>
-                <style>
-                    body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; background-color: #0a0a0a; color: #f3f3f3; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 2rem; background-color: #121111; border: 1px solid rgba(223, 186, 134, 0.2); border-radius: 16px; }
-                    .header { text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 1rem; }
-                    .title { font-family: 'Playfair Display', Georgia, serif; color: #dfba86; font-size: 1.6rem; margin-top: 1rem; }
-                    .content { padding: 2rem 0; line-height: 1.6; font-size: 1rem; }
-                    .btn { display: inline-block; background-color: #dfba86; color: #0a0a0a; padding: 0.8rem 2rem; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 1.5rem; }
-                    .footer { text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem; font-size: 0.8rem; color: #a09f9f; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h2 class='title'>MEDUSA RESTAURANT</h2>
+            <body style=\"font-family: 'Plus Jakarta Sans', Arial, sans-serif; background-color: #0a0a0a; color: #f3f3f3; margin: 0; padding: 2rem 0;\">
+                <div style=\"max-width: 600px; margin: 0 auto; padding: 2rem; background-color: #121111; border: 1px solid rgba(223, 186, 134, 0.2); border-radius: 16px;\">
+                    <div style=\"text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 1rem;\">
+                        <h2 style=\"font-family: 'Playfair Display', Georgia, serif; color: #dfba86; font-size: 1.6rem; margin: 0; letter-spacing: 2px;\">MEDUSA RESTAURANT</h2>
                     </div>
-                    <div class='content'>
-                        <p>Dear {$toName},</p>
-                        <p>Welcome to Medusa! We are thrilled to confirm that your account has been successfully verified and activated.</p>
-                        <p>You can now log in to reserve tables, browse our artisanal menu, customize your dishes, and place orders directly from our digital command center.</p>
-                        <div style='text-align: center;'>
-                            <a href='http://localhost/restaurant_medusa/login.html' class='btn'>Log In to Your Account</a>
+                    <div style=\"padding: 2rem 0; line-height: 1.6; font-size: 1rem; color: #f3f3f3;\">
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">Dear {$toName},</p>
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">Welcome to Medusa! We are thrilled to confirm that your account has been successfully verified and activated.</p>
+                        <p style=\"color: #f3f3f3; margin: 0 0 1rem 0;\">You can now log in to reserve tables, browse our artisanal menu, customize your dishes, and place orders directly from our digital command center.</p>
+                        <div style=\"text-align: center; margin-top: 1.5rem;\">
+                            <a href=\"http://localhost/restaurant_medusa/login.html\" style=\"display: inline-block; background-color: #dfba86; color: #0a0a0a; padding: 0.8rem 2rem; text-decoration: none; border-radius: 8px; font-weight: bold;\">Log In to Your Account</a>
                         </div>
                     </div>
-                    <div class='footer'>
-                        <p>&copy; 2026 Medusa Restaurant. SCO 44,45, Sector 68, SAS Nagar, Punjab 140308. All Rights Reserved.</p>
+                    <div style=\"text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem; font-size: 0.8rem; color: #a09f9f;\">
+                        <p style=\"color: #a09f9f; margin: 0;\">&copy; 2026 Medusa Restaurant. SCO 44,45, Sector 68, SAS Nagar, Punjab 140308. All Rights Reserved.</p>
                     </div>
                 </div>
             </body>

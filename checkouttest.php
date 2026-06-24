@@ -2062,6 +2062,10 @@ function renderOrderItems(items) {
         </div>
         `;
     }).join('');
+
+    const totalQty = items.reduce((sum, item) => sum + (parseInt(item.quantity) || 1), 0);
+    const countEl = document.getElementById('item-count');
+    if (countEl) countEl.textContent = totalQty;
 }
 function _old_renderOrderItems(items) {
     const listContainer = document.getElementById('order-items-list');
@@ -2719,6 +2723,23 @@ if (notifDropdown) {
         }
     });
 }
+
+// Pre-load coupon from sessionStorage if set from cart page
+document.addEventListener('DOMContentLoaded', () => {
+    const preAppliedCoupon = sessionStorage.getItem('applied_coupon_code');
+    if (preAppliedCoupon) {
+        const couponInput = document.getElementById('couponCodeInput');
+        if (couponInput) {
+            couponInput.value = preAppliedCoupon;
+            const applyBtn = document.getElementById('applyCouponBtn');
+            if (applyBtn) {
+                const couponInputGroup = document.getElementById('couponInputGroup');
+                if (couponInputGroup) couponInputGroup.classList.add('active');
+                applyBtn.click();
+            }
+        }
+    }
+});
 
 </script>
 <?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>

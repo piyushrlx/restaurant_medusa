@@ -82,7 +82,7 @@ $gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
 $packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
 
 $gst = $subtotal * ($gst_rate / 100);
-$delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $delivery_charge;
+$delivery = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : floatval($order['delivery_charge'] ?? 40.00);
 $packing = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 0.00 : $packing_charge;
 
 $grand_total = $subtotal + $gst + $delivery + $packing;

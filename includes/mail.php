@@ -76,6 +76,7 @@ if (!function_exists('sendWelcomeEmail')) {
         }
 
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
         try {
             $mail->isSMTP();
             $mail->Host       = $smtp_host;
@@ -151,6 +152,7 @@ if (!function_exists('sendConfirmationEmail')) {
         }
 
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
         try {
             $mail->isSMTP();
             $mail->Host       = $smtp_host;
@@ -252,6 +254,7 @@ if (!function_exists('sendBillEmail')) {
         }
 
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
         try {
             $mail->isSMTP();
             $mail->Host       = $smtp_host;
@@ -360,6 +363,7 @@ if (!function_exists('sendBookingEmail')) {
         }
 
         $mail = new PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
         try {
             $mail->isSMTP();
             $mail->Host       = $smtp_host;
