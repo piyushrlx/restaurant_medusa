@@ -1398,9 +1398,24 @@ $table_zones = [
     
     <script>
         (function() {
+            // Theme check
             const theme = localStorage.getItem('medusa_admin_theme');
             if (theme === 'light') {
                 document.documentElement.classList.add('light-mode');
+            }
+
+            // Tab check (flicker prevention)
+            const activeTab = localStorage.getItem('medusa_active_admin_tab');
+            if (activeTab && activeTab !== 'dashboard-tab') {
+                const style = document.createElement('style');
+                style.id = 'temp-tab-css';
+                style.innerHTML = `
+                    #dashboard-tab.tab-panel.active { display: none !important; }
+                    #${activeTab}.tab-panel { display: block !important; }
+                    .sidebar-link[onclick*="dashboard-tab"] { background-color: transparent !important; color: var(--gray) !important; }
+                    .sidebar-link[onclick*="${activeTab}"] { color: var(--gold) !important; background-color: rgba(223, 186, 134, 0.08) !important; }
+                `;
+                document.head.appendChild(style);
             }
         })();
     </script>
@@ -4847,6 +4862,9 @@ html:not(.light-mode) .form-select:focus{
             const panel = document.getElementById(tabId);
             if (panel) panel.classList.add('active');
             
+            // Save active tab to localStorage
+            localStorage.setItem('medusa_active_admin_tab', tabId);
+            
             // If kitchen panel is active, start live polling
             if (tabId === 'kitchen-tab') {
                 startKitchenPolling();
@@ -4898,9 +4916,20 @@ html:not(.light-mode) .form-select:focus{
             updateChartTheme(); // apply theme colors to chart immediately
         }
 
-        // Initialize theme UI state on DOMContentLoaded
+        // Initialize theme UI state and restore active tab on DOMContentLoaded
         document.addEventListener('DOMContentLoaded', function() {
             updateThemeUI();
+            
+            // Restore active tab
+            const activeTab = localStorage.getItem('medusa_active_admin_tab');
+            if (activeTab) {
+                const sidebarLink = document.querySelector(`.sidebar-link[onclick*="${activeTab}"]`);
+                if (sidebarLink) {
+                    switchTab(activeTab, sidebarLink);
+                }
+            }
+            // Remove temporary style tag to allow normal stylesheet rules to take over
+            document.getElementById('temp-tab-css')?.remove();
         });
 
         // 2. Order Status Controls (Online list)

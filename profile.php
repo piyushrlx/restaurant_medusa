@@ -1049,7 +1049,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <i class="fa-solid fa-id-badge"></i> Membership Pass
                     </button>
                     <button class="nav-link dashboard-pill-profile" id="pill-notifications-tab" data-bs-toggle="pill" data-bs-target="#pill-notifications" type="button" role="tab">
-                        <i class="fa-solid fa-bell"></i> Notifications Log
+                        <i class="fa-solid fa-bell"></i> Notification
                     </button>
                     <!-- Hidden tab button for programmatic switching to Terms -->
                     <button id="pill-terms-tab" data-bs-toggle="pill" data-bs-target="#pill-terms" type="button" role="tab" style="display: none;"></button>
@@ -1872,7 +1872,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="tab-pane fade" id="pill-notifications" role="tabpanel">
                     <div class="d-flex flex-column mb-5">
                         <h2 class="m-0" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.8rem; font-weight: 600;">
-                            <i class="fa-regular fa-bell me-2" style="color: #d4af37;"></i> Notifications Log
+                            <i class="fa-regular fa-bell me-2" style="color: #d4af37;"></i> Notification
                         </h2>
                         <p class="text-muted mt-2 mb-0" style="font-size: 0.95rem;">Stay updated with your recent activity and important alerts.</p>
                     </div>

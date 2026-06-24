@@ -38,15 +38,26 @@ if (!empty($_SESSION['user_id'])) {
         $pts_stmt->execute([$_SESSION['user_id']]);
         $user_points_balance = intval($pts_stmt->fetchColumn() ?: 0);
 
-        // Fetch saved addresses
         $addr_stmt = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC");
         $addr_stmt->execute([$_SESSION['user_id']]);
         $saved_addresses = $addr_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fetch notifications
+        $notif_stmt = $pdo->prepare("SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+        $notif_stmt->execute([$_SESSION['user_id']]);
+        $user_notifications = $notif_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $unread_notifications_count = 0;
+        foreach ($user_notifications as $n) {
+            if (empty($n['is_read'])) $unread_notifications_count++;
+        }
     } catch (PDOException $e) {
         // ignore
     }
 } else {
     $saved_addresses = [];
+    $user_notifications = [];
+    $unread_notifications_count = 0;
 }
 
 // Load Settings
@@ -84,8 +95,6 @@ $csrf_token = "dummy_test_token";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Medusa</title>
-    <!-- Global Theme Controller -->
-    <script src="assets/js/theme-toggle.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/variables.css">
@@ -545,18 +554,19 @@ $csrf_token = "dummy_test_token";
 
         /* Footer Styling */
         .main-footer {
-            background-color: #0b0f19;
-            color: #8a99ad;
+            background-color: #080c0a; /* Dark Medusa theme */
+            color: rgba(255,255,255,0.6);
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.95rem;
             position: relative;
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
 
         .footer-title {
-            color: #ffffff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
             font-size: 1.25rem;
-            font-weight: 700;
+            font-weight: 600;
             margin-bottom: 1.5rem;
             letter-spacing: 0.5px;
         }
@@ -566,7 +576,7 @@ $csrf_token = "dummy_test_token";
         }
 
         .footer-links a {
-            color: #8a99ad;
+            color: rgba(255,255,255,0.6);
             text-decoration: none;
             transition: all 0.2s ease;
             display: inline-flex;
@@ -575,7 +585,7 @@ $csrf_token = "dummy_test_token";
 
         .footer-links a i {
             font-size: 0.75rem;
-            color: #8a99ad;
+            color: rgba(255,255,255,0.4);
             transition: all 0.2s ease;
         }
 
@@ -591,14 +601,15 @@ $csrf_token = "dummy_test_token";
         .footer-icon {
             color: var(--gold);
             font-size: 1.1rem;
+            width: 20px;
         }
 
         .footer-contact-info span {
-            color: #8a99ad;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .footer-social-icons a {
-            color: #8a99ad;
+            color: var(--gold);
             font-size: 1.25rem;
             transition: all 0.2s ease;
         }
@@ -611,13 +622,14 @@ $csrf_token = "dummy_test_token";
         .footer-divider {
             border: none;
             border-top: 1px dotted rgba(255, 255, 255, 0.2);
-            margin: 2rem 0 1rem 0;
+            border-color: rgba(255,255,255,0.05);
+            margin: 2.5rem 0 1.5rem 0;
             opacity: 1;
         }
 
         .footer-bottom-text {
             font-size: 0.85rem;
-            color: #6c7a8d !important;
+            color: rgba(255, 255, 255, 0.4) !important;
         }
 
         .hover-orange:hover {
@@ -688,11 +700,10 @@ $csrf_token = "dummy_test_token";
             text-align: center;
             max-width: 450px;
             width: 90%;
-            padding: 3rem 2.5rem;
-            background: rgba(18, 17, 17, 0.7);
-            border: 1px solid rgba(223, 186, 134, 0.15);
-            border-radius: 24px;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
             transform: scale(0.95);
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
@@ -702,45 +713,23 @@ $csrf_token = "dummy_test_token";
             transform: scale(1);
         }
 
-        .logo-container-loader {
+        .food-animation-container {
             position: relative;
-            width: 90px;
-            height: 90px;
-            margin: 0 auto 2.5rem auto;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+            border-radius: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        .loader-logo {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 2px solid #dfba86;
-            padding: 2px;
-            z-index: 2;
-            animation: pulseLogo 2s ease-in-out infinite;
-        }
-
-        .logo-glow {
-            position: absolute;
-            width: 90px;
-            height: 90px;
-            background: radial-gradient(circle, rgba(223, 186, 134, 0.3) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 1;
-            animation: pulseGlow 2s ease-in-out infinite;
-        }
-
-        .spinner-ring {
-            position: absolute;
-            width: 90px;
-            height: 90px;
-            border: 3px solid rgba(223, 186, 134, 0.08);
-            border-top: 3px solid #dfba86;
-            border-radius: 50%;
-            animation: spinLoader 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-            z-index: 3;
+        .food-loader-gif {
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: none;
         }
 
         .loader-title {
@@ -756,14 +745,14 @@ $csrf_token = "dummy_test_token";
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.95rem;
             color: #a09f9f;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             min-height: 1.5rem;
             font-weight: 500;
         }
 
         .loader-progress-bar {
             width: 100%;
-            height: 4px;
+            height: 6px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             overflow: hidden;
@@ -772,25 +761,23 @@ $csrf_token = "dummy_test_token";
         .loader-progress-fill {
             width: 5%;
             height: 100%;
-            background: linear-gradient(90deg, #dfba86 0%, #e6c89f 100%);
+            background: linear-gradient(90deg, #dfba86 0%, #e6c89f 50%, #dfba86 100%);
+            background-size: 200% 100%;
             border-radius: 10px;
             transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: gradientMove 2s linear infinite;
+            box-shadow: 0 0 12px rgba(223, 186, 134, 0.5);
         }
 
         /* Keyframes */
-        @keyframes spinLoader {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes floatAnimation {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        @keyframes pulseLogo {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(223, 186, 134, 0.2); }
-            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(223, 186, 134, 0.5); }
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { transform: scale(0.85); opacity: 0.5; }
-            50% { transform: scale(1.15); opacity: 0.8; }
+        @keyframes gradientMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
     
         /* Redesign Styles */
@@ -951,6 +938,10 @@ $csrf_token = "dummy_test_token";
             color: #ffffff;
             font-size: 0.95rem;
             transition: all 0.3s;
+        }
+        .medusa-input-group select option {
+            background-color: #0f1714;
+            color: #ffffff;
         }
         .medusa-input-group input:focus, .medusa-input-group select:focus {
             border-color: var(--gold);
@@ -1375,6 +1366,40 @@ $csrf_token = "dummy_test_token";
         .map-modal-close { color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none; }
         .btn-confirm-map { background: var(--gold); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
 
+        /* Hide scrollbar but keep scroll functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Remove dropdown arrow from bell */
+        #notifDropdown::after {
+            display: none !important;
+        }
+        
+        /* Bell Ringing Animation */
+        @keyframes bell-ring {
+            0% { transform: rotate(0); }
+            10% { transform: rotate(20deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-5deg); }
+            50% { transform: rotate(0); }
+            100% { transform: rotate(0); }
+        }
+        .bell-ringing {
+            display: inline-block;
+            transform-origin: top center;
+            animation: bell-ring 1.5s infinite;
+        }
+
+        /* Hide Theme Toggle Button on Checkout */
+        #themeToggleBtn {
+            display: none !important;
+        }
 </style>
     <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_env_var('GOOGLE_MAPS_API_KEY', ''); ?>&libraries=places"></script>
 </head>
@@ -1398,12 +1423,40 @@ $csrf_token = "dummy_test_token";
                 <a href="my-orders.php" class="nav-link active" style="color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 4px;">My Orders</a>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <a href="profile.php#pill-notifications" class="text-white text-decoration-none position-relative" title="Notifications">
-                    <i class="fa-regular fa-bell" style="font-size: 1.2rem;"></i>
-                </a>
+                <div class="dropdown">
+                    <a href="#" class="text-white text-decoration-none position-relative dropdown-toggle" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications" style="text-decoration: none;">
+                        <i class="fa-regular fa-bell <?php echo ($unread_notifications_count > 0) ? 'bell-ringing' : ''; ?>" id="notifBellIcon" style="font-size: 1.2rem;"></i>
+                        <?php if($unread_notifications_count > 0): ?>
+                            <span id="notifRedDot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;">
+                                <span class="visually-hidden">New alerts</span>
+                            </span>
+                        <?php endif; ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark no-scrollbar" aria-labelledby="notifDropdown" style="width: 320px; max-height: 400px; overflow-y: auto; background-color: #1a1a1a; border-color: rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <li><h6 class="dropdown-header" style="color: var(--gold); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">Notifications</h6></li>
+                        <?php if (empty($user_notifications)): ?>
+                            <li><span class="dropdown-item text-muted text-center py-3">No new notifications</span></li>
+                        <?php else: ?>
+                            <?php foreach ($user_notifications as $notif): ?>
+                                <li>
+                                    <div class="dropdown-item px-3 py-2 text-wrap" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <strong style="color: #fff; font-size: 0.9rem;"><?php echo htmlspecialchars($notif['title']); ?></strong>
+                                            <small class="text-muted" style="font-size: 0.7rem;"><?php echo date('M d, g:i A', strtotime($notif['created_at'])); ?></small>
+                                        </div>
+                                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">
+                                            <?php echo htmlspecialchars($notif['message']); ?>
+                                        </div>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                        <li><a class="dropdown-item text-center text-decoration-underline" href="profile.php#pill-notifications" style="color: var(--gold); font-size: 0.85rem;">View All in Profile</a></li>
+                    </ul>
+                </div>
                 <a href="carttest.html" class="text-white text-decoration-none position-relative ms-2" title="Cart">
                     <i class="fa-solid fa-cart-shopping" style="font-size: 1.2rem;"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem;" id="cart-nav-count">0</span>
                 </a>
                 <a href="profile.php" class="text-decoration-none ms-2" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; color: var(--gold); font-weight: 600; font-size: 0.85rem;">
                     <?php echo substr($user_details['first_name'] ?: 'U', 0, 1); ?>
@@ -1570,7 +1623,6 @@ $csrf_token = "dummy_test_token";
                                     <span class="option-title">Self Pickup</span>
                                 </div>
                                 <div class="option-desc">Pick up your order from restaurant</div>
-                                <div class="option-meta text-green">15 mins</div>
                             </label>
                         </div>
                     </div>
@@ -1658,9 +1710,18 @@ $csrf_token = "dummy_test_token";
                                     <span class="lbl">Delivery Fee</span>
                                     <span class="val" id="checkout-delivery">₹40.00</span>
                                 </div>
-                                <div class="summary-row" id="coupon-discount-row" style="display: none;">
-                                    <span class="lbl">Coupon Discount (<span id="coupon-percent-label">0</span>%)</span>
-                                    <span class="val text-success" id="checkout-discount">-₹0.00</span>
+                                <div class="summary-row text-success" id="total-discount-row" style="display: none; align-items: center; position: relative;">
+                                    <span class="lbl" style="display: flex; align-items: center; gap: 6px; position: relative;">
+                                        Total Discount 
+                                        <i class="fas fa-info-circle discount-info-icon" id="discountInfoBtn" style="cursor: pointer; color: var(--gold);"></i>
+                                        <div id="discountPopover" style="display: none; position: absolute; top: 120%; left: 0; background: var(--bg-dark, #0a0a0a); border: 1px solid rgba(223, 186, 134, 0.3); padding: 12px; border-radius: 8px; z-index: 100; min-width: 200px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
+                                            <div id="bd-mrp-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);">Discount on MRP</span><span class="text-success" id="bd-mrp">-₹0.00</span></div>
+                                            <div id="bd-tier-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);" id="bd-tier-label">Tier Discount</span><span class="text-success" id="bd-tier">-₹0.00</span></div>
+                                            <div id="bd-coupon-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);">Coupon Discount</span><span class="text-success" id="bd-coupon">-₹0.00</span></div>
+                                            <div id="bd-points-row" style="display: none; justify-content: space-between; font-size: 0.8rem;"><span style="color: rgba(255,255,255,0.7);">Reward Points</span><span class="text-success" id="bd-points">-₹0.00</span></div>
+                                        </div>
+                                    </span>
+                                    <span class="val" id="checkout-total-discount">-₹0.00</span>
                                 </div>
                                 <div class="summary-row grand-total">
                                     <span class="lbl">Grand Total</span>
@@ -1672,22 +1733,48 @@ $csrf_token = "dummy_test_token";
                                 <div class="coupon-title">
                                     <i class="fas fa-tag"></i> Have a coupon code?
                                 </div>
+                                <div id="couponMessage" style="display: none; font-size: 0.85rem; margin-bottom: 10px;"></div>
                                 <div class="coupon-input-wrapper">
                                     <input type="text" id="couponCodeInput" placeholder="Enter coupon code">
                                     <button type="button" id="applyCouponBtn">Apply</button>
                                 </div>
                             </div>
+
+                            <!-- Points Container -->
+                            <div class="points-container mt-3" style="border: 1px dashed rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.01); border-radius: 8px; padding: 1.1rem; transition: all 0.3s;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <div class="coupon-title m-0" style="font-size: 1rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-star"></i> Medusa Rewards
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+                                        Tier: <strong class="text-white"><?php echo htmlspecialchars($user_tier_name); ?></strong>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 12px;">
+                                    Available Points: <strong class="text-white"><?php echo $user_points_balance; ?></strong> <span style="font-size: 0.75rem; opacity: 0.7;">(1 pt = ₹1)</span>
+                                </p>
+                                
+                                <?php if ($user_points_balance > 0): ?>
+                                <div class="form-check form-switch" style="display: flex; align-items: center; gap: 10px; padding-left: 0;">
+                                    <input class="form-check-input" type="checkbox" id="redeem_loyalty_points" style="margin: 0; width: 40px; height: 20px; cursor: pointer; border-color: rgba(255,255,255,0.3); background-color: rgba(255,255,255,0.1);">
+                                    <label class="form-check-label text-white" for="redeem_loyalty_points" style="font-size: 0.9rem; cursor: pointer; padding-top: 2px;">
+                                        Redeem points on this order
+                                    </label>
+                                </div>
+                                <?php else: ?>
+                                <div style="font-size: 0.8rem; color: #ef4444;">
+                                    <i class="fas fa-info-circle"></i> You don't have enough points to redeem yet.
+                                </div>
+                                <?php endif; ?>
+                                
+                                <div id="points-earned-tracker" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+                                    <i class="fas fa-gift text-success me-1"></i> You will earn <strong class="text-success"><span id="earned-points-value">0</span> points</strong> on this order!
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="eta-callout">
-                        <i class="fas fa-concierge-bell eta-icon"></i>
-                        <div class="eta-text">
-                            Expect your order in
-                            <strong id="eta-time-display">20-25 mins</strong>
-                            We'll notify you when it's on the way!
-                        </div>
-                    </div>
+
                 </div>
 
             </div>
@@ -1721,69 +1808,7 @@ $csrf_token = "dummy_test_token";
             <button id="confirmLocationBtn" class="btn-confirm-map">Confirm Location</button>
         </div>
     </div>
-
-<!-- Footer Section -->
-    <footer class="main-footer py-5 mt-5">
-        <div class="container">
-            <div class="row g-4">
-                <!-- Column 1: Menu Links -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-title">Menu Links</h5>
-                    <ul class="footer-links list-unstyled m-0">
-                        <li><a href="index.html"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
-                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>FAQ</a></li>
-                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>Contacts</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Column 2: Order Wizard -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-title">Order Wizard</h5>
-                    <ul class="footer-links list-unstyled m-0">
-                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>Pay online</a></li>
-                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>Pay with cash on delivery</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Column 3: Contacts -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-title">Contacts</h5>
-                    <ul class="footer-contact-info list-unstyled m-0">
-                        <li class="d-flex align-items-start mb-3">
-                            <i class="fas fa-map-marker-alt footer-icon me-3 mt-1"></i>
-                            <span>Address: 1234 Street Name, City Name, USA</span>
-                        </li>
-                        <li class="d-flex align-items-start mb-3">
-                            <i class="fas fa-envelope footer-icon me-3 mt-1"></i>
-                            <span>Mail: info@yourdomain.com</span>
-                        </li>
-                        <li class="d-flex align-items-start">
-                            <i class="fas fa-phone-alt footer-icon me-3 mt-1"></i>
-                            <span>Phone: +3630123456789</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Column 4: Find Us On -->
-                <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-title">Find Us On</h5>
-                    <div class="footer-social-icons d-flex gap-3">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-pinterest-p"></i></a>
-                    </div>
-                </div>
-            </div>
-            
-            <hr class="footer-divider">
-            
-            <div class="d-flex justify-content-between align-items-center flex-wrap pt-2">
-                <span class="text-muted footer-bottom-text">With <i class="fas fa-heart text-danger"></i> by UWS</span>
-                <a href="#" class="text-muted footer-bottom-text hover-orange" style="text-decoration: none;">Terms and conditions</a>
-            </div>
-        </div>
-    </footer>
+    </div>
 
     <!-- Scroll to Top Button -->
     <button id="scrollToTop" class="scroll-to-top-btn">
@@ -1882,61 +1907,101 @@ if (couponToggle) {
 
 document.getElementById('applyCouponBtn').addEventListener('click', () => {
     const code = document.getElementById('couponCodeInput').value.trim();
+    const messageBox = document.getElementById('couponMessage');
+    
     if (!code) {
-        alert('Please enter a coupon code.');
+        messageBox.style.display = 'block';
+        messageBox.style.color = '#ef4444'; // Red error color
+        messageBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a coupon code.';
         return;
     }
     
     const applyBtn = document.getElementById('applyCouponBtn');
     applyBtn.disabled = true;
     applyBtn.textContent = 'Applying...';
+    messageBox.style.display = 'none'; // Hide previous message
 
     fetch(`api/validate-coupon.php?code=${encodeURIComponent(code)}`)
         .then(res => res.json())
         .then(data => {
             applyBtn.disabled = false;
             applyBtn.textContent = 'Apply';
+            
+            messageBox.style.display = 'block';
             if (data.success) {
                 appliedCouponCode = data.coupon_code;
                 appliedCouponDiscountPercent = parseFloat(data.discount_value);
-                alert(`Coupon "${data.coupon_code}" applied successfully: ${data.discount_value}% OFF!`);
+                
+                messageBox.style.color = '#2ecc71'; // Green success color
+                messageBox.innerHTML = `<i class="fas fa-check-circle"></i> Coupon "${data.coupon_code}" applied: ${data.discount_value}% OFF!`;
+                
                 loadCheckoutSummary(); // Refresh UI with discount
             } else {
                 appliedCouponCode = '';
                 appliedCouponDiscountPercent = 0;
-                alert('Invalid Coupon: ' + data.message);
+                
+                messageBox.style.color = '#ef4444'; // Red error color
+                messageBox.innerHTML = `<i class="fas fa-exclamation-circle"></i> Invalid Coupon: ${data.message}`;
+                
                 loadCheckoutSummary(); // Refresh UI to remove discount
             }
         })
         .catch(err => {
             applyBtn.disabled = false;
             applyBtn.textContent = 'Apply';
-            alert('Failed to validate coupon due to network error.');
+            
+            messageBox.style.display = 'block';
+            messageBox.style.color = '#ef4444';
+            messageBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to validate coupon due to network error.';
         });
 });
-
-// Interactive payment method selection
-const paymentOptions = document.querySelectorAll('.payment-option-item');
-paymentOptions.forEach(option => {
-    option.addEventListener('click', function(e) {
-        // If clicked directly on the radio or label inside content, let the browser handle it
-        const radio = this.querySelector('.payment-option-radio');
-        if (e.target !== radio && e.target.tagName !== 'LABEL') {
-            radio.checked = true;
-        }
-        
-        // Update active class on items
-        paymentOptions.forEach(opt => opt.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Update visible panel
-        const targetPanelId = this.getAttribute('data-target');
-        document.querySelectorAll('.payment-details-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        document.getElementById(targetPanelId).classList.add('active');
+function setPaymentMode(mode, element) {
+    // Update active class on items
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        if (radio.value === mode) radio.checked = true;
     });
-});
+    
+    document.querySelectorAll('label[onclick^="setPaymentMode"]').forEach(opt => opt.classList.remove('active'));
+    element.classList.add('active');
+    
+    // Update submit button text
+    const submitBtn = document.getElementById('submitOrderBtn');
+    if (submitBtn) {
+        if (mode === 'cod') {
+            submitBtn.innerHTML = 'Place Order <i class="fas fa-arrow-right"></i>';
+        } else {
+            submitBtn.innerHTML = 'Proceed to Payment <i class="fas fa-arrow-right"></i>';
+        }
+    }
+    
+    // Auto-submit if COD is selected
+    if (mode === 'cod') {
+        const form = document.getElementById('orderForm');
+        if (form) {
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+    }
+}
+
+function setDeliveryMode(mode, element) {
+    document.querySelectorAll('input[name="delivery_option"]').forEach(radio => {
+        if (radio.value === mode) radio.checked = true;
+    });
+    
+    document.querySelectorAll('label[onclick^="setDeliveryMode"]').forEach(opt => opt.classList.remove('active'));
+    element.classList.add('active');
+    
+    // Optionally update summary
+    loadCheckoutSummary();
+}
+
+// Remove old broken event listeners
+
+
 
 // Load checkout summary totals
 async function loadCheckoutSummary() {
@@ -1979,7 +2044,7 @@ async function loadCheckoutSummary() {
             console.error('Error parsing cart from localStorage:', e);
         }
     }
-    useMockSummary();
+    handleEmptyCart();
 }
 
 function renderOrderItems(items) {
@@ -2016,56 +2081,58 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
         document.getElementById('checkout-packing').textContent = `₹${packing.toFixed(2)}`;
     }
     
-    // 1. Coupon Discount
+    // Calculate all discounts
+    let mrpDiscount = 0; // For future logic if items have MRP > Price
+    
     let couponDiscount = 0;
     if (typeof appliedCouponCode !== 'undefined' && appliedCouponCode && appliedCouponDiscountPercent > 0) {
         couponDiscount = subtotal * (appliedCouponDiscountPercent / 100);
-        const cpLabel = document.getElementById('coupon-percent-label');
-        if(cpLabel) cpLabel.textContent = appliedCouponDiscountPercent;
-        const cDiscount = document.getElementById('checkout-discount');
-        if(cDiscount) cDiscount.textContent = `-₹${couponDiscount.toFixed(2)}`;
-        const cRow = document.getElementById('coupon-discount-row');
-        if(cRow) cRow.style.display = 'flex';
-    } else {
-        const cRow = document.getElementById('coupon-discount-row');
-        if(cRow) cRow.style.display = 'none';
     }
 
-    // 2. Tier Discount
     let tierDiscount = 0;
     if (typeof USER_TIER_DISCOUNT_PERCENT !== 'undefined' && USER_TIER_DISCOUNT_PERCENT > 0) {
         tierDiscount = subtotal * (USER_TIER_DISCOUNT_PERCENT / 100);
-        const nameLabel = document.getElementById('tier-name-label');
-        if(nameLabel) nameLabel.textContent = USER_TIER_NAME;
-        const pctLabel = document.getElementById('tier-percent-label');
-        if(pctLabel) pctLabel.textContent = USER_TIER_DISCOUNT_PERCENT;
-        const tDiscount = document.getElementById('checkout-tier-discount');
-        if(tDiscount) tDiscount.textContent = `-₹${tierDiscount.toFixed(2)}`;
-        const tRow = document.getElementById('tier-discount-row');
-        if(tRow) tRow.style.display = 'flex';
-    } else {
-        const tRow = document.getElementById('tier-discount-row');
-        if(tRow) tRow.style.display = 'none';
     }
 
-    // 3. Points Discount
     let pointsDiscount = 0;
     const redeemCheckbox = document.getElementById('redeem_loyalty_points');
     const baseTotal = subtotal + gst + delivery + packing - couponDiscount - tierDiscount;
     if (redeemCheckbox && redeemCheckbox.checked && typeof USER_POINTS_BALANCE !== 'undefined') {
         pointsDiscount = Math.min(USER_POINTS_BALANCE, Math.max(0, baseTotal));
-        const ptsLabel = document.getElementById('redeemed-points-label');
-        if(ptsLabel) ptsLabel.textContent = pointsDiscount;
-        const pDiscount = document.getElementById('checkout-points-discount');
-        if(pDiscount) pDiscount.textContent = `-₹${pointsDiscount.toFixed(2)}`;
-        const pRow = document.getElementById('points-discount-row');
-        if(pRow) pRow.style.display = 'flex';
-    } else {
-        const pRow = document.getElementById('points-discount-row');
-        if(pRow) pRow.style.display = 'none';
+    }
+    
+    const totalDiscount = mrpDiscount + couponDiscount + tierDiscount + pointsDiscount;
+    
+    const discountRow = document.getElementById('total-discount-row');
+    if (discountRow) {
+        if (totalDiscount > 0) {
+            discountRow.style.display = 'flex';
+            document.getElementById('checkout-total-discount').textContent = `-₹${totalDiscount.toFixed(2)}`;
+            
+            // Update popover rows
+            const bdMrp = document.getElementById('bd-mrp-row');
+            if(bdMrp) { bdMrp.style.display = mrpDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-mrp').textContent = `-₹${mrpDiscount.toFixed(2)}`; }
+            
+            const bdTier = document.getElementById('bd-tier-row');
+            if(bdTier) { 
+                bdTier.style.display = tierDiscount > 0 ? 'flex' : 'none'; 
+                const bdTierLabel = document.getElementById('bd-tier-label');
+                if (bdTierLabel) bdTierLabel.textContent = `${USER_TIER_NAME} Tier (${USER_TIER_DISCOUNT_PERCENT}%)`;
+                document.getElementById('bd-tier').textContent = `-₹${tierDiscount.toFixed(2)}`; 
+            }
+            
+            const bdCoupon = document.getElementById('bd-coupon-row');
+            if(bdCoupon) { bdCoupon.style.display = couponDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-coupon').textContent = `-₹${couponDiscount.toFixed(2)}`; }
+            
+            const bdPoints = document.getElementById('bd-points-row');
+            if(bdPoints) { bdPoints.style.display = pointsDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-points').textContent = `-₹${pointsDiscount.toFixed(2)}`; }
+        } else {
+            discountRow.style.display = 'none';
+        }
     }
     
     const finalTotal = Math.max(0, baseTotal - pointsDiscount);
+
     document.getElementById('checkout-total').textContent = `₹${finalTotal.toFixed(2)}`;
 
     // 4. Points Earned Tracker (2% of order value)
@@ -2078,21 +2145,26 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     }
 }
 
-function useMockSummary() {
-    // Standard mock price from mockup screenshot ($18.70 / ₹18.70)
+function handleEmptyCart() {
     const listContainer = document.getElementById('order-items-list');
     listContainer.innerHTML = `
-        <tr>
-            <td class="product-name">Basic Box × 1</td>
-            <td class="product-total">₹15.85</td>
-        </tr>
+        <div class="text-center py-5 text-muted" style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <i class="fas fa-shopping-basket mb-3" style="font-size: 3rem; color: rgba(255,255,255,0.2);"></i>
+            <h5 class="text-white">Your cart is empty</h5>
+            <p class="mb-4" style="font-size: 0.9rem;">Looks like you haven't added anything to your order yet.</p>
+            <a href="menutest.html" class="btn btn-outline-light" style="border-color: var(--gold); color: var(--gold); padding: 8px 25px; border-radius: 8px; font-weight: bold; text-decoration: none;">Browse Menu</a>
+        </div>
     `;
-    const subtotal = 15.85;
-    const gst = subtotal * (GST_RATE / 100);
-    const delivery = 2.00;
-    const packing = PACKING_CHARGE;
-    const total = subtotal + gst + delivery + packing;
-    updateSummaryUI(subtotal, delivery, gst, total, packing);
+    
+    // Disable Proceed to Payment Button
+    const submitBtn = document.getElementById('submitOrderBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
+    }
+
+    updateSummaryUI(0, 0, 0, 0, 0);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2101,6 +2173,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (redeemCheckbox) {
         redeemCheckbox.addEventListener('change', () => {
             loadCheckoutSummary();
+        });
+    }
+    
+    // Toggle discount popover
+    const discountInfoBtn = document.getElementById('discountInfoBtn');
+    const discountPopover = document.getElementById('discountPopover');
+    if (discountInfoBtn && discountPopover) {
+        discountInfoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (discountPopover.style.display === 'none') {
+                discountPopover.style.display = 'block';
+            } else {
+                discountPopover.style.display = 'none';
+            }
+        });
+        
+        // Close popover when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!discountInfoBtn.contains(e.target) && !discountPopover.contains(e.target)) {
+                discountPopover.style.display = 'none';
+            }
         });
     }
 });
@@ -2183,6 +2276,10 @@ document.getElementById('orderForm').onsubmit = async (e) => {
             }
             showLoaderOverlay();
             submitBackendOrder(compiledName, phone, compiledAddress, 'MEMBERSHIP_PASS');
+            return;
+        } else if (selectedMethod === 'cod') {
+            showLoaderOverlay();
+            submitBackendOrder(compiledName, phone, compiledAddress, 'COD');
             return;
         } else if (selectedMethod === 'upi') {
             options.prefill.method = 'upi';
@@ -2402,15 +2499,13 @@ if(btnChooseMap) {
 <!-- Premium Payment Loading Overlay -->
 <div id="payment-loader-overlay" class="payment-loader-overlay">
     <div class="loader-content">
-        <div class="logo-container-loader">
-            <img src="assets/images/versace_logo.png" alt="Medusa Logo" class="loader-logo">
-            <div class="logo-glow"></div>
-            <div class="spinner-ring"></div>
+        <div class="food-animation-container">
+            <img src="assets/video/original-8456508d6dad952727bb9f969e1ecd55.gif" alt="Preparing Order..." class="food-loader-gif">
         </div>
-        <h2 class="loader-title">Payment Successful</h2>
-        <p class="loader-subtitle" id="loader-status-text">Verifying payment details...</p>
-        <div class="loader-progress-bar">
-            <div class="loader-progress-fill" id="loader-progress-fill"></div>
+        <h2 class="loader-title" style="display: none;">Payment Successful</h2>
+        <p class="loader-subtitle" id="loader-status-text" style="display: none;">Verifying payment details...</p>
+        <div class="loader-progress-bar" style="display: none;">
+            <div class="loader-progress-fill glow-pulse" id="loader-progress-fill"></div>
         </div>
     </div>
 </div>
@@ -2602,8 +2697,32 @@ if(confirmLocationBtn) {
     });
 }
 
+// Handle Notification Dropdown Click to Mark as Read
+const notifDropdown = document.getElementById('notifDropdown');
+if (notifDropdown) {
+    notifDropdown.addEventListener('show.bs.dropdown', function () {
+        const bellIcon = document.getElementById('notifBellIcon');
+        const redDot = document.getElementById('notifRedDot');
+        
+        if (bellIcon && bellIcon.classList.contains('bell-ringing')) {
+            // Remove animation and dot instantly for better UX
+            bellIcon.classList.remove('bell-ringing');
+            if (redDot) redDot.style.display = 'none';
+            
+            // Call API to update database
+            fetch('api/mark-notifications-read.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).catch(err => console.error('Error marking notifications as read:', err));
+        }
+    });
+}
+
 </script>
 <?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
 <?php require_once __DIR__ . '/includes/order_toast.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

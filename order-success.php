@@ -25,8 +25,8 @@ if (!empty($order_id)) {
             }
 
             if (!$error_msg) {
-                // Fetch items
-                $items_stmt = $pdo->prepare("SELECT item_name AS name, price, quantity FROM order_items WHERE order_id = ?");
+                // Fetch items with images
+                $items_stmt = $pdo->prepare("SELECT oi.item_name AS name, oi.price, oi.quantity, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
                 $items_stmt->execute([$db_order['id']]);
                 $db_items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -461,56 +461,143 @@ if (!$order) {
             to { opacity: 1; }
         }
 
-        /* Printable styles */
+        /* Printable styles - Professional Invoice */
         @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
             body {
                 background: #ffffff !important;
-                color: #000000 !important;
+                color: #333333 !important;
                 padding: 0;
+                font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .success-card {
-                border: none;
-                box-shadow: none;
-                background: #ffffff;
-                color: #000000 !important;
-                padding: 0;
-                max-width: 100%;
-                width: 100%;
+                border: none !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #333333 !important;
+                padding: 15mm 20mm !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
             }
             .success-icon-container, 
             .sms-badge, 
             .btn-group-success,
-            .success-subtitle {
-                display: none !important;
-            }
+            .success-subtitle,
             .success-title {
-                color: #000000 !important;
-                font-size: 2rem;
-                margin-bottom: 2rem;
+                display: none !important;
             }
             .invoice-box {
                 background: #ffffff !important;
-                border: 1px solid #cccccc !important;
-                color: #000000 !important;
-                padding: 1.5rem;
-            }
-            .invoice-header h4,
-            .invoice-meta strong,
-            .address-col-title,
-            .item-total,
-            .total-row.grand-total,
-            .total-row.grand-total span:last-child {
-                color: #000000 !important;
-            }
-            .address-text, .invoice-table td, .total-row {
+                border: none !important;
                 color: #333333 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
             }
-            .invoice-table th {
+            .invoice-header {
+                border-bottom: 2px solid #222222 !important;
+                padding-bottom: 1.5rem !important;
+                margin-bottom: 2rem !important;
+            }
+            .invoice-header h4 {
+                color: #111111 !important;
+                font-size: 2rem !important;
+                font-family: 'Playfair Display', serif !important;
+            }
+            .invoice-header h2 {
+                color: #111111 !important;
+            }
+            .invoice-meta {
                 color: #555555 !important;
-                border-bottom: 1px solid #999999 !important;
+                font-size: 0.95rem !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
             }
-            .invoice-table td {
+            .invoice-meta strong {
+                color: #111111 !important;
+            }
+            .address-col-title {
+                color: #777777 !important;
+                font-size: 0.85rem !important;
                 border-bottom: 1px solid #eeeeee !important;
+                padding-bottom: 0.4rem !important;
+                margin-bottom: 0.8rem !important;
+            }
+            .address-text {
+                color: #222222 !important;
+                font-size: 0.95rem !important;
+            }
+            .address-text strong {
+                color: #111111 !important;
+            }
+            .address-grid {
+                border-bottom: none !important;
+                margin-bottom: 2.5rem !important;
+            }
+            .invoice-items-list {
+                margin-bottom: 2rem !important;
+                border-top: 2px solid #222222 !important;
+            }
+            .invoice-item-row {
+                border-bottom: 1px solid #eeeeee !important;
+                padding: 0.8rem 0 !important;
+            }
+            .invoice-item-row strong {
+                color: #111111 !important;
+            }
+            .invoice-item-row span {
+                color: #555555 !important;
+            }
+            .invoice-item-row div:last-child {
+                color: #111111 !important;
+            }
+            .totals-wrapper {
+                width: 45% !important;
+                float: right !important;
+                margin-top: 1rem !important;
+            }
+            .totals-section {
+                width: 100% !important;
+            }
+            .total-row {
+                font-size: 0.95rem !important;
+                padding: 0.2rem 0 !important;
+                margin-bottom: 0.3rem !important;
+            }
+            .total-row span {
+                color: #444444 !important;
+            }
+            .total-row span:last-child {
+                color: #222222 !important;
+            }
+            .dashed-divider {
+                border-top: 2px solid #111111 !important;
+                margin: 0.5rem 0 0.8rem 0 !important;
+            }
+            .total-row.grand-total span {
+                color: #111111 !important;
+                font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif !important;
+                font-size: 1.25rem !important;
+                font-weight: bold !important;
+            }
+            
+            .print-footer {
+                display: block !important;
+            }
+            
+            /* Clearfix for totals */
+            .invoice-box::after {
+                content: "";
+                display: table;
+                clear: both;
             }
         }
 
@@ -802,33 +889,39 @@ if (!$order) {
         endif; ?>
 
         <div class="invoice-box" id="invoice">
-            <div class="invoice-header">
-                <div>
-                    <h4>Medusa Invoice</h4>
+            <div class="invoice-header" style="align-items: center;">
+                <div style="display: flex; align-items: center;">
+                    <img src="assets/images/medusaa.png" alt="Medusa Luxury Dining" style="height: 220px; object-fit: contain;">
+                </div>
+                <div class="text-end" style="text-align: right;">
+                    <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2.2rem; letter-spacing: 1px;">INVOICE</h2>
                     <div class="invoice-meta mt-1">
-                        <span>Invoice No: <strong><?php echo htmlspecialchars($order['order_id']); ?></strong></span>
+                        <span>Invoice No: <strong style="font-family: monospace;">#<?php echo htmlspecialchars($order['order_id']); ?></strong></span>
                         <span>Date: <strong><?php echo htmlspecialchars(date('F j, Y, g:i a', strtotime($order['created_at']))); ?></strong></span>
                     </div>
                 </div>
+            </div>
+
+            <div class="invoice-meta" style="display: flex; justify-content: space-between; margin-bottom: 2rem; background: rgba(255,255,255,0.02); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <span>Payment Status: <strong class="text-success"><i class="fas fa-check-circle" style="font-size: 0.85rem;"></i> Paid</strong></span>
+                </div>
                 <div class="text-end">
-                    <div class="invoice-meta">
-                        <span>Status: <strong class="text-success">Paid</strong></span>
-                        <span>Payment ID: <strong><?php echo htmlspecialchars($order['payment_id']); ?></strong></span>
-                    </div>
+                    <span>Payment ID: <strong style="font-family: monospace;"><?php echo htmlspecialchars($order['payment_id']); ?></strong></span>
                 </div>
             </div>
 
             <div class="address-grid">
                 <div>
-                    <div class="address-col-title">Customer Details</div>
+                    <div class="address-col-title">Invoice To</div>
                     <div class="address-text">
-                        <strong><?php echo htmlspecialchars($order['customer_name']); ?></strong><br>
-                        Phone: <?php echo htmlspecialchars($order['customer_phone']); ?><br>
-                        Email: <?php echo htmlspecialchars($order['customer_email']); ?>
+                        <strong style="color: var(--white); font-size: 1.05rem; display: block; margin-bottom: 4px;"><?php echo htmlspecialchars($order['customer_name']); ?></strong>
+                        <?php echo htmlspecialchars($order['customer_phone']); ?><br>
+                        <?php echo htmlspecialchars($order['customer_email']); ?>
                     </div>
                 </div>
                 <div>
-                    <div class="address-col-title">Delivery Address</div>
+                    <div class="address-col-title">Ship To</div>
                     <div class="address-text">
                         <?php echo nl2br(htmlspecialchars($order['delivery_address'])); ?>
                     </div>
@@ -836,60 +929,85 @@ if (!$order) {
             </div>
 
             <?php if (!empty($order['message'])): ?>
-                <div class="mb-4" style="font-size: 0.88rem;">
-                    <div class="address-col-title">Order Notes</div>
+                <div class="mb-4" style="font-size: 0.88rem; background: rgba(223, 186, 134, 0.05); padding: 1rem 1.5rem; border-radius: 8px; border-left: 3px solid var(--gold);">
+                    <div class="address-col-title" style="color: var(--gold); border: none; margin-bottom: 4px; padding: 0;">Order Notes</div>
                     <div class="address-text" style="font-style: italic;">
                         "<?php echo htmlspecialchars($order['message']); ?>"
                     </div>
                 </div>
             <?php endif; ?>
 
-            <table class="invoice-table">
-                <thead>
-                    <tr>
-                        <th style="width: 70%;">Item Description</th>
-                        <th style="width: 10%; text-align: center;">Qty</th>
-                        <th style="width: 20%; text-align: right;">Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($order['cart_items'] as $item): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($item['name']); ?></td>
-                            <td style="text-align: center;"><?php echo intval($item['quantity']); ?></td>
-                            <td class="item-total">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="invoice-items-list" style="margin-bottom: 2rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+                <?php foreach ($order['cart_items'] as $item): ?>
+                    <div class="invoice-item-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px dashed rgba(255,255,255,0.1);">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <?php if (!empty($item['image_url'])): ?>
+                                <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                            <?php else: ?>
+                                <div style="width: 60px; height: 60px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--gold);">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                            <?php endif; ?>
+                            <div style="display: flex; flex-direction: column;">
+                                <strong style="font-size: 1.05rem; font-weight: 600; color: var(--white); margin-bottom: 4px;"><?php echo htmlspecialchars($item['name']); ?></strong>
+                                <span style="font-size: 0.85rem; color: var(--gray);">Qty: <?php echo intval($item['quantity']); ?></span>
+                            </div>
+                        </div>
+                        <div style="font-size: 1.05rem; font-weight: 500; color: var(--white);">
+                            ₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
 
-            <div class="totals-section">
-                <?php 
-                $gst_percent = ($order['subtotal'] > 0) ? round(($order['gst'] / $order['subtotal']) * 100) : 18;
-                $packing_charge = $order['packing'] ?? 0.00;
-                ?>
-                <div class="total-row">
-                    <span>Subtotal</span>
-                    <span>₹<?php echo number_format($order['subtotal'], 2); ?></span>
+            <div class="totals-wrapper">
+                <div class="totals-section" style="width: 100%;">
+                    <?php 
+                    $gst_percent = ($order['subtotal'] > 0) ? round(($order['gst'] / $order['subtotal']) * 100) : 18;
+                    $packing_charge = $order['packing'] ?? 0.00;
+                    $computed_total_before_discount = $order['subtotal'] + $order['gst'] + $packing_charge + $order['delivery'];
+                    $discount_amount = $computed_total_before_discount - $order['total'];
+                    ?>
+                    <div class="total-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; color: var(--gray);">
+                        <span>Subtotal</span>
+                        <span style="color: var(--white);">₹<?php echo number_format($order['subtotal'], 2); ?></span>
+                    </div>
+                    <div class="total-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; color: var(--gray);">
+                        <span>GST (<?php echo $gst_percent; ?>%)</span>
+                        <span style="color: var(--white);">₹<?php echo number_format($order['gst'], 2); ?></span>
+                    </div>
+                    <?php if ($packing_charge > 0): ?>
+                    <div class="total-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; color: var(--gray);">
+                        <span>Packing Charges</span>
+                        <span style="color: var(--white);">₹<?php echo number_format($packing_charge, 2); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <div class="total-row" style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--gray);">
+                        <span>Delivery Fee</span>
+                        <span style="color: var(--white);">₹<?php echo number_format($order['delivery'], 2); ?></span>
+                    </div>
+                    
+                    <?php if ($discount_amount > 0.01): ?>
+                    <div class="total-row" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; color: var(--gray);">
+                        <span>Total Discount <i class="fas fa-info-circle" style="color: var(--gold); margin-left: 5px;" title="Includes all applied discounts"></i></span>
+                        <span style="color: var(--white);">-₹<?php echo number_format($discount_amount, 2); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="dashed-divider" style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 1rem 0 1.5rem 0;"></div>
+                    
+                    <div class="total-row grand-total" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.5rem; letter-spacing: 0.5px;">Grand Total</span>
+                        <span style="font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.5rem; font-weight: 700;">₹<?php echo number_format($order['total'], 2); ?></span>
+                    </div>
                 </div>
-                <div class="total-row">
-                    <span>GST (<?php echo $gst_percent; ?>%)</span>
-                    <span>₹<?php echo number_format($order['gst'], 2); ?></span>
-                </div>
-                <?php if ($packing_charge > 0): ?>
-                <div class="total-row">
-                    <span>Packing Charges</span>
-                    <span>₹<?php echo number_format($packing_charge, 2); ?></span>
-                </div>
-                <?php endif; ?>
-                <div class="total-row">
-                    <span>Delivery Fee</span>
-                    <span>₹<?php echo number_format($order['delivery'], 2); ?></span>
-                </div>
-                <div class="total-row grand-total">
-                    <span>Grand Total</span>
-                    <span>₹<?php echo number_format($order['total'], 2); ?></span>
-                </div>
+            </div>
+            
+            <div style="clear: both;"></div>
+            
+            <div style="margin-top: 3rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; display: none;" class="print-footer">
+                <p style="font-size: 0.85rem; color: #777; margin: 0;">Thank you for dining with Medusa Luxury. We hope to serve you again soon.</p>
+                <p style="font-size: 0.8rem; color: #999; margin: 5px 0 0 0;">Medusa Luxury Dining | GSTIN: 22AAAAA0000A1Z5 | contact@medusa.local</p>
             </div>
         </div>
 
