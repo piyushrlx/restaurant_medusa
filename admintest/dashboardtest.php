@@ -1,6 +1,21 @@
 <?php
 require_once dirname(__DIR__) . '/api/config.php';
-requireAdmin();
+requireLogin();
+
+if (empty($_SESSION['user_role'])) {
+    header('Location: ../login.html');
+    exit;
+}
+
+if ($_SESSION['user_role'] === 'driver') {
+    require __DIR__ . '/driver_dashboard.php';
+    exit; // STOP EXECUTION COMPLETELY FOR DRIVERS
+}
+
+if ($_SESSION['user_role'] !== 'admin') {
+    header('Location: ../login.html');
+    exit;
+}
 
 // Ensure feedback table exists before running any queries
 try {
