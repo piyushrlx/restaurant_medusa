@@ -629,11 +629,11 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="about.html" class="nav-link">About Us</a>
                 <a href="menutest.php" class="nav-link">Menu</a>
-                <a href="table_booking.php" class="nav-link">Book Table</a>
+                <a href="book-table-test.html" class="nav-link">Book Table</a>
                 <a href="career.html" class="nav-link">Career</a>
                 <a href="login.html" class="nav-link">Login</a>
             </div>
-            <a href="table_booking.php" class="btn-reserve">Book a Table</a>
+            <a href="book-table-test.html" class="btn-reserve">Book a Table</a>
         </div>
     </nav>
 
@@ -883,3 +883,4 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
     </script>
 </body>
 </html>
+
