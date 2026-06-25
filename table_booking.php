@@ -338,18 +338,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="index.html" style="display: flex; align-items: center; gap: 8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-                Medusa
-            </a>
-            <div class="d-flex gap-2">
-                <a href="book-table-test.html" class="btn btn-outline-light"><i class="fas fa-th-large me-2"></i>Floor Plan</a>
-                <a href="menutest.html" class="btn btn-outline-light">Menu</a>
-            </div>
-        </div>
-    </nav>
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <!-- Main Content Section -->
     <section class="booking-section">

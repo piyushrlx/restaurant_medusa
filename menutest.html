@@ -167,61 +167,8 @@
 <body class="bg-cream">
 
     <!-- NAVBAR -->
-    <nav class="w-full z-50 bg-[#2f1317] border-b border-white/10 h-24 flex items-center px-6 md:px-12 transition-all">
-        <a class="flex items-center gap-3 text-gold-dark text-lg font-serif tracking-widest uppercase hover:text-gold transition-colors"
-            id="navBrand" href="index.html">
-            <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" class="w-12 h-12 object-contain brightness-110">
-            <div>
-                <span class="block leading-none mb-1">Medusa</span>
-                <span class="block text-[0.6rem] tracking-[4px] text-gold/70">RESTAURANT</span>
-            </div>
-        </a>
-        <div class="hidden lg:flex items-center justify-center flex-1 gap-8 ml-8">
-            <a href="index.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Home</a>
-            <a href="about.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">About</a>
-            <a href="menutest.html"
-                class="text-gold border-b border-gold pb-1 text-[11px] tracking-widest uppercase font-medium">Menu</a>
-            <a href="my-orders.php"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Orders</a>
-            <a href="book-table-test.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Reservation</a>
-            <a href="gallery.php"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Gallery</a>
-            <a href="contact.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Contact</a>
-        </div>
-        <div class="ml-auto flex items-center gap-4 md:gap-6" id="navLinksContainer">
-            <a href="carttest.html" id="navCart"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors relative">
-                Cart (<span id="cartCount">0</span>)
-            </a>
-            <div class="relative group hidden xl:flex items-center py-2 outline-none" tabindex="0" id="navAccount">
-                <a href="javascript:void(0);"
-                    class="text-white/80 hover:text-gold text-xl transition-colors cursor-pointer flex items-center h-full">
-                    <i class="far fa-user"></i>
-                </a>
-                <div class="absolute right-0 top-full pt-2 w-40 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300"
-                    id="profileMenu">
-                    <div class="bg-cream rounded-xl shadow-2xl border border-gold/30 overflow-hidden">
-                        <a href="profile.php"
-                            class="block px-4 py-3 text-[11px] tracking-widest uppercase font-bold text-maroon hover:bg-gold/20 transition-colors">
-                            Profile</a>
-                        <a href="settings.php"
-                            class="block px-4 py-3 text-[11px] tracking-widest uppercase font-bold text-maroon hover:bg-gold/20 transition-colors border-t border-gold/10">
-                            Setting</a>
-                        <a href="api/logout.php"
-                            class="block px-4 py-3 text-[11px] tracking-widest uppercase font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-t border-gold/10">
-                            Logout</a>
-                    </div>
-                </div>
-            </div>
-            <a href="#" id="navReserve"
-                class="text-white border border-gold/60 px-5 py-2.5 hover:bg-gold/10 text-[11px] tracking-widest uppercase font-medium transition-all ml-2 hidden md:block">Reserve
-                a Table</a>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
+    <script src="assets/js/navbar.js" defer></script>
 
     <!-- HERO SECTION -->
     <section class="relative w-full h-[50vh] min-h-[400px] flex items-center justify-center bg-black overflow-hidden">
@@ -391,17 +338,25 @@
             const params = new URLSearchParams(window.location.search);
             const tableCode = params.get('table');
             if (tableCode) {
-                document.getElementById('navBrand').href = '#';
-                document.getElementById('navBack').style.display = 'none';
-                document.getElementById('navAccount').style.display = 'none';
-                document.getElementById('navLogout').style.display = 'none';
+                const navBrand = document.getElementById('navBrand');
+                if (navBrand) navBrand.href = '#';
+                const navBack = document.getElementById('navBack');
+                if (navBack) navBack.style.display = 'none';
+                const navAccount = document.getElementById('navAccount');
+                if (navAccount) navAccount.style.display = 'none';
+                const navLogout = document.getElementById('navLogout');
+                if (navLogout) navLogout.style.display = 'none';
 
-                document.getElementById('navMenu').href = 'menutest.html?table=' + tableCode;
-                document.getElementById('navCart').href = 'carttest.html?table=' + tableCode;
+                const navMenu = document.getElementById('navMenu');
+                if (navMenu) navMenu.href = 'menutest.html?table=' + tableCode;
+                const navCart = document.getElementById('navCart');
+                if (navCart) navCart.href = 'carttest.html?table=' + tableCode;
 
                 const navBill = document.getElementById('navBill');
-                navBill.style.display = 'inline-block';
-                navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
+                if (navBill) {
+                    navBill.style.display = 'inline-block';
+                    navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
+                }
 
                 const titleEl = document.querySelector('.section-title');
                 if (titleEl) {
@@ -601,8 +556,10 @@
 
         function renderCartUI(items) {
             const count = items.reduce((s, i) => s + i.quantity, 0);
-            document.getElementById('cartCount').textContent = count;
-            document.getElementById('floatingCartCount').textContent = `${count} Items`;
+            const cartCountEl = document.getElementById('cartCount');
+            if (cartCountEl) cartCountEl.textContent = count;
+            const floatCartCountEl = document.getElementById('floatingCartCount');
+            if (floatCartCountEl) floatCartCountEl.textContent = `${count} Items`;
 
             const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
             document.getElementById('floatingCartPrice').textContent = total.toFixed(0);

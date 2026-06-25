@@ -957,27 +957,8 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
     <div id="google_translate_element"></div>
 
     <!-- Luxury Top Header Bar -->
-    <header class="luxury-navbar">
-        <div class="d-flex justify-content-between align-items-center w-100 max-width-1200 mx-auto">
-            <a href="menutest.html" class="navbar-brand d-flex align-items-center gap-3 text-decoration-none" style="font-family: 'Playfair Display', serif; text-transform: uppercase; letter-spacing: 2px;">
-                <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="width: 48px; height: 48px; object-fit: contain; filter: brightness(1.1);">
-                <div class="d-flex flex-column justify-content-center">
-                    <span style="line-height: 1; margin-bottom: 4px; font-size: 1.25rem; color: #b8973a; font-weight: 600;">Medusa</span>
-                    <span style="font-size: 0.6rem; letter-spacing: 4px; color: rgba(223, 186, 134, 0.7); font-family: 'Inter', sans-serif; font-weight: 400;">RESTAURANT</span>
-                </div>
-            </a>
-            <div class="d-flex align-items-center gap-4">
-                <a href="menutest.html" class="nav-link-custom">
-                    <i class="fa-solid fa-utensils"></i>
-                    <span>Browse Menu</span>
-                </a>
-                <a href="api/logout.php" class="nav-link-custom text-danger">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </div>
-    </header>
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <div class="dashboard-wrapper">
         <div class="dashboard-grid">

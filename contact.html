@@ -111,49 +111,8 @@
 
 <body class="antialiased text-text-dark">
     <!-- NAVBAR -->
-    <nav class="bg-maroon px-4 md:px-8 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <button class="text-gold lg:hidden text-xl"
-                onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="index.html" class="flex items-center gap-3">
-                <img src="assets/images/logo_right.png" alt="Medusa Logo"
-                    class="w-56 md:w-64 lg:w-72 h-auto object-contain -my-10 lg:-my-12">
-            </a>
-        </div>
-        <div class="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-            <a href="index.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Home</a>
-            <a href="about.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">About</a>
-            <a href="menutest.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Menu</a>
-            <a href="my-orders.php"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Orders</a>
-            <a href="book-table-test.html"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Reservation</a>
-            <a href="gallery.php"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors">Gallery</a>
-            <a href="contact.html"
-                class="text-gold border-b border-gold pb-1 text-[11px] tracking-widest uppercase font-medium">Contact</a>
-        </div>
-        <div class="ml-auto flex items-center gap-4 md:gap-6">
-            <a href="carttest.html" id="navCart"
-                class="text-white/80 hover:text-gold text-[11px] tracking-widest uppercase font-medium transition-colors relative">
-                Cart (<span id="cartCount">0</span>)
-            </a>
-            <div class="relative group hidden xl:flex items-center py-2 outline-none" tabindex="0">
-                <a href="profile.php"
-                    class="text-white/80 hover:text-gold text-xl transition-colors flex items-center h-full">
-                    <i class="far fa-user"></i>
-                </a>
-            </div>
-            <a href="book-table-test.html"
-                class="text-white border border-gold/60 px-5 py-2.5 hover:bg-gold/10 text-[11px] tracking-widest uppercase font-medium transition-all ml-2 hidden md:block">Reserve
-                a Table</a>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
+    <script src="assets/js/navbar.js" defer></script>
 
     <!-- HERO SECTION -->
     <section class="relative w-full h-[40vh] min-h-[350px] flex items-center justify-center bg-black overflow-hidden">

@@ -802,3 +802,19 @@ Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=95&token
 ----------------------------------------
 
 [2026-06-24 14:37:15] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_95_20260624_143659.pdf
+[2026-06-25 09:24:52] [EMAIL] OTP for testuser_67890@example.com: 215149
+[2026-06-25 09:24:56] [SMS] OTP for 8765432109: 312871
+[2026-06-25 10:00:05] [EMAIL] OTP for unique_user_999@example.com: 734090
+[2026-06-25 10:00:09] [SMS] OTP for 9999999999: 763915
+[2026-06-25 12:52:01] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Connection timed out after 3001 milliseconds
+[2026-06-25 12:52:04] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-1C0A7
+PDF Path: bills/order_83_20260625_125201.pdf
+Download URL: http://192.168.1.7/restaurant_medusa/download_bill.php?id=83&token=701cc73159cac25e133d8dd7af8c2ea5842972a2d1a2d674067ce20c49badfe0
+----------------------------------------
+
+[2026-06-25 12:52:10] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_83_20260625_125201.pdf

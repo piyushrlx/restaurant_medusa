@@ -1,10 +1,45 @@
 <?php
 require_once __DIR__ . '/api/config.php';
+require_once __DIR__ . '/includes/token_helper.php';
 requireLogin();
 
 // Fetch orders to render on server side (initial load)
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
+
+// Handle order cancellation via AJAX POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_order') {
+    header('Content-Type: application/json');
+    $order_id = $_POST['order_id'];
+    try {
+        $chk_stmt = $pdo->prepare("SELECT order_status, order_number FROM orders WHERE id = ? AND user_id = ?");
+        $chk_stmt->execute([$order_id, $user_id]);
+        $order_info = $chk_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($order_info) {
+            $status = strtolower($order_info['order_status']);
+            if ($status === 'pending' || $status === 'confirmed') {
+                $upd_stmt = $pdo->prepare("UPDATE orders SET order_status = 'cancelled', tracking_status = 'cancelled' WHERE id = ?");
+                $upd_stmt->execute([$order_id]);
+                
+                try {
+                    require_once __DIR__ . '/includes/notifications_helper.php';
+                    addNotification($user_id, 'Order Cancelled', "Your order #{$order_info['order_number']} has been cancelled successfully.");
+                } catch (Exception $notif_ex) {
+                    // Fail-safe for notification helpers
+                }
+                echo json_encode(['success' => true, 'message' => 'Order cancelled successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Order cannot be cancelled at this stage.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Order not found.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    }
+    exit;
+}
 
 try {
     $stmt = $pdo->prepare("SELECT *, tracking_token, tracking_status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
@@ -20,46 +55,12 @@ try {
     $orders = [];
 }
 
-$currentTab = $_GET['tab'] ?? 'active';
-$filteredOrders = [];
-foreach ($orders as $o) {
-    $status = strtolower($o['order_status']);
-    $stepMap = ['pending'=>1, 'confirmed'=>2, 'preparing'=>3, 'ready'=>4, 'completed'=>5, 'cancelled'=>0];
-    $s = $stepMap[$status] ?? 1;
-    
-    if ($currentTab == 'active' && $s > 0 && $s < 5) {
-        $filteredOrders[] = $o;
-    } elseif ($currentTab == 'past' && $s == 5) {
-        $filteredOrders[] = $o;
-    } elseif ($currentTab == 'cancelled' && $s == 0) {
-        $filteredOrders[] = $o;
-    }
-}
-$orders = $filteredOrders;
-
-// Fetch user coupons
-require_once __DIR__ . '/api/CouponService.php';
-$userCoupons = [];
-try {
-    $couponService = new CouponService($pdo);
-    $couponService->expireCoupons();
-    $userCoupons = $couponService->getUserCoupons($user_id);
-} catch (Exception $e) {
-    // Ignore error
-}
-
-$user_notifications = [];
-$unread_notifications_count = 0;
-try {
-    $notif_stmt = $pdo->prepare("SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
-    $notif_stmt->execute([$user_id]);
-    $user_notifications = $notif_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($user_notifications as $n) {
-        if (empty($n['is_read'])) $unread_notifications_count++;
-    }
-} catch(PDOException $e) {
-    // ignore
+// Check initial status parameter from tab query (e.g. ?tab=active)
+$initialStatus = 'all';
+if (isset($_GET['tab'])) {
+    if ($_GET['tab'] === 'active') $initialStatus = 'active';
+    elseif ($_GET['tab'] === 'past') $initialStatus = 'past';
+    elseif ($_GET['tab'] === 'cancelled') $initialStatus = 'cancelled';
 }
 ?>
 <!DOCTYPE html>
@@ -67,1065 +68,506 @@ try {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Orders - Medusa</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --gold: #C09B5B;
-      --formal-garden: #132F20;
-      --formal-garden-deep: #0B1C13;
-      --rosewood: #5A1827;
-      --warm-ivory: #F6F4EB;
-      --card-bg: #112519;
-      --card-border: #1C3B2B;
-    }
-
-    body {
-      background-color: var(--formal-garden-deep);
-      color: var(--warm-ivory);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      margin: 0;
-    }
-
-    /* NAVBAR */
-    .lux-navbar {
-      background-color: transparent;
-      padding: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 90px;
-      position: absolute;
-      top: 0;
-      width: 100%;
-      z-index: 100;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .lux-navbar-brand {
-      color: var(--gold) !important;
-      font-size: 1.5rem;
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-left: 40px;
-    }
-
-    .lux-navbar-brand img {
-      height: 90px;
-      margin-left: 0;
-    }
-
-    .lux-nav-links {
-      display: flex;
-      height: 100%;
-      align-items: center;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .lux-nav-link {
-      color: white;
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      transition: color 0.2s;
-      position: relative;
-      font-family: 'Lato', sans-serif;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .lux-nav-link:hover {
-      color: var(--gold);
-    }
-
-    .lux-nav-link.active {
-      color: var(--gold);
-      text-decoration: underline;
-      text-underline-offset: 8px;
-      text-decoration-thickness: 2px;
-      text-decoration-color: var(--gold);
-    }
-
-    .lux-nav-actions {
-      display: flex;
-      align-items: center;
-      padding-right: 40px;
-      gap: 20px;
-    }
-
-    .nav-icon {
-      color: white;
-      font-size: 1.2rem;
-      text-decoration: none;
-      transition: 0.3s;
-    }
-
-    .nav-icon:hover {
-      color: var(--gold);
-    }
-
-    .nav-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid var(--gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--gold);
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    /* NOTIFICATIONS DROPDOWN */
-    .nav-icon-container {
-      position: relative;
-    }
-    .notif-badge {
-      position: absolute;
-      top: -5px; right: -5px;
-      background: var(--rosewood);
-      color: white;
-      font-size: 0.6rem;
-      font-weight: bold;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      pointer-events: none;
-    }
-    .notif-dropdown {
-      position: absolute;
-      top: 40px; right: -10px;
-      width: 320px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      display: none;
-      flex-direction: column;
-      z-index: 200;
-      overflow: hidden;
-      text-align: left;
-    }
-    .notif-dropdown.show {
-      display: flex;
-    }
-
-    /* Bell Ringing Animation */
-    @keyframes bell-ring {
-      0% { transform: rotate(0); }
-      10% { transform: rotate(20deg); }
-      20% { transform: rotate(-15deg); }
-      30% { transform: rotate(10deg); }
-      40% { transform: rotate(-5deg); }
-      50% { transform: rotate(0); }
-      100% { transform: rotate(0); }
-    }
-    .bell-ringing {
-      display: inline-block;
-      transform-origin: top center;
-      animation: bell-ring 1.5s infinite;
-    }
-    .notif-header {
-      padding: 15px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      font-family: 'Playfair Display', serif;
-      color: var(--gold);
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    .notif-item {
-      padding: 15px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      text-decoration: none;
-      transition: background 0.2s;
-      display: flex;
-      gap: 15px;
-    }
-    .notif-item:hover {
-      background: rgba(255,255,255,0.02);
-    }
-    .notif-icon {
-      color: var(--gold);
-      font-size: 1.2rem;
-      margin-top: 3px;
-    }
-    .notif-content h5 {
-      color: white;
-      font-size: 0.85rem;
-      margin: 0 0 5px 0;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .notif-content p {
-      color: rgba(255,255,255,0.5);
-      font-size: 0.75rem;
-      margin: 0 0 5px 0;
-    }
-    .notif-time {
-      color: rgba(255,255,255,0.3);
-      font-size: 0.65rem;
-    }
-    .notif-footer {
-      padding: 12px;
-      text-align: center;
-      background: rgba(0,0,0,0.2);
-      color: var(--gold);
-      font-size: 0.8rem;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-    .notif-footer:hover {
-      background: rgba(0,0,0,0.4);
-      color: white;
-    }
-
-    /* HERO SECTION */
-    .hero-section {
-      position: relative;
-      height: 40vh;
-      min-height: 350px;
-      background: url('assets/images/restaurant_interior.png') center/cover no-repeat;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding-top: 90px;
-    }
-
-    .hero-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(to bottom, rgba(11,28,19,0.8) 0%, rgba(11,28,19,1) 100%);
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 10;
-    }
-
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 4rem;
-      font-weight: 400;
-      color: white;
-      margin-bottom: 10px;
-    }
-
-    .hero-title span {
-      color: var(--gold);
-    }
-
-    .hero-subtitle {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1rem;
-      letter-spacing: 0.5px;
-      margin-bottom: 25px;
-    }
-
-    .hero-divider {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 25px;
-    }
-    
-    .hero-divider img {
-      height: 60px;
-      max-width: 100%;
-      object-fit: contain;
-      opacity: 0.9;
-    }
-
-    /* TABS SECTION */
-    .tabs-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .tabs {
-      display: flex;
-      gap: 30px;
-    }
-
-    .tab-item {
-      color: rgba(255,255,255,0.5);
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      padding-bottom: 15px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: 0.3s;
-    }
-
-    .tab-item:hover {
-      color: white;
-    }
-
-    .tab-item.active {
-      color: var(--gold);
-    }
-
-    .tab-item.active::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--gold);
-    }
-
-    .btn-refresh {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.7);
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: 0.3s;
-      cursor: pointer;
-    }
-
-    .btn-refresh:hover {
-      background: rgba(255,255,255,0.05);
-      color: white;
-      border-color: rgba(255,255,255,0.5);
-    }
-
-    /* ORDERS CONTAINER */
-    .orders-container {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 30px;
-    }
-
-    .order-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 30px;
-    }
-
-    .oc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 30px;
-    }
-
-    .oc-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      color: white;
-    }
-
-    .oc-badge {
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .badge-confirmed { background: rgba(30, 90, 40, 0.2); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.3); }
-    .badge-preparing { background: rgba(180, 80, 20, 0.2); color: #FF9800; border: 1px solid rgba(255, 152, 0, 0.3); }
-    .badge-pending { background: rgba(255, 255, 255, 0.1); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.2); }
-    .badge-completed { background: rgba(192, 155, 91, 0.1); color: var(--gold); border: 1px solid rgba(192, 155, 91, 0.3); }
-
-    .oc-meta {
-      color: rgba(255,255,255,0.5);
-      font-size: 0.85rem;
-      margin-top: 8px;
-    }
-
-    .oc-time {
-      text-align: right;
-    }
-
-    .oc-time span {
-      display: block;
-      color: rgba(255,255,255,0.5);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
-    }
-
-    .oc-time div {
-      color: var(--gold);
-      font-family: 'Playfair Display', serif;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* STEPPER */
-    .stepper {
-      display: flex;
-      justify-content: space-between;
-      position: relative;
-      margin-bottom: 40px;
-    }
-
-    .stepper::before {
-      content: '';
-      position: absolute;
-      top: 15px; left: 30px; right: 30px;
-      height: 2px;
-      background: rgba(255,255,255,0.1);
-      z-index: 1;
-    }
-
-    .step {
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 80px;
-    }
-
-    .step-icon {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--card-bg);
-      border: 2px solid rgba(255,255,255,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255,255,255,0.3);
-      font-size: 0.85rem;
-    }
-
-    .step-label {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.5);
-      text-align: center;
-    }
-    
-    .step-time {
-      font-size: 0.65rem;
-      color: rgba(255,255,255,0.4);
-    }
-
-    .step.active .step-icon {
-      border-color: var(--gold);
-      color: var(--gold);
-      box-shadow: 0 0 10px rgba(192,155,91,0.3);
-    }
-    .step.active .step-label {
-      color: var(--gold);
-    }
-
-    .step.done .step-icon {
-      border-color: var(--gold);
-      background: var(--gold);
-      color: var(--card-bg);
-    }
-
-    /* PROGRESS BAR FILL */
-    .stepper-fill {
-      position: absolute;
-      top: 15px; left: 30px;
-      height: 2px;
-      background: var(--gold);
-      z-index: 1;
-      transition: width 0.5s;
-    }
-
-    /* ORDER ITEMS */
-    .order-items {
-      border-top: 1px solid rgba(255,255,255,0.05);
-      padding-top: 20px;
-      margin-bottom: 20px;
-    }
-
-    .oi-title {
-      font-size: 0.75rem;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-    }
-
-    .oi-row {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 15px;
-    }
-
-    .oi-img {
-      width: 60px; height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-      background: #222;
-    }
-
-    .oi-info {
-      flex: 1;
-    }
-
-    .oi-name {
-      font-size: 0.95rem;
-      color: white;
-      margin-bottom: 5px;
-    }
-
-    .diet-badge {
-      font-size: 0.6rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-    .diet-veg { border: 1px solid #4CAF50; color: #4CAF50; }
-    .diet-nonveg { border: 1px solid #F44336; color: #F44336; }
-    .diet-bar { border: 1px solid #2196F3; color: #2196F3; }
-
-    .oi-price {
-      color: white;
-      font-size: 0.95rem;
-      width: 100px;
-      text-align: right;
-    }
-
-    .oi-qty {
-      color: rgba(255,255,255,0.5);
-      font-size: 0.9rem;
-      width: 40px;
-      text-align: right;
-    }
-
-    /* ORDER FOOTER */
-    .oc-footer {
-      border-top: 1px solid rgba(255,255,255,0.05);
-      padding-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-details {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      text-decoration: none;
-      transition: 0.3s;
-    }
-    .btn-details:hover {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-
-    .total-display {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .total-display span {
-      color: rgba(255,255,255,0.5);
-      font-size: 0.8rem;
-    }
-
-    .total-display strong {
-      color: var(--gold);
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
-    }
-
-    /* EXPLORE MORE SECTION */
-    .explore-section {
-      max-width: 900px;
-      margin: 60px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      color: var(--gold);
-      margin-bottom: 10px;
-    }
-    .section-divider {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 40px;
-    }
-    
-    .section-divider img {
-      height: 60px;
-      max-width: 100%;
-      object-fit: contain;
-      opacity: 0.9;
-    }
-
-    .explore-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .explore-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 30px 20px;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .explore-icon {
-      color: var(--gold);
-      font-size: 1.5rem;
-    }
-
-    .explore-title {
-      color: white;
-      font-family: 'Playfair Display', serif;
-      font-size: 1.2rem;
-      margin: 0;
-    }
-
-    .explore-desc {
-      color: rgba(255,255,255,0.6);
-      font-size: 0.8rem;
-      line-height: 1.5;
-      flex: 1;
-    }
-
-    .explore-link {
-      color: white;
-      font-size: 0.8rem;
-      text-decoration: none;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .explore-link:hover { color: var(--gold); }
-
-    /* NEED HELP */
-    .help-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 900px;
-      margin: 0 auto 60px;
-    }
-    .help-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .help-icon {
-      color: var(--gold);
-      font-size: 2rem;
-    }
-    .help-title { color: var(--gold); margin: 0 0 5px 0; font-size: 1.1rem; }
-    .help-desc { color: white; margin: 0; font-size: 0.85rem; }
-    
-    /* FOOTER */
-    .lux-footer {
-      background-color: var(--formal-garden);
-      color: white;
-      padding: 60px 40px 30px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .lux-footer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 40px;
-    }
-    .lux-footer h4 { color: var(--gold); margin-bottom: 20px; font-size: 1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;}
-    .lux-footer p, .lux-footer a { color: #A0C1B0; font-size: 0.85rem; line-height: 1.8; margin-bottom: 10px; text-decoration: none; display: block; }
-    .lux-footer-socials { display: flex; gap: 16px; margin-top: 20px; }
-    .lux-footer-socials a { color: white; transition: 0.2s; }
-    .lux-footer-socials a:hover { color: var(--gold); }
-    .lux-footer-bottom { text-align: center; padding-top: 24px; color: rgba(255,255,255,0.4); font-size: 0.8rem; }
-
-    @media (max-width: 768px) {
-      .oc-header { flex-direction: column; gap: 15px; }
-      .oc-time { text-align: left; margin-top: 10px; }
-      .stepper { overflow-x: auto; padding-bottom: 10px; }
-      .stepper::before { width: 300px; }
-      .stepper-fill { width: 0 !important; } /* Simplify on mobile if needed */
-      .explore-grid { grid-template-columns: 1fr; }
-      .help-card { flex-direction: column; text-align: center; gap: 20px; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- LUXURY NAVBAR -->
-  <nav class="lux-navbar">
-    <a class="lux-navbar-brand" href="index.html">
-      <img src="assets/images/logo.png" alt="Medusa Logo">
-    </a>
-
-    <div class="lux-nav-links d-none d-lg-flex">
-      <a href="index.html" class="lux-nav-link">HOME</a>
-      <a href="menutest.html" class="lux-nav-link">MENU</a>
-      <a href="book-table-test.html" class="lux-nav-link">BOOK TABLE</a>
-      <a href="about.html" class="lux-nav-link">ABOUT US</a>
-      <a href="career.html" class="lux-nav-link">CAREERS</a>
-      <a href="my-orders.php" class="lux-nav-link active">MY ORDERS</a>
-    </div>
-
-    <div class="lux-nav-actions">
-      <div class="nav-icon-container" id="notif-bell">
-        <a href="javascript:void(0)" class="nav-icon position-relative">
-          <i class="fa-regular fa-bell <?php echo ($unread_notifications_count > 0) ? 'bell-ringing' : ''; ?>" id="notifBellIcon"></i>
-          <?php if($unread_notifications_count > 0): ?>
-              <span id="notifRedDot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;">
-                  <span class="visually-hidden">New alerts</span>
-              </span>
-          <?php endif; ?>
-        </a>
-        
-        <!-- Dropdown -->
-        <div class="notif-dropdown" id="notif-dropdown">
-          <div class="notif-header">Notifications</div>
-          <?php if (empty($user_notifications)): ?>
-              <div class="notif-item" style="justify-content: center; color: var(--gold); padding: 15px;">No new notifications</div>
-          <?php else: ?>
-              <?php foreach ($user_notifications as $notif): ?>
-              <a href="#" class="notif-item">
-                <i class="fa-solid fa-circle-info notif-icon"></i>
-                <div class="notif-content">
-                  <h5><?php echo htmlspecialchars($notif['title']); ?></h5>
-                  <p><?php echo htmlspecialchars($notif['message']); ?></p>
-                  <span class="notif-time"><?php echo date('M d, g:i A', strtotime($notif['created_at'])); ?></span>
-                </div>
-              </a>
-              <?php endforeach; ?>
-          <?php endif; ?>
-          <a href="profile.php?tab=notifications" class="notif-footer">View All Notifications</a>
-        </div>
-      </div>
-      <a href="profile.php" class="nav-avatar"><?php echo substr($user_name, 0, 1); ?></a>
-    </div>
-  </nav>
-
-  <!-- HERO SECTION -->
-  <section class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <h1 class="hero-title">My <span>Orders</span></h1>
-      <p class="hero-subtitle">Track and view your dining experiences</p>
-      <div class="hero-divider">
-        <img src="assets/images/wix_divider.png" alt="divider">
-      </div>
-    </div>
-  </section>
-
-  <!-- TABS -->
-  <div class="tabs-container">
-    <div class="tabs">
-      <a href="?tab=active" class="tab-item <?php echo $currentTab == 'active' ? 'active' : ''; ?>"><i class="fa-solid fa-clipboard-list"></i> ACTIVE ORDERS</a>
-      <a href="?tab=past" class="tab-item <?php echo $currentTab == 'past' ? 'active' : ''; ?>"><i class="fa-solid fa-clock-rotate-left"></i> PAST ORDERS</a>
-      <a href="?tab=cancelled" class="tab-item <?php echo $currentTab == 'cancelled' ? 'active' : ''; ?>"><i class="fa-regular fa-circle-xmark"></i> CANCELLED ORDERS</a>
-    </div>
-    <button class="btn-refresh" onclick="location.reload();">
-      <i class="fa-solid fa-rotate-right"></i> Refresh
-    </button>
-  </div>
-
-  <!-- ORDERS LIST -->
-  <div class="orders-container">
-    <?php if (empty($orders)): ?>
-      <div class="order-card" style="text-align: center; padding: 60px 20px;">
-        <i class="fa-solid fa-utensils" style="font-size: 3rem; color: var(--gold); opacity: 0.5; margin-bottom: 20px;"></i>
-        <h3 style="color: white; margin-bottom: 10px;">No <?php echo ucfirst($currentTab); ?> Orders</h3>
-        <p style="color: rgba(255,255,255,0.5);">You don't have any <?php echo $currentTab; ?> orders to show right now.</p>
-      </div>
-    <?php else: ?>
-      <?php foreach ($orders as $order): 
-        // Logic for Stepper & Badges
-        $status = strtolower($order['order_status']);
-        $stepMap = ['pending'=>1, 'confirmed'=>2, 'preparing'=>3, 'ready'=>4, 'completed'=>5, 'cancelled'=>0];
-        $curStep = $stepMap[$status] ?? 1;
-        
-        $badgeClass = 'badge-pending';
-        $badgeText = 'Pending';
-        if ($curStep == 2) { $badgeClass = 'badge-confirmed'; $badgeText = 'Confirmed'; }
-        if ($curStep == 3) { $badgeClass = 'badge-preparing'; $badgeText = 'Preparing'; }
-        if ($curStep == 4) { $badgeClass = 'badge-confirmed'; $badgeText = 'Ready'; }
-        if ($curStep == 5) { $badgeClass = 'badge-completed'; $badgeText = 'Completed'; }
-        if ($curStep == 0) { $badgeClass = 'badge-pending'; $badgeText = 'Cancelled'; }
-
-        // Time logic
-        $orderDate = date('d M Y, h:i A', strtotime($order['order_date']));
-        $type = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 'Dine-in' : 'Delivery';
-        
-        // Mock est time based on status
-        $estTime = '10-15 mins';
-        if ($curStep == 1) $estTime = '20-25 mins';
-        if ($curStep >= 4) $estTime = '--';
-      ?>
-      <div class="order-card">
-        <!-- HEADER -->
-        <div class="oc-header">
-          <div>
-            <h3 class="oc-title">ORDER #<?php echo htmlspecialchars($order['order_number']); ?> <span class="oc-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></span></h3>
-            <div class="oc-meta">Placed on <?php echo $orderDate; ?> &bull; <?php echo $type; ?></div>
-          </div>
-          <?php if ($curStep > 0 && $curStep < 5): ?>
-          <div class="oc-time">
-            <span>ESTIMATED TIME</span>
-            <div><i class="fa-regular fa-clock"></i> <?php echo $estTime; ?></div>
-          </div>
-          <?php endif; ?>
-        </div>
-
-        <!-- STEPPER -->
-        <div class="stepper">
-          <?php $fillPct = ($curStep > 1) ? (($curStep - 1) / 4) * 100 : 0; ?>
-          <div class="stepper-fill" style="width: <?php echo $fillPct; ?>%;"></div>
-          
-          <?php
-          $steps = [
-            1 => ['icon'=>'fa-check', 'label'=>'Order Placed'],
-            2 => ['icon'=>'fa-check', 'label'=>'Confirmed'],
-            3 => ['icon'=>'fa-fire-burner', 'label'=>'Preparing'],
-            4 => ['icon'=>'fa-bell-concierge', 'label'=>'Ready'],
-            5 => ['icon'=>'fa-user', 'label'=>'Served']
-          ];
-
-          foreach ($steps as $i => $s):
-            $stateClass = '';
-            if ($i < $curStep) $stateClass = 'done';
-            if ($i == $curStep) $stateClass = 'active';
-            if ($curStep == 0) $stateClass = ''; // Cancelled
-          ?>
-          <div class="step <?php echo $stateClass; ?>">
-            <div class="step-icon"><i class="fa-solid <?php echo $s['icon']; ?>"></i></div>
-            <div class="step-label"><?php echo $s['label']; ?></div>
-            <!-- mock time -->
-            <div class="step-time"><?php echo ($stateClass == 'done') ? date('h:i A', strtotime($order['order_date']) + ($i*120)) : ''; ?></div>
-          </div>
-          <?php endforeach; ?>
-        </div>
-
-        <!-- ITEMS -->
-        <div class="order-items">
-          <div class="oi-title">ORDER ITEMS</div>
-          
-          <?php foreach ($order['items'] as $item): 
-            // Mock dietary badge logic based on name
-            $dClass = 'diet-veg'; $dText = 'Veg';
-            $lname = strtolower($item['item_name']);
-            if (strpos($lname, 'chicken') !== false || strpos($lname, 'lamb') !== false || strpos($lname, 'prawn') !== false || strpos($lname, 'fish') !== false) {
-                $dClass = 'diet-nonveg'; $dText = 'Non-Veg';
-            }
-            if (strpos($lname, 'mojito') !== false || strpos($lname, 'wine') !== false || strpos($lname, 'beer') !== false || strpos($lname, 'cola') !== false) {
-                $dClass = 'diet-bar'; $dText = 'Bar';
-            }
-            // Resolve image source
-            $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '';
-            if (!empty($imgSrc) && strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, '//') !== 0) {
-                if (strpos($imgSrc, 'uploads/') !== 0) {
-                    $imgSrc = 'uploads/' . $imgSrc;
+  <title>My Orders - La Medusaa</title>
+  
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: true
+        },
+        theme: {
+            extend: {
+                colors: {
+                    cream: '#F8F4EC',
+                    maroon: '#4A121E',
+                    gold: '#C89B3C',
+                    charcoal: '#2E2E2E',
+                    borderlux: '#E8DCCB'
+                },
+                fontFamily: {
+                    serif: ['Cormorant Garamond', 'Playfair Display', 'Georgia', 'serif'],
+                    sans: ['Jost', 'Plus Jakarta Sans', 'sans-serif']
                 }
             }
-            if (empty($imgSrc)) {
-                $imgSrc = 'uploads/default.jpg';
-            }
-          ?>
-          <div class="oi-row">
-            <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="item" class="oi-img" onerror="this.src='assets/images/logo.png'">
-            <div class="oi-info">
-              <div class="oi-name"><?php echo htmlspecialchars($item['item_name']); ?></div>
-              <span class="diet-badge <?php echo $dClass; ?>"><?php echo $dText; ?></span>
-            </div>
-            <div class="oi-price">₹<?php echo number_format($item['price'], 2); ?></div>
-            <div class="oi-qty">× <?php echo $item['quantity']; ?></div>
-          </div>
-          <?php endforeach; ?>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="oc-footer">
-          <div style="display: flex; gap: 15px;">
-            <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details">View Details</a>
-            <?php if ($curStep > 0 && $curStep < 5): ?>
-            <a href="track.php?order_id=<?php echo urlencode($order['order_number']); ?>" class="btn-details" style="background: var(--gold); color: var(--card-bg); border-color: var(--gold); font-weight: 600;">Track Order <i class="fa-solid fa-location-arrow" style="margin-left: 5px;"></i></a>
-            <a href="javascript:void(0);" class="btn-details" style="border-color: #ff4d4d; color: #ff4d4d;">Cancel Order</a>
-            <?php endif; ?>
-          </div>
-          <div class="total-display">
-            <span>Estimated Total</span>
-            <strong>₹ <?php echo number_format($order['total_amount'], 2); ?></strong>
-          </div>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </div>
-
-  <!-- EXPLORE MORE -->
-  <div class="explore-section">
-    <h2 class="section-title">Explore More</h2>
-    <div class="section-divider"><img src="assets/images/wix_divider.png" alt="divider"></div>
-    
-    <div class="explore-grid">
-      <div class="explore-card">
-        <i class="fa-regular fa-calendar-check explore-icon"></i>
-        <h4 class="explore-title">Book a Table</h4>
-        <p class="explore-desc">Reserve your perfect spot for a memorable experience.</p>
-        <a href="book-table-test.html" class="explore-link">Book Now &rarr;</a>
-      </div>
-      <div class="explore-card">
-        <i class="fa-solid fa-utensils explore-icon"></i>
-        <h4 class="explore-title">Our Menu</h4>
-        <p class="explore-desc">Discover our curated menu crafted with passion.</p>
-        <a href="menutest.html" class="explore-link">View Menu &rarr;</a>
-      </div>
-      <div class="explore-card">
-        <i class="fa-solid fa-users explore-icon"></i>
-        <h4 class="explore-title">Private Events</h4>
-        <p class="explore-desc">Celebrate your special moments with us.</p>
-        <a href="#" class="explore-link">Enquire Now &rarr;</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEED HELP -->
-  <div class="help-card">
-    <div class="help-left">
-      <i class="fa-solid fa-headset help-icon"></i>
-      <div>
-        <h4 class="help-title">Need Help?</h4>
-        <p class="help-desc">Our team is here to assist you with your orders.</p>
-      </div>
-    </div>
-    <a href="#" class="btn-details">Contact Support</a>
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="lux-footer">
-    <div class="lux-footer-grid">
-      <div>
-        <img src="assets/images/logo_right.png" alt="Medusa Logo" style="width: 220px; height: auto; margin: 0; margin-bottom: 0  px;">
-        <p>Experience culinary excellence, handcrafted cocktails, and unforgettable moments.</p>
-        <div class="lux-footer-socials">
-          <a href="#"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#"><i class="fa-brands fa-twitter"></i></a>
-          <a href="#"><i class="fa-brands fa-youtube"></i></a>
-        </div>
-      </div>
-      <div>
-        <h4>Navigation</h4>
-        <a href="index.html">Home</a>
-        <a href="menutest.html">Menu</a>
-        <a href="book-table-test.html">Book Table</a>
-        <a href="about.html">About Us</a>
-        <a href="career.html">Careers</a>
-        <a href="#">Contact Us</a>
-      </div>
-      <div>
-        <h4>Contact</h4>
-        <p>SCO 44-45, Sector 68, SAS Nagar<br>Mohali, Punjab 160308</p>
-        <p><i class="fa-solid fa-phone" style="margin-right:8px; color:var(--gold);"></i>+91 84272 27398</p>
-        <p><i class="fa-regular fa-envelope" style="margin-right:8px; color:var(--gold);"></i>contact@medusa.com</p>
-        <p style="margin-top: 15px;"><a href="#" style="color:var(--gold);"><i class="fa-solid fa-location-dot me-2"></i> View on Map &rarr;</a></p>
-      </div>
-      <div>
-        <h4>Newsletter</h4>
-        <p>Stay updated with our latest events and offers.</p>
-        <div style="display:flex; margin-top:15px;">
-          <input type="email" placeholder="Enter your email" style="background:transparent; border:1px solid rgba(255,255,255,0.2); padding:10px 15px; color:white; width:100%; border-radius:4px 0 0 4px; outline:none;">
-          <button style="background:var(--formal-garden-deep); border:1px solid rgba(255,255,255,0.2); border-left:none; color:var(--gold); padding:10px 15px; border-radius:0 4px 4px 0; cursor:pointer;"><i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-      </div>
-    </div>
-    <div class="lux-footer-bottom">
-      &copy; 2026 Medusa Restaurant, Bar & Lounge. All rights reserved.
-    </div>
-  </footer>
-
-  <script>
-    document.getElementById('notif-bell').addEventListener('click', function(e) {
-      const dropdown = document.getElementById('notif-dropdown');
-      const isShowing = dropdown.classList.toggle('show');
-      
-      if (isShowing) {
-        const bellIcon = document.getElementById('notifBellIcon');
-        const redDot = document.getElementById('notifRedDot');
-        if (bellIcon && bellIcon.classList.contains('bell-ringing')) {
-          bellIcon.classList.remove('bell-ringing');
-          if (redDot) redDot.style.display = 'none';
-          
-          // Call API to mark as read
-          fetch('api/mark-notifications-read.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }).catch(err => console.error('Error marking notifications as read:', err));
         }
+    };
+  </script>
+  
+  <!-- FontAwesome & Flatpickr -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  
+  <style>
+      /* Flatpickr Luxury Hotel Theme Overrides */
+      .flatpickr-calendar {
+          background: #F8F4EC !important;
+          border: 1px solid #E8DCCB !important;
+          box-shadow: 0 10px 25px rgba(59,17,27,0.06) !important;
+          border-radius: 12px !important;
+          font-family: 'Jost', sans-serif !important;
       }
-      e.stopPropagation();
-    });
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('#notif-bell')) {
-        const dropdown = document.getElementById('notif-dropdown');
-        if (dropdown) dropdown.classList.remove('show');
+      .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+          background: #4A121E !important;
+          border-color: #4A121E !important;
+          color: white !important;
       }
-    });
+      .flatpickr-day:hover {
+          background: #E8DCCB !important;
+      }
+      .flatpickr-months .flatpickr-month {
+          color: #4A121E !important;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months {
+          font-weight: 600 !important;
+      }
+  </style>
+</head>
+<body class="bg-[#F8F4EC] text-[#2E2E2E] font-sans min-h-screen flex flex-col">
+
+  <!-- SHARED NAVIGATION BAR -->
+  <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+  <script src="assets/js/navbar.js" defer></script>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-grow w-full mx-auto px-6 md:px-12 py-12" style="max-width:1440px;">
+    
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-serif font-semibold text-[#4A121E]">My Orders</h1>
+            <p class="text-sm md:text-base text-[#2E2E2E]/60 mt-1 font-normal">Track and manage your dining experiences.</p>
+        </div>
+        <button onclick="location.reload();" class="self-start sm:self-center flex items-center gap-2 px-5 py-2.5 bg-white border border-[#E8DCCB] hover:bg-[#F8F4EC] transition-colors rounded-xl text-xs font-semibold tracking-wider text-[#4A121E] shadow-sm uppercase">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+    </div>
+
+    <!-- Filter Section Card -->
+    <div class="bg-white border border-[#E8DCCB] rounded-2xl p-6 mb-8 shadow-sm flex flex-col lg:flex-row lg:items-end gap-6">
+        <!-- Search Order -->
+        <div class="flex-1 w-full flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-[#2E2E2E]/70">Search Order</label>
+            <div class="relative flex items-center">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 text-[#2E2E2E]/40 text-sm"></i>
+                <input type="text" id="search-input" onkeyup="filterOrders()" placeholder="Enter order number..." class="w-full pl-10 pr-4 py-2.5 bg-[#F8F4EC]/40 border border-[#E8DCCB] rounded-xl text-sm text-[#2E2E2E] outline-none focus:border-[#4A121E] transition-colors">
+            </div>
+        </div>
+        
+        <!-- Order Status -->
+        <div class="w-full lg:w-56 flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-[#2E2E2E]/70">Filter by Status</label>
+            <select id="status-select" onchange="filterOrders()" class="w-full px-4 py-2.5 bg-[#F8F4EC]/40 border border-[#E8DCCB] rounded-xl text-sm text-[#2E2E2E] outline-none focus:border-[#4A121E] transition-colors cursor-pointer">
+                <option value="all" <?php echo $initialStatus === 'all' ? 'selected' : ''; ?>>All Orders</option>
+                <option value="active" <?php echo $initialStatus === 'active' ? 'selected' : ''; ?>>Active Orders</option>
+                <option value="past" <?php echo $initialStatus === 'past' ? 'selected' : ''; ?>>Past Orders</option>
+                <option value="cancelled" <?php echo $initialStatus === 'cancelled' ? 'selected' : ''; ?>>Cancelled Orders</option>
+            </select>
+        </div>
+        
+        <!-- Date Range -->
+        <div class="w-full lg:w-64 flex flex-col gap-1.5">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-[#2E2E2E]/70">Date Range</label>
+            <div class="relative flex items-center">
+                <i class="fa-regular fa-calendar absolute left-4 text-[#2E2E2E]/40 text-sm"></i>
+                <input type="text" id="date-range" placeholder="Select date range" class="w-full pl-10 pr-4 py-2.5 bg-[#F8F4EC]/40 border border-[#E8DCCB] rounded-xl text-sm text-[#2E2E2E] outline-none focus:border-[#4A121E] transition-colors cursor-pointer">
+            </div>
+        </div>
+        
+        <!-- Reset Filters Button -->
+        <button id="reset-filters-btn" class="w-full lg:w-auto px-5 py-2.5 bg-[#4A121E] hover:bg-[#3B111B] text-white transition-colors rounded-xl text-xs font-semibold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md shrink-0">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+        </button>
+    </div>
+
+    <!-- Orders List -->
+    <div id="orders-list-container" style="display:flex; flex-direction:column; gap:18px;">
+        <?php if (empty($orders)): ?>
+            <div id="no-orders-message" style="background:#fff; border:1px solid #E8DCCB; border-radius:18px; padding:60px 30px; text-align:center;">
+                <i class="fa-solid fa-utensils" style="font-size:2.5rem; color:#C89B3C; opacity:0.5; display:block; margin-bottom:16px;"></i>
+                <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:#4A121E; margin-bottom:8px;">No Orders Found</h3>
+                <p style="font-size:13px; color:rgba(46,46,46,0.55); max-width:360px; margin:0 auto 24px;">We couldn't find any orders matching your selected filters. Explore our menu to place an order.</p>
+                <a href="menutest.html" style="display:inline-block; padding:10px 24px; background:#4A121E; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none;">View Menu</a>
+            </div>
+        <?php else: ?>
+            <!-- JS No-results placeholder -->
+            <div id="no-orders-message" style="background:#fff; border:1px solid #E8DCCB; border-radius:18px; padding:60px 30px; text-align:center; display:none;">
+                <i class="fa-solid fa-utensils" style="font-size:2.5rem; color:#C89B3C; opacity:0.5; display:block; margin-bottom:16px;"></i>
+                <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:#4A121E; margin-bottom:8px;">No Orders Found</h3>
+                <p style="font-size:13px; color:rgba(46,46,46,0.55); max-width:360px; margin:0 auto 24px;">We couldn't find any orders matching your selected filters. Explore our menu to place an order.</p>
+                <a href="menutest.html" style="display:inline-block; padding:10px 24px; background:#4A121E; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none;">View Menu</a>
+            </div>
+
+            <?php foreach ($orders as $order):
+                $status  = strtolower($order['order_status']);
+                $stepMap = ['pending'=>1,'confirmed'=>2,'preparing'=>3,'ready'=>4,'completed'=>5,'cancelled'=>0];
+                $curStep = $stepMap[$status] ?? 1;
+
+                switch ($status) {
+                    case 'pending': case 'confirmed': case 'preparing':
+                        $badgeStyle = 'color:#9a7320; background:rgba(200,155,60,0.13); border:1px solid rgba(200,155,60,0.5);';
+                        $badgeText  = ucfirst($status);
+                        break;
+                    case 'ready':
+                        $badgeStyle = 'color:#15803d; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.4);';
+                        $badgeText  = 'Ready';
+                        break;
+                    case 'completed': case 'delivered':
+                        $badgeStyle = 'color:#15803d; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.4);';
+                        $badgeText  = 'Delivered';
+                        break;
+                    case 'cancelled':
+                        $badgeStyle = 'color:#dc2626; background:rgba(220,38,38,0.07); border:1px solid rgba(220,38,38,0.35);';
+                        $badgeText  = 'Cancelled';
+                        break;
+                    default:
+                        $badgeStyle = 'color:#6b7280; background:#f9fafb; border:1px solid #e5e7eb;';
+                        $badgeText  = ucfirst($status);
+                }
+
+                $orderDate = date('d M Y, h:i A', strtotime($order['order_date']));
+                $type      = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 'Dine-in' : 'Delivery';
+                $estTime   = ($curStep == 1) ? '20-25 mins' : (($curStep >= 4) ? '--' : '10-15 mins');
+            ?>
+
+
+            <!-- ══ ORDER CARD ══ -->
+            <div class="order-card-item"
+                 data-order-number="<?php echo htmlspecialchars($order['order_number']); ?>"
+                 data-order-status="<?php echo htmlspecialchars($order['order_status']); ?>"
+                 data-order-date="<?php echo htmlspecialchars($order['order_date']); ?>"
+                 style="background:#fff; border:1px solid #E8DCCB; border-radius:18px; padding:36px; display:flex; gap:0; align-items:flex-start; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+
+                <!-- ─── TIMELINE (220px) ─── -->
+                <div style="width:240px; flex-shrink:0; padding-right:30px; border-right:1.5px solid #EDE5D8;">
+                    <?php
+                    $steps = [
+                        1 => ['label'=>'Order Placed', 'icon'=>'fa-check'],
+                        2 => ['label'=>'Confirmed',    'icon'=>'fa-check'],
+                        3 => ['label'=>'Preparing',    'icon'=>'fa-fire-burner'],
+                        4 => ['label'=>'Ready',        'icon'=>'fa-bell-concierge'],
+                        5 => ['label'=>'Delivered',    'icon'=>'fa-check'],
+                    ];
+                    foreach ($steps as $i => $s):
+                        $isDone   = ($curStep > 0 && $i < $curStep);
+                        $isActive = ($curStep > 0 && $i == $curStep);
+                        $isPend   = ($curStep == 0 || $i > $curStep);
+                        $isLast   = ($i === 5);
+                    ?>
+                    <div style="display:flex; align-items:flex-start; gap:11px; position:relative; <?php echo !$isLast ? 'padding-bottom:16px;' : ''; ?>">
+                        <?php if (!$isLast): ?>
+                        <div style="position:absolute; left:12px; top:27px; bottom:0; width:2px; background:<?php echo ($isDone ? '#4A121E' : '#E8DCCB'); ?>;"></div>
+                        <?php endif; ?>
+
+                        <?php if ($isDone || $isActive): ?>
+                        <div style="width:25px; height:25px; border-radius:50%; background:#4A121E; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; z-index:1; margin-top:1px;">
+                            <i class="fa-solid <?php echo $isDone ? 'fa-check' : $s['icon']; ?>" style="color:#fff; font-size:9px;"></i>
+                        </div>
+                        <?php else: ?>
+                        <div style="width:25px; height:25px; border-radius:50%; background:#fff; border:2px solid #D4C9B8; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; z-index:1; margin-top:1px;">
+                            <i class="fa-regular fa-user" style="color:#D4C9B8; font-size:9px;"></i>
+                        </div>
+                        <?php endif; ?>
+
+                        <div>
+                            <div style="font-size:13px; font-weight:600; line-height:1.3; color:<?php echo $isPend ? 'rgba(46,46,46,0.28)' : '#1E1E1E'; ?>;"><?php echo $s['label']; ?></div>
+                            <div style="font-size:11px; color:rgba(46,46,46,0.42); margin-top:1px;">
+                                <?php echo ($curStep > 0 && $i <= $curStep)
+                                    ? date('h:i A', strtotime($order['order_date']) + (($i-1)*120))
+                                    : '--:--'; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div><!-- /timeline -->
+
+                <!-- ─── MAIN CONTENT (flex:1) ─── -->
+                <div style="flex:1; padding-left:26px; min-width:0;">
+
+                    <!-- Header: order info left + est. time right -->
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px;">
+
+                        <div style="display:flex; align-items:center; gap:13px;">
+                            <div style="width:44px; height:44px; background:#1C1C1E; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="white" style="width:21px;height:21px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px; flex-wrap:wrap;">
+                                    <span style="font-size:17px; font-weight:700; color:#4A121E; letter-spacing:0.3px;">ORDER #<?php echo htmlspecialchars($order['order_number']); ?></span>
+                                    <span style="font-size:9px; padding:3px 9px; border-radius:20px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; <?php echo $badgeStyle; ?>"><?php echo $badgeText; ?></span>
+                                </div>
+                                <div style="font-size:12px; color:rgba(46,46,46,0.48);"><?php echo $orderDate; ?> &bull; <?php echo $type; ?></div>
+                            </div>
+                        </div>
+
+                        <!-- Estimated Time / Status -->
+                        <div style="text-align:right; flex-shrink:0; padding-top:2px;">
+                            <?php if ($curStep > 0 && $curStep < 5): ?>
+                                <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:rgba(46,46,46,0.38); margin-bottom:5px;">Estimated Time</div>
+                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#C89B3C;">
+                                    <i class="fa-regular fa-clock" style="font-size:15px;"></i>
+                                    <span style="font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:600; line-height:1;"><?php echo $estTime; ?></span>
+                                </div>
+                            <?php elseif ($curStep == 5): ?>
+                                <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:rgba(46,46,46,0.38); margin-bottom:5px;">Delivered on</div>
+                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#15803d;">
+                                    <i class="fa-regular fa-circle-check" style="font-size:14px;"></i>
+                                    <span style="font-size:14px; font-weight:600;"><?php echo date('d M Y', strtotime($order['order_date'])); ?></span>
+                                </div>
+                            <?php elseif ($curStep == 0): ?>
+                                <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:rgba(46,46,46,0.38); margin-bottom:5px;">Status</div>
+                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#dc2626;">
+                                    <i class="fa-regular fa-circle-xmark" style="font-size:14px;"></i>
+                                    <span style="font-size:14px; font-weight:600;">Cancelled</span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div><!-- /header -->
+
+                    <!-- Items -->
+                    <div style="border-top:1px solid #EDE5D8; padding-top:14px;">
+                        <div style="font-size:12px; font-weight:600; color:#2E2E2E; margin-bottom:11px;">Order Items (<?php echo count($order['items']); ?>)</div>
+                        <?php foreach ($order['items'] as $item):
+                            $dStyle = 'color:#15803d; border-color:rgba(22,163,74,0.55);';
+                            $dText  = 'Veg';
+                            $ln     = strtolower($item['item_name']);
+                            if (strpos($ln,'chicken')!==false||strpos($ln,'lamb')!==false||strpos($ln,'prawn')!==false||strpos($ln,'fish')!==false){
+                                $dStyle='color:#dc2626; border-color:rgba(220,38,38,0.55);'; $dText='Non-Veg';
+                            }
+                            if (strpos($ln,'mojito')!==false||strpos($ln,'wine')!==false||strpos($ln,'beer')!==false||strpos($ln,'cola')!==false){
+                                $dStyle='color:#2563eb; border-color:rgba(37,99,235,0.55);'; $dText='Bar';
+                            }
+                            $img = !empty($item['image_url']) ? $item['image_url'] : '';
+                            if (!empty($img) && strpos($img,'http')!==0 && strpos($img,'//')!==0)
+                                $img = (strpos($img,'uploads/')!==0) ? 'uploads/'.$img : $img;
+                            if (empty($img)) $img = 'uploads/default.jpg';
+                        ?>
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+                            <img src="<?php echo htmlspecialchars($img); ?>"
+                                 alt="<?php echo htmlspecialchars($item['item_name']); ?>"
+                                 style="width:50px; height:50px; border-radius:8px; object-fit:cover; flex-shrink:0; border:1px solid #EDE5D8; background:#F8F4EC;"
+                                 onerror="this.src='assets/images/logo.png'">
+                            <div style="flex:1; min-width:0;">
+                                <div style="font-size:13px; font-weight:600; color:#1E1E1E; line-height:1.3; margin-bottom:4px;"><?php echo htmlspecialchars($item['item_name']); ?></div>
+                                <span style="display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; padding:2px 7px; border-radius:4px; border:1px solid; <?php echo $dStyle; ?>"><?php echo $dText; ?></span>
+                            </div>
+                            <div style="font-size:13px; font-weight:600; color:#1E1E1E; flex-shrink:0; min-width:70px; text-align:right;">₹<?php echo number_format($item['price'],2); ?></div>
+                            <div style="font-size:12px; color:rgba(46,46,46,0.4); width:26px; text-align:right; flex-shrink:0;">× <?php echo $item['quantity']; ?></div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div><!-- /items -->
+
+                    <!-- Total + Buttons -->
+                    <div style="border-top:1px solid #EDE5D8; padding-top:14px; margin-top:8px; display:flex; align-items:center; gap:9px; flex-wrap:wrap;">
+                        <div style="margin-right:auto;">
+                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.8px; color:rgba(46,46,46,0.42); margin-bottom:3px;">Total Amount</div>
+                            <div style="font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; color:#C89B3C; line-height:1.1;">₹<?php echo number_format($order['total_amount'],2); ?></div>
+                        </div>
+
+                        <?php if ($curStep > 0 && $curStep < 5): ?>
+                        <a href="track.php?order_id=<?php echo urlencode($order['order_number']); ?>"
+                           style="display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 20px; background:#C89B3C; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:background .2s; white-space:nowrap; border:none;"
+                           onmouseover="this.style.background='#b88c2e'" onmouseout="this.style.background='#C89B3C'">
+                            Track Order <i class="fa-solid fa-location-arrow" style="font-size:9px;"></i>
+                        </a>
+                        <?php endif; ?>
+
+                        <a href="order-details.php?order_id=<?php echo urlencode($order['order_number']); ?>"
+                           style="display:inline-flex; align-items:center; height:44px; padding:0 18px; background:#fff; color:#2E2E2E; border:1px solid #D4C9B8; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:background .2s; white-space:nowrap;"
+                           onmouseover="this.style.background='#F8F4EC'" onmouseout="this.style.background='#fff'">
+                            View Details
+                        </a>
+
+                        <a href="download_bill.php?id=<?php echo $order['id']; ?>&token=<?php echo generateToken($order['id']); ?>" target="_blank"
+                           style="display:inline-flex; align-items:center; height:44px; padding:0 18px; background:#fff; color:#2E2E2E; border:1px solid #D4C9B8; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:background .2s; white-space:nowrap;"
+                           onmouseover="this.style.background='#F8F4EC'" onmouseout="this.style.background='#fff'">
+                            Invoice
+                        </a>
+
+                        <?php if ($curStep > 0 && $curStep < 3): ?>
+                        <button onclick="cancelOrder(<?php echo $order['id']; ?>, '<?php echo htmlspecialchars($order['order_number']); ?>')"
+                                style="display:inline-flex; align-items:center; height:44px; padding:0 18px; background:#fff; color:#dc2626; border:1px solid rgba(220,38,38,0.4); border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:background .2s; white-space:nowrap;"
+                                onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='#fff'">
+                            Cancel Order
+                        </button>
+                        <?php endif; ?>
+
+                        <?php if ($curStep == 5): ?>
+                        <button onclick="reorderItems(<?php echo $order['id']; ?>)"
+                                style="display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 20px; background:#C89B3C; color:#fff; border:none; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:background .2s; white-space:nowrap;"
+                                onmouseover="this.style.background='#b88c2e'" onmouseout="this.style.background='#C89B3C'">
+                            <i class="fa-solid fa-rotate-left" style="font-size:9px;"></i> Reorder
+                        </button>
+                        <?php endif; ?>
+                    </div><!-- /total+buttons -->
+
+                </div><!-- /main content -->
+            </div><!-- /order-card-item -->
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+    <!-- SUPPORT CARD / HELP SECTION -->
+    <div class="bg-white border border-[#E8DCCB] rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 mt-16">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-[#C89B3C]/10 flex items-center justify-center text-[#C89B3C] text-xl shrink-0">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-[#4A121E]">Need Help?</h4>
+                <p class="text-xs text-[#2E2E2E]/60 mt-0.5">Our support team is here to help you with your orders.</p>
+            </div>
+        </div>
+        <a href="contact.html" class="px-6 py-2.5 bg-[#4A121E] hover:bg-[#3B111B] text-white rounded-xl text-xs font-semibold uppercase tracking-wider no-underline transition-colors shadow-md text-center shrink-0">Contact Support</a>
+    </div>
+
+  </main>
+
+  <!-- SHARED FOOTER -->
+  <?php include_once __DIR__ . '/includes/footer.php'; ?>
+
+  <!-- Flatpickr Range JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  
+  <script>
+      // Initialize Date Picker Range
+      flatpickr("#date-range", {
+          mode: "range",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d M Y",
+          onChange: function(selectedDates, dateStr, instance) {
+              filterOrders();
+          }
+      });
+
+      // Filter Logic
+      function filterOrders() {
+          const searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+          const statusQuery = document.getElementById('status-select').value.toLowerCase();
+          const dateRangeInput = document.getElementById('date-range').value;
+          
+          let startDate = null;
+          let endDate = null;
+          if (dateRangeInput.includes(' to ')) {
+              const parts = dateRangeInput.split(' to ');
+              startDate = new Date(parts[0]);
+              endDate = new Date(parts[1]);
+              endDate.setHours(23, 59, 59, 999);
+          } else if (dateRangeInput) {
+              startDate = new Date(dateRangeInput);
+              endDate = new Date(dateRangeInput);
+              endDate.setHours(23, 59, 59, 999);
+          }
+          
+          const cards = document.querySelectorAll('.order-card-item');
+          let visibleCount = 0;
+          
+          cards.forEach(card => {
+              const orderNumber = card.getAttribute('data-order-number').toLowerCase();
+              const orderStatus = card.getAttribute('data-order-status').toLowerCase();
+              const orderDateStr = card.getAttribute('data-order-date');
+              const orderDate = new Date(orderDateStr);
+              
+              let matchesSearch = !searchQuery || orderNumber.includes(searchQuery);
+              
+              let matchesStatus = true;
+              if (statusQuery === 'active') {
+                  matchesStatus = ['pending', 'confirmed', 'preparing', 'ready'].includes(orderStatus);
+              } else if (statusQuery === 'past') {
+                  matchesStatus = ['completed', 'delivered'].includes(orderStatus);
+              } else if (statusQuery && statusQuery !== 'all') {
+                  matchesStatus = (orderStatus === statusQuery || (statusQuery === 'delivered' && orderStatus === 'completed'));
+              }
+              
+              let matchesDate = true;
+              if (startDate && endDate) {
+                  matchesDate = (orderDate >= startDate && orderDate <= endDate);
+              }
+              
+              if (matchesSearch && matchesStatus && matchesDate) {
+                  card.style.display = 'flex';
+                  visibleCount++;
+              } else {
+                  card.style.display = 'none';
+              }
+          });
+          
+          const noOrdersMsg = document.getElementById('no-orders-message');
+          if (visibleCount === 0) {
+              noOrdersMsg.classList.remove('hidden');
+              noOrdersMsg.style.display = 'block';
+          } else {
+              noOrdersMsg.classList.add('hidden');
+              noOrdersMsg.style.display = 'none';
+          }
+      }
+
+      // Reset Filters Event
+      document.getElementById('reset-filters-btn').addEventListener('click', () => {
+          document.getElementById('search-input').value = '';
+          document.getElementById('status-select').value = 'all';
+          const fpInstance = document.getElementById('date-range')._flatpickr;
+          if (fpInstance) fpInstance.clear();
+          filterOrders();
+      });
+
+      // Run filter initially on load (for initialStatus parameters like active, past, cancelled)
+      document.addEventListener('DOMContentLoaded', () => {
+          filterOrders();
+      });
+
+      // Cancel Order AJAX Action
+      async function cancelOrder(orderId, orderNumber) {
+          if (!confirm(`Are you sure you want to cancel order #${orderNumber}?`)) {
+              return;
+          }
+          try {
+              const formData = new FormData();
+              formData.append('action', 'cancel_order');
+              formData.append('order_id', orderId);
+              
+              const response = await fetch('my-orders.php', {
+                  method: 'POST',
+                  body: formData
+              });
+              
+              const result = await response.json();
+              if (result.success) {
+                  alert(result.message);
+                  location.reload();
+              } else {
+                  alert(result.message || 'Failed to cancel order.');
+              }
+          } catch (e) {
+              console.error('Error cancelling order:', e);
+              alert('Network error. Failed to cancel order.');
+          }
+      }
+
+      // Reorder AJAX Action
+      async function reorderItems(orderId) {
+          try {
+              const response = await fetch('api/account-api.php?action=reorder', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ order_id: orderId })
+              });
+              const result = await response.json();
+              if (result.success) {
+                  window.location.href = 'carttest.html';
+              } else {
+                  alert(result.message || 'Failed to reorder items.');
+              }
+          } catch (e) {
+              console.error('Error reordering items:', e);
+              alert('Network error. Failed to reorder items.');
+          }
+      }
   </script>
 </body>
 </html>
