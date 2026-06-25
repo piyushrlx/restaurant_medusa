@@ -1102,6 +1102,7 @@
                     <li><a href="menutest.html">Our Menu</a></li>
                     <li><a href="book-table-test.html">Reservations</a></li>
                     <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
                     <li><a href="register.php">Create Account</a></li>
                     <li><a href="#">Ambitions</a></li>
                     <li><a href="career.html">Career</a></li>
@@ -1120,10 +1121,11 @@
             <div class="footer-col">
                 <h3>Join Our Circle</h3>
                 <p>Get exclusive offers and premium updates.</p>
-                <div class="newsletter-form">
-                    <input type="email" placeholder="Email Address">
-                    <button type="button"><i class="fa-solid fa-arrow-right"></i></button>
-                </div>
+                <form id="newsletterForm" class="newsletter-form">
+                    <div id="newsletterMessage" class="hidden absolute -top-8 left-0 text-xs px-2 py-1 rounded"></div>
+                    <input type="email" id="newsletter_email" name="newsletter_email" placeholder="Email Address" required>
+                    <button type="submit"><i class="fa-solid fa-arrow-right"></i></button>
+                </form>
             </div>
         </div>
         <div class="footer-bottom">
@@ -1157,8 +1159,8 @@
 
     <!-- Active Session Check Script -->
     <script>
-        // --- Map Modal Logic ---
         const MAP_EMBED_URL = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2885.413030890794!2d76.71954153075983!3d30.680322781741616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fef0030d303dd%3A0xc81adde575ebd2ce!2sMedusa-bar%20and%20lounge!5e0!3m2!1sen!2sin!4v1780853698088!5m2!1sen!2sin';
+        
         function openMapModal() {
             const modal = document.getElementById('mapModal');
             document.getElementById('mapIframe').src = MAP_EMBED_URL;
@@ -1166,6 +1168,7 @@
             document.getElementById('mapContent').style.transform = 'scale(1)';
             document.body.style.overflow = 'hidden';
         }
+        
         function closeMapModal() {
             const modal = document.getElementById('mapModal');
             modal.style.opacity = '0'; modal.style.visibility = 'hidden';
@@ -1191,7 +1194,71 @@
                 console.error("Session check failed:", e);
             }
         });
+
+        const newsletterForm = document.getElementById('newsletterForm');
+        if (newsletterForm) {
+            const messageDiv = document.getElementById('newsletterMessage');
+            if (messageDiv) {
+                messageDiv.style.position = 'absolute';
+                messageDiv.style.top = '-35px';
+                messageDiv.style.left = '0';
+                messageDiv.style.fontSize = '12px';
+                messageDiv.style.padding = '6px 12px';
+                messageDiv.style.borderRadius = '4px';
+                messageDiv.style.display = 'none';
+                messageDiv.style.whiteSpace = 'nowrap';
+                messageDiv.style.zIndex = '10';
+            }
+
+            newsletterForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('newsletter_email');
+                const btn = this.querySelector('button');
+                const originalHtml = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+                
+                try {
+                    const response = await fetch('api/subscribe.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'newsletter_email=' + encodeURIComponent(emailInput.value)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    messageDiv.style.display = 'block';
+                    if(result.success) {
+                        messageDiv.style.backgroundColor = 'rgba(25, 54, 39, 0.95)';
+                        messageDiv.style.color = '#dfba86';
+                        messageDiv.style.border = '1px solid #dfba86';
+                        messageDiv.innerText = result.message || 'Subscribed successfully!';
+                        emailInput.value = '';
+                    } else {
+                        messageDiv.style.backgroundColor = 'rgba(82, 28, 34, 0.95)';
+                        messageDiv.style.color = '#fff';
+                        messageDiv.style.border = '1px solid #ff4d4d';
+                        messageDiv.innerText = result.message || 'Subscription failed.';
+                    }
+                } catch (err) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.backgroundColor = 'rgba(82, 28, 34, 0.95)';
+                    messageDiv.style.color = '#fff';
+                    messageDiv.style.border = '1px solid #ff4d4d';
+                    messageDiv.innerText = 'Network error. Please try again later.';
+                } finally {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    setTimeout(() => {
+                        messageDiv.style.display = 'none';
+                    }, 5000);
+                }
+            });
+        }
     </script>
 </body>
-
 </html>
+

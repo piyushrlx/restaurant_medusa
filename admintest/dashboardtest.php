@@ -19,6 +19,24 @@ try {
     // Fail silently
 }
 
+// Ensure subscribers table exists
+try {
+    $createTableQuery = "
+        CREATE TABLE IF NOT EXISTS `subscribers` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `email` VARCHAR(255) NOT NULL UNIQUE,
+            `subscribed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ";
+    $pdo->exec($createTableQuery);
+} catch (PDOException $e) {
+    // Fail silently
+}
+
+// Fetch subscribers for Mass Emails tab
+$stmt = $pdo->query("SELECT * FROM subscribers ORDER BY subscribed_at DESC");
+$subscribers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Helper to render gold stars based on feedback rating
 function renderStars($rating, $review = '') {
     $rating = intval($rating);
@@ -3113,6 +3131,12 @@ html:not(.light-mode) .form-select:focus{
                 </a>
             </li>
             <li>
+                <a class="sidebar-link" onclick="switchTab('mass-emails-tab', this)">
+                    <i class="fas fa-envelope"></i>
+                    <span>Mass Emails</span>
+                </a>
+            </li>
+            <li>
                 <a class="sidebar-link" onclick="switchTab('liquor-tab', this); loadActiveQuotas();">
                     <i class="fas fa-wine-bottle"></i>
                     <span>Liquor Quota</span>
@@ -4499,6 +4523,81 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- Mass Emails Tab -->
+        <div id="mass-emails-tab" class="tab-panel">
+            <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="page-title mb-1" style="color:#fff;">Marketing & Newsletters</h1>
+                    <p class="page-subtitle" style="color:var(--gray);">Manage your subscribers and send mass emails.</p>
+                </div>
+                <div class="badge bg-success p-2 px-3" style="font-size: 14px;">
+                    <i class="fas fa-users me-2"></i> <?= count($subscribers) ?> Subscribers
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Compose Email Section -->
+                <div class="col-lg-8 mb-4">
+                    <div class="metric-card shadow-sm h-100" style="display: block;">
+                        <div class="card-header border-bottom border-secondary mb-3 pb-3">
+                            <h4 class="mb-0 text-white" style="font-family: 'Playfair Display', serif;"><i class="fas fa-paper-plane text-gold me-2" style="color: #dfba86;"></i> Compose Mass Email</h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="emailAlert" class="alert d-none"></div>
+                            <form id="massEmailForm">
+                                <div class="mb-3">
+                                    <label class="form-label" style="color: var(--gray);">Email Subject</label>
+                                    <input type="text" class="form-control" name="subject" required placeholder="e.g. Join us for a VIP Wine Tasting Event!" style="background: #2a2a2a; border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label" style="color: var(--gray);">Message Content</label>
+                                    <textarea class="form-control" name="message" rows="8" required placeholder="Write your beautiful newsletter here..." style="background: #2a2a2a; border: 1px solid rgba(255,255,255,0.1); color: #fff;"></textarea>
+                                </div>
+                                <button type="submit" class="btn px-4 py-2" id="sendBtn" style="background: #dfba86; color: #121212; font-weight: 600;">
+                                    <i class="fas fa-paper-plane me-2"></i> Send to All Subscribers
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscribers List -->
+                <div class="col-lg-4 mb-4">
+                    <div class="metric-card shadow-sm h-100" style="display: block; padding: 0;">
+                        <div class="card-header border-bottom border-secondary p-3">
+                            <h4 class="mb-0 text-white" style="font-family: 'Playfair Display', serif;"><i class="fas fa-list text-gold me-2" style="color: #dfba86;"></i> Subscriber List</h4>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-dark table-hover mb-0" style="background: transparent;">
+                                <thead style="position: sticky; top: 0; z-index: 1;">
+                                    <tr>
+                                        <th style="color: var(--gray); font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.1); background: var(--bg-secondary);">Email Address</th>
+                                        <th class="text-end" style="color: var(--gray); font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.1); background: var(--bg-secondary);">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (count($subscribers) > 0): ?>
+                                        <?php foreach ($subscribers as $sub): ?>
+                                            <tr>
+                                                <td style="border-bottom: 1px solid rgba(255,255,255,0.05);"><?= htmlspecialchars($sub['email']) ?></td>
+                                                <td class="text-end text-muted" style="font-size:0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05);"><?= date('M j, Y', strtotime($sub['subscribed_at'])) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="2" class="text-center py-4 text-muted" style="border-bottom: none;">No subscribers yet.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    </div>
+
     </div>
 
     <!-- ==================== MODALS ==================== -->
@@ -4694,7 +4793,6 @@ html:not(.light-mode) .form-select:focus{
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Menu CRUD Modal -->
     <div class="modal fade" id="menuCrudModal" tabindex="-1">
@@ -4788,6 +4886,8 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
     </div>
+    </div>
+
 
     <!-- Bootstrap & jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -7593,6 +7693,45 @@ function printTableQR() {
     `);
     printWindow.document.close();
 }
+    document.getElementById('massEmailForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('sendBtn');
+        const alert = document.getElementById('emailAlert');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
+        btn.disabled = true;
+        alert.className = 'alert d-none';
+        
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('api/send_newsletter.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            alert.classList.remove('d-none');
+            if (result.success) {
+                alert.classList.add('alert-success');
+                alert.innerText = result.message;
+                this.reset();
+            } else {
+                alert.classList.add('alert-danger');
+                alert.innerText = result.message;
+            }
+        } catch (err) {
+            alert.classList.remove('d-none');
+            alert.classList.add('alert-danger');
+            alert.innerText = 'Failed to send mass email due to a network error.';
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
 </script>
 </body>
 </html>
+
+
+

@@ -394,9 +394,9 @@ if (session_status() === PHP_SESSION_NONE) session_start();
         <a href="menutest.html" class="nav-link">Menu</a>
         <a href="my-orders.php" class="nav-link">Orders</a>
         <a href="gallery.php" class="nav-link active">Gallery</a>
-        <a href="table_booking.php" class="nav-link">Reserve</a>
+        <a href="book-table-test.html" class="nav-link">Reserve</a>
     </div>
-    <a href="table_booking.php" class="nav-reserve">Reserve a Table</a>
+    <a href="book-table-test.html" class="nav-reserve">Reserve a Table</a>
 </nav>
 
 <!-- ══════════ HERO ══════════ -->
@@ -469,7 +469,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             <p>Tag us on Instagram @la.medusaa<br>We'd love to feature your experience.</p>
         </div>
     </div>
-    <a href="https://instagram.com" target="_blank" class="insta-btn">
+    <a href="https://www.instagram.com/la_medusaa_mohali?igsh=MXVwcHA3Nm9wbXV1dQ==" target="_blank" class="insta-btn">
         Follow Us <i class="fab fa-instagram"></i>
     </a>
 </div>
@@ -796,3 +796,4 @@ renderPhotos();
 </script>
 </body>
 </html>
+
