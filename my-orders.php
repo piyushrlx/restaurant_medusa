@@ -71,7 +71,14 @@ if (isset($_GET['tab'])) {
   <title>My Orders - La Medusaa</title>
   
   <!-- Tailwind CSS & Fonts -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        originalWarn.apply(console, args);
+    };
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
         corePlugins: {

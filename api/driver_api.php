@@ -78,6 +78,20 @@ try {
             echo json_encode(['success' => true, 'message' => 'SOS Alert broadcasted successfully']);
             break;
 
+        case 'update_location':
+            $order_number = $data['order_number'] ?? '';
+            $lat = $data['lat'] ?? null;
+            $lng = $data['lng'] ?? null;
+            
+            if (empty($order_number) || $lat === null || $lng === null) {
+                throw new Exception("Order number, lat, and lng are required");
+            }
+            
+            $stmt = $pdo->prepare("UPDATE orders SET driver_lat = ?, driver_lng = ?, driver_last_updated = NOW() WHERE order_number = ?");
+            $stmt->execute([$lat, $lng, $order_number]);
+            
+            echo json_encode(['success' => true]);
+            break;
         default:
             throw new Exception("Invalid action");
     }

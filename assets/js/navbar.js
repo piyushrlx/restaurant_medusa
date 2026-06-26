@@ -30,6 +30,16 @@
     if (typeof tailwind === 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdn.tailwindcss.com';
+        
+        // Suppress Tailwind Play CDN warning for production
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+
         script.onload = () => {
             tailwind.config = {
                 corePlugins: {
