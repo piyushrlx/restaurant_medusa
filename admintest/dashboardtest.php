@@ -2075,7 +2075,8 @@ $table_zones = [
 .sidebar.collapsed .sidebar-link span{
     display:none;
 }
-.sidebar.collapsed .sidebar-link{
+.sidebar.collapsed .sidebar-link,
+.sidebar.collapsed .sidebar-brand {
     justify-content:center;
 }
 .main-content{
@@ -2085,35 +2086,41 @@ $table_zones = [
     margin-left:80px!important;
 }
 
-/* Burger button: bottom-left, always visible */
-#sidebarToggle{
-    position:fixed;
-    left:1.15rem;
-    bottom:1.15rem;
-    z-index:2000;
-    width:46px;
-    height:46px;
-    border-radius:14px;
-    border:1px solid rgba(148,163,184,.28);
-    background:var(--bg-secondary);
-    color:var(--gold);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 8px 18px rgba(0,0,0,.12);
-    transition:all .25s ease, background-color .25s ease, border-color .25s ease;
-}
-#sidebarToggle:hover{
-    transform:translateY(-1px);
-    border-color:rgba(223,186,134,.55);
-}
-html.light-mode #sidebarToggle{
-    background:#ffffff;
-    border-color:rgba(15,23,42,.12);
-}
-#sidebarToggle.closed{
-    left:1.15rem;
-}
+/* Sidebar toggle: inside sidebar */
+  /* Sidebar is fixed, so absolute positioning works automatically */
+  #sidebarToggle{
+      width:36px;
+      height:36px;
+      display: flex;
+      align-items:center;
+      justify-content:center;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      border-radius: 8px;
+      transition:all .25s ease;
+      cursor: pointer;
+  }
+  #sidebarToggle:hover{
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border-color: rgba(255,255,255,0.1);
+  }
+  .sidebar.collapsed .sidebar-brand {
+      flex-direction: column;
+      gap: 1rem;
+      padding-top: 1.5rem;
+  }
+  .sidebar.collapsed .medusa-logo {
+      display: none;
+  }
+  html.light-mode #sidebarToggle{
+      color: #475569;
+  }
+  html.light-mode #sidebarToggle:hover{
+      background: rgba(15,23,42,0.05);
+      border-color: rgba(15,23,42,0.1);
+  }
 
 /* Gold action buttons: consistent and no wrapping */
 .btn-gold-action{
@@ -2214,9 +2221,10 @@ html:not(.light-mode) .form-select:focus{
         margin-left:0!important;
     }
     #sidebarToggle{
-        left:1rem!important;
-        bottom:1rem!important;
-    }
+          left:1rem!important;
+          top:1.25rem!important;
+          bottom:auto!important;
+      }
 }
 
 /* Orders Management filter box tuning */
@@ -3071,10 +3079,7 @@ html:not(.light-mode) .form-select:focus{
 </style>
 </head>
 <body>
-<button id="sidebarToggle" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar"><i class="fas fa-bars"></i></button>
-
-
-    <!-- GLOBAL HEADER ACTIONS (THEME & NOTIFICATIONS) -->
+<!-- GLOBAL HEADER ACTIONS (THEME & NOTIFICATIONS) -->
     <div style="position: fixed; top: 2rem; right: 2.5rem; z-index: 1050; display: flex; align-items: center; gap: 12px;">
         <!-- Notification Bell Dropdown -->
         <div class="notification-dropdown-wrapper">
@@ -3104,8 +3109,8 @@ html:not(.light-mode) .form-select:focus{
 
     <!-- LEFT SIDEBAR -->
     <div class="sidebar">
-        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 8px;">
-            <img src="../assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
+<div class="sidebar-brand" style="display: flex; align-items: center; gap: 8px;">
+            <img src="../assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="height: 32px;">
             <span>Admin</span>
         </div>
         <ul class="sidebar-menu">
@@ -7643,9 +7648,10 @@ function toggleSidebar(){
   sidebar.classList.toggle('mobile-open');
   return;
  }
- sidebar.classList.toggle('collapsed');
- main.classList.toggle('expanded');
- btn.classList.toggle('closed');
+    sidebar.classList.toggle('collapsed');
+   main.classList.toggle('expanded');
+   btn.classList.toggle('closed');
+   
  document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
  localStorage.setItem('sidebarCollapsed',sidebar.classList.contains('collapsed'));
 }
@@ -7654,9 +7660,10 @@ document.addEventListener('DOMContentLoaded',()=>{
  const main=document.querySelector('.main-content');
  const btn=document.getElementById('sidebarToggle');
  if(localStorage.getItem('sidebarCollapsed')==='true'){
-  sidebar?.classList.add('collapsed');
-  main?.classList.add('expanded');
-  btn?.classList.add('closed');
+      sidebar?.classList.add('collapsed');
+    main?.classList.add('expanded');
+    btn?.classList.add('closed');
+    
   document.body.classList.add('sidebar-collapsed');
  }
 });
@@ -7747,6 +7754,19 @@ function printTableQR() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
