@@ -2086,25 +2086,58 @@ $table_zones = [
     margin-left:80px!important;
 }
 
-/* Sidebar toggle: inside sidebar */
-  /* Sidebar is fixed, so absolute positioning works automatically */
+/* Sidebar toggle: fixed on viewport */
   #sidebarToggle{
+      position: fixed;
+      top: 2rem;
+      left: 215px;
+      z-index: 2000;
       width:36px;
       height:36px;
       display: flex;
       align-items:center;
       justify-content:center;
-      background: transparent;
-      border: 1px solid transparent;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255,255,255,0.08);
       color: #94a3b8;
       border-radius: 8px;
-      transition:all .25s ease;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  #sidebarToggle .mobile-menu-icon,
+  #sidebarToggle .mobile-close-icon {
+      display: none;
+  }
+  #sidebarToggle .desktop-toggle-icon {
+      display: block;
+  }
+  #sidebarToggle i {
+      transition: transform 0.3s ease;
+  }
+  #sidebarToggle.closed .desktop-toggle-icon {
+      transform: rotate(180deg);
   }
   #sidebarToggle:hover{
       background: rgba(255,255,255,0.05);
       color: #fff;
-      border-color: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.15);
+  }
+  .sidebar-collapsed #sidebarToggle {
+      left: 22px;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+  }
+  .sidebar.collapsed {
+      cursor: pointer;
+  }
+  .sidebar.collapsed * {
+      cursor: default;
+  }
+  .sidebar.collapsed .sidebar-link,
+  .sidebar.collapsed .sidebar-link * {
+      cursor: pointer;
   }
   .sidebar.collapsed .sidebar-brand {
       flex-direction: column;
@@ -2112,14 +2145,17 @@ $table_zones = [
       padding-top: 1.5rem;
   }
   .sidebar.collapsed .medusa-logo {
-      display: none;
+      display: block;
   }
   html.light-mode #sidebarToggle{
+      background: #ffffff;
+      border-color: rgba(15,23,42,0.08);
       color: #475569;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
   html.light-mode #sidebarToggle:hover{
       background: rgba(15,23,42,0.05);
-      border-color: rgba(15,23,42,0.1);
+      border-color: rgba(15,23,42,0.15);
   }
 
 /* Gold action buttons: consistent and no wrapping */
@@ -2224,7 +2260,22 @@ html:not(.light-mode) .form-select:focus{
           left:1rem!important;
           top:1.25rem!important;
           bottom:auto!important;
-      }
+          z-index: 3000;
+          background: var(--bg-secondary) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+    }
+    #sidebarToggle .desktop-toggle-icon {
+        display: none !important;
+    }
+    #sidebarToggle .mobile-menu-icon {
+        display: block !important;
+    }
+    #sidebarToggle.mobile-open .mobile-menu-icon {
+        display: none !important;
+    }
+    #sidebarToggle.mobile-open .mobile-close-icon {
+        display: block !important;
+    }
 }
 
 /* Orders Management filter box tuning */
@@ -3107,10 +3158,17 @@ html:not(.light-mode) .form-select:focus{
         </button>
     </div>
 
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebarToggle" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+        <i class="fas fa-chevron-left desktop-toggle-icon"></i>
+        <i class="fas fa-bars mobile-menu-icon"></i>
+        <i class="fas fa-times mobile-close-icon"></i>
+    </button>
+
     <!-- LEFT SIDEBAR -->
     <div class="sidebar">
-<div class="sidebar-brand" style="display: flex; align-items: center; gap: 8px;">
-            <img src="../assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="height: 32px;">
+        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 8px;">
+            <img src="../assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="height: 32px;" class="medusa-logo">
             <span>Admin</span>
         </div>
         <ul class="sidebar-menu">
@@ -7646,6 +7704,7 @@ function toggleSidebar(){
  const btn=document.getElementById('sidebarToggle');
  if(window.innerWidth<=768){
   sidebar.classList.toggle('mobile-open');
+  btn.classList.toggle('mobile-open');
   return;
  }
     sidebar.classList.toggle('collapsed');
@@ -7666,6 +7725,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     
   document.body.classList.add('sidebar-collapsed');
  }
+
+ // Expand sidebar on click of collapsed sidebar's empty space
+ sidebar?.addEventListener('click', (e) => {
+     if (sidebar.classList.contains('collapsed') && !e.target.closest('.sidebar-link')) {
+         toggleSidebar();
+     }
+ });
 });
 
 function printTableQR() {
