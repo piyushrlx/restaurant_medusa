@@ -854,8 +854,9 @@
             });
             const finalPrice = base + extra;
 
+            const itemId = custCurrentItem.id;
             closeCustModal();
-            addToCart(custCurrentItem.id, selectedChoices, finalPrice);
+            addToCart(itemId, selectedChoices, finalPrice);
         }
 
         // Slider Navigation JS
