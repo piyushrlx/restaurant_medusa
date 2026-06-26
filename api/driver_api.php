@@ -72,10 +72,14 @@ try {
 
             $message = "EMERGENCY ALERT: Driver $driver_name reported an SOS at coordinates: Lat $lat, Lng $lng. Active Order: $order_number.";
 
-            $stmt = $pdo->prepare("INSERT INTO notifications (type, title, message, created_at) VALUES ('system', 'SOS ALERT', ?, NOW())");
-            $stmt->execute([$message]);
+            require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+            $success = addNotification('system', 'SOS ALERT', $message);
 
-            echo json_encode(['success' => true, 'message' => 'SOS Alert broadcasted successfully']);
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'SOS Alert broadcasted successfully']);
+            } else {
+                throw new Exception("Failed to save notification to database.");
+            }
             break;
 
         case 'update_location':

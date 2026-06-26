@@ -494,7 +494,7 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
             // Populate UI
             document.getElementById('uiOrderNumber').textContent = currentOrder.order_number;
-            document.getElementById('uiAmount').textContent = '?' + currentOrder.total_amount;
+            document.getElementById('uiAmount').textContent = '₹' + currentOrder.total_amount;
             document.getElementById('uiPayment').textContent = currentOrder.payment_method;
             document.getElementById('uiCustomerName').textContent = currentOrder.customer_name;
             document.getElementById('uiCustomerAddress').textContent = currentOrder.delivery_address;
@@ -657,8 +657,9 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
         // Action: SOS
         async function triggerSOS() {
+            if (!confirm("CRITICAL: Send Emergency SOS Alert to Admin?")) return;
             try {
-                await fetch('../api/driver_api.php', {
+                const res = await fetch('../api/driver_api.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ 
@@ -668,7 +669,12 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                         lng: currentLng
                     })
                 });
-                alert("SOS Alert Sent! The restaurant has been notified of your location.");
+                const data = await res.json();
+                if (data.success) {
+                    alert("SOS Alert Sent! The restaurant has been notified of your location.");
+                } else {
+                    alert("Error sending SOS: " + data.message);
+                }
             } catch (err) { alert("Error sending SOS."); }
         }
 
