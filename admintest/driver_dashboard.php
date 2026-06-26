@@ -565,6 +565,20 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                         } else {
                             driverFeature.getGeometry().setCoordinates(coord);
                         }
+
+                        // Send location to backend if an order is active
+                        if (currentOrder && currentOrder.order_number) {
+                            fetch('../api/driver_api.php', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    action: 'update_location',
+                                    order_number: currentOrder.order_number,
+                                    lat: currentLat,
+                                    lng: currentLng
+                                })
+                            }).catch(err => console.error("Error updating location", err));
+                        }
                     },
                     (error) => { console.warn("GPS Error", error); },
                     { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
