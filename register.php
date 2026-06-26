@@ -125,7 +125,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        originalWarn.apply(console, args);
+    };
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -183,22 +190,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="fixed inset-0 bg-[#0f0703]/65 z-0 pointer-events-none"></div>
 
     <!-- TOP NAV -->
-    <nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-12 h-20 bg-[#2f1317]">
-        <a href="index.html" class="flex items-center gap-3 no-underline">
-            <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" class="w-10 h-10 object-contain brightness-110">
-            <div class="font-serif text-[1.15rem] font-semibold text-gold-light tracking-[2px] uppercase leading-tight">
-                LA-MEDUSAA
-                <small class="block text-[0.58rem] tracking-[4px] font-normal text-gold-light/65">Bar & Lounge</small>
-            </div>
-        </a>
-        <ul class="flex items-center gap-9 list-none">
-            <li><a href="index.html" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Home</a></li>
-            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Menu</a></li>
-            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Events</a></li>
-            <li><a href="#" class="text-[0.75rem] font-medium tracking-[2px] uppercase text-[#f0ebe1]/75 hover:text-gold-light transition-colors">Contact</a></li>
-            <li><a href="#" class="text-[0.72rem] font-medium tracking-[2px] uppercase text-gold-light border border-[#b8973a]/60 px-[18px] py-2 hover:bg-[#b8973a]/10 transition-all">Reservation</a></li>
-        </ul>
-    </nav>
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <!-- MAIN LAYOUT -->
     <div class="relative z-10 flex-1 flex flex-col min-h-screen">

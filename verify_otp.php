@@ -620,22 +620,8 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
 <body>
 
     <!-- TOP NAVIGATION -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">
-                <img src="assets/images/logo.png" alt="La-Medusaa Logo">
-            </a>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="about.html" class="nav-link">About Us</a>
-                <a href="menutest.php" class="nav-link">Menu</a>
-                <a href="book-table-test.html" class="nav-link">Book Table</a>
-                <a href="career.html" class="nav-link">Career</a>
-                <a href="login.html" class="nav-link">Login</a>
-            </div>
-            <a href="book-table-test.html" class="btn-reserve">Book a Table</a>
-        </div>
-    </nav>
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <!-- MAIN WRAPPER -->
     <main class="main-wrapper">

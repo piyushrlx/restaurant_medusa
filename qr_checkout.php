@@ -781,15 +781,9 @@ $csrf_token = "dummy_test_token";
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="menutest.html" style="display: flex; align-items: center; gap: 8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
-                Medusa
-            </a>
-            <a href="carttest.html" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Back to Cart</a>
-        </div>
-    </nav>
+    <!-- NAVBAR -->
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <div class="checkout-hero">
         <div class="container">

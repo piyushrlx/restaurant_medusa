@@ -1404,66 +1404,9 @@ $csrf_token = "dummy_test_token";
     <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_env_var('GOOGLE_MAPS_API_KEY', ''); ?>&libraries=places"></script>
 </head>
 <body>
-    
-    <nav class="navbar-medusa-checkout">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a href="menutest.html" class="text-decoration-none d-flex align-items-center gap-3">
-                <img src="assets/images/medusaa2(onlylogo).png" alt="Medusa Logo" style="width: 40px; filter: brightness(1.2);">
-                <div>
-                    <div style="color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.2rem; line-height: 1;">Medusa</div>
-                    <div style="color: rgba(223, 186, 134, 0.7); font-size: 0.5rem; letter-spacing: 2px;">RESTAURANT, BAR & LOUNGE</div>
-                </div>
-            </a>
-            <div class="d-none d-md-flex align-items-center">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="menutest.html" class="nav-link">Menu</a>
-                <a href="book-table-test.html" class="nav-link">Book Table</a>
-                <a href="about.html" class="nav-link">About Us</a>
-                <a href="career.html" class="nav-link">Careers</a>
-                <a href="my-orders.php" class="nav-link active" style="color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 4px;">My Orders</a>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none position-relative dropdown-toggle" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications" style="text-decoration: none;">
-                        <i class="fa-regular fa-bell <?php echo ($unread_notifications_count > 0) ? 'bell-ringing' : ''; ?>" id="notifBellIcon" style="font-size: 1.2rem;"></i>
-                        <?php if($unread_notifications_count > 0): ?>
-                            <span id="notifRedDot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;">
-                                <span class="visually-hidden">New alerts</span>
-                            </span>
-                        <?php endif; ?>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark no-scrollbar" aria-labelledby="notifDropdown" style="width: 320px; max-height: 400px; overflow-y: auto; background-color: #1a1a1a; border-color: rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                        <li><h6 class="dropdown-header" style="color: var(--gold); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">Notifications</h6></li>
-                        <?php if (empty($user_notifications)): ?>
-                            <li><span class="dropdown-item text-muted text-center py-3">No new notifications</span></li>
-                        <?php else: ?>
-                            <?php foreach ($user_notifications as $notif): ?>
-                                <li>
-                                    <div class="dropdown-item px-3 py-2 text-wrap" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <strong style="color: #fff; font-size: 0.9rem;"><?php echo htmlspecialchars($notif['title']); ?></strong>
-                                            <small class="text-muted" style="font-size: 0.7rem;"><?php echo date('M d, g:i A', strtotime($notif['created_at'])); ?></small>
-                                        </div>
-                                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">
-                                            <?php echo htmlspecialchars($notif['message']); ?>
-                                        </div>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
-                        <li><a class="dropdown-item text-center text-decoration-underline" href="profile.php#pill-notifications" style="color: var(--gold); font-size: 0.85rem;">View All in Profile</a></li>
-                    </ul>
-                </div>
-                <a href="carttest.html" class="text-white text-decoration-none position-relative ms-2" title="Cart">
-                    <i class="fa-solid fa-cart-shopping" style="font-size: 1.2rem;"></i>
-                </a>
-                <a href="profile.php" class="text-decoration-none ms-2" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; color: var(--gold); font-weight: 600; font-size: 0.85rem;">
-                    <?php echo substr($user_details['first_name'] ?: 'U', 0, 1); ?>
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- NAVBAR -->
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
 
     <form id="orderForm">
         <input type="hidden" id="name" value="">

@@ -483,18 +483,8 @@ $current_step = $step_order[$tracking_status] ?? 1;
 <body>
 
 <!-- TOP NAV -->
-<nav class="top-nav">
-    <a href="index.html" class="nav-logo">
-        <img src="assets/images/logo.png" alt="Medusa">
-        <span class="nav-brand">La-Medusaa</span>
-    </a>
-    <div class="nav-actions">
-        <a href="menutest.html" class="nav-link">Menu</a>
-        <?php if (!empty($_SESSION['user_id'])): ?>
-            <a href="my-orders.php" class="nav-link">My Orders</a>
-        <?php endif; ?>
-    </div>
-</nav>
+<?php include_once __DIR__ . '/includes/navbar.php'; ?>
+<script src="assets/js/navbar.js" defer></script>
 
 <main>
     <!-- Order Header -->

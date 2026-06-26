@@ -293,22 +293,8 @@
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" id="navBrand" href="index.html" style="display:flex;align-items:center;gap:8px;">
-                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height:32px;border-radius:50%;border:1px solid var(--gold);padding:1px;">
-                Medusa
-            </a>
-            <div class="d-flex gap-2" id="navLinksContainer">
-                <a href="#" id="navBack" onclick="history.back(); return false;" class="btn btn-outline-light btn-sm" title="Back"><i class="fas fa-arrow-left"></i></a>
-                <a href="menutest.html" id="navMenu" class="btn btn-outline-light btn-sm">Menu</a>
-                <a href="carttest.html" id="navCart" class="btn btn-outline-light btn-sm">Cart (<span id="cartCount">0</span>)</a>
-                <a href="#" id="navBill" class="btn btn-gold-action btn-sm" style="display:none;"><i class="fas fa-receipt"></i> View Bill</a>
-                <a href="profile.php" id="navAccount" class="btn btn-outline-light btn-sm">My Account</a>
-                <a href="api/logout.php" id="navLogout" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
-        </div>
-    </nav>
+    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
+    <script src="assets/js/navbar.js" defer></script>
     <script>
         // QR Code Dine-In Mode Logic
         document.addEventListener('DOMContentLoaded', () => {
@@ -316,20 +302,27 @@
             const tableCode = params.get('table');
             if (tableCode) {
                 // We are in QR Code Mode!
-                document.getElementById('navBrand').href = '#';
-                document.getElementById('navBack').style.display = 'none';
-                document.getElementById('navAccount').style.display = 'none';
-                document.getElementById('navLogout').style.display = 'none';
+                const navBrand = document.getElementById('navBrand');
+                if (navBrand) navBrand.href = '#';
+                const navBack = document.getElementById('navBack');
+                if (navBack) navBack.style.display = 'none';
+                const navAccount = document.getElementById('navAccount');
+                if (navAccount) navAccount.style.display = 'none';
+                const navLogout = document.getElementById('navLogout');
+                if (navLogout) navLogout.style.display = 'none';
                 
                 // Append table parameter to Menu and Cart links
-                document.getElementById('navMenu').href = 'menutest.html?table=' + tableCode;
-                document.getElementById('navCart').href = 'carttest.html?table=' + tableCode;
+                const navMenu = document.getElementById('navMenu');
+                if (navMenu) navMenu.href = 'menutest.html?table=' + tableCode;
+                const navCart = document.getElementById('navCart');
+                if (navCart) navCart.href = 'carttest.html?table=' + tableCode;
                 
                 // Show 'View Bill' which links to the cart or checkout where table bill is shown
                 const navBill = document.getElementById('navBill');
-                navBill.style.display = 'inline-block';
-                // Assuming carttest handles table bills or you can direct them to checkout
-                navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
+                if (navBill) {
+                    navBill.style.display = 'inline-block';
+                    navBill.href = 'carttest.html?table=' + tableCode + '&view_bill=true';
+                }
                 
                 // Add a welcome message
                 const titleEl = document.querySelector('.section-title');
@@ -686,8 +679,10 @@
 
         function renderCartUI(items) {
             const count = items.reduce((s, i) => s + i.quantity, 0);
-            document.getElementById('cartCount').textContent        = count;
-            document.getElementById('floatingCartCount').textContent = `${count} Items`;
+            const cartCountEl = document.getElementById('cartCount');
+            if (cartCountEl) cartCountEl.textContent = count;
+            const floatCartCountEl = document.getElementById('floatingCartCount');
+            if (floatCartCountEl) floatCartCountEl.textContent = `${count} Items`;
             const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
             document.getElementById('floatingCartPrice').textContent = total.toFixed(0);
 

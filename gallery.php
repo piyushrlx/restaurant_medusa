@@ -383,21 +383,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 <body>
 
 <!-- ══════════ NAV ══════════ -->
-<nav class="top-nav">
-    <a href="index.html" class="nav-logo">
-        <img src="assets/images/medusaa2(onlylogo).png" alt="La-Medusaa" onerror="this.src='assets/images/versace_logo.png'">
-        <span class="nav-brand">La-Medusaa</span>
-    </a>
-    <div class="nav-links">
-        <a href="index.html" class="nav-link">Home</a>
-        <a href="about.html" class="nav-link">About</a>
-        <a href="menutest.html" class="nav-link">Menu</a>
-        <a href="my-orders.php" class="nav-link">Orders</a>
-        <a href="gallery.php" class="nav-link active">Gallery</a>
-        <a href="book-table-test.html" class="nav-link">Reserve</a>
-    </div>
-    <a href="book-table-test.html" class="nav-reserve">Reserve a Table</a>
-</nav>
+<?php include_once __DIR__ . '/includes/navbar.php'; ?>
+<script src="assets/js/navbar.js" defer></script>
 
 <!-- ══════════ HERO ══════════ -->
 <section class="hero">
