@@ -131,6 +131,9 @@ if (isset($_GET['tab'])) {
           font-weight: 600 !important;
       }
   </style>
+
+    <!-- Navbar Performance Optimization Links -->
+    <link rel="stylesheet" href="assets/css/components.css">
 </head>
 <body class="bg-[#F8F4EC] text-[#2E2E2E] font-sans min-h-screen flex flex-col">
 

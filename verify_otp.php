@@ -616,6 +616,27 @@ $secondsLeft = max(0, $resendDelay - $timeSinceLast);
             }
         }
     </style>
+
+    <!-- Navbar Performance Optimization Links -->
+    <link rel="stylesheet" href="assets/css/components.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                corePlugins: {
+                    preflight: false
+                },
+                theme: {
+                    extend: {
+                        colors: {
+                            gold: '#b8973a',
+                            'gold-light': '#d4af5a',
+                        }
+                    }
+                }
+            };
+        }
+    </script>
 </head>
 <body>
 

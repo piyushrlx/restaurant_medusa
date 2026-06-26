@@ -802,3 +802,15 @@ Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=95&token
 ----------------------------------------
 
 [2026-06-24 14:37:15] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_95_20260624_143659.pdf
+[2026-06-26 07:54:02] [SMS_GATEWAY_ERROR] SMS failed for 9876543211: cURL Error: Connection timed out after 3015 milliseconds
+[2026-06-26 07:54:05] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 9876543211
+Order ID: ORD-9E595
+PDF Path: bills/order_95_20260626_075402.pdf
+Download URL: http://192.168.1.5/restaurant_medusa/download_bill.php?id=95&token=04872f40ebf54e3dadbb6d4b7ab92446b7cee141f40a7eab60231c76c6537b10
+----------------------------------------
+
+[2026-06-26 07:54:10] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 9876543211 with attachment: bills/order_95_20260626_075402.pdf
