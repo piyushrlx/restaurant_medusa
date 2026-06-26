@@ -1,6 +1,6 @@
 <?php
 // Shared Footer Component - LA-MEDUSAA Bar & Lounge
-// Include this file at the bottom of every page: <?php include_once __DIR__ . '/includes/footer.php'; ?>
+// Include this file at the bottom of every page: include_once __DIR__ . '/includes/footer.php';
 ?>
 <style>
     /* ── Luxury Footer ── */
