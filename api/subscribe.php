@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('subscribe', 8, 600);
 
 header('Content-Type: application/json');
 
@@ -23,6 +25,7 @@ try {
     ";
     $pdo->exec($createTableQuery);
 } catch (PDOException $e) {
+    error_log('Subscriber table init error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Database initialization failed.'
@@ -67,6 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "You are already subscribed. Thank you!"]);
         } else {
+            error_log('Newsletter subscribe error: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "An error occurred. Please try again later."]);
         }

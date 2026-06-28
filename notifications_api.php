@@ -11,6 +11,8 @@ require_once __DIR__ . '/includes/notifications_helper.php';
 
 // Secure the API: Admins only
 requireAdmin();
+require_same_origin_unsafe_request();
+rate_limit('admin_notifications', 180, 300);
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -123,9 +125,10 @@ try {
     
 } catch (Exception $e) {
     http_response_code(500);
+    error_log('Notifications API error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'API Database Error: ' . $e->getMessage()
+        'message' => 'Unable to process notifications request.'
     ]);
 }
 ?>

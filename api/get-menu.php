@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+security_apply_headers('public-short');
 
 try {
     // Fetch all available food items
@@ -39,9 +40,10 @@ try {
         'data'    => $items
     ]);
 } catch (Exception $e) {
+    error_log('Menu API error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage(),
+        'message' => 'Menu is temporarily unavailable.',
         'data'    => []
     ]);
 }

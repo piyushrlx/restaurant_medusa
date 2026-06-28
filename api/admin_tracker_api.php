@@ -2,12 +2,11 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 requireLogin();
+rate_limit('admin_tracker', 120, 300);
 
 // Allow 'admin' or 'superadmin' to access
 if (empty($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin', 'superadmin'])) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Forbidden: Admin access required']);
-    exit;
+    json_response(['success' => false, 'message' => 'Forbidden: Admin access required'], 403);
 }
 
 try {
@@ -24,7 +23,7 @@ try {
 
     echo json_encode(['success' => true, 'drivers' => $active_drivers]);
 } catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log('Admin tracker error: ' . $e->getMessage());
+    json_response(['success' => false, 'message' => 'Unable to load driver tracking data.'], 500);
 }
 ?>

@@ -17,6 +17,11 @@ if ($_SESSION['user_role'] !== 'admin') {
     exit;
 }
 
+if (isset($_REQUEST['action'])) {
+    require_same_origin_unsafe_request();
+    rate_limit('admin_dashboard_action', 240, 300);
+}
+
 // Ensure feedback table exists before running any queries
 try {
     $createTableQuery = "
@@ -318,6 +323,8 @@ $settings['gst_rate'] = intval(get_env_var('GST_RATE', $settings['gst_rate']));
 $settings['opening_hours'] = get_env_var('OPENING_HOURS', $settings['opening_hours']);
 $settings['inactivity_months'] = intval(get_env_var('INACTIVITY_MONTHS', $settings['inactivity_months'] ?? 3));
 
+
+
 // 3. API Handlers
 if (isset($_REQUEST['action'])) {
     $action = $_REQUEST['action'];
@@ -378,7 +385,8 @@ if (isset($_REQUEST['action'])) {
             $quotas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'quotas' => $quotas]);
         } catch (PDOException $e) {
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            error_log('Admin load active quotas error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Unable to load active quotas.']);
         }
         exit;
     }
@@ -443,7 +451,8 @@ if (isset($_REQUEST['action'])) {
 
             echo json_encode(['success' => true, 'user_id' => $user_id, 'brands' => $brands]);
         } catch (PDOException $e) {
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            error_log('Admin verify liquor order error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Unable to verify customer quota.']);
         }
         exit;
     }
@@ -509,7 +518,8 @@ if (isset($_REQUEST['action'])) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            error_log('Admin consume peg error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Unable to consume peg quota.']);
         }
         exit;
     }
@@ -1792,7 +1802,7 @@ $table_zones = [
             padding: 0;
             margin: 0 0 0.8rem 0;
             font-size: 0.82rem;
-            color: #e0e0e0;
+            color: var(--text-secondary, #b0b8c8);
         }
         .kitchen-card-items li {
             padding: 0.2rem 0;
@@ -1800,6 +1810,47 @@ $table_zones = [
         }
         .kitchen-card-items li:last-child {
             border-bottom: none;
+        }
+
+        /* Kitchen column badge colors */
+        .bg-gold {
+            background-color: var(--gold) !important;
+        }
+        .count-badge-pending {
+            background-color: var(--gold);
+            color: #1a1200;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 0.28em 0.65em;
+            border-radius: 20px;
+            min-width: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .count-badge-cooking {
+            background-color: #2196F3;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 0.28em 0.65em;
+            border-radius: 20px;
+            min-width: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .count-badge-ready {
+            background-color: #4CAF50;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 0.28em 0.65em;
+            border-radius: 20px;
+            min-width: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Settings CSS */
@@ -1853,6 +1904,7 @@ $table_zones = [
             background-color: var(--gold-light);
             transform: translateY(-1px);
         }
+
 
         /* QR block */
         .qr-card-view {
@@ -1909,13 +1961,24 @@ $table_zones = [
 
         html.light-mode .page-title,
         html.light-mode .card-header-premium,
-        html.light-mode .kitchen-col-title,
         html.light-mode .qr-title-text,
         html.light-mode .metric-info .value,
         html.light-mode .premium-table,
         html.light-mode .premium-table td,
         html.light-mode .premium-table td strong {
             color: var(--white) !important;
+        }
+
+        html.light-mode .kitchen-col-title {
+            color: #1a1a2e !important;
+        }
+
+        html.light-mode .kitchen-card-items {
+            color: #374151 !important;
+        }
+
+        html.light-mode .kitchen-card-header {
+            color: #1a1a2e !important;
         }
 
         html.light-mode .text-white {
@@ -2821,6 +2884,31 @@ html:not(.light-mode) .form-select:focus{
             color: #ffffff;
         }
 
+        /* --- SOS Urgent Toast --- */
+        .toast-medusa-sos {
+            background: rgba(25, 8, 8, 0.97);
+            border: 2px solid rgba(244, 67, 54, 0.7);
+            box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5), 0 10px 30px rgba(244, 67, 54, 0.3);
+            animation: slideInToast 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards,
+                       sosPulse 1s ease-in-out 0.3s 5 alternate;
+        }
+
+        @keyframes sosPulse {
+            from { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5), 0 10px 30px rgba(244, 67, 54, 0.2); border-color: rgba(244, 67, 54, 0.5); }
+            to   { box-shadow: 0 0 0 8px rgba(244, 67, 54, 0), 0 10px 30px rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 1); }
+        }
+
+        .toast-medusa-sos .toast-medusa-title {
+            color: #ff5252;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .notif-sos-urgent {
+            background: rgba(244, 67, 54, 0.2) !important;
+            color: #f44336 !important;
+        }
+
         /* --- Empty State Styles --- */
         .notif-empty-state {
             text-align: center;
@@ -3682,14 +3770,26 @@ html:not(.light-mode) .form-select:focus{
 
             <!-- Kitchen Search Control -->
             <div class="content-card mb-4">
-                <div class="row g-3">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label class="form-label text-muted small text-uppercase">Search Active Orders</label>
-                        <div class="premium-search-group">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="kitchen_search_input" class="form-control form-control-dashboard" placeholder="Search Order ID, Dish Name, Customer, Table..." onkeyup="filterKitchenOrders()">
+                        <div class="d-flex gap-2">
+                            <div class="premium-search-group flex-grow-1" style="min-width:0;">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="kitchen_search_input"
+                                    class="form-control form-control-dashboard"
+                                    placeholder="Search Order ID, Dish Name, Customer, Table..."
+                                    onkeydown="if(event.key==='Enter') filterKitchenOrders()">
+                            </div>
+                            <button class="btn btn-sm btn-gold-action flex-shrink-0" onclick="filterKitchenOrders()" title="Search">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button class="btn btn-sm flex-shrink-0" id="kitchen-reset-btn"
+                                style="display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#94a3b8;"
+                                onclick="resetKitchenSearch()" title="Reset">
+                                <i class="fas fa-times"></i> Reset
+                            </button>
                         </div>
-
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted small text-uppercase mb-1">Quick Status Filter</label>
@@ -3708,7 +3808,7 @@ html:not(.light-mode) .form-select:focus{
                 <div class="kitchen-col">
                     <div class="kitchen-col-title">
                         <span>New Orders</span>
-                        <span class="badge bg-gold text-dark" id="count-kitchen-pending">0</span>
+                        <span class="count-badge-pending" id="count-kitchen-pending">0</span>
                     </div>
                     <div id="kitchen-pending-list"></div>
                 </div>
@@ -3717,7 +3817,7 @@ html:not(.light-mode) .form-select:focus{
                 <div class="kitchen-col">
                     <div class="kitchen-col-title">
                         <span>Preparing / Cooking</span>
-                        <span class="badge bg-primary text-white" id="count-kitchen-preparing">0</span>
+                        <span class="count-badge-cooking" id="count-kitchen-preparing">0</span>
                     </div>
                     <div id="kitchen-preparing-list"></div>
                 </div>
@@ -3726,7 +3826,7 @@ html:not(.light-mode) .form-select:focus{
                 <div class="kitchen-col">
                     <div class="kitchen-col-title">
                         <span>Ready for Service</span>
-                        <span class="badge bg-success text-dark" id="count-kitchen-ready">0</span>
+                        <span class="count-badge-ready" id="count-kitchen-ready">0</span>
                     </div>
                     <div id="kitchen-ready-list"></div>
                 </div>
@@ -3743,12 +3843,12 @@ html:not(.light-mode) .form-select:focus{
             <!-- Menu Search Box -->
             <div class="content-card mb-4">
                 <form id="menuSearchForm" onsubmit="performMenuSearch(event)">
-                    <div class="row g-3">
-                        <div class="col-md-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
                             <label class="form-label text-muted small text-uppercase">Dish Name</label>
                             <input type="text" id="menu_search_input" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Search dish name, details...">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
@@ -3793,11 +3893,16 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="0">Out of Stock</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-gold-action btn-action-wide"><i class="fas fa-search me-1"></i><span>Filter</span></button>
+                        <div class="col-md-1 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-gold-action flex-grow-1" title="Filter"><i class="fas fa-search"></i></button>
+                            <button type="button" class="btn flex-shrink-0" id="menu-reset-btn"
+                                style="display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#94a3b8;height:42px;"
+                                onclick="resetMenuSearch()" title="Reset Filters">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="row g-3 mt-2">
+                    <div class="row g-3 mt-1">
                         <div class="col-md-12">
                             <div class="form-check form-switch">
                                 <input type="checkbox" id="menu_bestseller_check" class="form-check-input">
@@ -3825,8 +3930,8 @@ html:not(.light-mode) .form-select:focus{
                                 <th>Category</th>
                                 <th>Price</th>
                                 <th>Description</th>
-                                <th>Customizations</th>
-                                <th>Status</th>
+                                <th class="text-center">Available</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="menu-search-results-body"></tbody>
@@ -3898,7 +4003,6 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
-        <!-- ==================== CUSTOMERS TAB ==================== -->
         <div id="customers-tab" class="tab-panel">
             <div class="page-header">
                 <h1 class="page-title">Customer History</h1>
@@ -5356,6 +5460,8 @@ html:not(.light-mode) .form-select:focus{
                     renderKitchenColumn(data.orders.filter(o => o.order_status.toLowerCase() === 'pending'), 'kitchen-pending-list', 'pending');
                     renderKitchenColumn(data.orders.filter(o => o.order_status.toLowerCase() === 'preparing'), 'kitchen-preparing-list', 'preparing');
                     renderKitchenColumn(data.orders.filter(o => o.order_status.toLowerCase() === 'ready'), 'kitchen-ready-list', 'ready');
+                    // Re-apply search filter after every refresh so results don't vanish
+                    filterKitchenOrders();
                 }
             });
         }
@@ -5838,6 +5944,11 @@ html:not(.light-mode) .form-select:focus{
             e.preventDefault();
             const id = document.getElementById('menu_item_id').value;
             const action = id ? 'edit_menu_item' : 'add_menu_item';
+
+            const submitBtn = document.getElementById('btnMenuSubmit');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
             
             const bodyData = {
                 action: action,
@@ -5845,7 +5956,7 @@ html:not(.light-mode) .form-select:focus{
                 category: document.getElementById('menu_category').value,
                 price: document.getElementById('menu_price').value,
                 description: document.getElementById('menu_description').value,
-                image_url: document.getElementById('menu_image_url').value
+                image_url: document.getElementById('menu_image_url').value || ''
             };
             if (id) bodyData.id = id;
             
@@ -5858,12 +5969,18 @@ html:not(.light-mode) .form-select:focus{
             .then(data => {
                 if (data.success) {
                     bootstrap.Modal.getInstance(document.getElementById('menuCrudModal')).hide();
-                    alert('Dish successfully saved!', () => {
-                        location.reload();
-                    });
+                    showToast(id ? 'Dish updated successfully!' : 'New dish added successfully!', 'success');
+                    setTimeout(() => location.reload(), 1200);
                 } else {
-                    alert('Error saving menu details');
+                    showToast('Error saving dish: ' + (data.message || 'Unknown error'), 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                 }
+            })
+            .catch(err => {
+                showToast('Network error. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             });
         }
 
@@ -6066,13 +6183,63 @@ html:not(.light-mode) .form-select:focus{
         let _kitchenStatusFilter = 'all';
 
         function filterKitchenOrders() {
-            const query = (document.getElementById('kitchen_search_input')?.value || '').toLowerCase();
+            const query = (document.getElementById('kitchen_search_input')?.value || '').trim().toLowerCase();
+            const resetBtn = document.getElementById('kitchen-reset-btn');
+
+            // Show reset button only when there's an active query
+            if (resetBtn) {
+                resetBtn.style.display = query ? '' : 'none';
+            }
+
+            // Filter cards and track per-column matches
+            const columnMatches = {
+                'kitchen-pending-list': 0,
+                'kitchen-preparing-list': 0,
+                'kitchen-ready-list': 0
+            };
+
             document.querySelectorAll('.kitchen-card').forEach(card => {
                 const text = card.textContent.toLowerCase();
-                const matchSearch = !query || text.includes(query);
-                // Status filter is applied via CSS class toggling on columns
-                card.style.display = matchSearch ? '' : 'none';
+                const match = !query || text.includes(query);
+                card.style.display = match ? '' : 'none';
+
+                // Count visible cards per column
+                const parentList = card.closest('[id^="kitchen-"][id$="-list"]');
+                if (match && parentList && parentList.id in columnMatches) {
+                    columnMatches[parentList.id]++;
+                }
             });
+
+            // Show 'no results' message per column when search has no matches
+            if (query) {
+                Object.entries(columnMatches).forEach(([listId, count]) => {
+                    const list = document.getElementById(listId);
+                    if (!list) return;
+                    let noRes = list.querySelector('.kitchen-no-results');
+                    if (count === 0) {
+                        if (!noRes) {
+                            noRes = document.createElement('div');
+                            noRes.className = 'kitchen-no-results text-center text-muted py-4';
+                            noRes.innerHTML = `<i class="fas fa-search me-2"></i>No match for "${query}"`;
+                            list.appendChild(noRes);
+                        } else {
+                            noRes.innerHTML = `<i class="fas fa-search me-2"></i>No match for "${query}"`;
+                            noRes.style.display = '';
+                        }
+                    } else if (noRes) {
+                        noRes.style.display = 'none';
+                    }
+                });
+            } else {
+                // Remove all no-results messages when query cleared
+                document.querySelectorAll('.kitchen-no-results').forEach(el => el.remove());
+            }
+        }
+
+        function resetKitchenSearch() {
+            const input = document.getElementById('kitchen_search_input');
+            if (input) input.value = '';
+            filterKitchenOrders();
         }
 
         function filterKitchenStatus(status) {
@@ -6113,6 +6280,10 @@ html:not(.light-mode) .form-select:focus{
                 bestseller: document.getElementById('menu_bestseller_check')?.checked ? '1' : '0'
             });
 
+            // Show reset button when search is active
+            const resetBtn = document.getElementById('menu-reset-btn');
+            if (resetBtn) resetBtn.style.display = '';
+
             const card = document.getElementById('menu-search-results-card');
             const tbody = document.getElementById('menu-search-results-body');
             if (card) card.style.display = 'block';
@@ -6131,6 +6302,21 @@ html:not(.light-mode) .form-select:focus{
             .catch(() => showSearchError('menu-search-results-body', 7, 'Network error.'));
         }
 
+        function resetMenuSearch() {
+            // Clear all filter inputs
+            const fields = ['menu_search_input', 'menu_price_min', 'menu_price_max'];
+            fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            const selects = ['menu_category_select', 'menu_diet_select', 'menu_availability_select'];
+            selects.forEach(id => { const el = document.getElementById(id); if (el) el.value = el.options[0].value; });
+            const check = document.getElementById('menu_bestseller_check');
+            if (check) check.checked = false;
+            // Hide results and reset button
+            const card = document.getElementById('menu-search-results-card');
+            if (card) card.style.display = 'none';
+            const resetBtn = document.getElementById('menu-reset-btn');
+            if (resetBtn) resetBtn.style.display = 'none';
+        }
+
         function renderMenuSearchResults(menu) {
             const tbody = document.getElementById('menu-search-results-body');
             if (!tbody) return;
@@ -6140,7 +6326,7 @@ html:not(.light-mode) .form-select:focus{
                 return;
             }
 
-             tbody.innerHTML = menu.map(dish => {
+            tbody.innerHTML = menu.map(dish => {
                 let imgSrc = dish.image_url || '';
                 if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
                     if (imgSrc.startsWith('uploads/')) {
@@ -6157,9 +6343,10 @@ html:not(.light-mode) .form-select:focus{
                 const bestBadge = dish.is_bestseller
                     ? '<span class="badge bg-warning text-dark ms-1" style="font-size:0.7rem;">⭐ BESTSELLER</span>'
                     : '';
-                const availBadge = dish.is_available == 1
-                    ? '<span class="status-badge bg-success text-dark">Available</span>'
-                    : '<span class="status-badge bg-danger text-white">Unavailable</span>';
+
+                const custCount = dish.cust_count || 0;
+                const custActive = custCount > 0 ? 'active' : '';
+                const isAvail = dish.is_available == 1;
 
                 return `<tr>
                     <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
@@ -6167,8 +6354,33 @@ html:not(.light-mode) .form-select:focus{
                     <td class="text-uppercase"><small>${dish.category || '—'}</small></td>
                     <td class="text-gold">${fmtINR(dish.price)}</td>
                     <td><small class="text-muted">${(dish.description || '').substring(0, 60)}${(dish.description || '').length > 60 ? '…' : ''}</small></td>
-                    <td><small class="text-muted">${dish.cust_count || 0} groups</small></td>
-                    <td>${availBadge}</td>
+                    <td class="text-center">
+                        <div class="form-check form-switch premium-switch d-inline-block">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                ${isAvail ? 'checked' : ''}
+                                onchange="toggleMenuAvailability(${dish.id}, this.checked)">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <button class="btn btn-sm btn-luxury-action btn-luxury-custom ${custActive}"
+                                onclick="openCustomizationManager(${dish.id}, '${dish.name.replace(/'/g, "\\'")}')"
+                                title="Manage Customizations">
+                                <i class="fas fa-sliders-h"></i>
+                                <span class="luxury-badge bg-gold-badge ms-1">${custCount}</span>
+                            </button>
+                            <button class="btn btn-sm btn-luxury-action btn-luxury-edit"
+                                onclick="openEditMenuModal(${JSON.stringify(dish).replace(/'/g, "&#39;")})"
+                                title="Edit Item">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-luxury-action btn-luxury-delete"
+                                onclick="deleteMenuItem(${dish.id})"
+                                title="Delete Item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -6659,12 +6871,6 @@ html:not(.light-mode) .form-select:focus{
                 });
             }
 
-            // Real-time debounced kitchen search
-            const kitchenInput = document.getElementById('kitchen_search_input');
-            if (kitchenInput) {
-                kitchenInput.addEventListener('input', debounce(filterKitchenOrders, 200));
-            }
-
             // Real-time debounced orders search (search-as-you-type on the text field)
             const orderInput = document.getElementById('order_search_input');
             if (orderInput) {
@@ -6983,6 +7189,19 @@ html:not(.light-mode) .form-select:focus{
             }
         }
 
+        function playSOSAlarm() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Urgent repeating alarm: high-low-high pattern
+                const pattern = [1200, 800, 1200, 800, 1200];
+                pattern.forEach((freq, i) => {
+                    setTimeout(() => playTone(audioCtx, freq, 0, 0.18), i * 200);
+                });
+            } catch (e) {
+                console.warn("SOS alarm audio error:", e);
+            }
+        }
+
         function playTone(ctx, freq, startTime, duration) {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -7045,7 +7264,7 @@ html:not(.light-mode) .form-select:focus{
         }
 
         // Toast notifications stacking system
-        function showToastNotification(notif) {
+        function showToastNotification(notif, isSOS) {
             let toastContainer = document.getElementById('toastContainerMedusa');
             if (!toastContainer) {
                 toastContainer = document.createElement('div');
@@ -7055,10 +7274,10 @@ html:not(.light-mode) .form-select:focus{
             }
 
             const toast = document.createElement('div');
-            toast.className = 'toast-medusa';
+            toast.className = isSOS ? 'toast-medusa toast-medusa-sos' : 'toast-medusa';
             
-            const iconClass = getNotifIcon(notif.type);
-            const colorClass = getNotifClass(notif.type);
+            const iconClass = getNotifIcon(notif.type, notif.title);
+            const colorClass = isSOS ? 'notif-sos-urgent' : getNotifClass(notif.type);
 
             toast.innerHTML = `
                 <div class="notif-icon-circle ${colorClass}" style="width: 34px; height: 34px; font-size: 0.95rem;">
@@ -7073,13 +7292,14 @@ html:not(.light-mode) .form-select:focus{
 
             toastContainer.appendChild(toast);
 
-            // Auto dismiss after 4 seconds
+            // SOS stays visible for 12 seconds; regular toasts 4 seconds
+            const dismissDelay = isSOS ? 12000 : 4000;
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.classList.add('fade-out');
                     setTimeout(() => toast.remove(), 300);
                 }
-            }, 4000);
+            }, dismissDelay);
         }
 
         // Fetch paginated history for center page tab
@@ -7157,8 +7377,9 @@ html:not(.light-mode) .form-select:focus{
             
             let html = '';
             notifications.forEach(n => {
-                const iconClass = getNotifIcon(n.type);
-                const colorClass = getNotifClass(n.type);
+                const isSOS = n.type === 'system' && n.title && n.title.toUpperCase().includes('SOS');
+                const iconClass = getNotifIcon(n.type, n.title);
+                const colorClass = isSOS ? 'notif-sos-urgent' : getNotifClass(n.type);
                 const rowClass = n.is_read == 1 ? 'read-row' : 'unread-row';
                 const formattedTime = formatDateTime(n.created_at);
                 
@@ -7394,8 +7615,9 @@ html:not(.light-mode) .form-select:focus{
 
             let html = '';
             notifications.forEach(n => {
-                const iconClass = getNotifIcon(n.type);
-                const colorClass = getNotifClass(n.type);
+                const isSOS = n.type === 'system' && n.title && n.title.toUpperCase().includes('SOS');
+                const iconClass = getNotifIcon(n.type, n.title);
+                const colorClass = isSOS ? 'notif-sos-urgent' : getNotifClass(n.type);
                 const unreadClass = n.is_read == 0 ? 'unread' : '';
                 const timeStr = formatRelativeTime(n.created_at);
 
@@ -7428,16 +7650,23 @@ html:not(.light-mode) .form-select:focus{
                         if (!isInitialLoad) {
                             const newNotifs = data.notifications.filter(n => n.id > lastFetchedNotifId);
                             if (newNotifs.length > 0) {
-                                // Sound chime trigger (orders category only)
-                                const hasOrder = newNotifs.some(n => n.type === 'order');
-                                if (hasOrder) {
+                                // Detect SOS alerts first (highest priority)
+                                const sosNotifs = newNotifs.filter(n => n.type === 'system' && n.title && n.title.toUpperCase().includes('SOS'));
+                                const orderNotifs = newNotifs.filter(n => n.type === 'order');
+
+                                if (sosNotifs.length > 0) {
+                                    // Urgent SOS alarm
+                                    playSOSAlarm();
+                                    sosNotifs.forEach(n => showToastNotification(n, true));
+                                }
+
+                                if (orderNotifs.length > 0) {
                                     playChimeSound();
                                 }
                                 
-                                // Slide-in toast notifications
-                                newNotifs.forEach(n => {
-                                    showToastNotification(n);
-                                });
+                                // Slide-in toast for all other new notifications
+                                newNotifs.filter(n => !(n.type === 'system' && n.title && n.title.toUpperCase().includes('SOS')))
+                                    .forEach(n => showToastNotification(n, false));
 
                                 // Reload page history in case center tab is actively shown
                                 const notifTab = document.getElementById('notifications-tab');
@@ -7463,7 +7692,10 @@ html:not(.light-mode) .form-select:focus{
         }
 
         // Helper formatting functions
-        function getNotifIcon(type) {
+        function getNotifIcon(type, title) {
+            if (type === 'system' && title && title.toUpperCase().includes('SOS')) {
+                return 'fas fa-triangle-exclamation';
+            }
             switch (type) {
                 case 'order': return 'fas fa-receipt';
                 case 'payment': return 'fas fa-wallet';
@@ -7527,7 +7759,7 @@ html:not(.light-mode) .form-select:focus{
                 type: type === 'success' ? 'payment' : (type === 'error' ? 'system' : 'staff'),
                 title: type.charAt(0).toUpperCase() + type.slice(1),
                 body: message
-            });
+            }, false);
         }
 
         function loadActiveQuotas() {

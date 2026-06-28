@@ -4,6 +4,12 @@
  * Pulls images and videos directly from Google Drive public folders.
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
+// Load gallery manifest if present (admin-managed uploads)
+$gallery_manifest = [];
+$manifest_path = __DIR__ . '/uploads/gallery/gallery.json';
+if (file_exists($manifest_path)) {
+    $gallery_manifest = json_decode(file_get_contents($manifest_path), true) ?: [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -383,7 +389,18 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <!-- Navbar Performance Optimization Links -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/components.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
+        // Expose server-side gallery manifest to client JS (if present)
+        window.GALLERY_MANIFEST = <?php echo json_encode($gallery_manifest, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?> || [];
+<script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
             tailwind.config = {
@@ -505,7 +522,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
         </div>
         <div class="footer-col">
             <h4>Follow Us</h4>
-            <a href="#"><i class="fab fa-instagram me-2"></i> Instagram</a>
+            <a href="https://www.instagram.com/la_medusaa_mohali?igsh=MXVwcHA3Nm9wbXV1dQ%3D%3D"><i class="fab fa-instagram me-2"></i> Instagram</a>
             <a href="#"><i class="fab fa-facebook me-2"></i> Facebook</a>
             <a href="#"><i class="fab fa-pinterest me-2"></i> Pinterest</a>
         </div>
@@ -671,8 +688,28 @@ function driveViewUrl(id){ return `https://drive.google.com/file/d/${id}/preview
 // ═══════════════════ PHOTOS ═══════════════════
 function renderPhotos() {
     const grid = document.getElementById('photosGrid');
-    const shown = PHOTO_IDS.slice(0, visiblePhotos);
+    // Use server-managed manifest if available
+    const manifestImages = (window.GALLERY_MANIFEST || []).filter(i => i.type === 'image');
+    if (manifestImages.length > 0) {
+        const shown = manifestImages.slice(0, visiblePhotos);
+        grid.innerHTML = shown.map((it, i) => `
+            <div class="photo-item" data-idx="${i}" onclick="openLightbox(${i})">
+                <img src="/${it.file}" alt="Gallery photo ${i+1}" loading="lazy" onerror="this.parentElement.style.display='none'">
+                <div class="photo-overlay">
+                    <div class="photo-overlay-inner">
+                        <div class="photo-expand-icon"><i class="fas fa-expand-alt"></i></div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
 
+        document.getElementById('photoLoadMore').style.display =
+            visiblePhotos >= manifestImages.length ? 'none' : 'block';
+        return;
+    }
+
+    // Fallback to Drive-based photos
+    const shown = PHOTO_IDS.slice(0, visiblePhotos);
     grid.innerHTML = shown.map((id, i) => `
         <div class="photo-item" data-idx="${i}" onclick="openLightbox(${i})">
             <img
@@ -740,8 +777,27 @@ document.addEventListener('keydown', e => {
 // ═══════════════════ VIDEOS ═══════════════════
 function renderVideos() {
     const grid = document.getElementById('videoGrid');
-    const shown = VIDEO_IDS.slice(0, visibleVideos);
+    const manifestVideos = (window.GALLERY_MANIFEST || []).filter(i => i.type === 'video');
+    if (manifestVideos.length > 0) {
+        const shown = manifestVideos.slice(0, visibleVideos);
+        grid.innerHTML = shown.map((it, i) => `
+            <div class="video-card">
+                <div class="video-thumb">
+                    <video src="/${it.file}" loading="lazy" controls style="width:100%;height:100%;object-fit:cover;"></video>
+                </div>
+                <div class="video-info">
+                    <div class="video-name">${it.caption || 'Video'}</div>
+                    <div class="video-desc"></div>
+                </div>
+            </div>
+        `).join('');
 
+        document.getElementById('videoLoadMore').style.display =
+            visibleVideos >= manifestVideos.length ? 'none' : 'block';
+        return;
+    }
+
+    const shown = VIDEO_IDS.slice(0, visibleVideos);
     grid.innerHTML = shown.map((v, i) => `
         <div class="video-card" onclick="openVideoLb('${v.id}')">
             <div class="video-thumb">

@@ -2,6 +2,8 @@
 require_once __DIR__ . '/config.php';
 
 requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('buy_membership_card', 5, 300);
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['full_name'] ?? 'MEMBER';

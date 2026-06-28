@@ -2,11 +2,11 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('driver_api', 180, 300);
 
 if (empty($_SESSION['user_role']) || $_SESSION['user_role'] !== 'driver') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Forbidden: Driver access required']);
-    exit;
+    json_response(['success' => false, 'message' => 'Forbidden: Driver access required'], 403);
 }
 
 $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
@@ -53,6 +53,9 @@ try {
             if ($status === 'Picked Up') {
                 $status = 'Out for Delivery';
             }
+            if (!in_array($status, ['Out for Delivery', 'Delivered'], true)) {
+                throw new Exception("Invalid status");
+            }
 
             $stmt = $pdo->prepare("UPDATE orders SET status = ?, order_status = ? WHERE order_number = ?");
             $stmt->execute([$status, $status, $order_number]);
@@ -90,6 +93,11 @@ try {
             if (empty($order_number) || $lat === null || $lng === null) {
                 throw new Exception("Order number, lat, and lng are required");
             }
+            $lat = filter_var($lat, FILTER_VALIDATE_FLOAT);
+            $lng = filter_var($lng, FILTER_VALIDATE_FLOAT);
+            if ($lat === false || $lng === false || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                throw new Exception("Invalid coordinates");
+            }
             
             $stmt = $pdo->prepare("UPDATE orders SET driver_lat = ?, driver_lng = ?, driver_last_updated = NOW() WHERE order_number = ?");
             $stmt->execute([$lat, $lng, $order_number]);
@@ -101,6 +109,7 @@ try {
     }
 } catch (Exception $e) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log('Driver API error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to process driver request.']);
 }
 ?>

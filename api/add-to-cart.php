@@ -2,6 +2,8 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('cart_mutation', 120, 300);
 
 $data = json_decode(file_get_contents('php://input'), true) ?: [];
 $food_item_id = intval($data['food_item_id'] ?? 0);
@@ -30,6 +32,7 @@ try {
     }
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log('Add to cart error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to update cart right now.']);
 }
 ?>
