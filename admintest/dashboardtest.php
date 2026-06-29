@@ -671,6 +671,8 @@ if (isset($_REQUEST['action'])) {
             $params[] = floatval($_POST['max_price']);
         }
         
+        $sql .= " ORDER BY category, id ASC";
+        
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -1368,7 +1370,7 @@ while ($row = $active_order_stmt->fetch(PDO::FETCH_ASSOC)) {
 $active_tables_count = count(array_unique($occupied_tables));
 
 // 7-day Sales Chart Query
-$chart_stmt = $pdo->query("SELECT DATE(order_date) as d, SUM(total_amount) as total FROM orders WHERE order_status = 'completed' GROUP BY DATE(order_date) ORDER BY DATE(order_date) ASC LIMIT 7");
+$chart_stmt = $pdo->query("SELECT * FROM (SELECT DATE(order_date) as d, SUM(total_amount) as total FROM orders WHERE order_status = 'completed' GROUP BY DATE(order_date) ORDER BY DATE(order_date) DESC LIMIT 7) as recent_days ORDER BY d ASC");
 $chart_labels = [];
 $chart_data = [];
 while ($row = $chart_stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -3478,19 +3480,19 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="dinein">Dine-In Order</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label text-muted small text-uppercase">Date Filter</label>
-                            <select id="order_date_select" class="form-select bg-dark text-white border-secondary form-control-dashboard" onchange="toggleCustomDateFields('orders', this.value)">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="yesterday">Yesterday</option>
-                                <option value="7days">Last 7 Days</option>
-                                <option value="30days">Last 30 Days</option>
-                                <option value="custom">Custom Range</option>
-                            </select>
-                        </div>
-                        <div class="col-auto d-flex align-items-end">
-                            <button type="submit" class="btn btn-gold-action btn-action-form"><i class="fas fa-search me-1"></i><span>Filter</span></button>
+                            <div class="d-flex gap-2 align-items-end">
+                                <select id="order_date_select" class="form-select bg-dark text-white border-secondary form-control-dashboard" onchange="toggleCustomDateFields('orders', this.value)">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days">Last 30 Days</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                                <button type="submit" class="btn btn-gold-action btn-action-form" title="Filter"><i class="fas fa-search me-1"></i><span>Filter</span></button>
+                            </div>
                         </div>
                     </div>
                     <div class="row g-3 mt-2" id="orders_custom_date_row" style="display:none;">
