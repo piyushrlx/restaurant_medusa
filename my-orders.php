@@ -47,12 +47,72 @@ try {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($orders as &$order) {
-        $item_stmt = $pdo->prepare("SELECT oi.*, fi.image_url FROM order_items oi LEFT JOIN food_items fi ON oi.food_item_id = fi.id WHERE oi.order_id = ?");
+        $item_stmt = $pdo->prepare("
+            SELECT oi.*,
+                   COALESCE(fi_id.image_url, fi_name.image_url) AS image_url
+            FROM order_items oi
+            LEFT JOIN food_items fi_id   ON oi.food_item_id = fi_id.id
+            LEFT JOIN food_items fi_name ON fi_id.id IS NULL AND LOWER(fi_name.name) = LOWER(oi.item_name)
+            WHERE oi.order_id = ?
+        ");
         $item_stmt->execute([$order['id']]);
         $order['items'] = $item_stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch(PDOException $e) {
     $orders = [];
+}
+
+// Smart image fallback: keyword -> Unsplash food photo
+function getSmartFoodImage($item_name, $stored_url = '') {
+    if (!empty($stored_url) &&
+        (strpos($stored_url, 'http://') === 0 || strpos($stored_url, 'https://') === 0)) {
+        return $stored_url;
+    }
+    if (!empty($stored_url) && strpos($stored_url, 'unsplash') === false) {
+        $clean = ltrim($stored_url, '/');
+        if (strpos($clean, 'uploads/') !== 0) $clean = 'uploads/' . $clean;
+        return $clean;
+    }
+    $ln = strtolower($item_name);
+    $keywords = [
+        'manchow'        => 'https://images.unsplash.com/photo-1547592180-85f173990554?w=100&h=100&fit=crop&auto=format',
+        'pho'            => 'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=100&h=100&fit=crop&auto=format',
+        'tom yum'        => 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=100&h=100&fit=crop&auto=format',
+        'soup'           => 'https://images.unsplash.com/photo-1547592180-85f173990554?w=100&h=100&fit=crop&auto=format',
+        'shorba'         => 'https://images.unsplash.com/photo-1547592180-85f173990554?w=100&h=100&fit=crop&auto=format',
+        'butter chicken' => 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=100&h=100&fit=crop&auto=format',
+        'chicken'        => 'https://images.unsplash.com/photo-1598103442097-8b74394b95c1?w=100&h=100&fit=crop&auto=format',
+        'paneer'         => 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=100&h=100&fit=crop&auto=format',
+        'biryani'        => 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100&h=100&fit=crop&auto=format',
+        'naan'           => 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100&h=100&fit=crop&auto=format',
+        'dal'            => 'https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=100&h=100&fit=crop&auto=format',
+        'caesar'         => 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=100&h=100&fit=crop&auto=format',
+        'salad'          => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=100&h=100&fit=crop&auto=format',
+        'quinoa'         => 'https://images.unsplash.com/photo-1544025162-d76694265947?w=100&h=100&fit=crop&auto=format',
+        'pizza'          => 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=100&h=100&fit=crop&auto=format',
+        'pasta'          => 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=100&h=100&fit=crop&auto=format',
+        'burger'         => 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100&h=100&fit=crop&auto=format',
+        'steak'          => 'https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=100&h=100&fit=crop&auto=format',
+        'lamb'           => 'https://images.unsplash.com/photo-1544025162-d76694265947?w=100&h=100&fit=crop&auto=format',
+        'fish'           => 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=100&h=100&fit=crop&auto=format',
+        'prawn'          => 'https://images.unsplash.com/photo-1559742811-822873691df8?w=100&h=100&fit=crop&auto=format',
+        'mushroom'       => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop&auto=format',
+        'cake'           => 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&h=100&fit=crop&auto=format',
+        'ice cream'      => 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=100&h=100&fit=crop&auto=format',
+        'mojito'         => 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=100&h=100&fit=crop&auto=format',
+        'beer'           => 'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=100&h=100&fit=crop&auto=format',
+        'wine'           => 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=100&h=100&fit=crop&auto=format',
+        'juice'          => 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=100&h=100&fit=crop&auto=format',
+        'coffee'         => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=100&h=100&fit=crop&auto=format',
+        'tomato'         => 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=100&h=100&fit=crop&auto=format',
+        'corn'           => 'https://images.unsplash.com/photo-1504708528861-7937e9ef89aa?w=100&h=100&fit=crop&auto=format',
+        'lemon'          => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format',
+        'rice'           => 'https://images.unsplash.com/photo-1536304993881-ff86e0c9f2a7?w=100&h=100&fit=crop&auto=format',
+    ];
+    foreach ($keywords as $kw => $url) {
+        if (strpos($ln, $kw) !== false) return $url;
+    }
+    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format';
 }
 
 // Check initial status parameter from tab query (e.g. ?tab=active)
@@ -210,7 +270,7 @@ if (isset($_GET['tab'])) {
                 <a href="menutest.html" style="display:inline-block; padding:10px 24px; background:#4A121E; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none;">View Menu</a>
             </div>
 
-            <?php foreach ($orders as $order):
+            <?php foreach ($orders as $index => $order):
                 $status  = strtolower($order['order_status']);
                 $stepMap = ['pending'=>1,'confirmed'=>2,'preparing'=>3,'ready'=>4,'completed'=>5,'cancelled'=>0];
                 $curStep = $stepMap[$status] ?? 1;
@@ -244,11 +304,11 @@ if (isset($_GET['tab'])) {
 
 
             <!-- ══ ORDER CARD ══ -->
-            <div class="order-card-item"
+            <div class="order-card-item <?php echo $index >= 3 ? 'extra-order' : ''; ?>"
                  data-order-number="<?php echo htmlspecialchars($order['order_number']); ?>"
                  data-order-status="<?php echo htmlspecialchars($order['order_status']); ?>"
                  data-order-date="<?php echo htmlspecialchars($order['order_date']); ?>"
-                 style="background:#fff; border:1px solid #E8DCCB; border-radius:18px; padding:36px; display:flex; gap:0; align-items:flex-start; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+                 style="background:#fff; border:1px solid #E8DCCB; border-radius:18px; padding:36px; display:<?php echo $index >= 3 ? 'none' : 'flex'; ?>; gap:0; align-items:flex-start; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
 
                 <!-- ─── TIMELINE (220px) ─── -->
                 <div style="width:240px; flex-shrink:0; padding-right:30px; border-right:1.5px solid #EDE5D8;">
@@ -341,7 +401,9 @@ if (isset($_GET['tab'])) {
                     <!-- Items -->
                     <div style="border-top:1px solid #EDE5D8; padding-top:14px;">
                         <div style="font-size:12px; font-weight:600; color:#2E2E2E; margin-bottom:11px;">Order Items (<?php echo count($order['items']); ?>)</div>
-                        <?php foreach ($order['items'] as $item):
+                        <?php
+                        $fallback = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format';
+                        foreach ($order['items'] as $item):
                             $dStyle = 'color:#15803d; border-color:rgba(22,163,74,0.55);';
                             $dText  = 'Veg';
                             $ln     = strtolower($item['item_name']);
@@ -351,16 +413,13 @@ if (isset($_GET['tab'])) {
                             if (strpos($ln,'mojito')!==false||strpos($ln,'wine')!==false||strpos($ln,'beer')!==false||strpos($ln,'cola')!==false){
                                 $dStyle='color:#2563eb; border-color:rgba(37,99,235,0.55);'; $dText='Bar';
                             }
-                            $img = !empty($item['image_url']) ? $item['image_url'] : '';
-                            if (!empty($img) && strpos($img,'http')!==0 && strpos($img,'//')!==0)
-                                $img = (strpos($img,'uploads/')!==0) ? 'uploads/'.$img : $img;
-                            if (empty($img)) $img = 'uploads/default.jpg';
+                            $img = getSmartFoodImage($item['item_name'], $item['image_url'] ?? '');
                         ?>
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
                             <img src="<?php echo htmlspecialchars($img); ?>"
                                  alt="<?php echo htmlspecialchars($item['item_name']); ?>"
                                  style="width:50px; height:50px; border-radius:8px; object-fit:cover; flex-shrink:0; border:1px solid #EDE5D8; background:#F8F4EC;"
-                                 onerror="this.src='assets/images/logo.png'">
+                                 onerror="this.onerror=null;this.src='<?php echo $fallback; ?>'">
                             <div style="flex:1; min-width:0;">
                                 <div style="font-size:13px; font-weight:600; color:#1E1E1E; line-height:1.3; margin-bottom:4px;"><?php echo htmlspecialchars($item['item_name']); ?></div>
                                 <span style="display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; padding:2px 7px; border-radius:4px; border:1px solid; <?php echo $dStyle; ?>"><?php echo $dText; ?></span>
@@ -378,8 +437,18 @@ if (isset($_GET['tab'])) {
                             <div style="font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; color:#C89B3C; line-height:1.1;">₹<?php echo number_format($order['total_amount'],2); ?></div>
                         </div>
 
-                        <?php if ($curStep > 0 && $curStep < 5): ?>
-                        <a href="track.php?order_id=<?php echo urlencode($order['order_number']); ?>"
+                        <?php if ($curStep > 0 && $curStep < 5):
+                            // Ensure tracking_token exists; generate if missing
+                            $tk = $order['tracking_token'] ?? '';
+                            if (empty($tk) || strlen($tk) !== 64) {
+                                $tk = bin2hex(random_bytes(32));
+                                try {
+                                    $upd = $pdo->prepare("UPDATE orders SET tracking_token = ? WHERE id = ?");
+                                    $upd->execute([$tk, $order['id']]);
+                                } catch (Exception $e) { /* silent */ }
+                            }
+                        ?>
+                        <a href="track.php?token=<?php echo urlencode($tk); ?>"
                            style="display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 20px; background:#C89B3C; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:background .2s; white-space:nowrap; border:none;"
                            onmouseover="this.style.background='#b88c2e'" onmouseout="this.style.background='#C89B3C'">
                             Track Order <i class="fa-solid fa-location-arrow" style="font-size:9px;"></i>
@@ -418,6 +487,36 @@ if (isset($_GET['tab'])) {
                 </div><!-- /main content -->
             </div><!-- /order-card-item -->
             <?php endforeach; ?>
+            <?php if (count($orders) > 3): ?>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button id="view-more-orders-btn" onclick="toggleExtraOrders()" style="display:inline-block; padding:12px 32px; background:transparent; color:#4A121E; border:1px solid #4A121E; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s;">
+                        View More <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                <script>
+                    function toggleExtraOrders() {
+                        const extraOrders = document.querySelectorAll('.extra-order');
+                        const btn = document.getElementById('view-more-orders-btn');
+                        let isShowing = false;
+                        
+                        extraOrders.forEach(order => {
+                            if (order.style.display === 'none') {
+                                order.style.display = 'flex';
+                                isShowing = true;
+                            } else {
+                                order.style.display = 'none';
+                                isShowing = false;
+                            }
+                        });
+                        
+                        if (isShowing) {
+                            btn.innerHTML = 'View Less <i class="fa-solid fa-arrow-up ml-1"></i>';
+                        } else {
+                            btn.innerHTML = 'View More <i class="fa-solid fa-arrow-right ml-1"></i>';
+                        }
+                    }
+                </script>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 
