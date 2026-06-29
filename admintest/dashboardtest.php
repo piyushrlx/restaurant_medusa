@@ -409,28 +409,31 @@ if (isset($_REQUEST['action'])) {
         try {
             $user_id = null;
             // 1. Check if it's an order number
-            $stmt = $pdo->prepare("SELECT user_id FROM orders WHERE order_number = ?");
+            $stmt = $pdo->prepare("SELECT user_id, customer_phone FROM orders WHERE order_number = ?");
             $stmt->execute([$clean_term]);
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($order && !empty($order['user_id'])) {
-                $user_id = $order['user_id'];
-            } else {
-                // 2. Check if it matches phone, email, or exact name
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? OR email = ? OR full_name = ?");
-                $stmt->execute([$clean_term, $clean_term, $clean_term]);
+            if ($order) {
+                if (!empty($order['user_id'])) {
+                    $user_id = $order['user_id'];
+                } elseif (!empty($order['customer_phone'])) {
+                    // Order has no direct user_id, try linking via phone
+                    $stmt_u = $pdo->prepare("SELECT id FROM users WHERE phone LIKE ?");
+                    $stmt_u->execute(['%' . $order['customer_phone'] . '%']);
+                    $user = $stmt_u->fetch(PDO::FETCH_ASSOC);
+                    if ($user) $user_id = $user['id'];
+                }
+            } 
+            
+            if (!$user_id) {
+                // 2. Check if it matches phone, email, or partial name
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone LIKE ? OR email = ? OR full_name LIKE ? LIMIT 1");
+                $wildcard = "%" . $clean_term . "%";
+                $stmt->execute([$wildcard, $clean_term, $wildcard]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($user) {
                     $user_id = $user['id'];
-                } else {
-                    // 3. Fallback: Check if it's a partial name
-                    $stmt = $pdo->prepare("SELECT id FROM users WHERE full_name LIKE ? LIMIT 1");
-                    $stmt->execute(['%' . $clean_term . '%']);
-                    $user_partial = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($user_partial) {
-                        $user_id = $user_partial['id'];
-                    }
                 }
             }
 
@@ -504,15 +507,11 @@ if (isset($_REQUEST['action'])) {
             $upd = $pdo->prepare("UPDATE user_liquor_quota SET total_pegs = ? WHERE user_id = ? AND food_item_id = ?");
             $upd->execute([$new_pegs, $user_id, $food_item_id]);
 
-            // 2. Decrement general quota in users table
-            $upd_user = $pdo->prepare("UPDATE users SET liquor_quota_pegs = GREATEST(0, liquor_quota_pegs - 1) WHERE id = ?");
-            $upd_user->execute([$user_id]);
-
             // 3. Add system notification of consumption
             $notif_title = "Peg Consumed";
             $notif_body = "1 peg of " . $quota['item_name'] . " logged for " . $user_name . " (Verified via: " . $search_term . "). Remaining brand quota: " . $new_pegs . " pegs.";
             
-            $stmt_notif = $pdo->prepare("INSERT INTO notifications (title, body) VALUES (?, ?)");
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (type, title, body) VALUES ('system', ?, ?)");
             $stmt_notif->execute([$notif_title, $notif_body]);
 
             $pdo->commit();
@@ -523,7 +522,7 @@ if (isset($_REQUEST['action'])) {
                 $pdo->rollBack();
             }
             error_log('Admin consume peg error: ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Unable to consume peg quota.']);
+            echo json_encode(['success' => false, 'message' => 'Unable to consume peg quota. Error: ' . $e->getMessage()]);
         }
         exit;
     }
@@ -767,24 +766,25 @@ if (isset($_REQUEST['action'])) {
         $params = [];
         
         if (!empty($_POST['search'])) {
+            $clean_search = ltrim(trim($_POST['search']), '#');
             $sql .= " AND (order_number LIKE ? OR customer_name LIKE ?)";
-            $wildcard = "%" . $_POST['search'] . "%";
+            $wildcard = "%" . $clean_search . "%";
             $params[] = $wildcard; $params[] = $wildcard;
         }
         
         if (!empty($_POST['method']) && $_POST['method'] !== 'all') {
             if ($_POST['method'] === 'cash') {
-                $sql .= " AND delivery_address LIKE '%Paid via CASH%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via CASH%' OR payment_method = 'cash' OR payment_method = 'cod')";
             } elseif ($_POST['method'] === 'card') {
-                $sql .= " AND delivery_address LIKE '%Paid via CARD%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via CARD%' OR payment_method = 'card')";
             } elseif ($_POST['method'] === 'upi') {
-                $sql .= " AND delivery_address LIKE '%Paid via UPI%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via UPI%' OR payment_method = 'upi')";
             } elseif ($_POST['method'] === 'netbanking') {
-                $sql .= " AND (delivery_address LIKE '%Paid via NETBANKING%' OR delivery_address LIKE '%Paid via NET BANKING%')";
+                $sql .= " AND (delivery_address LIKE '%Paid via NETBANKING%' OR delivery_address LIKE '%Paid via NET BANKING%' OR payment_method = 'netbanking')";
             } elseif ($_POST['method'] === 'wallet') {
-                $sql .= " AND delivery_address LIKE '%Paid via WALLET%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via WALLET%' OR payment_method = 'wallet')";
             } elseif ($_POST['method'] === 'gateway') {
-                $sql .= " AND delivery_address NOT LIKE '%Paid via %'";
+                $sql .= " AND (delivery_address NOT LIKE '%Paid via %' AND (payment_method = 'Online' OR payment_method IS NULL OR payment_method = ''))";
             }
         }
         
@@ -1445,6 +1445,10 @@ $table_zones = [
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF Export (html2pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Excel Export (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
         (function() {
@@ -3222,6 +3226,29 @@ html:not(.light-mode) .form-select:focus{
             background: rgba(220, 38, 38, 0.12);
             color: #ffffff;
         }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableReportTemplate, #printableReportTemplate * {
+                visibility: visible !important;
+            }
+            #printableReportTemplate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+        }
 </style>
 </head>
 <body>
@@ -4157,12 +4184,14 @@ html:not(.light-mode) .form-select:focus{
                             $pay_stmt = $pdo->query("SELECT * FROM orders ORDER BY id DESC LIMIT 50");
                             $pay_logs = $pay_stmt->fetchAll(PDO::FETCH_ASSOC);
                             foreach ($pay_logs as $log):
-                                $method = 'Online Gateway';
-                                if (stripos($log['delivery_address'], 'Paid via CASH') !== false) $method = 'CASH';
-                                elseif (stripos($log['delivery_address'], 'Paid via CARD') !== false) $method = 'CARD';
-                                elseif (stripos($log['delivery_address'], 'Paid via UPI') !== false) $method = 'UPI';
-                                elseif (stripos($log['delivery_address'], 'Paid via NETBANKING') !== false || stripos($log['delivery_address'], 'Paid via NET BANKING') !== false) $method = 'NET BANKING';
-                                elseif (stripos($log['delivery_address'], 'Paid via WALLET') !== false) $method = 'WALLET';
+                                $method = 'ONLINE GATEWAY';
+                                $addr = strtoupper($log['delivery_address'] ?? '');
+                                $pm = strtolower($log['payment_method'] ?? '');
+                                if (strpos($addr, 'PAID VIA CASH') !== false || $pm === 'cash' || $pm === 'cod') $method = 'CASH';
+                                elseif (strpos($addr, 'PAID VIA CARD') !== false || $pm === 'card') $method = 'CARD';
+                                elseif (strpos($addr, 'PAID VIA UPI') !== false || $pm === 'upi') $method = 'UPI';
+                                elseif (strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false || $pm === 'netbanking') $method = 'NET BANKING';
+                                elseif (strpos($addr, 'PAID VIA WALLET') !== false || $pm === 'wallet') $method = 'WALLET';
                             ?>
                             <tr>
                                 <td>#<?php echo htmlspecialchars($log['order_number']); ?></td>
@@ -4185,6 +4214,73 @@ html:not(.light-mode) .form-select:focus{
 
         <!-- ==================== REPORTS TAB ==================== -->
         <div id="reports-tab" class="tab-panel">
+            
+            <!-- Professional Written Report Template (Hidden from screen) -->
+            <div id="printableReportTemplate" style="display: none; background: white; color: black; padding: 40px; font-family: 'Times New Roman', serif;">
+                <div style="text-align: center; border-bottom: 2px solid #dfba86; padding-bottom: 20px; margin-bottom: 30px;">
+                    <h1 style="margin: 0; color: #111; font-family: 'Playfair Display', serif; font-size: 32px; letter-spacing: 2px;">LA MEDUSA</h1>
+                    <p style="margin: 5px 0 0; color: #555; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Bar & Lounge - Professional Business Report</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 12px; color: #333;">
+                    <div>
+                        <strong>Report Period:</strong> <span id="print_report_period"></span><br>
+                        <strong>Generated On:</strong> <span id="print_report_date"></span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>Total Revenue:</strong> <span id="print_report_revenue" style="font-size: 16px; font-weight: bold; color: #dfba86;"></span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Executive Summary</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Completed Orders</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Average Order Value (AOV)</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Performance Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_orders"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_aov"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_score"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Revenue Trend</h2>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <img id="print_sales_chart_img" src="" style="max-width: 100%; height: auto; max-height: 250px; border: 1px solid #eee; padding: 10px; background: white;" alt="Sales Chart">
+                    </div>
+                </div>
+
+                <div style="page-break-before: always; padding-top: 20px;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Top Performing Items</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item Name</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Category</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Qty Sold</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_top_dishes_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #777; border-top: 1px solid #eee; padding-top: 20px;">
+                    End of Report. Confidential Business Document.
+                </div>
+            </div>
+
             <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h1 class="page-title">Business Intelligence Dashboard</h1>
@@ -4668,21 +4764,24 @@ html:not(.light-mode) .form-select:focus{
                                 <label class="form-label text-muted small text-uppercase">Search Customer</label>
                                 <input type="text" id="consume_search_term" class="form-control form-control-dashboard" placeholder="Enter Name, Phone, or Order ID..." required>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
-                                <select id="consume_brand_id" class="form-select form-control-dashboard" required>
-                                    <option value="">-- Click Verify to load brands --</option>
-                                </select>
-                            </div>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-light btn-sm mb-3" onclick="loadCustomerBrands()">
-                                    <i class="fas fa-check-circle me-1"></i> Verify & Load Brands
+                                <button type="button" class="btn btn-outline-light btn-sm mb-3" id="btn-admin-verify" onclick="loadCustomerBrands()">
+                                    <i class="fas fa-search me-1"></i> Search Customer
                                 </button>
                             </div>
-                            <hr style="border-color: rgba(255,255,255,0.08);">
-                            <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
-                                <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
-                            </button>
+                            
+                            <div id="consume_brand_section" style="display:none;">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
+                                    <select id="consume_brand_id" class="form-select form-control-dashboard" required>
+                                        <option value="">-- Choose Brand --</option>
+                                    </select>
+                                </div>
+                                <hr style="border-color: rgba(255,255,255,0.08);">
+                                <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
+                                    <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -6493,11 +6592,12 @@ html:not(.light-mode) .form-select:focus{
             tbody.innerHTML = logs.map(log => {
                 let method = 'ONLINE GATEWAY';
                 const addr = (log.delivery_address || '').toUpperCase();
-                if (addr.includes('PAID VIA CASH')) method = 'CASH';
-                else if (addr.includes('PAID VIA CARD')) method = 'CARD';
-                else if (addr.includes('PAID VIA UPI')) method = 'UPI';
-                else if (addr.includes('PAID VIA NETBANKING') || addr.includes('PAID VIA NET BANKING')) method = 'NET BANKING';
-                else if (addr.includes('PAID VIA WALLET')) method = 'WALLET';
+                const pm = (log.payment_method || '').toLowerCase();
+                if (addr.includes('PAID VIA CASH') || pm === 'cash' || pm === 'cod') method = 'CASH';
+                else if (addr.includes('PAID VIA CARD') || pm === 'card') method = 'CARD';
+                else if (addr.includes('PAID VIA UPI') || pm === 'upi') method = 'UPI';
+                else if (addr.includes('PAID VIA NETBANKING') || addr.includes('PAID VIA NET BANKING') || pm === 'netbanking') method = 'NET BANKING';
+                else if (addr.includes('PAID VIA WALLET') || pm === 'wallet') method = 'WALLET';
 
                 const isPaid = log.order_status?.toLowerCase() === 'completed';
                 const statusHtml = isPaid
@@ -6767,16 +6867,77 @@ html:not(.light-mode) .form-select:focus{
         // =====================================================================
         // 7. EXPORT FUNCTIONS
         // =====================================================================
-        function printReport() {
-            window.print();
+        function populateReportTemplate() {
+            if (!_lastReportData) return false;
+            
+            const summary = _lastReportData.summary || {};
+            const dishes = _lastReportData.dishes || [];
+            
+            // Format dates
+            document.getElementById('print_report_period').textContent = `${summary.start_date || 'N/A'} to ${summary.end_date || 'N/A'}`;
+            document.getElementById('print_report_date').textContent = new Date().toLocaleString();
+            
+            // Populate summary
+            document.getElementById('print_report_revenue').textContent = `₹${parseFloat(summary.revenue || 0).toFixed(2)}`;
+            document.getElementById('print_report_orders').textContent = summary.orders_count || 0;
+            document.getElementById('print_report_aov').textContent = `₹${parseFloat(summary.aov || 0).toFixed(2)}`;
+            
+            let score = parseFloat(summary.performance_score || 0);
+            document.getElementById('print_report_score').textContent = `${score.toFixed(0)} / 100`;
+            
+            // Top Dishes
+            const dishesTbody = document.getElementById('print_top_dishes_tbody');
+            dishesTbody.innerHTML = '';
+            dishes.slice(0, 15).forEach(dish => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid #ddd;">${dish.name || 'Unknown'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.category || 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.qty_sold || 0}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(dish.revenue || 0).toFixed(2)}</td>
+                `;
+                dishesTbody.appendChild(tr);
+            });
+            
+            // Grab chart canvas image
+            if (typeof repSalesChartInst !== 'undefined' && repSalesChartInst) {
+                document.getElementById('print_sales_chart_img').src = repSalesChartInst.toBase64Image();
+            }
+            
+            return true;
         }
 
-        function exportReportToPDF() {
-            // Use browser's built-in print-to-PDF (print styles handle layout)
-            const originalTitle = document.title;
-            document.title = 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10);
+        function printReport() {
+            if (!populateReportTemplate()) {
+                alert('Please generate a report first by clicking "Update Report".');
+                return;
+            }
             window.print();
-            document.title = originalTitle;
+        }
+  
+        function exportReportToPDF() {
+            if (!populateReportTemplate()) {
+                alert('Please generate a report first by clicking "Update Report".');
+                return;
+            }
+            
+            const element = document.getElementById('printableReportTemplate');
+            
+            // Temporarily show the template for html2pdf rendering since it clones it
+            const originalDisplay = element.style.display;
+            element.style.display = 'block';
+            
+            const opt = {
+                margin:       10,
+                filename:     'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = originalDisplay;
+            });
         }
 
         function exportReportToExcel() {
@@ -6789,80 +6950,52 @@ html:not(.light-mode) .form-select:focus{
             const dishes = _lastReportData.dishes || [];
             const categories = _lastReportData.categories || [];
             const payments = _lastReportData.payments || {};
-            const topCustomers = _lastReportData.top_customers || [];
 
-            // Build CSV rows
-            let csv = [];
+            // Helper to create a worksheet with auto-width
+            function createWsWithAutoWidth(aoa) {
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                const colWidths = aoa[0].map((_, colIndex) => ({
+                    wch: Math.max(...aoa.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))) + 2
+                }));
+                ws['!cols'] = colWidths;
+                return ws;
+            }
 
-            csv.push(['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT']);
-            csv.push(['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`]);
-            csv.push(['Generated At', summary.generated_at || new Date().toLocaleString()]);
-            csv.push([]);
+            const wb = XLSX.utils.book_new();
 
-            // Summary section
-            csv.push(['=== SUMMARY METRICS ===']);
-            csv.push(['Metric', 'Value', 'Growth vs Last Period']);
-            csv.push(['Total Revenue', `INR ${parseFloat(summary.revenue || 0).toFixed(2)}`, `${summary.revenue_growth || 0}%`]);
-            csv.push(['Completed Orders', summary.orders_count || 0, `${summary.orders_growth || 0}%`]);
-            csv.push(['Average Order Value', `INR ${parseFloat(summary.aov || 0).toFixed(2)}`, `${summary.aov_growth || 0}%`]);
-            csv.push(['Total Orders', summary.total_orders || 0, '']);
-            csv.push(['Online Orders', summary.online_orders || 0, '']);
-            csv.push(['Dine-In Orders', summary.dinein_orders || 0, '']);
-            csv.push(['Cancelled Orders', summary.cancelled_orders || 0, '']);
-            csv.push(['Acceptance Rate', `${summary.acceptance_rate || 0}%`, '']);
-            csv.push(['Completion Rate', `${summary.completion_rate || 0}%`, '']);
-            csv.push(['Performance Score', `${summary.performance_score || 0}/100`, '']);
-            csv.push([]);
+            // 1. Summary Sheet
+            const summaryAoa = [
+                ['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT'],
+                ['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`],
+                ['Generated At', new Date().toLocaleString()],
+                [],
+                ['Metric', 'Value', 'Growth vs Last Period'],
+                ['Total Revenue (INR)', parseFloat(summary.revenue || 0).toFixed(2), `${summary.revenue_growth || 0}%`],
+                ['Completed Orders', summary.orders_count || 0, `${summary.orders_growth || 0}%`],
+                ['Average Order Value (INR)', parseFloat(summary.aov || 0).toFixed(2), `${summary.aov_growth || 0}%`],
+                ['Performance Score', `${summary.performance_score || 0}/100`, '']
+            ];
+            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(summaryAoa), "Summary");
 
-            // Customer metrics
-            csv.push(['=== CUSTOMER ANALYTICS ===']);
-            csv.push(['Total Customers', summary.total_customers || 0]);
-            csv.push(['New Customers', summary.new_customers || 0]);
-            csv.push(['Returning Customers', summary.returning_customers || 0]);
-            csv.push(['Retention Rate', `${summary.retention_rate || 0}%`]);
-            csv.push([]);
+            // 2. Top Dishes Sheet
+            const dishesAoa = [['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue (INR)']];
+            dishes.forEach((d, i) => dishesAoa.push([i + 1, d.item_name || d.name, d.category || 'N/A', d.qty_sold, parseFloat(d.revenue || 0).toFixed(2)]));
+            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(dishesAoa), "Top Dishes");
 
-            // Top dishes
-            csv.push(['=== TOP SELLING DISHES ===']);
-            csv.push(['Rank', 'Dish Name', 'Qty Sold', 'Revenue (INR)']);
-            dishes.forEach((d, i) => csv.push([i + 1, d.item_name, d.qty_sold, parseFloat(d.revenue || 0).toFixed(2)]));
-            csv.push([]);
+            // 3. Category Performance Sheet
+            const catAoa = [['Category', 'Units Sold', 'Revenue (INR)']];
+            categories.forEach(c => catAoa.push([c.category_name || c.category, c.units_sold || c.qty, parseFloat(c.revenue || 0).toFixed(2)]));
+            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(catAoa), "Categories");
 
-            // Category performance
-            csv.push(['=== CATEGORY PERFORMANCE ===']);
-            csv.push(['Category', 'Units Sold', 'Revenue (INR)']);
-            categories.forEach(c => csv.push([c.category_name, c.units_sold, parseFloat(c.revenue || 0).toFixed(2)]));
-            csv.push([]);
-
-            // Payment breakdown
-            csv.push(['=== PAYMENT METHOD BREAKDOWN ===']);
-            csv.push(['Method', 'Transactions', 'Total Amount (INR)']);
+            // 4. Payments Sheet
+            const payAoa = [['Payment Method', 'Transactions', 'Total Amount (INR)']];
             Object.entries(payments).forEach(([method, vals]) => {
-                if (vals.count > 0) csv.push([method, vals.count, parseFloat(vals.amount || 0).toFixed(2)]);
+                if (vals.count > 0) payAoa.push([method.toUpperCase(), vals.count, parseFloat(vals.amount || 0).toFixed(2)]);
             });
-            csv.push([]);
+            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(payAoa), "Payments");
 
-            // Top customers
-            csv.push(['=== TOP PERFORMING CUSTOMERS ===']);
-            csv.push(['Name', 'Phone', 'Orders', 'Total Spent (INR)']);
-            topCustomers.forEach(c => csv.push([c.customer_name, c.customer_phone, c.order_count, parseFloat(c.total_spent || 0).toFixed(2)]));
-
-            // Convert to CSV string
-            const csvStr = csv.map(row => row.map(cell => {
-                const s = String(cell || '').replace(/"/g, '""');
-                return s.includes(',') || s.includes('\n') || s.includes('"') ? `"${s}"` : s;
-            }).join(',')).join('\r\n');
-
-            // Trigger download
-            const blob = new Blob(['\uFEFF' + csvStr], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Medusa_Report_' + new Date().toISOString().slice(0, 10) + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            // Write and download
+            XLSX.writeFile(wb, 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.xlsx');
         }
 
         // =====================================================================
@@ -7798,7 +7931,7 @@ html:not(.light-mode) .form-select:focus{
                                     <td class="text-center"><strong>${bottles}</strong></td>
                                     <td class="text-center"><strong>${pegs}</strong></td>
                                     <td class="text-center">
-                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0})">
+                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0}, ${q.food_item_id})">
                                             <i class="fas fa-glass-water me-1"></i> Log Consume
                                         </button>
                                     </td>
@@ -7816,26 +7949,32 @@ html:not(.light-mode) .form-select:focus{
                 });
         }
 
-        function selectQuotaForConsume(customerName, hasQuota) {
+        function selectQuotaForConsume(customerName, hasQuota, brandId = null) {
             document.getElementById('consume_search_term').value = customerName;
             document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Verifying... --</option>';
             document.getElementById('btn-admin-consume').disabled = true;
             verifiedUserId = null;
             
             showToast(`Selected ${customerName}. Verifying active quota...`, 'info');
-            loadCustomerBrands(); // Auto load it!
+            loadCustomerBrands(brandId); // Auto load it!
         }
 
-        function loadCustomerBrands() {
+        function loadCustomerBrands(autoSelectBrandId = null) {
             const searchTerm = document.getElementById('consume_search_term').value.trim();
             const brandSelect = document.getElementById('consume_brand_id');
+            const brandSection = document.getElementById('consume_brand_section');
+            const btnVerify = document.getElementById('btn-admin-verify');
 
             if (!searchTerm) {
                 showToast('Please enter a search term.', 'error');
                 return;
             }
 
-            brandSelect.innerHTML = '<option value="">Verifying...</option>';
+            const origText = btnVerify.innerHTML;
+            btnVerify.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Searching...';
+            btnVerify.disabled = true;
+
+            brandSection.style.display = 'none';
             document.getElementById('btn-admin-consume').disabled = true;
             verifiedUserId = null;
 
@@ -7848,6 +7987,9 @@ html:not(.light-mode) .form-select:focus{
             })
             .then(res => res.json())
             .then(data => {
+                btnVerify.innerHTML = origText;
+                btnVerify.disabled = false;
+
                 if (data.success) {
                     verifiedUserId = data.user_id;
                     let html = '<option value="">-- Choose Brand --</option>';
@@ -7856,7 +7998,16 @@ html:not(.light-mode) .form-select:focus{
                         html += `<option value="${b.food_item_id}">${escapeHtml(b.item_name)} (${total_pegs} pegs left)</option>`;
                     });
                     brandSelect.innerHTML = html;
+                    
+                    // Auto-select the brand if requested
+                    if (autoSelectBrandId) {
+                        brandSelect.value = autoSelectBrandId;
+                    }
+                    
+                    // Reveal the hidden selection box and consume button
+                    brandSection.style.display = 'block';
                     document.getElementById('btn-admin-consume').disabled = false;
+                    
                     showToast('Customer verified successfully! Please select a brand to log peg consumption.', 'success');
                 } else {
                     brandSelect.innerHTML = '<option value="">Verification Failed</option>';
@@ -7865,6 +8016,8 @@ html:not(.light-mode) .form-select:focus{
             })
             .catch(err => {
                 console.error(err);
+                btnVerify.innerHTML = origText;
+                btnVerify.disabled = false;
                 brandSelect.innerHTML = '<option value="">Error verifying customer</option>';
                 showToast('Network error verifying customer.', 'error');
             });
