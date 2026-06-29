@@ -43,27 +43,6 @@ if (!empty($_SESSION['user_id'])) {
 }
 ?>
 
-<!-- Fonts & FontAwesome -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<style>
-    @keyframes bell-ring {
-      0% { transform: rotate(0); }
-      10% { transform: rotate(20deg); }
-      20% { transform: rotate(-15deg); }
-      30% { transform: rotate(10deg); }
-      40% { transform: rotate(-5deg); }
-      50% { transform: rotate(0); }
-      100% { transform: rotate(0); }
-    }
-    .bell-ringing {
-      display: inline-block;
-      transform-origin: top center;
-      animation: bell-ring 1.5s infinite;
-    }
-</style>
-
 <nav id="main-navbar" class="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-6 md:px-12 h-20 bg-[#3B111B] border-b border-[#C8A25A]/10 font-sans">
     <!-- Logo Brand -->
     <a href="index.html" class="flex items-center gap-3 no-underline">

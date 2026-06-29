@@ -184,6 +184,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             -webkit-text-fill-color: #2a1a0e;
         }
     </style>
+
+    <!-- Navbar Performance Optimization Links -->
+    <link rel="stylesheet" href="assets/css/components.css">
 </head>
 <body class="font-sans min-h-screen flex flex-col relative overflow-x-hidden">
     <!-- Background overlay -->
