@@ -1,4 +1,28 @@
 (function() {
+    // Inject navbar.css dynamically if not already loaded
+    try {
+        if (!document.querySelector('link[href*="navbar.css"]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'assets/css/navbar.css';
+            document.head.appendChild(link);
+        }
+    } catch (e) {
+        console.error('Error injecting navbar.css:', e);
+    }
+
+    // Inject visual standard fonts dynamically if not already loaded
+    try {
+        if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Playfair+Display"]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap';
+            document.head.appendChild(link);
+        }
+    } catch (e) {
+        console.error('Error injecting visual standard fonts:', e);
+    }
+
     // Intercept localStorage calls to detect changes in the same window/tab
     try {
         const originalSetItem = localStorage.setItem;
@@ -67,8 +91,9 @@
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href === currentPage || (currentPage === 'index.php' && href === 'index.html')) {
-                link.classList.add('text-[#C8A25A]', 'border-b-2', 'border-[#C8A25A]', 'pb-1');
-                link.classList.remove('text-[#F8EACE]/75', 'text-[#F8EACE]');
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
             }
         });
 
