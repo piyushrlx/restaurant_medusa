@@ -81,18 +81,22 @@ function isVegItem($name, $description = '') {
     return true;
 }
 
-// Helper to resolve dish image URLs for admin view
+// Helper to resolve dish image URLs for admin view and prevent 404s
 function getDishImage($image_url) {
-    if (empty($image_url)) {
-        return '../uploads/default.jpg';
-    }
+    $fallback = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format';
+    if (empty($image_url)) return $fallback;
     if (strpos($image_url, 'http://') === 0 || strpos($image_url, 'https://') === 0 || strpos($image_url, '//') === 0) {
         return $image_url;
     }
-    if (strpos($image_url, 'uploads/') === 0) {
-        return '../' . $image_url;
+    $cleanPath = ltrim($image_url, '/');
+    if (strpos($cleanPath, 'uploads/') !== 0) {
+        $cleanPath = 'uploads/' . $cleanPath;
     }
-    return '../uploads/' . $image_url;
+    $localPath = __DIR__ . '/../' . $cleanPath;
+    if (file_exists($localPath)) {
+        return '../' . $cleanPath;
+    }
+    return $fallback;
 }
 
 // Helper to download external or Google Drive images locally and save to uploads folder
@@ -695,6 +699,7 @@ if (isset($_REQUEST['action'])) {
             $cc = $pdo->prepare("SELECT COUNT(*) FROM dish_customizations WHERE food_item_id = ?");
             $cc->execute([$dish['id']]);
             $dish['cust_count'] = (int)$cc->fetchColumn();
+            $dish['display_image_url'] = getDishImage($dish['image_url']);
             
             $filtered[] = $dish;
         }
@@ -3961,7 +3966,7 @@ html:not(.light-mode) .form-select:focus{
                             <?php foreach ($menu_list as $dish): ?>
                             <tr>
                                 <td>
-                                    <img src="<?php echo htmlspecialchars(getDishImage($dish['image_url'])); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                                    <img src="<?php echo htmlspecialchars(getDishImage($dish['image_url'])); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format'">
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($dish['name']); ?></strong></td>
                                 <td><span class="text-uppercase"><?php echo htmlspecialchars($dish['category']); ?></span></td>
@@ -5293,7 +5298,7 @@ html:not(.light-mode) .form-select:focus{
         function openAddTableItemModal() {
             if (!activeDineInOrder) return;
             document.getElementById('add_table_order_id').value = activeDineInOrder.id;
-            const modal = new bootstrap.Modal(document.getElementById('addTableItemModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addTableItemModal'));
             modal.show();
         }
 
@@ -5332,7 +5337,7 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('settle_order_id').value = activeDineInOrder.id;
             document.getElementById('settle_bill_total').textContent = '₹' + parseFloat(activeDineInOrder.total_amount).toFixed(2);
             
-            const modal = new bootstrap.Modal(document.getElementById('settleBillModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('settleBillModal'));
             modal.show();
         }
 
@@ -5433,7 +5438,7 @@ html:not(.light-mode) .form-select:focus{
                 };
             }
 
-            const modal = new bootstrap.Modal(document.getElementById('tableQRModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('tableQRModal'));
             modal.show();
         }
 
@@ -5517,7 +5522,7 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('cust_food_item_id').value = foodItemId;
             resetCustomGroupForm();
             loadExistingCustomizations(foodItemId);
-            const modal = new bootstrap.Modal(document.getElementById('customizationManagerModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('customizationManagerModal'));
             modal.show();
         }
 
@@ -5906,7 +5911,7 @@ html:not(.light-mode) .form-select:focus{
             removeDishImage();
             switchImageSource('upload');
             
-            const modal = new bootstrap.Modal(document.getElementById('menuCrudModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('menuCrudModal'));
             modal.show();
         }
 
@@ -5936,7 +5941,7 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('menuModalTitle').textContent = 'Edit Dish Details';
             document.getElementById('btnMenuSubmit').textContent = 'Update Dish';
             
-            const modal = new bootstrap.Modal(document.getElementById('menuCrudModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('menuCrudModal'));
             modal.show();
         }
 
@@ -6327,15 +6332,7 @@ html:not(.light-mode) .form-select:focus{
             }
 
             tbody.innerHTML = menu.map(dish => {
-                let imgSrc = dish.image_url || '';
-                if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
-                    if (imgSrc.startsWith('uploads/')) {
-                        imgSrc = '../' + imgSrc;
-                    } else {
-                        imgSrc = '../uploads/' + imgSrc;
-                    }
-                }
-                if (!imgSrc) imgSrc = '../uploads/default.jpg';
+                let imgSrc = dish.display_image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format';
 
                 const vegBadge = dish.is_veg
                     ? '<span class="badge" style="background:#16a34a; color:#fff; font-size:0.7rem;">VEG</span>'
@@ -6349,7 +6346,7 @@ html:not(.light-mode) .form-select:focus{
                 const isAvail = dish.is_available == 1;
 
                 return `<tr>
-                    <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;"></td>
+                    <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format'"></td>
                     <td><strong>${dish.name}</strong> ${vegBadge}${bestBadge}</td>
                     <td class="text-uppercase"><small>${dish.category || '—'}</small></td>
                     <td class="text-gold">${fmtINR(dish.price)}</td>
@@ -6370,7 +6367,7 @@ html:not(.light-mode) .form-select:focus{
                                 <span class="luxury-badge bg-gold-badge ms-1">${custCount}</span>
                             </button>
                             <button class="btn btn-sm btn-luxury-action btn-luxury-edit"
-                                onclick="openEditMenuModal(${JSON.stringify(dish).replace(/'/g, "&#39;")})"
+                                onclick="openEditMenuModal(${JSON.stringify(dish).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')})"
                                 title="Edit Item">
                                 <i class="fas fa-edit"></i>
                             </button>
