@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/CouponService.php';
 
 header('Content-Type: application/json');
+rate_limit('validate_coupon', 60, 300);
 
 // Get request parameters
 $couponCode = trim($_REQUEST['code'] ?? '');
@@ -27,9 +28,10 @@ try {
         'expires_at' => $coupon->expires_at
     ]);
 } catch (Exception $e) {
+    error_log('Coupon validation error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => 'Coupon is invalid or unavailable.'
     ]);
 }
 exit;

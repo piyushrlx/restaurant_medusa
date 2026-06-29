@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('login', 10, 300);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -76,6 +78,7 @@ try {
         ]
     ]);
 } catch(PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    error_log('Login database error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to login right now. Please try again later.']);
 }
 ?>

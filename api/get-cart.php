@@ -25,6 +25,7 @@ try {
 
     echo json_encode(['success' => true, 'items' => $items]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'items' => []]);
+    error_log('Get cart error: ' . $e->getMessage());
+    json_response(['success' => false, 'message' => 'Unable to load cart.', 'items' => []], 500);
 }
 ?>

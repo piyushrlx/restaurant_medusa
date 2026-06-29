@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 header('Content-Type: application/json');
+security_apply_headers('public-short');
 
 $settings_file = dirname(__DIR__) . '/admintest/settings.json';
 $settings = [

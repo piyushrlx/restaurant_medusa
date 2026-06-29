@@ -2,6 +2,8 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 requireAdmin();
+require_same_origin_unsafe_request();
+rate_limit('admin_customization', 120, 300);
 
 $action = $_POST['action'] ?? '';
 
@@ -62,6 +64,7 @@ try {
 
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    error_log('Customization API error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to process customization request.']);
 }
 ?>

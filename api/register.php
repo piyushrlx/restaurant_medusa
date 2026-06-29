@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('register', 5, 600);
 
 // Clear and destroy any existing session when registering to prevent session carry-over
 $_SESSION = array();
@@ -78,6 +80,7 @@ try {
         'message' => 'Registration successful! You can now log in.'
     ]);
 } catch(PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    error_log('Registration database error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to register right now. Please try again later.']);
 }
 ?>

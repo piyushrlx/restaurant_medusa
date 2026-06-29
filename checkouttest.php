@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once __DIR__ . '/api/config.php';
 
 $user_details = [
@@ -87,7 +86,7 @@ $packing_charge = isset($settings['packing_charge']) ? floatval($settings['packi
 //     exit;
 // }
 // $csrf_token = generateCSRFToken();
-$csrf_token = "dummy_test_token";
+$csrf_token = csrf_token();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1405,7 +1404,16 @@ $csrf_token = "dummy_test_token";
 
     <!-- Navbar Performance Optimization Links -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
+<script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
             tailwind.config = {
@@ -2274,6 +2282,20 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
         } catch(e) {
             console.error('Error parsing cart items:', e);
         }
+    }
+
+    cartItems = (Array.isArray(cartItems) ? cartItems : []).map(item => {
+        return {
+            food_item_id: parseInt(item.food_item_id ?? item.id ?? 0, 10),
+            quantity: Math.max(1, parseInt(item.quantity ?? 1, 10)),
+            name: item.name ?? ''
+        };
+    }).filter(item => item.food_item_id > 0);
+
+    if (cartItems.length === 0) {
+        alert('Your cart is empty or contains invalid items. Please refresh and try again.');
+        hideLoaderOverlay();
+        return;
     }
 
     const saveAddressCheckbox = document.getElementById('save_address');

@@ -106,6 +106,239 @@
             color: var(--text-gold);
         }
 
+        /* Static navbar fallback styles */
+        #main-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            height: 80px;
+            background-color: #3B111B;
+            border-bottom: 1px solid rgba(200, 162, 90, 0.1);
+        }
+
+        #main-navbar .nav-link-item {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #F8EACE;
+            transition: color 0.25s ease;
+        }
+
+        #main-navbar .nav-link-item:hover {
+            color: #C8A25A;
+        }
+
+        #nav-mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #F8EACE;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.45rem;
+        }
+
+        #nav-mobile-drawer {
+            display: none;
+            position: fixed;
+            inset: 80px 0 0;
+            z-index: 990;
+            background: rgba(59, 17, 27, 0.95);
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 1.5rem;
+            gap: 1.25rem;
+            overflow-y: auto;
+        }
+
+        #nav-mobile-drawer.show {
+            display: flex;
+        }
+
+        #nav-mobile-drawer a {
+            color: #F8EACE;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #nav-mobile-drawer a:hover {
+            color: #C8A25A;
+        }
+
+        .navbar-spacer {
+            height: 80px;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .navbar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            min-height: 80px;
+            background-color: #3B111B;
+            border-bottom: 1px solid rgba(200, 162, 90, 0.1);
+        }
+
+        .navbar-brand-link {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            color: #F8EACE;
+            text-decoration: none;
+        }
+
+        .navbar-brand-logo {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+        }
+
+        .navbar-brand-text {
+            display: flex;
+            flex-direction: column;
+            color: #C8A25A;
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .navbar-brand-text small {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.58rem;
+            letter-spacing: 4px;
+            font-weight: 400;
+            color: rgba(200, 162, 90, 0.65);
+        }
+
+        .desktop-nav {
+            display: flex;
+            gap: 1.8rem;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .reserve-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid rgba(200, 162, 90, 0.38);
+            color: #C8A25A;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: transparent;
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .reserve-link:hover {
+            background: rgba(200, 162, 90, 0.08);
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #F8EACE;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.45rem;
+        }
+
+        .mobile-drawer {
+            display: none;
+            position: fixed;
+            inset: 80px 0 0;
+            z-index: 990;
+            background: rgba(59, 17, 27, 0.95);
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 1.5rem;
+            gap: 1.25rem;
+            overflow-y: auto;
+        }
+
+        .mobile-drawer.show {
+            display: flex;
+        }
+
+        .mobile-drawer a {
+            width: 100%;
+            color: #F8EACE;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            text-align: center;
+            padding: 0.9rem 0;
+        }
+
+        .mobile-drawer a:hover {
+            color: #C8A25A;
+        }
+
+        @media (max-width: 1024px) {
+            .desktop-nav {
+                display: none;
+            }
+            .mobile-toggle {
+                display: inline-flex;
+            }
+            .reserve-link {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-wrapper {
+                padding: 0 18px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #main-navbar {
+                padding: 0 18px;
+            }
+        }
+
         .btn-outline {
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 12px 25px;
@@ -1152,6 +1385,15 @@
     <!-- Navbar Performance Optimization Links -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/components.css">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
@@ -1175,8 +1417,45 @@
 <body>
 
     <!-- Header -->
-    <div id="navbar-placeholder"></div>
-    <script src="assets/js/navbar.js" defer></script>
+    <nav id="main-navbar" class="navbar-wrapper">
+        <a href="index.html" class="navbar-brand-link">
+            <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" class="navbar-brand-logo">
+            <div class="navbar-brand-text">
+                LA-MEDUSAA
+                <small>Bar & Lounge</small>
+            </div>
+        </a>
+
+        <ul class="desktop-nav nav-links">
+            <li><a href="index.html" class="nav-link-item">Home</a></li>
+            <li><a href="about.html" class="nav-link-item">About</a></li>
+            <li><a href="menutest.html" class="nav-link-item">Menu</a></li>
+            <li><a href="gallery.php" class="nav-link-item">Gallery</a></li>
+            <li><a href="book-table-test.html" class="nav-link-item">Book Table</a></li>
+            <li><a href="career.html" class="nav-link-item">Careers</a></li>
+            <li><a href="contact.html" class="nav-link-item">Contact</a></li>
+            <li><a href="login.html" class="nav-link-item">Login</a></li>
+        </ul>
+
+        <div class="nav-actions">
+            <a href="book-table-test.html" class="reserve-link">Reserve a Table</a>
+            <button id="nav-mobile-toggle" class="mobile-toggle" aria-label="Open navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+    <div id="nav-mobile-drawer" class="hidden mobile-drawer">
+        <a href="index.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Home</a>
+        <a href="about.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">About</a>
+        <a href="menutest.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Menu</a>
+        <a href="gallery.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Gallery</a>
+        <a href="book-table-test.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Book Table</a>
+        <a href="career.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Careers</a>
+        <a href="contact.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Contact</a>
+        <a href="login.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Login</a>
+        <a href="book-table-test.html" class="text-xs font-semibold tracking-[2px] uppercase text-[#C8A25A] border border-[#C8A25A]/60 px-6 py-2.5 hover:bg-[#C8A25A]/10 transition-all no-underline mt-4">Reserve a Table</a>
+    </div>
+    <div class="h-20 w-full pointer-events-none"></div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1570,6 +1849,47 @@
                 revealObserver.observe(element);
             });
         });
+
+        // --- Mobile Navbar Toggle ---
+        (function() {
+            const toggleBtn = document.getElementById('nav-mobile-toggle');
+            const drawer = document.getElementById('nav-mobile-drawer');
+
+            if (!toggleBtn || !drawer) return;
+
+            const closeDrawer = () => {
+                drawer.classList.remove('show');
+                drawer.classList.add('hidden');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+            };
+
+            const openDrawer = () => {
+                drawer.classList.add('show');
+                drawer.classList.remove('hidden');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+            };
+
+            toggleBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (drawer.classList.contains('show')) {
+                    closeDrawer();
+                } else {
+                    openDrawer();
+                }
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!drawer.contains(event.target) && !toggleBtn.contains(event.target)) {
+                    closeDrawer();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 1024) {
+                    closeDrawer();
+                }
+            });
+        })();
     </script>
 </body>
 

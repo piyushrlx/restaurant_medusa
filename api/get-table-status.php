@@ -95,5 +95,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'statuses' => []]);
+    error_log('Table status error: ' . $e->getMessage());
+    json_response(['success' => false, 'message' => 'Unable to load table status.', 'statuses' => []], 500);
 }

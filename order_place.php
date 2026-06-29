@@ -11,9 +11,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 header('Content-Type: application/json');
+require_same_origin_unsafe_request();
+rate_limit('order_place', 8, 300);
 
 // Read JSON input
-$input = file_get_contents('php://input');
+$input = request_raw_body();
 $data = json_decode($input, true);
 
 if (!$data) {
@@ -24,6 +26,14 @@ if (!$data) {
     exit;
 }
 
+$sent_csrf = (string)($data['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $sent_csrf)) {
+    json_response([
+        'success' => false,
+        'message' => 'Your session expired. Please refresh checkout and try again.'
+    ], 403);
+}
+
 $customer_name = trim($data['customer_name'] ?? 'Customer');
 $customer_phone = trim($data['customer_phone'] ?? '');
 $customer_email = trim($data['customer_email'] ?? '');
@@ -32,6 +42,8 @@ $delivery_city = trim($data['delivery_city'] ?? '');
 $delivery_state = trim($data['delivery_state'] ?? '');
 $delivery_pincode = trim($data['delivery_pincode'] ?? '');
 $payment_method = trim($data['payment_method'] ?? 'Online');
+$payment_method_key = strtolower($payment_method);
+$payment_id = trim($data['razorpay_payment_id'] ?? '');
 $cart_items = $data['cart_items'] ?? [];
 $coupon_code = trim($data['coupon_code'] ?? '');
 $redeem_loyalty_points = !empty($data['redeem_loyalty_points']);
@@ -50,13 +62,84 @@ if (empty($customer_phone) || empty($cart_items)) {
     exit;
 }
 
-// Subtotal calculation
-$subtotal = 0;
-foreach ($cart_items as $item) {
-    $item_price = floatval($item['price']);
-    $item_qty = intval($item['quantity'] ?? 1);
-    $subtotal += ($item_price * $item_qty);
+$online_methods = ['online', 'card', 'upi', 'gpay'];
+if (in_array($payment_method_key, $online_methods, true) && ($payment_id === '' || stripos($payment_id, 'mock') !== false)) {
+    json_response([
+        'success' => false,
+        'message' => 'Payment confirmation is required before placing this order.'
+    ], 402);
 }
+
+if ($payment_method_key === 'membership') {
+    $card_number = trim($data['membership_card_number'] ?? '');
+    $cvv = trim($data['membership_cvv'] ?? '');
+
+    if (empty($db_user_id ?? $_SESSION['user_id'] ?? null)) {
+        json_response(['success' => false, 'message' => 'Please log in to use Membership Pass.'], 401);
+    }
+
+    $membership_user_id = $_SESSION['user_id'];
+    $card_stmt = $pdo->prepare("SELECT id FROM membership_cards WHERE user_id = ? AND card_number = ? AND cvv = ?");
+    $card_stmt->execute([$membership_user_id, $card_number, $cvv]);
+    if (!$card_stmt->fetch()) {
+        json_response(['success' => false, 'message' => 'Invalid Membership Pass details.'], 403);
+    }
+
+    $payment_id = 'MEMBERSHIP_' . substr($card_number, -4);
+} elseif ($payment_method_key === 'cod') {
+    $payment_id = 'COD';
+}
+
+// Build the bill from server-side menu records. Browser prices/names are display-only.
+$subtotal = 0;
+$normalized_cart_items = [];
+$lookup_by_id = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE id = ? AND is_available = 1");
+$lookup_by_name = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE name = ? AND is_available = 1 LIMIT 1");
+
+foreach ($cart_items as $item) {
+    if (!is_array($item)) continue;
+
+    $food_item_id = intval($item['food_item_id'] ?? ($item['id'] ?? 0));
+    $item_qty = max(1, min(99, intval($item['quantity'] ?? 1)));
+
+    if ($food_item_id > 0) {
+        $lookup_by_id->execute([$food_item_id]);
+        $menu_item = $lookup_by_id->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $lookup_name = trim($item['name'] ?? '');
+        $lookup_by_name->execute([$lookup_name]);
+        $menu_item = $lookup_by_name->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (!$menu_item) {
+        json_response([
+            'success' => false,
+            'message' => 'One or more cart items are no longer available. Please refresh your cart.'
+        ], 400);
+    }
+
+    $item_price = floatval($menu_item['price']);
+    $item_subtotal = $item_price * $item_qty;
+    $subtotal += $item_subtotal;
+
+    $normalized_cart_items[] = [
+        'id' => intval($menu_item['id']),
+        'food_item_id' => intval($menu_item['id']),
+        'name' => $menu_item['name'],
+        'price' => $item_price,
+        'quantity' => $item_qty,
+        'category' => $menu_item['category'] ?? '',
+        'subtotal' => $item_subtotal
+    ];
+}
+
+if (empty($normalized_cart_items) || $subtotal <= 0) {
+    json_response([
+        'success' => false,
+        'message' => 'Your cart is empty or unavailable. Please refresh and try again.'
+    ], 400);
+}
+$cart_items = $normalized_cart_items;
 
 // Load Settings
 $settings_file = __DIR__ . '/admintest/settings.json';
@@ -244,15 +327,11 @@ try {
     $items_for_pdf = [];
     $pegs_to_add = 0;
     foreach ($cart_items as $item) {
-        $f_stmt = $pdo->prepare("SELECT id, category FROM food_items WHERE name = ?");
-        $f_stmt->execute([$item['name']]);
-        $f_item = $f_stmt->fetch();
-        $food_item_id = $f_item ? $f_item['id'] : null;
-        $category = $f_item ? $f_item['category'] : '';
-
+        $food_item_id = intval($item['food_item_id']);
+        $category = $item['category'] ?? '';
         $item_price = floatval($item['price']);
         $item_qty = intval($item['quantity'] ?? 1);
-        $item_subtotal = $item_price * $item_qty;
+        $item_subtotal = floatval($item['subtotal'] ?? ($item_price * $item_qty));
 
         if ($category && strtolower(trim($category)) === 'liquor') {
             $pegs_to_add += 8 * $item_qty;
@@ -438,8 +517,13 @@ try {
         addNotification('order', 'New Order Received', $order_notif_body);
 
         // 2. Payment notification
-        $payment_notif_body = "Payment of ₹" . number_format($total, 2) . " processed successfully for order {$order_number}.";
-        addNotification('payment', 'Payment Successful', $payment_notif_body);
+        if ($payment_method_key === 'cod') {
+            $payment_notif_body = "Order {$order_number} is placed with Cash on Delivery. Payment will be collected on delivery.";
+            addNotification('payment', 'Payment Pending', $payment_notif_body);
+        } else {
+            $payment_notif_body = "Payment of ₹" . number_format($total, 2) . " processed successfully for order {$order_number}.";
+            addNotification('payment', 'Payment Successful', $payment_notif_body);
+        }
 
         // 3. Kitchen notification (special requests)
         $special_req = trim($data['message'] ?? '');
@@ -513,14 +597,14 @@ try {
         'customer_email' => $customer_email,
         'delivery_address' => $delivery_address,
         'message' => trim($data['message'] ?? ''),
-        'payment_id' => trim($data['razorpay_payment_id'] ?? 'pay_mock_' . substr(md5(uniqid()), 0, 10)),
+        'payment_id' => $payment_id,
         'cart_items' => $cart_items,
         'subtotal' => $subtotal,
         'gst' => $tax_amount,
         'packing' => $packing_fee,
         'delivery' => $delivery_charge,
         'total' => $total,
-        'status' => 'Paid',
+        'status' => ($payment_method_key === 'cod' ? 'Pending' : 'Paid'),
         'sms_status' => ($sms_status === 'sent_gateway') ? 'success' : 'failed',
         'sms_response' => '',
         'created_at' => date('Y-m-d H:i:s')

@@ -834,6 +834,15 @@
 
     <!-- Navbar Performance Optimization Links -->
     <link rel="stylesheet" href="assets/css/components.css">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function (...args) {
+            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
@@ -852,6 +861,50 @@
             };
         }
     </script>
+    <!-- Hero section overrides: restore styles that components.css overrides -->
+    <style>
+        .hero .section-title {
+            font-size: 3.5rem;
+            text-align: left;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 400;
+            letter-spacing: normal;
+            color: var(--text-light, #ffffff);
+        }
+
+        .hero-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content {
+            width: 45%;
+            padding-right: 40px;
+        }
+
+        .hero-image-wrapper {
+            width: 50%;
+            height: 500px;
+            position: relative;
+            margin-bottom: -50px;
+            z-index: 2;
+        }
+
+        .hero-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+    </style>
 </head>
 
 <body>
@@ -1102,7 +1155,7 @@
                 <p>Luxury dining experience crafted for unforgettable moments.</p>
             </div>
             <div class="footer-col">
-                                <h3>Navigation</h3>
+                <h3>Navigation</h3>
                 <ul class="footer-links">
                     <li><a href="index.html">Home</a></li>
                     <li><a href="menutest.html">Our Menu</a></li>
@@ -1111,7 +1164,7 @@
                     <li><a href="contact.html">Contact Us</a></li>
                     <li><a href="register.php">Create Account</a></li>
                     <li><a href="career.html">Career</a></li>
-                    <li><a href="login.php">Login</a></li>
+                    <li><a href="login.html">Login</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -1128,7 +1181,8 @@
                 <p>Get exclusive offers and premium updates.</p>
                 <form id="newsletterForm" class="newsletter-form">
                     <div id="newsletterMessage" class="hidden absolute -top-8 left-0 text-xs px-2 py-1 rounded"></div>
-                    <input type="email" id="newsletter_email" name="newsletter_email" placeholder="Email Address" required>
+                    <input type="email" id="newsletter_email" name="newsletter_email" placeholder="Email Address"
+                        required>
                     <button type="submit"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
             </div>
@@ -1151,8 +1205,7 @@
                     loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
             <h4 style="font-family:var(--font-serif);color:#fff;margin-top:16px;font-size:1.3rem;">La Medusaa</h4>
-            <p
-                style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
+            <p style="color:var(--gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">
                 SCO 44,45, District One Market, Sector 68, SAS Nagar</p>
             <a href="https://www.google.com/maps/search/?api=1&query=SCO+44+45+District+One+Market+Sector+68+Sahibzada+Ajit+Singh+Nagar+Punjab+140308"
                 target="_blank" rel="noopener"
@@ -1165,7 +1218,7 @@
     <!-- Active Session Check Script -->
     <script>
         const MAP_EMBED_URL = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2885.413030890794!2d76.71954153075983!3d30.680322781741616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fef0030d303dd%3A0xc81adde575ebd2ce!2sMedusa-bar%20and%20lounge!5e0!3m2!1sen!2sin!4v1780853698088!5m2!1sen!2sin';
-        
+
         function openMapModal() {
             const modal = document.getElementById('mapModal');
             document.getElementById('mapIframe').src = MAP_EMBED_URL;
@@ -1173,7 +1226,7 @@
             document.getElementById('mapContent').style.transform = 'scale(1)';
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeMapModal() {
             const modal = document.getElementById('mapModal');
             modal.style.opacity = '0'; modal.style.visibility = 'hidden';
@@ -1215,15 +1268,15 @@
                 messageDiv.style.zIndex = '10';
             }
 
-            newsletterForm.addEventListener('submit', async function(e) {
+            newsletterForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const emailInput = document.getElementById('newsletter_email');
                 const btn = this.querySelector('button');
                 const originalHtml = btn.innerHTML;
-                
+
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 btn.disabled = true;
-                
+
                 try {
                     const response = await fetch('api/subscribe.php', {
                         method: 'POST',
@@ -1232,11 +1285,11 @@
                         },
                         body: 'newsletter_email=' + encodeURIComponent(emailInput.value)
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     messageDiv.style.display = 'block';
-                    if(result.success) {
+                    if (result.success) {
                         messageDiv.style.backgroundColor = 'rgba(25, 54, 39, 0.95)';
                         messageDiv.style.color = '#dfba86';
                         messageDiv.style.border = '1px solid #dfba86';
@@ -1265,7 +1318,5 @@
         }
     </script>
 </body>
+
 </html>
-
-
-

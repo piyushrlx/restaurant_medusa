@@ -10,6 +10,8 @@ require_once __DIR__ . '/config.php';
 
 // Check if user is logged in
 requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('account_api', 80, 300);
 
 $user_id = $_SESSION['user_id'];
 $action  = $_GET['action'] ?? '';
@@ -496,5 +498,6 @@ try {
     echo json_encode(['success' => false, 'message' => 'Invalid action']);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'API Error: ' . $e->getMessage()]);
+    error_log('Account API error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to process this account request right now. Please try again later.']);
 }
