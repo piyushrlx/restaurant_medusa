@@ -2440,8 +2440,8 @@ html:not(.light-mode) .form-select:focus{
 #menuSearchForm .btn-action-form{
     min-width: 104px !important;
     width: auto !important;
-    height: 44px !important;
-    min-height: 44px !important;
+    height: 50px !important;
+    min-height: 50px !important;
     padding: 0 12px !important;
     font-size: 0.92rem;
 }
@@ -2449,8 +2449,8 @@ html:not(.light-mode) .form-select:focus{
 #customersSearchForm .btn-action-wide{
     min-width: 140px !important;
     width: auto !important;
-    height: 44px !important;
-    min-height: 44px !important;
+    height: 50px !important;
+    min-height: 50px !important;
     padding: 0 14px !important;
     font-size: 0.92rem;
 }
@@ -2458,8 +2458,8 @@ html:not(.light-mode) .form-select:focus{
 #reportsFilterForm .btn-action-wide{
     min-width: 178px !important;
     width: auto !important;
-    height: 44px !important;
-    min-height: 44px !important;
+    height: 50px !important;
+    min-height: 50px !important;
     padding: 0 14px !important;
     font-size: 0.92rem;
 }
@@ -2485,8 +2485,8 @@ html:not(.light-mode) .form-select:focus{
 #customersSearchForm .form-control-dashboard,
 #reportsFilterForm .form-control-dashboard,
 #reportsFilterForm .form-select{
-    min-height: 44px !important;
-    height: 44px !important;
+    min-height: 50px !important;
+    height: 50px !important;
 }
 
 /* Match the icon size to the tighter buttons */
@@ -3848,12 +3848,13 @@ html:not(.light-mode) .form-select:focus{
             <!-- Menu Search Box -->
             <div class="content-card mb-4">
                 <form id="menuSearchForm" onsubmit="performMenuSearch(event)">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-2">
+                    <!-- Row 1: Primary Filters -->
+                    <div class="row g-3 align-items-end mb-3">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small text-uppercase">Dish Name</label>
                             <input type="text" id="menu_search_input" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Search dish name, details...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
@@ -3875,7 +3876,7 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small text-uppercase">Diet Type</label>
                             <select id="menu_diet_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Types</option>
@@ -3883,14 +3884,18 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="nonveg">Non-Veg</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                    </div>
+
+                    <!-- Row 2: Secondary Filters & Actions -->
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small text-uppercase">Price Range</label>
                             <div class="d-flex gap-2">
                                 <input type="number" id="menu_price_min" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Min">
                                 <input type="number" id="menu_price_max" class="form-control bg-dark text-white border-secondary form-control-dashboard" placeholder="Max">
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <label class="form-label text-muted small text-uppercase">Availability</label>
                             <select id="menu_availability_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All</option>
@@ -3898,20 +3903,18 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="0">Out of Stock</option>
                             </select>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end gap-2">
-                            <button type="submit" class="btn btn-gold-action flex-grow-1" title="Filter"><i class="fas fa-search"></i></button>
-                            <button type="button" class="btn flex-shrink-0" id="menu-reset-btn"
-                                style="display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#94a3b8;height:42px;"
-                                onclick="resetMenuSearch()" title="Reset Filters">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-12">
-                            <div class="form-check form-switch">
+                        <div class="col-md-4 d-flex align-items-center gap-3">
+                            <div class="form-check form-switch mb-0 flex-grow-1">
                                 <input type="checkbox" id="menu_bestseller_check" class="form-check-input">
                                 <label class="form-check-label text-muted small text-uppercase" for="menu_bestseller_check">Show Bestsellers Only</label>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-gold-action px-4" title="Filter"><i class="fas fa-search me-2"></i>Search</button>
+                                <button type="button" class="btn px-3" id="menu-reset-btn"
+                                    style="display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#94a3b8;height:42px;"
+                                    onclick="resetMenuSearch()" title="Reset Filters">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
