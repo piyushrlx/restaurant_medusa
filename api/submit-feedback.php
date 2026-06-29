@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('submit_feedback', 20, 300);
 
 header('Content-Type: application/json');
 
@@ -156,9 +158,10 @@ try {
     exit;
 
 } catch (PDOException $e) {
+    error_log('Feedback save error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'An error occurred while saving feedback: ' . $e->getMessage()
+        'message' => 'An error occurred while saving feedback. Please try again later.'
     ]);
     exit;
 }

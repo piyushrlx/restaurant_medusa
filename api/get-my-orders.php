@@ -38,10 +38,10 @@ try {
         'orders' => $orders
     ]);
 } catch(PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
+    error_log('Get my orders error: ' . $e->getMessage());
+    json_response([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
-    ]);
+        'message' => 'Unable to load orders.'
+    ], 500);
 }
 ?>

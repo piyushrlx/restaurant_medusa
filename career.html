@@ -818,6 +818,42 @@
       transform: translateY(-2px);
     }
 
+    .form-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%) translateY(120%);
+      min-width: 280px;
+      max-width: 90%;
+      padding: 16px 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+      z-index: 11000;
+      backdrop-filter: blur(12px);
+    }
+
+    .form-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .form-toast.success {
+      background: rgba(20, 60, 25, 0.95);
+      border-color: #3db467;
+    }
+
+    .form-toast.error {
+      background: rgba(92, 22, 31, 0.95);
+      border-color: #ff6b6b;
+    }
+
     /* FOOTER */
     .lux-footer {
       background-color: #2F1317;
@@ -1019,7 +1055,16 @@
     <!-- Navbar Performance Optimization Links -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/components.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
+<script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
             tailwind.config = {
@@ -1177,34 +1222,35 @@
       <p>Build your career with one of the most premium dining destinations.</p>
     </div>
 
-    <form class="medusa-form reveal"
-      onsubmit="event.preventDefault(); alert('Application Submitted! Thank you for applying to Medusa.');">
+    <form id="careerForm" class="medusa-form reveal">
       <div class="form-row">
         <div class="form-group floating-group">
-          <input type="text" class="form-control" placeholder=" " required id="fullName">
+          <input type="text" class="form-control" placeholder=" " required id="fullName" name="full_name">
           <label class="form-label" for="fullName"><i class="fa-regular fa-user"></i> FULL NAME</label>
         </div>
         <div class="form-group floating-group">
-          <input type="tel" class="form-control" placeholder=" " required id="mobileNum">
+          <input type="tel" class="form-control" placeholder=" " required id="mobileNum" name="mobile">
           <label class="form-label" for="mobileNum"><i class="fa-solid fa-phone"></i> MOBILE NUMBER</label>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group floating-group">
-          <input type="email" class="form-control" placeholder=" " required id="emailAddr">
+          <input type="email" class="form-control" placeholder=" " required id="emailAddr" name="email">
           <label class="form-label" for="emailAddr"><i class="fa-regular fa-envelope"></i> EMAIL ADDRESS</label>
         </div>
         <div class="form-group floating-group">
-          <select class="form-select" required id="positionApply">
+          <select class="form-select" required id="positionApply" name="position">
             <option value="" selected disabled></option>
-            <option>Executive Chef</option>
-            <option>Sous Chef</option>
-            <option>Sommelier</option>
-            <option>Mixologist</option>
-            <option>Restaurant Manager</option>
-            <option>Luxury Server</option>
-            <option>Host / Hostess</option>
+            <option>Waiter</option>
+            <option>Captain</option>
+            <option>Head Chef</option>
+            <option>Supervisor</option>
+            <option>Cleaning Staff</option>
+            <option>CDP (Chef de Partie)</option>
+            <option>Barista</option>
+            <option>Commis 1</option>
+            <option>Commis 2</option>
           </select>
           <label class="form-label" for="positionApply"><i class="fa-solid fa-briefcase"></i> POSITION APPLYING
             FOR</label>
@@ -1213,32 +1259,32 @@
 
       <div class="form-row">
         <div class="form-group floating-group">
-          <input type="text" class="form-control" placeholder=" " id="experience">
+          <input type="text" class="form-control" placeholder=" " required id="experience" name="experience">
           <label class="form-label" for="experience"><i class="fa-regular fa-clock"></i> YEARS OF EXPERIENCE</label>
         </div>
         <div class="form-group floating-group">
-          <input type="text" class="form-control" placeholder=" " id="currentCity">
+          <input type="text" class="form-control" placeholder=" " required id="currentCity" name="city">
           <label class="form-label" for="currentCity"><i class="fa-solid fa-location-dot"></i> CURRENT CITY</label>
         </div>
       </div>
 
       <div class="form-row" style="grid-template-columns: 1fr;">
         <div class="form-group floating-group">
-          <input type="text" class="form-control" placeholder=" " id="expectedSalary">
+          <input type="text" class="form-control" placeholder=" " required id="expectedSalary" name="expected_salary">
           <label class="form-label" for="expectedSalary"><i class="fa-solid fa-wallet"></i> EXPECTED SALARY (₹ /
             MONTH)</label>
         </div>
       </div>
 
       <div class="form-group" style="margin-bottom: 24px;">
-        <label class="form-label"
+        <label class="form-label" for="file-input"
           style="color: rgba(255,255,255,0.7); font-size: 0.75rem; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; display:flex; align-items:center; gap:10px; margin-bottom:10px;"><i
             class="fa-regular fa-file-pdf" style="color:var(--gold);"></i> RESUME (UPLOAD PDF/DOC/DOCX - MAX
           5MB)</label>
         <div class="file-drop-area" id="drop-zone">
           <i class="fa-solid fa-cloud-arrow-up"></i>
-          Drag & drop your resume file here or <span>browse files</span>
-          <input type="file" id="file-input" style="display:none;" accept=".pdf,.doc,.docx">
+          <div class="file-drop-text">Drag & drop your resume file here or <span>browse files</span></div>
+          <input type="file" id="file-input" name="resume" hidden accept=".pdf,.doc,.docx">
         </div>
       </div>
 
@@ -1250,6 +1296,7 @@
 
       <button type="submit" class="btn-submit">SUBMIT APPLICATION</button>
     </form>
+    <div id="careerToast" class="form-toast" aria-live="polite" aria-atomic="true"></div>
   </section>
 
   <!-- FOOTER -->
@@ -1272,10 +1319,10 @@
         <p><a href="index.html">Home</a></p>
         <p><a href="menutest.html">Our Menu</a></p>
         <p><a href="book-table-test.html">Book Table</a></p>
-        <p><a href="#">About Us</a></p>
+        <p><a href="about.html">About Us</a></p>
         <p><a href="contact.html">Contact Us</a></p>
         <p><a href="career.html">Careers</a></p>
-        <p><a href="login.php">Login</a></p>
+        <p><a href="login.html">Login</a></p>
       </div>
       <div>
         <h4>Contact</h4>
@@ -1308,6 +1355,7 @@
     // --- INTERACTIVE FILE UPLOAD LOGIC ---
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
+    const fileDropText = dropZone ? dropZone.querySelector('.file-drop-text') : null;
 
     if (dropZone && fileInput) {
       // Trigger file select on click
@@ -1340,21 +1388,79 @@
       });
 
       dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
         const dt = e.dataTransfer;
         const files = dt.files;
         if (files.length > 0) {
-          fileInput.files = files;
+          if (window.DataTransfer) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(files[0]);
+            fileInput.files = dataTransfer.files;
+          } else {
+            fileInput.files = files;
+          }
           updateDropZoneText(files[0].name);
         }
       });
     }
 
     function updateDropZoneText(fileName) {
-      dropZone.innerHTML = `
-        <i class="fa-solid fa-file-circle-check" style="color: var(--gold); font-size: 2.2rem; margin-bottom: 12px; display: block;"></i>
-        Selected File: <strong style="color: var(--gold);">${fileName}</strong><br>
-        <span>Click to change file</span>
-      `;
+      if (fileDropText) {
+        fileDropText.innerHTML = `Selected File: <strong style="color: var(--gold);">${fileName}</strong><br><span>Click to change file</span>`;
+      }
+    }
+
+    const careerForm = document.getElementById('careerForm');
+    if (careerForm) {
+      careerForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = careerForm.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SUBMITTING...';
+        btn.disabled = true;
+
+        const formData = new FormData(careerForm);
+        const response = await fetch('api/submit-career.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        let result;
+        try {
+          result = await response.json();
+        } catch (err) {
+          showToast('Unexpected server response. Please try again later.', 'error');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          return;
+        }
+
+        if (result.success) {
+          showToast(result.message || 'Application submitted successfully.', 'success');
+          careerForm.reset();
+          updateDropZoneText('Drag & drop your resume file here or browse files');
+        } else {
+          showToast(result.message || 'Failed to submit application.', 'error');
+        }
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      });
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('careerToast');
+      if (!toast) {
+        alert(message);
+        return;
+      }
+
+      toast.textContent = message;
+      toast.className = `form-toast show ${type}`;
+      clearTimeout(showToast.timeoutId);
+      showToast.timeoutId = setTimeout(() => {
+        toast.className = `form-toast ${type}`;
+      }, 4500);
     }
 
     // --- SCROLL REVEAL (INTERSECTION OBSERVER) ---

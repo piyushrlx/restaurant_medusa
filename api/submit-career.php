@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('submit_career', 5, 900);
 
 // Disable error display for cleaner JSON response, log instead
 ini_set('display_errors', 0);
@@ -24,7 +26,8 @@ try {
     $pdo->exec($table_sql);
 } catch (PDOException $e) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Database initialization failed: ' . $e->getMessage()]);
+    error_log('Career table init error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to accept applications right now. Please try again later.']);
     exit;
 }
 
@@ -186,6 +189,7 @@ try {
     if (file_exists($dest_path)) {
         unlink($dest_path);
     }
-    echo json_encode(['success' => false, 'message' => 'Database error while saving application: ' . $e->getMessage()]);
+    error_log('Career application save error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to save application right now. Please try again later.']);
 }
 ?>

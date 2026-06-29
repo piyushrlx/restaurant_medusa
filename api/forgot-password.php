@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('forgot_password', 8, 600);
 
 // Decode JSON input
 $data = [];
@@ -182,6 +184,7 @@ try {
 
     echo json_encode(['success' => false, 'message' => 'Invalid action specified.']);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+    error_log('Forgot password API error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Unable to process password reset right now. Please try again later.']);
 }
 ?>

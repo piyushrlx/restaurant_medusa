@@ -1,5 +1,8 @@
 <?php
 header('Content-Type: application/json');
+require_once __DIR__ . '/config.php';
+require_same_origin_unsafe_request();
+rate_limit('contact', 8, 600);
 
 // Get JSON data if sent via fetch
 $data = json_decode(file_get_contents('php://input'), true);

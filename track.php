@@ -482,7 +482,16 @@ $current_step = $step_order[$tracking_status] ?? 1;
 
     <!-- Navbar Performance Optimization Links -->
     <link rel="stylesheet" href="assets/css/components.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
+<script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind !== 'undefined') {
             tailwind.config = {

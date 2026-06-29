@@ -1,11 +1,9 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-if (empty($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
+requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('mark_notifications_read', 120, 300);
 
 $user_id = $_SESSION['user_id'];
 
@@ -13,12 +11,12 @@ try {
     $stmt = $pdo->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
     $stmt->execute([$user_id]);
     
-    echo json_encode([
+    json_response([
         'success' => true,
         'updated' => $stmt->rowCount()
     ]);
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error']);
+    error_log('Mark notifications read error: ' . $e->getMessage());
+    json_response(['success' => false, 'message' => 'Unable to update notifications.'], 500);
 }
 ?>

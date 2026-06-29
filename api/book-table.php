@@ -17,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Must be logged in
 requireLogin();
+require_same_origin_unsafe_request();
+rate_limit('book_table', 15, 600);
 
 $user_id = $_SESSION['user_id'];
 
@@ -139,5 +141,6 @@ try {
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Failed to save booking: ' . $e->getMessage()]);
+    error_log('Table booking save error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Failed to save booking. Please try again later.']);
 }

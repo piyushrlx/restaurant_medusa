@@ -1,6 +1,8 @@
 <?php
 require_once dirname(dirname(__DIR__)) . '/api/config.php';
-// requireAdmin(); // Assume implemented in real system
+requireAdmin();
+require_same_origin_unsafe_request();
+rate_limit('admin_send_newsletter', 3, 900);
 
 header('Content-Type: application/json');
 
