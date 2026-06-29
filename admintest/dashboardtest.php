@@ -3987,6 +3987,7 @@ html:not(.light-mode) .form-select:focus{
                                             $cc->execute([$dish['id']]);
                                             $cust_count = (int)$cc->fetchColumn();
                                         } catch(Exception $e) { $cust_count = 0; }
+                                        $dish['display_image_url'] = getDishImage($dish['image_url']);
                                         ?>
                                         <button class="btn btn-sm btn-luxury-action btn-luxury-custom <?php echo $cust_count > 0 ? 'active' : ''; ?>" onclick="openCustomizationManager(<?php echo $dish['id']; ?>, '<?php echo htmlspecialchars(addslashes($dish['name'])); ?>')" title="Manage Customizations">
                                             <i class="fas fa-sliders-h"></i> 
@@ -4790,7 +4791,7 @@ html:not(.light-mode) .form-select:focus{
     <!-- ==================== MODALS ==================== -->
     
     <!-- Table QR Modal -->
-    <div class="modal fade" id="tableQRModal" tabindex="-1">
+    <div class="modal" id="tableQRModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary text-white">
                 <div class="modal-header border-secondary">
@@ -4818,7 +4819,7 @@ html:not(.light-mode) .form-select:focus{
     </div>
 
     <!-- Settle Bill Modal -->
-    <div class="modal fade" id="settleBillModal" tabindex="-1">
+    <div class="modal" id="settleBillModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary text-white">
                 <div class="modal-header border-secondary">
@@ -4852,7 +4853,7 @@ html:not(.light-mode) .form-select:focus{
     </div>
 
     <!-- Add Table Item Modal -->
-    <div class="modal fade" id="addTableItemModal" tabindex="-1">
+    <div class="modal" id="addTableItemModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary text-white">
                 <div class="modal-header border-secondary">
@@ -4886,7 +4887,7 @@ html:not(.light-mode) .form-select:focus{
     </div>
 
     <!-- Cover Letter Viewer Modal -->
-    <div class="modal fade" id="coverLetterModal" tabindex="-1">
+    <div class="modal" id="coverLetterModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary text-white">
                 <div class="modal-header border-secondary">
@@ -4901,7 +4902,7 @@ html:not(.light-mode) .form-select:focus{
     </div>
 
     <!-- Resume Viewer Modal -->
-    <div class="modal fade" id="resumeViewerModal" tabindex="-1">
+    <div class="modal" id="resumeViewerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 900px;">
             <div class="modal-content bg-dark border-secondary text-white" style="border: 1px solid rgba(223, 186, 134, 0.25) !important;">
                 <div class="modal-header border-secondary">
@@ -4916,7 +4917,7 @@ html:not(.light-mode) .form-select:focus{
     </div>
 
     <!-- ==================== CUSTOMIZATION MANAGER MODAL ==================== -->
-    <div class="modal fade" id="customizationManagerModal" tabindex="-1">
+    <div class="modal" id="customizationManagerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content text-white" style="background:#121111; border:1px solid rgba(223,186,134,0.25);">
                 <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.07);">
@@ -4982,7 +4983,7 @@ html:not(.light-mode) .form-select:focus{
         </div>
 
     <!-- Menu CRUD Modal -->
-    <div class="modal fade" id="menuCrudModal" tabindex="-1">
+    <div class="modal" id="menuCrudModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary text-white">
                 <div class="modal-header border-secondary">
@@ -5207,6 +5208,9 @@ html:not(.light-mode) .form-select:focus{
         document.addEventListener('DOMContentLoaded', function() {
             updateThemeUI();
             
+            // Move all modals to the root body element to fix Bootstrap z-index backdrop bugs
+            document.querySelectorAll('.modal').forEach(m => document.body.appendChild(m));
+
             // Restore active tab
             const activeTab = localStorage.getItem('medusa_active_admin_tab');
             if (activeTab) {
@@ -5777,7 +5781,9 @@ html:not(.light-mode) .form-select:focus{
                 // Pipe external links through local proxy to bypass browser-side CORS and referrer policies
                 displayUrl = 'dashboardtest.php?action=proxy_image&url=' + encodeURIComponent(url);
             } else if (url && !url.startsWith('//')) {
-                if (url.startsWith('uploads/')) {
+                if (url.startsWith('../')) {
+                    displayUrl = url;
+                } else if (url.startsWith('uploads/')) {
                     displayUrl = '../' + url;
                 } else {
                     displayUrl = '../uploads/' + url;
@@ -5927,7 +5933,7 @@ html:not(.light-mode) .form-select:focus{
             if (fileInput) fileInput.value = '';
             
             if (dish.image_url) {
-                updateImagePreview(dish.image_url);
+                updateImagePreview(dish.display_image_url || dish.image_url);
                 if (dish.image_url.startsWith('uploads/')) {
                     switchImageSource('upload');
                 } else {
