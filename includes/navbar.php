@@ -43,7 +43,7 @@ if (!empty($_SESSION['user_id'])) {
 }
 ?>
 
-<nav id="main-navbar" class="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-6 md:px-12 h-20 bg-[#3B111B] border-b border-[#C8A25A]/10 font-sans">
+<nav id="main-navbar" class="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-6 md:px-12 h-20 bg-[#3B111B] border-b border-solid border-[#C8A25A]/10 font-sans">
     <!-- Logo Brand -->
     <a href="index.html" class="flex items-center gap-3 no-underline">
         <img src="assets/images/medusaa2(onlylogo).png" alt="Logo" class="w-10 h-10 object-contain brightness-110">
@@ -83,7 +83,7 @@ if (!empty($_SESSION['user_id'])) {
                     <?php endif; ?>
                 </button>
                 <!-- Notification Dropdown -->
-                <div id="nav-notif-dropdown" class="hidden absolute right-0 mt-[12px] w-80 bg-[#F8F3EB] border border-[#3B111B]/10 rounded-2xl shadow-[0_10px_30px_rgba(59,17,27,0.1)] overflow-hidden z-[110]">
+                <div id="nav-notif-dropdown" class="hidden absolute right-0 mt-[12px] w-80 bg-[#F8F3EB] border border-solid border-[#3B111B]/10 rounded-2xl shadow-[0_10px_30px_rgba(59,17,27,0.1)] overflow-hidden z-[110]">
                     <div class="px-4 py-3 border-b border-[#3B111B]/10 text-xs font-serif font-semibold text-[#3B111B] tracking-wider uppercase">Notifications</div>
                     <div class="max-h-72 overflow-y-auto font-sans">
                         <?php if (empty($user_notifications)): ?>
@@ -118,18 +118,18 @@ if (!empty($_SESSION['user_id'])) {
                     <i class="fa-regular fa-user"></i>
                 </button>
                 <!-- Dropdown List -->
-                <div id="nav-profile-dropdown" class="hidden absolute right-0 mt-[12px] w-max min-w-[150px] bg-[#F8F3EB] border border-[#3B111B]/10 rounded-2xl shadow-[0_10px_30px_rgba(59,17,27,0.1)] overflow-hidden z-[110] p-2 flex flex-col gap-1">
+                <div id="nav-profile-dropdown" class="hidden absolute right-0 mt-[12px] w-max min-w-[150px] bg-[#F8F3EB] border border-solid border-[#3B111B]/10 rounded-2xl shadow-[0_10px_30px_rgba(59,17,27,0.1)] overflow-hidden z-[110] p-2 flex flex-col gap-1">
                     <a href="profile.php" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-[#3B111B] hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 no-underline uppercase">My Profile</a>
                     <a href="my-orders.php" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-[#3B111B] hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 no-underline uppercase">My Orders</a>
                     <a href="profile.php#pill-reservations" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-[#3B111B] hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 no-underline uppercase">Reservations</a>
                     <a href="profile.php#pill-loyalty" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-[#3B111B] hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 no-underline uppercase">Rewards</a>
-                    <a href="api/logout.php" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-red-600 hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 border-t border-[#3B111B]/10 no-underline uppercase mt-1 pt-2">Logout</a>
+                    <a href="api/logout.php" class="block px-4 py-2.5 text-xs font-semibold tracking-wider text-red-600 hover:bg-[#3B111B]/5 rounded-xl transition-colors duration-200 border-t border-solid border-[#3B111B]/10 no-underline uppercase mt-1 pt-2">Logout</a>
                 </div>
             </div>
         <?php endif; ?>
 
         <!-- Reservation Button (Desktop/Tablet) -->
-        <a href="book-table-test.html" class="hidden md:block text-[0.72rem] font-medium tracking-[2px] uppercase text-[#C8A25A] border border-[#C8A25A]/60 px-[18px] py-2 hover:bg-[#C8A25A]/10 transition-all no-underline">Reserve a Table</a>
+        <a href="book-table-test.html" class="hidden md:block text-[0.72rem] font-medium tracking-[2px] uppercase text-[#C8A25A] border border-solid border-[#C8A25A]/60 px-[18px] py-2 hover:bg-[#C8A25A]/10 transition-all no-underline">Reserve a Table</a>
 
         <!-- Mobile Hamburger Toggle -->
         <button id="nav-mobile-toggle" class="lg:hidden text-[#F8EACE] bg-transparent border-none cursor-pointer text-xl p-1 outline-none">
@@ -140,24 +140,24 @@ if (!empty($_SESSION['user_id'])) {
 
 <!-- Mobile Drawer -->
 <div id="nav-mobile-drawer" class="hidden fixed inset-0 top-20 z-[90] bg-[#3B111B]/95 backdrop-blur-md flex flex-col items-center justify-start py-8 gap-6 overflow-y-auto font-sans">
-    <a href="index.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">Home</a>
-    <a href="about.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium font-medium">About</a>
-    <a href="menutest.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">Menu</a>
-    <a href="gallery.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">Gallery</a>
-    <a href="book-table-test.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">Book Table</a>
-    <a href="career.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium font-medium">Careers</a>
+    <a href="index.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Home</a>
+    <a href="about.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">About</a>
+    <a href="menutest.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Menu</a>
+    <a href="gallery.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Gallery</a>
+    <a href="book-table-test.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Book Table</a>
+    <a href="career.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Careers</a>
     
     <?php if (!empty($_SESSION['user_id'])): ?>
-        <a href="my-orders.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">My Orders</a>
-        <a href="carttest.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium flex items-center gap-1.5">Cart <span id="cartCountMobileDrawer" class="px-1.5 py-0.5 text-[0.65rem] bg-[#C8A25A] text-[#3B111B] rounded-full font-bold hidden">0</span></a>
-        <a href="profile.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium font-medium">My Profile</a>
-        <a href="api/logout.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-red-500 hover:text-red-600 transition-colors no-underline font-medium font-medium">Logout</a>
+        <a href="my-orders.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">My Orders</a>
+        <a href="carttest.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline flex items-center gap-1.5">Cart <span id="cartCountMobileDrawer" class="px-1.5 py-0.5 text-[0.65rem] bg-[#C8A25A] text-[#3B111B] rounded-full font-bold hidden">0</span></a>
+        <a href="profile.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">My Profile</a>
+        <a href="api/logout.php" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-red-500 hover:text-red-600 transition-colors no-underline">Logout</a>
     <?php else: ?>
-        <a href="contact.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium font-medium font-medium font-medium">Contact</a>
-        <a href="login.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline font-medium">Login</a>
+        <a href="contact.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Contact</a>
+        <a href="login.html" class="nav-link-item text-sm font-semibold tracking-[2px] uppercase text-[#F8EACE] hover:text-[#C8A25A] transition-colors no-underline">Login</a>
     <?php endif; ?>
     
-    <a href="book-table-test.html" class="text-xs font-semibold tracking-[2px] uppercase text-[#C8A25A] border border-[#C8A25A]/60 px-6 py-2.5 hover:bg-[#C8A25A]/10 transition-all no-underline mt-4 font-medium">Reserve a Table</a>
+    <a href="book-table-test.html" class="text-xs font-semibold tracking-[2px] uppercase text-[#C8A25A] border border-solid border-[#C8A25A]/60 px-6 py-2.5 hover:bg-[#C8A25A]/10 transition-all no-underline mt-4">Reserve a Table</a>
 </div>
 
 <!-- Spacer to push down content so it doesn't get hidden under the fixed navbar -->

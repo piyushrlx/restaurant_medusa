@@ -1535,7 +1535,7 @@ $csrf_token = csrf_token();
                                     <input type="text" id="billing_street" placeholder=" " required>
                                     <label>Delivery Address*</label>
                                 </div>
-                                <div class="medusa-square-btn" id="btnChooseFromMap">
+                                <div class="medusa-square-btn" id="btnChooseFromMap" title="Choose from Map">
                                     <i class="fas fa-map-marker-alt"></i>
                                 </div>
                             </div>
@@ -2445,7 +2445,7 @@ const btnChooseMap = document.getElementById('btnChooseFromMap');
 if(btnChooseMap) {
     btnChooseMap.addEventListener('click', () => {
         if (navigator.geolocation) {
-            btnChooseMap.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+            btnChooseMap.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
@@ -2473,11 +2473,11 @@ if(btnChooseMap) {
                     alert("Failed to get address from map, but coordinates captured.");
                     document.getElementById('billing_street').value = `[${lat}, ${lng}]`;
                 }
-                btnChooseMap.innerHTML = '<i class="fas fa-check"></i> Found';
-                setTimeout(() => { btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map'; }, 3000);
+                btnChooseMap.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => { btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i>'; }, 3000);
             }, (error) => {
                 alert('Location access denied or unavailable.');
-                btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i> Choose from Map';
+                btnChooseMap.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
             });
         } else {
             alert('Geolocation is not supported by your browser.');
