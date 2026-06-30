@@ -16,9 +16,8 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- OpenLayers -->
-    <script src="https://cdn.jsdelivr.net/npm/ol@v10.3.1/dist/ol.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.3.1/ol.css">
+    <!-- Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($mapsApiKey); ?>&libraries=places"></script>
 
     <style>
         :root {
@@ -520,71 +519,50 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
         const DEFAULT_RESTAURANT_LNG = 76.719541;
         let RESTAURANT_LAT = 30.680322;
         let RESTAURANT_LNG = 76.719541;
-        const TOMTOM_API_KEY = "qI82bUxco20qcXu2avJFVppor79rrqzM";
-
         // State
         let currentOrder = null;
         let map = null;
-        let vectorSource = null;
-        let routeSource = null;
-        let driverFeature = null;
-        let restaurantFeature = null;
-        let customerFeature = null;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let driverMarker = null;
+        let restaurantMarker = null;
+        let customerMarker = null;
         let watchId = null;
         let currentLat = null;
         let currentLng = null;
-
-        function createMarkerStyle(color, size) {
-            return new ol.style.Style({
-                image: new ol.style.Circle({
-                    radius: size,
-                    fill: new ol.style.Fill({ color: color }),
-                    stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-                })
-            });
-        }
 
         // Initialize Map
         function initMap() {
             if (map) return;
             
-            routeSource = new ol.source.Vector();
-            vectorSource = new ol.source.Vector();
+            map = new google.maps.Map(document.getElementById('map-container'), {
+                center: { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG },
+                zoom: 13,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
             
-            map = new ol.Map({
-                target: 'map-container',
-                layers: [
-                    new ol.layer.Tile({
-                        source: new ol.source.XYZ({
-                            url: `https://api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${TOMTOM_API_KEY}`,
-                            attributions: '&copy; TomTom'
-                        })
-                    }),
-                    new ol.layer.Vector({
-                        source: routeSource,
-                        style: new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: 'rgba(76, 175, 80, 0.8)',
-                                width: 5
-                            })
-                        })
-                    }),
-                    new ol.layer.Vector({
-                        source: vectorSource
-                    })
-                ],
-                view: new ol.View({
-                    center: ol.proj.fromLonLat([RESTAURANT_LNG, RESTAURANT_LAT]),
-                    zoom: 13
-                }),
-                controls: []
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true,
+                polylineOptions: { strokeColor: '#4CAF50', strokeWeight: 5 }
             });
 
-            restaurantFeature = new ol.Feature({
-                geometry: new ol.geom.Point(ol.proj.fromLonLat([RESTAURANT_LNG, RESTAURANT_LAT]))
+            restaurantMarker = new google.maps.Marker({
+                position: { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#dfba86',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                },
+                title: 'Restaurant'
             });
-            restaurantFeature.setStyle(createMarkerStyle('#dfba86', 10));
-            vectorSource.addFeature(restaurantFeature);
         }
 
         // Fetch Order API
@@ -598,9 +576,11 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
                 if (result.success) {
                     currentOrder = result.order;
+                    localStorage.setItem('active_delivery_order_number', currentOrder.order_number);
                     startDeliveryUI();
                 } else {
                     alert(result.message);
+                    localStorage.removeItem('active_delivery_order_number');
                 }
             } catch (err) {
                 alert("Network error fetching order.");
@@ -626,11 +606,11 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
             // Init Map and Tracking
             initMap();
-            if (map && restaurantFeature) {
-                map.getView().setCenter(ol.proj.fromLonLat([RESTAURANT_LNG, RESTAURANT_LAT]));
-                restaurantFeature.getGeometry().setCoordinates(ol.proj.fromLonLat([RESTAURANT_LNG, RESTAURANT_LAT]));
+            if (map && restaurantMarker) {
+                const restPos = { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG };
+                map.setCenter(restPos);
+                restaurantMarker.setPosition(restPos);
             }
-            setTimeout(() => { map.updateSize(); }, 500); 
             startGPSTracking();
 
             // Geocode Customer Address
@@ -644,26 +624,47 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                 if (forceDropLat && forceDropLng) {
                     cLat = forceDropLat;
                     cLng = forceDropLng;
-                } else {
-                    const geoRes = await fetch(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(currentOrder.delivery_address)}.json?key=${TOMTOM_API_KEY}`);
-                    const geoData = await geoRes.json();
                     
-                    if (geoData.results && geoData.results.length > 0) {
-                        cLat = geoData.results[0].position.lat;
-                        cLng = geoData.results[0].position.lon;
-                    } else {
-                        console.warn('TomTom Geocoding failed. Using fallback.', geoData);
-                    }
+                    customerMarker = new google.maps.Marker({
+                        position: { lat: cLat, lng: cLng },
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#4CAF50',
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 2
+                        },
+                        title: 'Customer'
+                    });
+                    setupRoute(cLat, cLng);
+                } else {
+                    const geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ address: currentOrder.delivery_address }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            cLat = results[0].geometry.location.lat();
+                            cLng = results[0].geometry.location.lng();
+                        } else {
+                            console.warn('Google Maps Geocoding failed. Using fallback.');
+                        }
+                        
+                        customerMarker = new google.maps.Marker({
+                            position: { lat: cLat, lng: cLng },
+                            map: map,
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 10,
+                                fillColor: '#4CAF50',
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2
+                            },
+                            title: 'Customer'
+                        });
+                        setupRoute(cLat, cLng);
+                    });
                 }
-                
-                customerFeature = new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([cLng, cLat]))
-                });
-                customerFeature.setStyle(createMarkerStyle('#4CAF50', 10));
-                vectorSource.addFeature(customerFeature);
-
-                // Setup Route
-                setupRoute(cLat, cLng);
             } catch (e) {
                 console.error("Geocoding failed", e);
             }
@@ -676,17 +677,25 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                     (position) => {
                         currentLat = position.coords.latitude;
                         currentLng = position.coords.longitude;
+                        
+                        const pos = { lat: currentLat, lng: currentLng };
 
-                        const coord = ol.proj.fromLonLat([currentLng, currentLat]);
-
-                        if (!driverFeature) {
-                            driverFeature = new ol.Feature({
-                                geometry: new ol.geom.Point(coord)
+                        if (!driverMarker) {
+                            driverMarker = new google.maps.Marker({
+                                position: pos,
+                                map: map,
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 12,
+                                    fillColor: '#2196F3',
+                                    fillOpacity: 1,
+                                    strokeColor: '#ffffff',
+                                    strokeWeight: 2
+                                },
+                                title: 'Driver'
                             });
-                            driverFeature.setStyle(createMarkerStyle('#2196F3', 12));
-                            vectorSource.addFeature(driverFeature);
                         } else {
-                            driverFeature.getGeometry().setCoordinates(coord);
+                            driverMarker.setPosition(pos);
                         }
 
                         // Send location to backend if an order is active
@@ -709,34 +718,23 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             }
         }
 
-        // OpenLayers Routing Setup (using OSRM API)
-        async function setupRoute(custLat, custLng) {
-            routeSource.clear();
-            const start = `${RESTAURANT_LNG},${RESTAURANT_LAT}`;
-            const end = `${custLng},${custLat}`;
+        // Google Maps Routing Setup
+        function setupRoute(custLat, custLng) {
+            if (!directionsService || !directionsRenderer) return;
             
-            try {
-                const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`);
-                const data = await res.json();
-                
-                if(data.routes && data.routes.length > 0) {
-                    const route = data.routes[0].geometry;
-                    const format = new ol.format.GeoJSON();
-                    const routeFeature = format.readFeature({
-                        type: 'Feature',
-                        geometry: route
-                    }, {
-                        dataProjection: 'EPSG:4326',
-                        featureProjection: 'EPSG:3857'
-                    });
-                    routeSource.addFeature(routeFeature);
-                    
-                    const extent = routeSource.getExtent();
-                    map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16 });
+            const request = {
+                origin: { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG },
+                destination: { lat: custLat, lng: custLng },
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+            
+            directionsService.route(request, (result, status) => {
+                if (status == 'OK') {
+                    directionsRenderer.setDirections(result);
+                } else {
+                    console.error("Routing error", status);
                 }
-            } catch(e) {
-                console.error("Routing error", e);
-            }
+            });
         }
 
         // Action: Picked Up
@@ -815,8 +813,12 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
         function resetDashboard() {
             if (watchId) navigator.geolocation.clearWatch(watchId);
-            if (vectorSource) vectorSource.clear();
-            if (routeSource) routeSource.clear();
+            if (directionsRenderer) directionsRenderer.setDirections({routes: []});
+            if (driverMarker) { driverMarker.setMap(null); driverMarker = null; }
+            if (restaurantMarker) { restaurantMarker.setMap(null); restaurantMarker = null; }
+            if (customerMarker) { customerMarker.setMap(null); customerMarker = null; }
+            
+            localStorage.removeItem('active_delivery_order_number');
             
             document.getElementById('screen-delivery').classList.remove('active');
             document.getElementById('screen-entry').classList.add('active');
@@ -835,6 +837,13 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Auto-fetch if there is an active order in localStorage
+            const activeOrder = localStorage.getItem('active_delivery_order_number');
+            if (activeOrder) {
+                document.getElementById('orderInput').value = activeOrder;
+                fetchOrder();
+            }
+
             const confirmBtn = document.getElementById('btnConfirmCancel');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
@@ -880,6 +889,7 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
         async function logout() {
             if (!confirm("Log out of Driver Portal?")) return;
+            localStorage.removeItem('active_delivery_order_number');
             try {
                 await fetch('../api/logout.php');
                 window.location.href = '../login.html';
