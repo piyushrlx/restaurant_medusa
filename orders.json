@@ -18,49 +18,19 @@
                 "subtotal": 425
             },
             {
-                "id": 3,
-                "food_item_id": 3,
-                "name": "Vietnamese Pho Soup",
-                "price": 425,
-                "quantity": 2,
-                "category": "Soups",
-                "subtotal": 850
-            },
-            {
-                "id": 11,
-                "food_item_id": 11,
-                "name": "Classical Caesar Salad",
-                "price": 425,
-                "quantity": 1,
-                "category": "Salad",
-                "subtotal": 425
-            },
-            {
-                "id": 12,
-                "food_item_id": 12,
-                "name": "Middle Eastern Salad Bowl",
-                "price": 545,
-                "quantity": 1,
-                "category": "Salad",
-                "subtotal": 545
+                "name": "Garlic Naan",
+                "price": 80,
+                "quantity": 3
             }
         ],
-        "subtotal": 2245,
-        "gst": 404.09999999999997,
+        "subtotal": 1140,
+        "gst": 205.2,
         "packing": 4.06,
         "delivery": 40,
-        "total": 2468.66,
-        "status": "cancelled",
+        "total": 1389.26,
+        "status": "Paid",
         "sms_status": "failed",
         "sms_response": "",
-        "created_at": "2026-06-30 09:12:19",
-        "feedback": {
-            "rating": 5,
-            "review": "",
-            "submitted_at": "2026-06-30 09:12:26",
-            "coupon_code": "5STAR-SUMMER2026-1F599D92",
-            "coupon_discount": "10% OFF"
-        },
-        "cancellation_reason": "Reason 3"
+        "created_at": "2026-06-23 21:00:10"
     }
 }
