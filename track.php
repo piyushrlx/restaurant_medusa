@@ -21,7 +21,8 @@ try {
                o.total_amount, o.order_status, o.tracking_status,
                o.estimated_delivery, o.order_date,
                o.tax_amount, o.packing_charge, o.delivery_charge,
-               o.discount, o.tier_discount_amount, o.points_redeemed_discount
+               o.discount, o.tier_discount_amount, o.points_redeemed_discount,
+               o.order_type
         FROM orders o
         WHERE o.tracking_token = ?
         LIMIT 1
@@ -53,14 +54,23 @@ if ($terminal) {
 }
 
 $tracking_status = $order['tracking_status'] ?? 'placed';
+$is_takeaway = (isset($order['order_type']) && strcasecmp($order['order_type'], 'takeaway') === 0);
 $steps = [
-    ['key' => 'placed',           'label' => 'Order Placed',   'icon' => 'fa-receipt'],
-    ['key' => 'confirmed',        'label' => 'Confirmed',       'icon' => 'fa-circle-check'],
-    ['key' => 'preparing',        'label' => 'Preparing',       'icon' => 'fa-fire-burner'],
-    ['key' => 'out_for_delivery', 'label' => 'On the Way',      'icon' => 'fa-motorcycle'],
-    ['key' => 'delivered',        'label' => 'Delivered',       'icon' => 'fa-house'],
+    ['key' => 'placed',    'label' => 'Order Placed',   'icon' => 'fa-receipt'],
+    ['key' => 'confirmed', 'label' => 'Confirmed',      'icon' => 'fa-circle-check'],
+    ['key' => 'preparing', 'label' => 'Preparing',      'icon' => 'fa-fire-burner'],
+    ['key' => $is_takeaway ? 'ready_for_pickup' : 'out_for_delivery', 'label' => $is_takeaway ? 'Ready for Pickup' : 'On the Way', 'icon' => $is_takeaway ? 'fa-store' : 'fa-motorcycle'],
+    ['key' => 'delivered', 'label' => $is_takeaway ? 'Picked Up' : 'Delivered', 'icon' => $is_takeaway ? 'fa-circle-user' : 'fa-house'],
 ];
-$step_order = ['placed'=>1,'confirmed'=>2,'preparing'=>3,'out_for_delivery'=>4,'delivered'=>5,'cancelled'=>0];
+$step_order = [
+    'placed'           => 1,
+    'confirmed'        => 2,
+    'preparing'        => 3,
+    'out_for_delivery' => 4,
+    'ready_for_pickup' => 4,
+    'delivered'        => 5,
+    'cancelled'        => 0
+];
 $current_step = $step_order[$tracking_status] ?? 1;
 ?>
 <!DOCTYPE html>
@@ -74,7 +84,12 @@ $current_step = $step_order[$tracking_status] ?? 1;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script>
+        function initGoogleMapsTrack() {
+            if (typeof __initTrackMap === 'function') __initTrackMap();
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBiHCxp2jLKJOxy_pteRZbiMaWxkg2Mepk&libraries=places&loading=async&callback=initGoogleMapsTrack" defer></script>
 
     <style>
         :root {
@@ -535,21 +550,44 @@ $current_step = $step_order[$tracking_status] ?? 1;
             <div class="status-text-group">
                 <div class="status-main-label" id="statusLabel">
                     <?php
-                    $labels = ['placed'=>'Order Placed','confirmed'=>'Order Confirmed','preparing'=>'Being Prepared','out_for_delivery'=>'Out for Delivery','delivered'=>'Delivered','cancelled'=>'Cancelled'];
+                    $labels = [
+                        'placed'           => 'Order Placed',
+                        'confirmed'        => 'Order Confirmed',
+                        'preparing'        => 'Being Prepared',
+                        'out_for_delivery' => 'Out for Delivery',
+                        'ready_for_pickup' => 'Ready for Pickup',
+                        'delivered'        => $is_takeaway ? 'Picked Up' : 'Delivered',
+                        'cancelled'        => 'Cancelled'
+                    ];
                     echo $labels[$tracking_status] ?? 'Processing';
                     ?>
                 </div>
                 <div class="status-sub-label" id="statusMsg">
                     <?php
-                    $msgs = ['placed'=>'We have received your order and are confirming it.','confirmed'=>'Your order has been confirmed by our team!','preparing'=>'Our chefs are preparing your order right now.','out_for_delivery'=>'Your order is on its way to you!','delivered'=>'Your order has been delivered. Enjoy your meal!','cancelled'=>'This order has been cancelled.'];
+                    $msgs = [
+                        'placed'           => 'We have received your order and are confirming it.',
+                        'confirmed'        => 'Your order has been confirmed by our team!',
+                        'preparing'        => 'Our chefs are preparing your order right now.',
+                        'out_for_delivery' => 'Your order is on its way to you!',
+                        'ready_for_pickup' => 'Your order is ready! Please collect it at the restaurant counter.',
+                        'delivered'        => $is_takeaway ? 'Your order has been picked up from our counter. Enjoy your meal!' : 'Your order has been delivered. Enjoy your meal!',
+                        'cancelled'        => 'This order has been cancelled.'
+                    ];
                     echo $msgs[$tracking_status] ?? '';
                     ?>
                 </div>
             </div>
-            <?php if (!empty($order['estimated_delivery']) && !$terminal): ?>
+            <?php
+            $eta_mins_php = null;
+            if (!empty($order['estimated_delivery']) && !$terminal) {
+                $diff_sec = strtotime($order['estimated_delivery']) - time();
+                $eta_mins_php = $diff_sec > 0 ? ceil($diff_sec / 60) : null;
+            }
+            ?>
+            <?php if ($eta_mins_php !== null): ?>
             <div class="eta-badge" id="etaBadge">
                 <i class="fas fa-clock"></i>
-                ETA <?php echo date('g:i A', strtotime($order['estimated_delivery'])); ?>
+                <?php echo $eta_mins_php === 1 ? '1 min away' : $eta_mins_php . ' mins away'; ?>
             </div>
             <?php else: ?>
             <div class="eta-badge" id="etaBadge" style="display:none;"></div>
@@ -578,11 +616,18 @@ $current_step = $step_order[$tracking_status] ?? 1;
     <!-- Live Map Card -->
     <div class="details-card" id="liveMapCard" style="display: <?php echo $tracking_status === 'out_for_delivery' ? 'block' : 'none'; ?>; overflow: hidden;">
         <div class="details-section pb-0">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <p class="details-title m-0">Live Tracking</p>
-                <div class="badge bg-gold text-dark" style="background: var(--gold); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;"><i class="fa-solid fa-location-crosshairs me-1"></i> Live</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <p class="details-title m-0" style="margin:0;">Live Tracking</p>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div id="liveEtaStrip" style="display:none; background: rgba(201,168,76,0.12); border:1px solid var(--gold); border-radius:20px; padding:4px 14px; font-size:0.78rem; font-weight:600; color:var(--gold); letter-spacing:0.5px;">
+                        <i class="fa-solid fa-clock" style="margin-right:5px;"></i><span id="etaCountdown">---</span>
+                    </div>
+                    <div style="background: var(--gold); padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color:#000; display:flex; align-items:center; gap:5px;">
+                        <span style="width:6px;height:6px;background:#000;border-radius:50%;display:inline-block;animation:pulse-dot 1.2s infinite;"></span> LIVE
+                    </div>
+                </div>
             </div>
-            <div id="partnerMap" style="height: 280px; width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px;"></div>
+            <div id="partnerMap" style="height: 300px; width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; background:#111;"></div>
         </div>
     </div>
 
@@ -654,8 +699,16 @@ $current_step = $step_order[$tracking_status] ?? 1;
 
         <!-- Address -->
         <div class="details-section">
-            <p class="details-title">Delivery Address</p>
-            <p class="address-text"><?php echo nl2br(htmlspecialchars(preg_replace('/\[[0-9.-]+,\s*[0-9.-]+\]/', '', $order['delivery_address']))); ?></p>
+            <p class="details-title"><?php echo $is_takeaway ? 'Pickup Location' : 'Delivery Address'; ?></p>
+            <p class="address-text">
+                <?php 
+                if ($is_takeaway) {
+                    echo "<strong>LA-MEDUSAA Restaurant Counter</strong><br><span style='font-size: 0.85rem; opacity: 0.7;'>Please collect your order at our main kitchen counter.</span>";
+                } else {
+                    echo nl2br(htmlspecialchars(preg_replace('/\[[0-9.-]+,\s*[0-9.-]+\]/', '', $order['delivery_address'])));
+                }
+                ?>
+            </p>
         </div>
     </div>
 
@@ -672,18 +725,13 @@ $current_step = $step_order[$tracking_status] ?? 1;
     LA-MEDUSAA Bar &amp; Lounge, Sector 68, Mohali &nbsp;·&nbsp; Live tracking updates every 15 seconds
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const TOKEN   = <?php echo json_encode($token); ?>;
-const POLL_MS = 15000;
+const POLL_MS = 10000;
 const DELIVERY_ADDRESS = <?php echo json_encode($order['delivery_address']); ?>;
 const DELIVERY_CITY = <?php echo json_encode($order['delivery_city'] ?? ''); ?>;
+const GMAPS_KEY = 'AIzaSyBiHCxp2jLKJOxy_pteRZbiMaWxkg2Mepk';
 
-const STEP_ORDER = { placed:1, confirmed:2, preparing:3, out_for_delivery:4, delivered:5, cancelled:0 };
-const LABELS = { placed:'Order Placed', confirmed:'Order Confirmed', preparing:'Being Prepared', out_for_delivery:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' };
-const MSGS   = { placed:'We have received your order and are confirming it.', confirmed:'Your order has been confirmed by our team!', preparing:'Our chefs are preparing your order right now.', out_for_delivery:'Your order is on its way to you!', delivered:'Your order has been delivered. Enjoy your meal!', cancelled:'This order has been cancelled.' };
-
-// Set initial fill width
 let currentStep = <?php echo $current_step; ?>;
 setFill(currentStep);
 
@@ -692,215 +740,242 @@ function setFill(step) {
     document.getElementById('stepFill').style.width = pct + '%';
 }
 
-let map = null;
-let riderMarker = null;
+// ─── Google Maps globals ───
+let gmap = null;
+let driverMarker = null;
 let customerMarker = null;
-let routeLine = null;
-let routeGlow = null;
+let directionsService = null;
+let directionsRenderer = null;
+let mapReady = false;
+let pendingDriverLat = null;
+let pendingDriverLng = null;
 
-async function getCustomerCoords() {
-    const match = DELIVERY_ADDRESS.match(/\[([0-9.-]+),\s*([0-9.-]+)\]/);
-    if (match) return [parseFloat(match[1]), parseFloat(match[2])];
-    
-    let cleanAddr = DELIVERY_ADDRESS.replace(/Table\s+[A-Za-z0-9]+/gi, '').trim();
-    if(cleanAddr) {
-        try {
-            const query = encodeURIComponent(cleanAddr);
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-            const data = await res.json();
-            if (data && data.length > 0) {
-                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-            }
-        } catch(e) { console.error("Geocoding address failed", e); }
+window.__initTrackMap = function() {
+    mapReady = true;
+    // Only create map if map card is already visible
+    const card = document.getElementById('liveMapCard');
+    if (card && card.style.display !== 'none') {
+        _createGMap();
     }
+};
 
-    if(DELIVERY_CITY && DELIVERY_CITY.trim() !== '') {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(DELIVERY_CITY.trim())}&limit=1`);
-            const data = await res.json();
-            if (data && data.length > 0) {
-                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-            }
-        } catch(e) { console.error("Geocoding city failed", e); }
-    }
-    
-    // Fallback if geocoding fails so map always shows a line
-    console.warn("Using fallback coordinates for customer destination.");
-    return [30.690, 76.735];
-}
-
-function initMap() {
-    if (map) return;
-    
-    map = L.map('partnerMap').setView([30.681219808145546, 76.72328631342646], 16);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
-
-    const truckIconHtml = `
-        <div style="background: var(--gold); border: 2px solid #000; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(201,168,76,0.6);">
-            <i class="fa-solid fa-motorcycle" style="color: #000; font-size: 1.1rem;"></i>
-        </div>
-    `;
-    const truckIcon = L.divIcon({
-        html: truckIconHtml,
-        className: 'dummy',
-        iconSize: [38, 38],
-        iconAnchor: [19, 19]
+function _createGMap() {
+    if (gmap || !mapReady) return;
+    const center = { lat: 30.6813, lng: 76.7233 };
+    gmap = new google.maps.Map(document.getElementById('partnerMap'), {
+        center: center,
+        zoom: 14,
+        styles: [
+            { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+            { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+            { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#e0e0e0' }] },
+            { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+            { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dadada' }] },
+            { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#c8c8c8' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9e8f5' }] },
+            { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5f5e0' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+            { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#e0e0e0' }] },
+        ],
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
     });
 
-    riderMarker = L.marker([30.681219808145546, 76.72328631342646], {icon: truckIcon}).addTo(map);
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: gmap,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#c9a84c',
+            strokeWeight: 5,
+            strokeOpacity: 0.85,
+        },
+    });
 
-    getCustomerCoords().then(coords => {
-        if (coords) {
-            const customerIconHtml = `
-                <div style="background: #111; border: 2px solid var(--gold); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(255,255,255,0.2);">
-                    <i class="fa-solid fa-house" style="color: var(--gold); font-size: 0.85rem;"></i>
-                </div>
-            `;
-            const customerIcon = L.divIcon({
-                html: customerIconHtml,
-                className: 'dummy',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
+    // Place customer marker via geocoding
+    _geocodeCustomer();
+
+    // If we have pending driver position, place it
+    if (pendingDriverLat && pendingDriverLng) {
+        _updateDriverMarker(pendingDriverLat, pendingDriverLng);
+        pendingDriverLat = null; pendingDriverLng = null;
+    }
+}
+
+function _geocodeCustomer() {
+    const geocoder = new google.maps.Geocoder();
+    let addr = DELIVERY_ADDRESS.replace(/Table\s+[A-Za-z0-9]+/gi, '').trim();
+    geocoder.geocode({ address: addr }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const pos = results[0].geometry.location;
+            customerMarker = new google.maps.Marker({
+                position: pos,
+                map: gmap,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 9,
+                    fillColor: '#c9a84c',
+                    fillOpacity: 1,
+                    strokeColor: '#fff',
+                    strokeWeight: 2,
+                },
+                title: 'Your Location',
+                zIndex: 5,
             });
-            customerMarker = L.marker(coords, {icon: customerIcon}).addTo(map);
-            
-            drawRoute(riderMarker.getLatLng(), customerMarker.getLatLng());
+            gmap.setCenter(pos);
         }
     });
 }
 
-async function drawRoute(startLatLng, endLatLng) {
-    const startLng = startLatLng.lng !== undefined ? startLatLng.lng : startLatLng[1];
-    const startLat = startLatLng.lat !== undefined ? startLatLng.lat : startLatLng[0];
-    const endLng = endLatLng.lng !== undefined ? endLatLng.lng : endLatLng[1];
-    const endLat = endLatLng.lat !== undefined ? endLatLng.lat : endLatLng[0];
-    
-    const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.routes && data.routes.length > 0) {
-            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            if (routeLine) {
-                routeLine.setLatLngs(coords);
-                if (routeGlow) routeGlow.setLatLngs(coords);
-            } else {
-                routeGlow = L.polyline(coords, {color: 'rgba(201, 168, 76, 0.35)', weight: 10, opacity: 1, lineCap: 'round', lineJoin: 'round'}).addTo(map);
-                routeLine = L.polyline(coords, {color: '#c9a84c', weight: 4, opacity: 0.95, lineCap: 'round', lineJoin: 'round'}).addTo(map);
-            }
-            map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
-        } else {
-            drawStraightLine([startLat, startLng], [endLat, endLng]);
-        }
-    } catch(e) {
-        drawStraightLine([startLat, startLng], [endLat, endLng]);
+function _updateDriverMarker(lat, lng) {
+    if (!mapReady || !gmap) {
+        pendingDriverLat = lat;
+        pendingDriverLng = lng;
+        return;
     }
-}
-
-function drawStraightLine(startCoords, endCoords) {
-    if (routeLine) {
-        routeLine.setLatLngs([startCoords, endCoords]);
-        if (routeGlow) routeGlow.setLatLngs([startCoords, endCoords]);
+    const pos = { lat: parseFloat(lat), lng: parseFloat(lng) };
+    if (!driverMarker) {
+        driverMarker = new google.maps.Marker({
+            position: pos,
+            map: gmap,
+            icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 6,
+                fillColor: '#2196F3',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+            },
+            title: 'Driver',
+            zIndex: 10,
+        });
     } else {
-        routeGlow = L.polyline([startCoords, endCoords], {color: 'rgba(201, 168, 76, 0.3)', weight: 8, opacity: 1, dashArray: '10, 10'}).addTo(map);
-        routeLine = L.polyline([startCoords, endCoords], {color: '#c9a84c', weight: 4, opacity: 0.9, dashArray: '10, 10'}).addTo(map);
+        driverMarker.setPosition(pos);
     }
-    map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+    gmap.panTo(pos);
+    // Draw route from driver to customer
+    if (customerMarker && directionsService && directionsRenderer) {
+        directionsService.route({
+            origin: pos,
+            destination: customerMarker.getPosition(),
+            travelMode: google.maps.TravelMode.DRIVING,
+        }, (result, status) => {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(result);
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend(pos);
+                bounds.extend(customerMarker.getPosition());
+                gmap.fitBounds(bounds, { padding: 50 });
+            }
+        });
+    }
 }
 
-function updateMap(lat, lng) {
-    if (!map) {
-        initMap();
+function _showMap() {
+    const card = document.getElementById('liveMapCard');
+    if (card.style.display === 'none' || card.style.display === '') {
+        card.style.display = 'block';
+        if (mapReady && !gmap) _createGMap();
+        else if (mapReady) google.maps.event.trigger(gmap, 'resize');
     }
-    
-    if (lat && lng) {
-        const latlng = [lat, lng];
-        riderMarker.setLatLng(latlng);
-        
-        if (customerMarker) {
-            drawRoute(riderMarker.getLatLng(), customerMarker.getLatLng());
+}
+
+function _hideMap() {
+    document.getElementById('liveMapCard').style.display = 'none';
+}
+
+// ─── ETA countdown strip ───
+function _updateEtaStrip(etaMinutes, estimatedDelivery) {
+    const strip = document.getElementById('liveEtaStrip');
+    const countdown = document.getElementById('etaCountdown');
+    if (!strip || !countdown) return;
+
+    if (etaMinutes !== null && etaMinutes !== undefined && etaMinutes > 0) {
+        strip.style.display = 'flex';
+        if (etaMinutes === 1) countdown.textContent = '1 min away';
+        else if (etaMinutes <= 2) countdown.textContent = etaMinutes + ' mins away';
+        else countdown.textContent = etaMinutes + ' mins away';
+    } else if (estimatedDelivery) {
+        // Fallback: show formatted time
+        const d = new Date(estimatedDelivery.replace(' ', 'T'));
+        const now = new Date();
+        const diffMs = d - now;
+        if (diffMs > 0) {
+            const mins = Math.ceil(diffMs / 60000);
+            strip.style.display = 'flex';
+            countdown.textContent = mins + ' min' + (mins !== 1 ? 's' : '') + ' away';
         } else {
-            map.setView(latlng, 15);
+            strip.style.display = 'none';
         }
+    } else {
+        strip.style.display = 'none';
     }
 }
 
+// ─── etaBadge (top summary) ───
+function _updateEtaBadge(estimatedDelivery, isTerminal) {
+    const eta = document.getElementById('etaBadge');
+    if (!eta) return;
+    if (estimatedDelivery && !isTerminal) {
+        const diffMs = new Date(estimatedDelivery.replace(' ', 'T')) - new Date();
+        if (diffMs > 0) {
+            const mins = Math.ceil(diffMs / 60000);
+            eta.innerHTML = `<i class="fas fa-clock"></i> ${mins === 1 ? '1 min away' : mins + ' mins away'}`;
+            eta.style.display = '';
+        } else {
+            eta.innerHTML = `<i class="fas fa-clock"></i> Arriving now`;
+            eta.style.display = '';
+        }
+    } else {
+        eta.style.display = 'none';
+    }
+}
+
+// ─── updateUI called by poll ───
 function updateUI(data) {
     const step = data.step;
     const status = data.tracking_status;
     const isTerminal = !data.is_active;
 
-    // Update headline
     document.getElementById('statusLabel').textContent = data.status_label;
     document.getElementById('statusMsg').textContent   = data.status_message;
 
-    // Pulse
     const pulse = document.getElementById('statusPulse');
-    pulse.classList.toggle('terminal', isTerminal);
+    if (pulse) pulse.classList.toggle('terminal', isTerminal);
 
-    // ETA
-    const eta = document.getElementById('etaBadge');
-    if (data.estimated_delivery && !isTerminal) {
-        const d = new Date(data.estimated_delivery.replace(' ', 'T'));
-        eta.innerHTML = `<i class="fas fa-clock"></i> ETA ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
-        eta.style.display = '';
-    } else {
-        eta.style.display = 'none';
-    }
+    _updateEtaBadge(data.estimated_delivery, isTerminal);
 
-    // Steps
     for (let i = 1; i <= 5; i++) {
         const circle = document.getElementById('stepCircle' + i);
         const label  = document.getElementById('stepLabel' + i);
-        circle.className = 'step-circle' + (i < step ? ' done' : i === step ? ' active' : '');
-        label.className  = 'step-label'  + (i < step ? ' done' : i === step ? ' active' : '');
+        if (circle) circle.className = 'step-circle' + (i < step ? ' done' : i === step ? ' active' : '');
+        if (label)  label.className  = 'step-label'  + (i < step ? ' done' : i === step ? ' active' : '');
     }
-
-    // Fill bar
     setFill(step);
     currentStep = step;
-    
-    // Live Map Logic
+
     if (status === 'out_for_delivery') {
-        const mapCard = document.getElementById('liveMapCard');
-        if (mapCard.style.display !== 'block') {
-            mapCard.style.display = 'block';
-            setTimeout(() => { if (map) map.invalidateSize(); }, 300);
+        _showMap();
+        if (data.driver_lat && data.driver_lng) {
+            _updateDriverMarker(data.driver_lat, data.driver_lng);
         }
-        
-        // Fetch location from the new API
-        fetch('api/get_location.php')
-            .then(res => res.json())
-            .then(loc => {
-                if (loc.lat && loc.lng) {
-                    updateMap(loc.lat, loc.lng);
-                }
-            })
-            .catch(err => console.error("Error fetching location:", err));
+        _updateEtaStrip(data.eta_minutes, data.estimated_delivery);
     } else {
-        document.getElementById('liveMapCard').style.display = 'none';
+        _hideMap();
     }
 
-    // Stop polling if terminal
     if (isTerminal) clearInterval(pollTimer);
 }
 
-// Initial map load if already on the way
-<?php if ($tracking_status === 'out_for_delivery'): ?>
-    setTimeout(() => {
-        initMap();
-        fetch('api/get_location.php')
-            .then(res => res.json())
-            .then(loc => {
-                if (loc.lat && loc.lng) {
-                    updateMap(loc.lat, loc.lng);
-                }
-            });
-    }, 500);
-<?php endif; ?>
-
+// ─── Polling ───
 let pollTimer = null;
 
 async function poll() {
@@ -908,28 +983,27 @@ async function poll() {
         const res  = await fetch(`api/track-status.php?token=${TOKEN}`);
         const data = await res.json();
         if (data.success) updateUI(data);
-    } catch(e) { /* silent — user still sees last known state */ }
+    } catch(e) { /* silent */ }
 }
 
-// Only poll if order is not already in a terminal state
+// Initial load if already out for delivery
+<?php if ($tracking_status === 'out_for_delivery'): ?>
+document.addEventListener('DOMContentLoaded', () => {
+    _showMap();
+    <?php if (!empty($order['driver_lat']) && !empty($order['driver_lng'])): ?>
+    _updateDriverMarker(<?php echo floatval($order['driver_lat']); ?>, <?php echo floatval($order['driver_lng']); ?>);
+    <?php endif; ?>
+    <?php if (!empty($order['estimated_delivery'])): ?>
+    const initEtaMs = new Date('<?php echo str_replace(' ', 'T', $order['estimated_delivery']); ?>') - new Date();
+    const initMins = initEtaMs > 0 ? Math.ceil(initEtaMs / 60000) : null;
+    _updateEtaStrip(initMins, '<?php echo addslashes($order['estimated_delivery']); ?>');
+    <?php endif; ?>
+});
+<?php endif; ?>
+
 <?php if (!$terminal): ?>
 pollTimer = setInterval(poll, POLL_MS);
 <?php endif; ?>
-
-// Fallback to fetch location if map is visible but order status not polled yet
-setInterval(() => {
-    const mapCard = document.getElementById('liveMapCard');
-    if (mapCard.style.display === 'block') {
-        fetch('api/get_location.php')
-            .then(res => res.json())
-            .then(loc => {
-                if (loc.lat && loc.lng) {
-                    updateMap(loc.lat, loc.lng);
-                }
-            })
-            .catch(err => console.error("Error fetching location:", err));
-    }
-}, 2000);
 </script>
 
 </body>

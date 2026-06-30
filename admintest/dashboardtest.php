@@ -3738,7 +3738,7 @@ html:not(.light-mode) .form-select:focus{
                                         ?>
                                         <tr>
                                             <td>
-                                                <strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong>
+                                                <strong class="text-gold">#<?php echo htmlspecialchars($ord['order_number']); ?></strong> <?php if (isset($ord['order_type']) && strcasecmp($ord['order_type'], 'takeaway') === 0): ?><span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;"><i class="fas fa-shopping-bag"></i> Takeaway</span><?php else: ?><span class="badge bg-primary text-white ms-1" style="font-size: 0.7rem;"><i class="fas fa-truck"></i> Delivery</span><?php endif; ?>
                                                 <?php echo renderStars($ord['rating'] ?? 0, $ord['review'] ?? ''); ?>
                                             </td>
                                             <td>
@@ -5893,9 +5893,21 @@ html:not(.light-mode) .form-select:focus{
                     btn = `<button class="btn btn-sm btn-primary w-100 text-white" onclick="updateOrderStatus(${order.id}, 'completed')">Complete / Serve</button>`;
                 }
                 
+                const isDineIn = order.delivery_address && order.delivery_address.toLowerCase().startsWith('table');
+                const isTakeaway = order.order_type && order.order_type.toLowerCase() === 'takeaway';
+                
+                let typeBadge = '';
+                if (isDineIn) {
+                    typeBadge = `<span class="badge bg-danger text-white ms-1" style="font-size: 0.65rem; padding: 2px 6px; vertical-align: middle;"><i class="fas fa-chair"></i> Dine-In</span>`;
+                } else if (isTakeaway) {
+                    typeBadge = `<span class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem; padding: 2px 6px; vertical-align: middle;"><i class="fas fa-shopping-bag"></i> Takeaway</span>`;
+                } else {
+                    typeBadge = `<span class="badge bg-primary text-white ms-1" style="font-size: 0.65rem; padding: 2px 6px; vertical-align: middle;"><i class="fas fa-truck"></i> Delivery</span>`;
+                }
+
                 card.innerHTML = `
                     <div class="kitchen-card-header">
-                        <span>#${order.order_number}</span>
+                        <span>#${order.order_number}${typeBadge}</span>
                         <span class="text-gold">${order.delivery_address}</span>
                     </div>
                     <ul class="kitchen-card-items">

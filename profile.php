@@ -1458,8 +1458,13 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <i class="fa-solid fa-bag-shopping" style="color: #d4af37; font-size: 1.2rem;"></i>
                                             </div>
                                             <div>
-                                                <h4 class="mb-1" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.25rem; font-weight: 600;">
+                                                <h4 class="mb-1" style="font-family: 'Playfair Display', serif; color: #5a2a35; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                                                     Order #<?php echo htmlspecialchars($order['order_number']); ?>
+                                                    <?php if (isset($order['order_type']) && strcasecmp($order['order_type'], 'takeaway') === 0): ?>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem; font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fa-solid fa-shopping-bag"></i> Takeaway</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-primary text-white" style="font-size: 0.7rem; font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fa-solid fa-truck"></i> Delivery</span>
+                                                    <?php endif; ?>
                                                 </h4>
                                                 <div class="text-muted" style="font-size: 0.85rem;">
                                                     <i class="fa-regular fa-calendar me-1"></i> <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>

@@ -22,7 +22,8 @@ try {
     $stmt = $pdo->prepare("
         SELECT o.id, o.order_number, o.customer_name, o.delivery_address,
                o.total_amount, o.order_status, o.tracking_status,
-               o.estimated_delivery, o.order_date
+               o.estimated_delivery, o.order_date,
+               o.driver_lat, o.driver_lng, o.order_type
         FROM orders o
         WHERE o.tracking_token = ?
         LIMIT 1
@@ -43,12 +44,15 @@ try {
     $items_stmt->execute([$order['id']]);
     $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $is_takeaway = (strcasecmp($order['order_type'] ?? '', 'takeaway') === 0);
+
     // Map tracking_status to step number (1-5)
     $status_steps = [
         'placed'           => 1,
         'confirmed'        => 2,
         'preparing'        => 3,
         'out_for_delivery' => 4,
+        'ready_for_pickup' => 4,
         'delivered'        => 5,
         'cancelled'        => 0,
     ];
@@ -62,7 +66,8 @@ try {
         'confirmed'        => 'Order Confirmed',
         'preparing'        => 'Being Prepared',
         'out_for_delivery' => 'Out for Delivery',
-        'delivered'        => 'Delivered',
+        'ready_for_pickup' => 'Ready for Pickup',
+        'delivered'        => $is_takeaway ? 'Picked Up' : 'Delivered',
         'cancelled'        => 'Cancelled',
     ];
 
@@ -71,9 +76,21 @@ try {
         'confirmed'        => 'Your order has been confirmed by our team!',
         'preparing'        => 'Our chefs are preparing your order right now.',
         'out_for_delivery' => 'Your order is on its way to you!',
-        'delivered'        => 'Your order has been delivered. Enjoy your meal!',
+        'ready_for_pickup' => 'Your order is ready! Please come to the kitchen counter to pick it up.',
+        'delivered'        => $is_takeaway ? 'You have picked up your order. Enjoy your meal!' : 'Your order has been delivered. Enjoy your meal!',
         'cancelled'        => 'This order has been cancelled.',
     ];
+
+    // Compute ETA minutes remaining from estimated_delivery
+    $eta_minutes = null;
+    if (!empty($order['estimated_delivery'])) {
+        $eta_ts = strtotime($order['estimated_delivery']);
+        $now_ts = time();
+        $diff = $eta_ts - $now_ts;
+        if ($diff > 0) {
+            $eta_minutes = ceil($diff / 60);
+        }
+    }
 
     echo json_encode([
         'success'           => true,
@@ -87,9 +104,13 @@ try {
         'status_label'      => $status_labels[$tracking_status] ?? 'Processing',
         'status_message'    => $status_messages[$tracking_status] ?? '',
         'estimated_delivery'=> $order['estimated_delivery'],
+        'eta_minutes'       => $eta_minutes,
+        'driver_lat'        => $order['driver_lat'] ? floatval($order['driver_lat']) : null,
+        'driver_lng'        => $order['driver_lng'] ? floatval($order['driver_lng']) : null,
         'order_date'        => $order['order_date'],
         'items'             => $items,
         'is_active'         => !in_array($tracking_status, ['delivered', 'cancelled']),
+        'is_takeaway'       => $is_takeaway,
     ]);
 
 } catch (PDOException $e) {

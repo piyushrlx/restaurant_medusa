@@ -673,7 +673,18 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
                     <i class="fa-solid fa-clipboard-check"></i> Order Status
                 </div>
                 <h2 class="status-text"><?php echo ucfirst(htmlspecialchars($order['order_status'])); ?></h2>
-                <p class="status-desc">Thank you! Your order has been processed successfully.</p>
+                <?php if (strtolower($order['order_status']) === 'cancelled'): ?>
+                    <p class="status-desc" style="color:#dc2626;">
+                        <?php if (!empty($order['cancellation_reason'])): ?>
+                            <i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i>
+                            <strong>Cancellation Reason:</strong> <?php echo htmlspecialchars($order['cancellation_reason']); ?>
+                        <?php else: ?>
+                            This order has been cancelled.
+                        <?php endif; ?>
+                    </p>
+                <?php else: ?>
+                    <p class="status-desc">Thank you! Your order has been processed successfully.</p>
+                <?php endif; ?>
             </div>
             <div class="meta-grid-wrap">
                 <div class="meta-grid">
@@ -726,15 +737,20 @@ $grand_total = $subtotal + $gst + $delivery + $packing;
             
             <div class="info-card">
                 <div class="info-card-header">
-                    <i class="fa-solid fa-motorcycle"></i> Fulfillment Mode
+                    <i class="fa-solid fa-bell-concierge"></i> Fulfillment Mode
                 </div>
                 <?php if (strpos(strtolower($order['delivery_address']), 'table') !== false): ?>
-                    <h3 class="info-card-title">Dine-In Service</h3>
+                    <h3 class="info-card-title" style="color: #dfba86;"><i class="fa-solid fa-chair me-1"></i> Dine-In Service</h3>
                     <div class="info-card-line">
                         <i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($order['delivery_address']); ?>
                     </div>
+                <?php elseif (isset($order['order_type']) && strcasecmp($order['order_type'], 'takeaway') === 0): ?>
+                    <h3 class="info-card-title" style="color: #dfba86;"><i class="fa-solid fa-shopping-bag me-1"></i> Takeaway / Pickup</h3>
+                    <div class="info-card-line">
+                        <i class="fa-solid fa-store"></i> Pick up at Restaurant Counter
+                    </div>
                 <?php else: ?>
-                    <h3 class="info-card-title">Home Delivery</h3>
+                    <h3 class="info-card-title" style="color: #dfba86;"><i class="fa-solid fa-truck me-1"></i> Home Delivery</h3>
                     <div class="info-card-line">
                         <i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($order['delivery_address']); ?>
                     </div>
