@@ -44,9 +44,10 @@ try {
 
         case 'update_status':
             $order_number = $data['order_number'] ?? '';
-            $status = $data['status'] ?? ''; // 'Picked Up' or 'Delivered'
+            $status = $data['status'] ?? ''; // 'Picked Up' or 'Delivered' or 'cancelled'
             $lat = $data['lat'] ?? null;
             $lng = $data['lng'] ?? null;
+            $reason = $data['reason'] ?? '';
 
             if (empty($order_number) || empty($status)) {
                 throw new Exception("Order number and status are required");
@@ -56,12 +57,42 @@ try {
             if ($status === 'Picked Up') {
                 $status = 'Out for Delivery';
             }
-            if (!in_array($status, ['Out for Delivery', 'Delivered'], true)) {
+            if ($status === 'Cancelled') {
+                $status = 'cancelled';
+            }
+            if (!in_array($status, ['Out for Delivery', 'Delivered', 'cancelled'], true)) {
                 throw new Exception("Invalid status");
             }
 
             $stmt = $pdo->prepare("UPDATE orders SET status = ?, order_status = ? WHERE order_number = ?");
             $stmt->execute([$status, $status, $order_number]);
+
+            // Sync status with orders.json
+            $orders_file = dirname(__DIR__) . '/orders.json';
+            if (file_exists($orders_file)) {
+                $json_content = file_get_contents($orders_file);
+                $orders = json_decode($json_content, true) ?: [];
+                if (isset($orders[$order_number])) {
+                    $orders[$order_number]['status'] = ($status === 'cancelled') ? 'cancelled' : (($status === 'Delivered') ? 'Delivered' : $status);
+                    if ($status === 'cancelled' && !empty($reason)) {
+                        $orders[$order_number]['cancellation_reason'] = $reason;
+                    }
+                    file_put_contents($orders_file, json_encode($orders, JSON_PRETTY_PRINT));
+                }
+            }
+
+            if ($status === 'cancelled') {
+                require_once dirname(__DIR__) . '/includes/notifications_helper.php';
+                $ord_stmt = $pdo->prepare("SELECT customer_name FROM orders WHERE order_number = ?");
+                $ord_stmt->execute([$order_number]);
+                $customer_name = $ord_stmt->fetchColumn() ?: 'Customer';
+                
+                $notif_msg = "Order {$order_number} for {$customer_name} has been cancelled by the driver.";
+                if (!empty($reason)) {
+                    $notif_msg .= " Reason: {$reason}";
+                }
+                addNotification('order', 'Order Cancelled', $notif_msg);
+            }
 
             if ($status === 'Delivered' && $lat && $lng) {
                 // We could optionally save final delivery coordinates somewhere here

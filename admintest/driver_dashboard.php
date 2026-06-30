@@ -176,7 +176,7 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             gap: 15px;
             overflow-y: auto;
             flex: 1;
-            padding-bottom: 100px; /* Space for sticky buttons */
+            padding-bottom: 160px; /* Space for sticky buttons */
             position: relative;
         }
 
@@ -285,6 +285,7 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
         .btn-pickup { background-color: #2196F3; }
         .btn-deliver { background-color: var(--primary); }
+        .btn-cancel { background-color: var(--danger); }
         .btn-sos { 
             background-color: transparent; 
             border: 2px solid var(--danger); 
@@ -293,9 +294,104 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             width: 60px;
         }
 
-        /* Custom Leaflet Controls */
-        
-            display: none !important; /* Hide the ugly default routing instructions */
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .modal-select:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+
+        .btn-modal:active {
+            opacity: 0.8;
+        }
+
+        .btn-modal-close {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-modal-confirm {
+            background-color: var(--danger);
+            color: white;
         }
     </style>
 </head>
@@ -386,8 +482,35 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
         <div class="action-panel">
             <button class="btn-action btn-sos" onclick="triggerSOS()"><i class="fa-solid fa-triangle-exclamation"></i></button>
-            <button class="btn-action btn-pickup" id="btnPickup" onclick="markPickedUp()"><i class="fa-solid fa-box"></i> Picked Up</button>
-            <button class="btn-action btn-deliver" id="btnDeliver" onclick="markDelivered()" style="display:none;"><i class="fa-solid fa-check-circle"></i> Delivered</button>
+            <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                <button class="btn-action btn-pickup" id="btnPickup" onclick="markPickedUp()"><i class="fa-solid fa-box"></i> Picked Up</button>
+                <button class="btn-action btn-deliver" id="btnDeliver" onclick="markDelivered()" style="display:none;"><i class="fa-solid fa-check-circle"></i> Delivered</button>
+                <button class="btn-action btn-cancel" id="btnCancel" onclick="cancelDelivery()"><i class="fa-solid fa-xmark"></i> Cancel Delivery</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancellation Reason Modal -->
+    <div id="cancelModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3 class="modal-title">Reason for Cancellation</h3>
+            <p class="modal-subtitle">Please select a reason for canceling this delivery:</p>
+            
+            <div class="reason-options">
+                <select id="cancellationReason" class="modal-select">
+                    <option value="" disabled selected>Select a reason...</option>
+                    <option value="reason1">Reason 1</option>
+                    <option value="reason2">Reason 2</option>
+                    <option value="reason3">Reason 3</option>
+                    <option value="reason4">Reason 4</option>
+                    <option value="reason5">Reason 5</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-close" onclick="closeCancelModal()">Go Back</button>
+                <button class="btn-modal btn-modal-confirm" id="btnConfirmCancel">Confirm Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -702,6 +825,58 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             document.getElementById('btnDeliver').style.display = 'none';
             currentOrder = null;
         }
+
+        function cancelDelivery() {
+            document.getElementById('cancelModal').style.display = 'flex';
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const confirmBtn = document.getElementById('btnConfirmCancel');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    const reasonSelect = document.getElementById('cancellationReason');
+                    const reasonVal = reasonSelect.value;
+                    const reasonText = reasonSelect.options[reasonSelect.selectedIndex]?.text || '';
+                    if (!reasonVal) {
+                        alert("Please select a reason first.");
+                        return;
+                    }
+                    
+                    if (!currentOrder || !currentOrder.order_number) {
+                        alert("No active order to cancel.");
+                        return;
+                    }
+                    
+                    try {
+                        const res = await fetch('../api/driver_api.php', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                action: 'update_status',
+                                order_number: currentOrder.order_number,
+                                status: 'cancelled',
+                                reason: reasonText
+                            })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            alert("Order cancelled successfully!");
+                            closeCancelModal();
+                            resetDashboard();
+                        } else {
+                            alert("Failed to cancel order: " + data.message);
+                        }
+                    } catch (err) {
+                        alert("Network error updating status.");
+                    }
+                });
+            }
+        });
 
         async function logout() {
             if (!confirm("Log out of Driver Portal?")) return;
