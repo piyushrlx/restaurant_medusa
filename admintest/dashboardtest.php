@@ -1459,14 +1459,7 @@ while ($row = $active_order_stmt->fetch(PDO::FETCH_ASSOC)) {
         $occupied_tables[] = trim($matches[1]);
     }
 }
-
-$reserved_tables = [];
-$res_stmt = $pdo->query("SELECT table_code FROM table_reservations WHERE status = 'active' AND reservation_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE) AND reservation_time <= DATE_ADD(NOW(), INTERVAL 90 MINUTE)");
-while ($row = $res_stmt->fetch(PDO::FETCH_ASSOC)) {
-    $reserved_tables[] = trim($row['table_code']);
-}
-
-$active_tables_count = count(array_unique(array_merge($occupied_tables, $reserved_tables)));
+$active_tables_count = count(array_unique($occupied_tables));
 
 // 7-day Sales Chart Query
 $chart_stmt = $pdo->query("SELECT * FROM (SELECT DATE(order_date) as d, SUM(total_amount) as total FROM orders WHERE order_status = 'completed' GROUP BY DATE(order_date) ORDER BY DATE(order_date) DESC LIMIT 7) as recent_days ORDER BY d ASC");
@@ -1847,10 +1840,6 @@ $table_zones = [
         .table-cell.occupied {
             background-color: rgba(223, 186, 134, 0.04);
             border-color: var(--gold);
-        }
-        .table-cell.reserved {
-            background-color: rgba(234, 179, 8, 0.04);
-            border-color: #eab308;
         }
         .table-cell .table-name {
             font-weight: 700;
@@ -3902,22 +3891,11 @@ html:not(.light-mode) .form-select:focus{
                 <div class="table-grid">
                     <?php foreach ($tables as $t_code): 
                         $is_occ = in_array($t_code, $occupied_tables);
-                        $is_res = in_array($t_code, $reserved_tables);
-                        
-                        $status_class = '';
-                        $status_icon = '🟢 Free';
-                        if ($is_occ) {
-                            $status_class = 'occupied';
-                            $status_icon = '🔴 Occupied';
-                        } elseif ($is_res) {
-                            $status_class = 'reserved';
-                            $status_icon = '🟡 Reserved';
-                        }
                     ?>
-                    <div class="table-cell <?php echo $status_class; ?>" onclick="openTableQRModal('<?php echo $t_code; ?>', <?php echo $is_occ ? 'true' : 'false'; ?>, <?php echo $is_res ? 'true' : 'false'; ?>)">
+                    <div class="table-cell <?php echo $is_occ ? 'occupied' : ''; ?>" onclick="openTableQRModal('<?php echo $t_code; ?>', <?php echo $is_occ ? 'true' : 'false'; ?>)">
                         <div class="table-name">Table <?php echo $t_code; ?></div>
                         <div class="table-status">
-                            <?php echo $status_icon; ?>
+                            <?php echo $is_occ ? '🔴 Occupied' : '🟢 Free'; ?>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -5161,20 +5139,6 @@ html:not(.light-mode) .form-select:focus{
                             <button id="btnDineInAct" class="btn btn-sm btn-gold-action"><i class="fas fa-plus"></i> Open Dine-In Bill</button>
                             <button onclick="printTableQR()" class="btn btn-sm btn-outline-secondary text-white"><i class="fas fa-print"></i> Print</button>
                         </div>
-                        
-                        <!-- Reservations Section -->
-                        <div class="mt-4 pt-3 border-top border-secondary text-start">
-                            <h6 class="text-gold"><i class="fas fa-calendar-check"></i> Manage Reservations</h6>
-                            <div id="tableReservationsList" class="mb-3 small">
-                                <!-- Reservations injected here -->
-                            </div>
-                            <div class="d-flex gap-2 align-items-center">
-                                <input type="text" id="resCustName" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white" placeholder="Name">
-                                <input type="text" id="resCustPhone" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white" placeholder="Phone">
-                                <input type="datetime-local" id="resTime" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white">
-                                <button onclick="addTableReservation()" class="btn btn-sm btn-gold-action whitespace-nowrap"><i class="fas fa-plus"></i> Add</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -5745,27 +5709,10 @@ html:not(.light-mode) .form-select:focus{
         }
 
         // 6. QR Code Configuration Dialog
-        function openTableQRModal(tableCode, isOccupied, isReserved) {
+        function openTableQRModal(tableCode, isOccupied) {
             selectedTableQR = tableCode;
             document.getElementById('qrModalTitle').textContent = 'Table ' + tableCode + ' Configuration';
             document.getElementById('qrTableLabel').textContent = 'Table ' + tableCode;
-            
-            // Load reservations for this table
-            fetch('../api/table_reservations.php?table_code=' + tableCode)
-            .then(res => res.json())
-            .then(data => {
-                const list = document.getElementById('tableReservationsList');
-                if (data.success && data.reservations.length > 0) {
-                    list.innerHTML = data.reservations.map(r => 
-                        `<div class="d-flex justify-content-between p-2 border-bottom border-secondary">
-                            <div><i class="fas fa-user-circle"></i> ${r.customer_name} <br> <i class="fas fa-phone"></i> ${r.customer_phone}</div>
-                            <div class="text-end"><span class="badge bg-warning text-dark">${new Date(r.reservation_time).toLocaleString()}</span></div>
-                        </div>`
-                    ).join('');
-                } else {
-                    list.innerHTML = '<div class="text-muted p-2">No upcoming reservations</div>';
-                }
-            });
             
             // Generate QR Code targeting the menu page with this table number prefilled
             // Use PHP to inject the real local Wi-Fi IP address so smartphones can reach it instead of looking for 'localhost'
@@ -6581,29 +6528,6 @@ html:not(.light-mode) .form-select:focus{
         // 2. KITCHEN SEARCH (Client-Side)
         // =====================================================================
         let _kitchenStatusFilter = 'all';
-
-        function addTableReservation() {
-            const name = document.getElementById('resCustName').value;
-            const phone = document.getElementById('resCustPhone').value;
-            const time = document.getElementById('resTime').value;
-            
-            if (!name || !phone || !time) return alert("All fields are required.");
-            
-            fetch('../api/table_reservations.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ table_code: selectedTableQR, customer_name: name, customer_phone: phone, reservation_time: time })
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    document.getElementById('resCustName').value = '';
-                    document.getElementById('resCustPhone').value = '';
-                    document.getElementById('resTime').value = '';
-                    openTableQRModal(selectedTableQR, false, true); // Refresh reservations
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            });
-        }
 
         function filterKitchenOrders() {
             const query = (document.getElementById('kitchen_search_input')?.value || '').trim().toLowerCase();
