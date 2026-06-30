@@ -1606,16 +1606,16 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                     $remaining_spend = 0;
                     $progress_percent = 100;
                     
-                    if ($user_tier_id == 1) {
-                        $next_tier_name = 'Gold';
-                        $next_tier_req = 25000;
-                        $remaining_spend = max(0, 25000 - $tier_spend);
-                        $progress_percent = min(100, round(($tier_spend / 25000) * 100));
-                    } elseif ($user_tier_id == 2) {
-                        $next_tier_name = '';
-                        $next_tier_req = 75000;
-                        $remaining_spend = max(0, 75000 - $tier_spend);
-                        $progress_percent = 100;
+                    // Fetch next tier dynamically
+                    $next_tier_stmt = $pdo->prepare("SELECT tier_name, spending_requirement FROM customer_tiers WHERE id = ?");
+                    $next_tier_stmt->execute([$user_tier_id + 1]);
+                    $next_tier = $next_tier_stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($next_tier) {
+                        $next_tier_name = $next_tier['tier_name'];
+                        $next_tier_req = floatval($next_tier['spending_requirement']);
+                        $remaining_spend = max(0, $next_tier_req - $tier_spend);
+                        $progress_percent = min(100, round(($tier_spend / max(1, $next_tier_req)) * 100));
                     }
                     ?>
                     

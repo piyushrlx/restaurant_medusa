@@ -1592,7 +1592,7 @@ $csrf_token = csrf_token();
                             <label class="option-box" onclick="setDeliveryMode('pickup', this)">
                                 <div class="option-box-header">
                                     <input type="radio" name="delivery_option" value="pickup" class="option-radio">
-                                    <span class="option-title">Self Pickup</span>
+                                    <span class="option-title">Takeaway</span>
                                 </div>
                                 <div class="option-desc">Pick up your order from restaurant</div>
                             </label>
@@ -1658,7 +1658,10 @@ $csrf_token = csrf_token();
                                 <h3>Order Summary</h3>
                             </div>
                             <div class="summary-order-id">
-                                <span>ORDER #<span id="order-id-display">ORD-A1022</span></span>
+                                <span>ORDER #<span id="order-id-display"></span></span>
+                                <script>
+                                    document.getElementById('order-id-display').textContent = 'P' + Math.floor(10000 + Math.random() * 90000);
+                                </script>
                                 <span class="summary-items-badge"><span id="item-count">0</span> Items</span>
                             </div>
                         </div>
@@ -2022,10 +2025,17 @@ async function loadCheckoutSummary() {
 function renderOrderItems(items) {
     const listContainer = document.getElementById('order-items-list');
     listContainer.innerHTML = items.map(item => {
-        const imgSrc = item.image_url || item.image;
+        let imgSrc = item.image_url || item.image || '';
+        if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+            if (!imgSrc.startsWith('uploads/')) {
+                imgSrc = 'uploads/' + imgSrc;
+            }
+        }
+        if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop';
+
         return `
         <div class="summary-item">
-            ${imgSrc ? `<img src="${imgSrc}" class="summary-item-img" onerror="this.outerHTML='<div class=\\'summary-item-img-placeholder\\'><i class=\\'fas fa-utensils\\'></i></div>'">` : `<div class="summary-item-img-placeholder"><i class="fas fa-utensils"></i></div>`}
+            <img src="${imgSrc}" class="summary-item-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
             <div class="summary-item-details">
                 <div class="summary-item-name">${item.name}</div>
                 <div class="summary-item-qty">Qty: ${item.quantity}</div>
@@ -2313,6 +2323,7 @@ async function submitBackendOrder(compiledName, phone, compiledAddress, paymentI
     const lastName = document.getElementById('billing_last_name').value.trim();
 
     const data = {
+        order_type: currentDeliveryMode,
         customer_name: compiledName,
         customer_phone: phone,
         delivery_address: compiledAddress,

@@ -110,7 +110,11 @@ try {
         try {
             $couponService = new CouponService($pdo);
             $userId = $_SESSION['user_id'] ?? null;
-            $campaignCode = get_env_var('DEFAULT_CAMPAIGN_CODE', 'SUMMER2026');
+            
+            // Fetch active campaign from database
+            $stmt = $pdo->query("SELECT campaign_code FROM campaigns WHERE is_active = 1 AND (expiry_date IS NULL OR expiry_date > NOW()) ORDER BY id DESC LIMIT 1");
+            $campaignData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $campaignCode = $campaignData ? $campaignData['campaign_code'] : 'SUMMER2026';
 
             // Generate coupon
             $couponCode = $couponService->generateCoupon($userId, $feedbackId, $campaignCode);

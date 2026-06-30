@@ -12,7 +12,7 @@ if (empty($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin',
 try {
     $stmt = $pdo->prepare("
         SELECT order_number, customer_name, delivery_address, status, 
-               driver_lat, driver_lng, driver_last_updated
+               driver_lat, driver_lng, driver_phone, driver_name, driver_last_updated
         FROM orders 
         WHERE status IN ('Picked Up', 'Out for Delivery') 
           AND driver_lat IS NOT NULL 

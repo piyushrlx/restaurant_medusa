@@ -468,7 +468,7 @@ try {
         $all_tiers = $tiers_stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $eligible_tier_id = 1;
-        $eligible_tier_name = 'Silver';
+        $eligible_tier_name = 'Bronze';
         $eligible_discount_percent = 10.00;
         foreach ($all_tiers as $t) {
             if ($lifetime_spend >= floatval($t['spending_requirement'])) {
