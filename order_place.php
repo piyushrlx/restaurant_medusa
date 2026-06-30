@@ -93,8 +93,8 @@ if ($payment_method_key === 'membership') {
 // Build the bill from server-side menu records. Browser prices/names are display-only.
 $subtotal = 0;
 $normalized_cart_items = [];
-$lookup_by_id = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE id = ? AND is_available = 1");
-$lookup_by_name = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE name = ? AND is_available = 1 LIMIT 1");
+$lookup_by_id = $pdo->prepare("SELECT id, name, price, category, subcategory FROM food_items WHERE id = ? AND is_available = 1");
+$lookup_by_name = $pdo->prepare("SELECT id, name, price, category, subcategory FROM food_items WHERE name = ? AND is_available = 1 LIMIT 1");
 
 foreach ($cart_items as $item) {
     if (!is_array($item)) continue;
@@ -129,6 +129,7 @@ foreach ($cart_items as $item) {
         'price' => $item_price,
         'quantity' => $item_qty,
         'category' => $menu_item['category'] ?? '',
+        'subcategory' => $menu_item['subcategory'] ?? '',
         'subtotal' => $item_subtotal
     ];
 }
@@ -333,7 +334,19 @@ try {
         $item_qty = intval($item['quantity'] ?? 1);
         $item_subtotal = floatval($item['subtotal'] ?? ($item_price * $item_qty));
 
-        if ($category && strtolower(trim($category)) === 'liquor') {
+        $subcategory = $item['subcategory'] ?? '';
+
+        $is_alcoholic = false;
+        if ($category && strtolower(trim($category)) === 'beverages') {
+            $non_alcoholic_subs = ['detox', 'signature mocktails', 'coffee (hot)', 'coffee (cold)', 'shakes & smoothies', 'iced teas', 'green tea', 'quenchers'];
+            if (!in_array(strtolower(trim($subcategory)), $non_alcoholic_subs)) {
+                $is_alcoholic = true;
+            }
+        } elseif ($category && strtolower(trim($category)) === 'liquor') {
+            $is_alcoholic = true;
+        }
+
+        if ($is_alcoholic) {
             $pegs_to_add += 8 * $item_qty;
             if ($db_user_id && $food_item_id) {
                 $check_q = $pdo->prepare("SELECT id FROM user_liquor_quota WHERE user_id = ? AND food_item_id = ?");

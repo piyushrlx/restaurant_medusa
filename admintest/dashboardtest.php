@@ -666,9 +666,9 @@ if (isset($_REQUEST['action'])) {
         $params = [];
         
         if (!empty($_POST['search'])) {
-            $sql .= " AND (name LIKE ? OR category LIKE ? OR description LIKE ?)";
+            $sql .= " AND (name LIKE ? OR category LIKE ? OR subcategory LIKE ? OR description LIKE ?)";
             $wildcard = "%" . $_POST['search'] . "%";
-            $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard;
+            $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard; $params[] = $wildcard;
         }
         
         if (!empty($_POST['category']) && $_POST['category'] !== 'all') {
@@ -702,7 +702,7 @@ if (isset($_REQUEST['action'])) {
         
         $filtered = [];
         foreach ($items as $dish) {
-            $is_veg = isVegItem($dish['name'], $dish['description']);
+            $is_veg = ($dish['diet_type'] === 'veg');
             $is_bestseller = in_array($dish['id'], $bestsellers);
             
             if (!empty($_POST['diet_type']) && $_POST['diet_type'] !== 'all') {
@@ -1169,12 +1169,14 @@ if (isset($_REQUEST['action'])) {
         $desc = $_POST['description'];
         $price = $_POST['price'];
         $category = $_POST['category'];
+        $subcategory = $_POST['subcategory'] ?: null;
         $image_url = $_POST['image_url'] ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
+        $diet_type = $_POST['diet_type'] ?? 'veg';
         
         $image_url = downloadImageFromUrl($image_url);
         
-        $stmt = $pdo->prepare("INSERT INTO food_items (name, description, price, category, image_url, is_available) VALUES (?, ?, ?, ?, ?, 1)");
-        $stmt->execute([$name, $desc, $price, $category, $image_url]);
+        $stmt = $pdo->prepare("INSERT INTO food_items (name, description, price, category, subcategory, image_url, diet_type, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+        $stmt->execute([$name, $desc, $price, $category, $subcategory, $image_url, $diet_type]);
         
         echo json_encode(['success' => true]);
         exit;
@@ -1187,12 +1189,14 @@ if (isset($_REQUEST['action'])) {
         $desc = $_POST['description'];
         $price = $_POST['price'];
         $category = $_POST['category'];
+        $subcategory = $_POST['subcategory'] ?: null;
         $image_url = $_POST['image_url'];
+        $diet_type = $_POST['diet_type'] ?? 'veg';
         
         $image_url = downloadImageFromUrl($image_url);
         
-        $stmt = $pdo->prepare("UPDATE food_items SET name = ?, description = ?, price = ?, category = ?, image_url = ? WHERE id = ?");
-        $stmt->execute([$name, $desc, $price, $category, $image_url, $id]);
+        $stmt = $pdo->prepare("UPDATE food_items SET name = ?, description = ?, price = ?, category = ?, subcategory = ?, image_url = ?, diet_type = ? WHERE id = ?");
+        $stmt->execute([$name, $desc, $price, $category, $subcategory, $image_url, $diet_type, $id]);
         
         echo json_encode(['success' => true]);
         exit;
@@ -4004,7 +4008,7 @@ html:not(.light-mode) .form-select:focus{
                             <label class="form-label text-muted small text-uppercase">Category</label>
                             <select id="menu_category_select" class="form-select bg-dark text-white border-secondary form-control-dashboard">
                                 <option value="all">All Categories</option>
-                                <option value="Liquor">Liquor</option>
+                                <option value="Beverages">Beverages</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -4071,7 +4075,7 @@ html:not(.light-mode) .form-select:focus{
             <div id="menu-search-results-card" class="content-card mb-4" style="display:none;">
                 <div class="card-header-premium">
                     <span>Menu Search Results</span>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('menu-search-results-card').style.display='none'">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetMenuSearch()">
                         <i class="fas fa-times me-1"></i> Clear Results
                     </button>
                 </div>
@@ -4117,8 +4121,20 @@ html:not(.light-mode) .form-select:focus{
                                 <td>
                                     <img src="<?php echo htmlspecialchars(getDishImage($dish['image_url'])); ?>" alt="" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format'">
                                 </td>
-                                <td><strong><?php echo htmlspecialchars($dish['name']); ?></strong></td>
-                                <td><span class="text-uppercase"><?php echo htmlspecialchars($dish['category']); ?></span></td>
+                                <td>
+                                    <?php if (($dish['diet_type'] ?? 'veg') === 'veg'): ?>
+                                        <svg viewBox="0 0 24 24" width="16" height="16" class="align-middle me-1" style="display:inline-block;"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#0f8a45" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#0f8a45"/></svg>
+                                    <?php else: ?>
+                                        <svg viewBox="0 0 24 24" width="16" height="16" class="align-middle me-1" style="display:inline-block;"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#c82333" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#c82333"/></svg>
+                                    <?php endif; ?>
+                                    <strong><?php echo htmlspecialchars($dish['name']); ?></strong>
+                                </td>
+                                <td>
+                                    <span class="text-uppercase"><?php echo htmlspecialchars($dish['category']); ?></span>
+                                    <?php if (!empty($dish['subcategory'])): ?>
+                                        <br><small class="text-gold" style="font-size: 0.75rem; letter-spacing: 0.5px;"><?php echo htmlspecialchars($dish['subcategory']); ?></small>
+                                    <?php endif; ?>
+                                </td>
                                 <td>₹<?php echo number_format($dish['price'], 2); ?></td>
                                 <td><small class="text-muted"><?php echo htmlspecialchars($dish['description']); ?></small></td>
                                 <td class="text-center">
@@ -5345,7 +5361,7 @@ html:not(.light-mode) .form-select:focus{
                         <div class="mb-3">
                             <label class="form-label text-muted">Category</label>
                             <select id="menu_category" class="form-select bg-dark text-white border-secondary" required>
-                                <option value="Liquor">Liquor</option>
+                                <option value="Beverages">Beverages</option>
                                 <option value="Soups">Soups</option>
                                 <option value="Salad">Salad</option>
                                 <option value="Bread Basket">Bread Basket</option>
@@ -5361,6 +5377,19 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="Sharing Boards">Sharing Boards</option>
                                 <option value="Brick Oven Pizza">Brick Oven Pizza</option>
                                 <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Subcategory (Optional)</label>
+                            <input type="text" id="menu_subcategory" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Liqueur, Gin, Vodka, Whiskey">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Diet Type</label>
+                            <select id="menu_diet_type" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="veg">Veg</option>
+                                <option value="nonveg">Non-Veg</option>
                             </select>
                         </div>
 
@@ -6087,12 +6116,72 @@ html:not(.light-mode) .form-select:focus{
                 <div class="spinner-border text-gold my-2" role="status" style="width: 1.5rem; height: 1.5rem;">
                     <span class="visually-hidden">Uploading...</span>
                 </div>
-                <div class="dropzone-text text-gold">Uploading image...</div>
+                <div class="dropzone-text text-gold">Compressing & Uploading image...</div>
             `;
 
+            // If it's a standard image (not GIF or SVG), compress and resize on client side
+            const isCompressible = file.type.startsWith('image/') && 
+                                   file.type !== 'image/svg+xml' && 
+                                   file.type !== 'image/gif';
+
+            if (isCompressible) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function () {
+                        // Max 1000px width/height to make upload extremely fast
+                        const MAX_WIDTH = 1000;
+                        const MAX_HEIGHT = 1000;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(function (blob) {
+                            if (!blob) {
+                                uploadImageFile(file, file.name, dropzone, originalHTML);
+                            } else {
+                                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                                const finalName = baseName + '_compressed.jpg';
+                                uploadImageFile(blob, finalName, dropzone, originalHTML);
+                            }
+                        }, 'image/jpeg', 0.75); // 75% quality JPEG
+                    };
+                    img.onerror = function () {
+                        uploadImageFile(file, file.name, dropzone, originalHTML);
+                    };
+                };
+                reader.onerror = function () {
+                    uploadImageFile(file, file.name, dropzone, originalHTML);
+                };
+            } else {
+                uploadImageFile(file, file.name, dropzone, originalHTML);
+            }
+        }
+
+        function uploadImageFile(fileOrBlob, filename, dropzone, originalHTML) {
             const formData = new FormData();
             formData.append('action', 'upload_dish_image');
-            formData.append('dish_image', file);
+            formData.append('dish_image', fileOrBlob, filename);
 
             fetch('dashboardtest.php', {
                 method: 'POST',
@@ -6265,6 +6354,7 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('menu_item_id').value = '';
             document.getElementById('menuModalTitle').textContent = 'Add New Dish';
             document.getElementById('btnMenuSubmit').textContent = 'Save Dish';
+            document.getElementById('menu_diet_type').value = 'veg';
             
             removeDishImage();
             switchImageSource('upload');
@@ -6277,9 +6367,11 @@ html:not(.light-mode) .form-select:focus{
             document.getElementById('menu_item_id').value = dish.id;
             document.getElementById('menu_name').value = dish.name;
             document.getElementById('menu_category').value = dish.category;
+            document.getElementById('menu_subcategory').value = dish.subcategory || '';
             document.getElementById('menu_price').value = dish.price;
             document.getElementById('menu_description').value = dish.description;
             document.getElementById('menu_image_url').value = dish.image_url;
+            document.getElementById('menu_diet_type').value = dish.diet_type || 'veg';
             
             const fileInput = document.getElementById('dish_image_file');
             if (fileInput) fileInput.value = '';
@@ -6317,9 +6409,11 @@ html:not(.light-mode) .form-select:focus{
                 action: action,
                 name: document.getElementById('menu_name').value,
                 category: document.getElementById('menu_category').value,
+                subcategory: document.getElementById('menu_subcategory').value,
                 price: document.getElementById('menu_price').value,
                 description: document.getElementById('menu_description').value,
-                image_url: document.getElementById('menu_image_url').value || ''
+                image_url: document.getElementById('menu_image_url').value || '',
+                diet_type: document.getElementById('menu_diet_type').value
             };
             if (id) bodyData.id = id;
             
@@ -6634,15 +6728,35 @@ html:not(.light-mode) .form-select:focus{
         function performMenuSearch(event) {
             if (event) event.preventDefault();
 
+            const searchVal = document.getElementById('menu_search_input')?.value || '';
+            const catVal = document.getElementById('menu_category_select')?.value || 'all';
+            const availVal = document.getElementById('menu_availability_select')?.value || 'all';
+            const dietVal = document.getElementById('menu_diet_select')?.value || 'all';
+            const minPrice = document.getElementById('menu_price_min')?.value || '';
+            const maxPrice = document.getElementById('menu_price_max')?.value || '';
+            const bestsellerVal = document.getElementById('menu_bestseller_check')?.checked ? '1' : '0';
+
+            // Save search filters state in sessionStorage
+            sessionStorage.setItem('medusa_menu_search', JSON.stringify({
+                search: searchVal,
+                category: catVal,
+                availability: availVal,
+                diet_type: dietVal,
+                min_price: minPrice,
+                max_price: maxPrice,
+                bestseller: bestsellerVal,
+                active: true
+            }));
+
             const params = new URLSearchParams({
                 action: 'search_menu',
-                search: document.getElementById('menu_search_input')?.value || '',
-                category: document.getElementById('menu_category_select')?.value || 'all',
-                availability: document.getElementById('menu_availability_select')?.value || 'all',
-                diet_type: document.getElementById('menu_diet_select')?.value || 'all',
-                min_price: document.getElementById('menu_price_min')?.value || '',
-                max_price: document.getElementById('menu_price_max')?.value || '',
-                bestseller: document.getElementById('menu_bestseller_check')?.checked ? '1' : '0'
+                search: searchVal,
+                category: catVal,
+                availability: availVal,
+                diet_type: dietVal,
+                min_price: minPrice,
+                max_price: maxPrice,
+                bestseller: bestsellerVal
             });
 
             // Show reset button when search is active
@@ -6668,6 +6782,9 @@ html:not(.light-mode) .form-select:focus{
         }
 
         function resetMenuSearch() {
+            // Clear saved search state
+            sessionStorage.removeItem('medusa_menu_search');
+
             // Clear all filter inputs
             const fields = ['menu_search_input', 'menu_price_min', 'menu_price_max'];
             fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -6694,9 +6811,10 @@ html:not(.light-mode) .form-select:focus{
             tbody.innerHTML = menu.map(dish => {
                 let imgSrc = dish.display_image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format';
 
-                const vegBadge = dish.is_veg
-                    ? '<span class="badge" style="background:#16a34a; color:#fff; font-size:0.7rem;">VEG</span>'
-                    : '<span class="badge" style="background:#dc2626; color:#fff; font-size:0.7rem;">NON-VEG</span>';
+                const isVeg = (dish.diet_type === 'veg');
+                const dietBadge = isVeg 
+                    ? `<svg viewBox="0 0 24 24" width="16" height="16" class="align-middle me-1" style="display:inline-block;"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#0f8a45" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#0f8a45"/></svg>`
+                    : `<svg viewBox="0 0 24 24" width="16" height="16" class="align-middle me-1" style="display:inline-block;"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#c82333" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#c82333"/></svg>`;
                 const bestBadge = dish.is_bestseller
                     ? '<span class="badge bg-warning text-dark ms-1" style="font-size:0.7rem;">⭐ BESTSELLER</span>'
                     : '';
@@ -6707,8 +6825,11 @@ html:not(.light-mode) .form-select:focus{
 
                 return `<tr>
                     <td><img src="${imgSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop&auto=format'"></td>
-                    <td><strong>${dish.name}</strong> ${vegBadge}${bestBadge}</td>
-                    <td class="text-uppercase"><small>${dish.category || '—'}</small></td>
+                    <td>${dietBadge}<strong>${dish.name}</strong> ${bestBadge}</td>
+                    <td class="text-uppercase">
+                        <small>${dish.category || '—'}</small>
+                        ${dish.subcategory ? `<br><small class="text-gold" style="font-size:0.75rem; letter-spacing:0.5px;">${dish.subcategory}</small>` : ''}
+                    </td>
                     <td class="text-gold">${fmtINR(dish.price)}</td>
                     <td><small class="text-muted">${(dish.description || '').substring(0, 60)}${(dish.description || '').length > 60 ? '…' : ''}</small></td>
                     <td class="text-center">
@@ -7530,6 +7651,28 @@ html:not(.light-mode) .form-select:focus{
 
             const menuResCard = document.getElementById('menu-search-results-card');
             if (menuResCard) menuResCard.style.display = 'none';
+
+            // Restore menu search if active
+            const savedSearch = sessionStorage.getItem('medusa_menu_search');
+            if (savedSearch) {
+                try {
+                    const criteria = JSON.parse(savedSearch);
+                    if (criteria && criteria.active) {
+                        if (document.getElementById('menu_search_input')) document.getElementById('menu_search_input').value = criteria.search || '';
+                        if (document.getElementById('menu_category_select')) document.getElementById('menu_category_select').value = criteria.category || 'all';
+                        if (document.getElementById('menu_availability_select')) document.getElementById('menu_availability_select').value = criteria.availability || 'all';
+                        if (document.getElementById('menu_diet_select')) document.getElementById('menu_diet_select').value = criteria.diet_type || 'all';
+                        if (document.getElementById('menu_price_min')) document.getElementById('menu_price_min').value = criteria.min_price || '';
+                        if (document.getElementById('menu_price_max')) document.getElementById('menu_price_max').value = criteria.max_price || '';
+                        if (document.getElementById('menu_bestseller_check')) document.getElementById('menu_bestseller_check').checked = criteria.bestseller === '1';
+                        
+                        // Run search to show the results card
+                        setTimeout(() => { performMenuSearch(null); }, 100);
+                    }
+                } catch (e) {
+                    console.error("Error restoring menu search:", e);
+                }
+            }
 
             // Update BI report chart colors when theme toggles
             document.addEventListener('themeChanged', () => {
