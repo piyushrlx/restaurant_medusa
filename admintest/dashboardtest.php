@@ -35,6 +35,26 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ";
     $pdo->exec($createTableQuery);
+
+    $createCampaignsQuery = "
+        CREATE TABLE IF NOT EXISTS `campaigns` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `campaign_code` VARCHAR(50) UNIQUE NOT NULL,
+            `discount_type` ENUM('percentage', 'flat') NOT NULL,
+            `discount_value` DECIMAL(10,2) NOT NULL,
+            `min_order_value` DECIMAL(10,2) DEFAULT 0.00,
+            `max_discount` DECIMAL(10,2) DEFAULT NULL,
+            `expiry_date` DATETIME DEFAULT NULL,
+            `is_active` TINYINT(1) DEFAULT 1,
+            `usage_limit` INT DEFAULT NULL,
+            `used_count` INT DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ";
+    $pdo->exec($createCampaignsQuery);
+
+    // Seed the default SUMMER2026 campaign if not exists
+    $pdo->exec("INSERT IGNORE INTO `campaigns` (`campaign_code`, `discount_type`, `discount_value`) VALUES ('SUMMER2026', 'percentage', 10.00)");
 } catch (PDOException $e) {
     // Fail silently
 }
@@ -888,9 +908,11 @@ if (isset($_REQUEST['action'])) {
         // 4. Best Selling Dishes
         $dish_stmt = $pdo->prepare("SELECT 
                                         oi.item_name, 
+                                        MAX(f.category) as category,
                                         SUM(oi.quantity) as qty_sold, 
                                         SUM(oi.quantity * oi.price) as revenue
                                     FROM order_items oi
+                                    LEFT JOIN food_items f ON oi.food_item_id = f.id
                                     JOIN orders o ON oi.order_id = o.id
                                     WHERE o.order_status = 'completed' AND o.order_date BETWEEN ? AND ?
                                     GROUP BY oi.item_name
@@ -899,7 +921,7 @@ if (isset($_REQUEST['action'])) {
         $dishes = $dish_stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // 5. Payment Breakup
-        $pay_stmt = $pdo->prepare("SELECT total_amount, delivery_address FROM orders WHERE order_status = 'completed' AND order_date BETWEEN ? AND ?");
+        $pay_stmt = $pdo->prepare("SELECT total_amount, delivery_address, payment_method FROM orders WHERE order_status = 'completed' AND order_date BETWEEN ? AND ?");
         $pay_stmt->execute([$start_date, $end_date]);
         $pay_orders = $pay_stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -913,18 +935,19 @@ if (isset($_REQUEST['action'])) {
         ];
         
         foreach ($pay_orders as $po) {
-            $addr = strtoupper($po['delivery_address']);
+            $addr = strtoupper($po['delivery_address'] ?? '');
+            $method = strtolower($po['payment_method'] ?? '');
             $amt = floatval($po['total_amount']);
             
-            if (strpos($addr, 'PAID VIA CASH') !== false) {
+            if ($method === 'cash' || $method === 'cod' || strpos($addr, 'PAID VIA CASH') !== false) {
                 $payments['CASH']['amount'] += $amt; $payments['CASH']['count']++;
-            } elseif (strpos($addr, 'PAID VIA CARD') !== false) {
+            } elseif ($method === 'card' || strpos($addr, 'PAID VIA CARD') !== false) {
                 $payments['CARD']['amount'] += $amt; $payments['CARD']['count']++;
-            } elseif (strpos($addr, 'PAID VIA UPI') !== false) {
+            } elseif ($method === 'upi' || strpos($addr, 'PAID VIA UPI') !== false) {
                 $payments['UPI']['amount'] += $amt; $payments['UPI']['count']++;
-            } elseif (strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false) {
+            } elseif ($method === 'netbanking' || strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false) {
                 $payments['NET BANKING']['amount'] += $amt; $payments['NET BANKING']['count']++;
-            } elseif (strpos($addr, 'PAID VIA WALLET') !== false) {
+            } elseif ($method === 'wallet' || strpos($addr, 'PAID VIA WALLET') !== false) {
                 $payments['WALLET']['amount'] += $amt; $payments['WALLET']['count']++;
             } else {
                 if (strpos($addr, 'TABLE ') === false) {
@@ -1336,6 +1359,75 @@ if (isset($_REQUEST['action'])) {
         exit;
     }
     
+    // --- CAMPAIGNS API START ---
+    if ($action === 'get_campaigns') {
+        $stmt = $pdo->query("SELECT * FROM campaigns ORDER BY created_at DESC");
+        $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'campaigns' => $campaigns]);
+        exit;
+    }
+
+    if ($action === 'create_campaign') {
+        $code = strtoupper(trim($_POST['code']));
+        $type = $_POST['discount_type'];
+        $val = floatval($_POST['discount_value']);
+        $min = floatval($_POST['min_order_value'] ?? 0);
+        $max = !empty($_POST['max_discount']) ? floatval($_POST['max_discount']) : null;
+        $exp = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $limit = !empty($_POST['usage_limit']) ? intval($_POST['usage_limit']) : null;
+        
+        try {
+            $stmt = $pdo->prepare("INSERT INTO campaigns (campaign_code, discount_type, discount_value, min_order_value, max_discount, expiry_date, usage_limit) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$code, $type, $val, $min, $max, $exp, $limit]);
+            echo json_encode(['success' => true, 'message' => 'Campaign created successfully']);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Failed to create campaign (may already exist)']);
+        }
+        exit;
+    }
+
+    if ($action === 'update_campaign') {
+        $id = intval($_POST['id']);
+        $type = $_POST['discount_type'];
+        $val = floatval($_POST['discount_value']);
+        $min = floatval($_POST['min_order_value'] ?? 0);
+        $max = !empty($_POST['max_discount']) ? floatval($_POST['max_discount']) : null;
+        $exp = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $limit = !empty($_POST['usage_limit']) ? intval($_POST['usage_limit']) : null;
+        
+        $stmt = $pdo->prepare("UPDATE campaigns SET discount_type=?, discount_value=?, min_order_value=?, max_discount=?, expiry_date=?, usage_limit=? WHERE id=?");
+        $stmt->execute([$type, $val, $min, $max, $exp, $limit, $id]);
+        
+        echo json_encode(['success' => true, 'message' => 'Campaign updated successfully']);
+        exit;
+    }
+
+    if ($action === 'delete_campaign') {
+        $id = intval($_POST['id']);
+        $stmt = $pdo->prepare("DELETE FROM campaigns WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Campaign deleted successfully']);
+        exit;
+    }
+    
+    if ($action === 'toggle_campaign') {
+        $id = intval($_POST['id']);
+        $stmt = $pdo->prepare("UPDATE campaigns SET is_active = NOT is_active WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Campaign status toggled']);
+        exit;
+    }
+    // --- CAMPAIGNS API END ---
+
+    // Delete Career Application Endpoint
+    if ($action === 'delete_career_application') {
+        $app_id = intval($_POST['id']);
+        $stmt = $pdo->prepare("DELETE FROM career_applications WHERE id = ?");
+        $stmt->execute([$app_id]);
+        echo json_encode(['success' => true, 'message' => 'Application deleted successfully']);
+        exit;
+    }
+
     // Update Career Application Status Endpoint
     if ($action === 'update_career_status') {
         $app_id = intval($_POST['id']);
@@ -1367,7 +1459,14 @@ while ($row = $active_order_stmt->fetch(PDO::FETCH_ASSOC)) {
         $occupied_tables[] = trim($matches[1]);
     }
 }
-$active_tables_count = count(array_unique($occupied_tables));
+
+$reserved_tables = [];
+$res_stmt = $pdo->query("SELECT table_code FROM table_reservations WHERE status = 'active' AND reservation_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE) AND reservation_time <= DATE_ADD(NOW(), INTERVAL 90 MINUTE)");
+while ($row = $res_stmt->fetch(PDO::FETCH_ASSOC)) {
+    $reserved_tables[] = trim($row['table_code']);
+}
+
+$active_tables_count = count(array_unique(array_merge($occupied_tables, $reserved_tables)));
 
 // 7-day Sales Chart Query
 $chart_stmt = $pdo->query("SELECT * FROM (SELECT DATE(order_date) as d, SUM(total_amount) as total FROM orders WHERE order_status = 'completed' GROUP BY DATE(order_date) ORDER BY DATE(order_date) DESC LIMIT 7) as recent_days ORDER BY d ASC");
@@ -1748,6 +1847,10 @@ $table_zones = [
         .table-cell.occupied {
             background-color: rgba(223, 186, 134, 0.04);
             border-color: var(--gold);
+        }
+        .table-cell.reserved {
+            background-color: rgba(234, 179, 8, 0.04);
+            border-color: #eab308;
         }
         .table-cell .table-name {
             font-weight: 700;
@@ -3227,6 +3330,18 @@ html:not(.light-mode) .form-select:focus{
             color: #ffffff;
         }
 
+        #printableReportTemplate {
+            background: white !important;
+            color: black !important;
+        }
+        #printableReportTemplate * {
+            color: #000 !important;
+        }
+        #printableReportTemplate th, #printableReportTemplate td {
+            color: #000 !important;
+            border-color: #ddd !important;
+        }
+
         @media print {
             body * {
                 visibility: hidden;
@@ -3235,12 +3350,11 @@ html:not(.light-mode) .form-select:focus{
                 visibility: visible !important;
             }
             #printableReportTemplate {
+                display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
-                background: white !important;
-                color: black !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
@@ -3358,6 +3472,12 @@ html:not(.light-mode) .form-select:focus{
                 <a class="sidebar-link" onclick="switchTab('reports-tab', this)">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Reports</span>
+                </a>
+            </li>
+            <li>
+                <a class="sidebar-link" onclick="switchTab('campaigns-tab', this)">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Campaigns</span>
                 </a>
             </li>
             <li>
@@ -3782,11 +3902,22 @@ html:not(.light-mode) .form-select:focus{
                 <div class="table-grid">
                     <?php foreach ($tables as $t_code): 
                         $is_occ = in_array($t_code, $occupied_tables);
+                        $is_res = in_array($t_code, $reserved_tables);
+                        
+                        $status_class = '';
+                        $status_icon = '🟢 Free';
+                        if ($is_occ) {
+                            $status_class = 'occupied';
+                            $status_icon = '🔴 Occupied';
+                        } elseif ($is_res) {
+                            $status_class = 'reserved';
+                            $status_icon = '🟡 Reserved';
+                        }
                     ?>
-                    <div class="table-cell <?php echo $is_occ ? 'occupied' : ''; ?>" onclick="openTableQRModal('<?php echo $t_code; ?>', <?php echo $is_occ ? 'true' : 'false'; ?>)">
+                    <div class="table-cell <?php echo $status_class; ?>" onclick="openTableQRModal('<?php echo $t_code; ?>', <?php echo $is_occ ? 'true' : 'false'; ?>, <?php echo $is_res ? 'true' : 'false'; ?>)">
                         <div class="table-name">Table <?php echo $t_code; ?></div>
                         <div class="table-status">
-                            <?php echo $is_occ ? '🔴 Occupied' : '🟢 Free'; ?>
+                            <?php echo $status_icon; ?>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -4212,6 +4343,44 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- ==================== CAMPAIGNS TAB ==================== -->
+        <div id="campaigns-tab" class="tab-panel">
+            <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="page-title">Campaigns Management</h1>
+                    <p class="page-subtitle">Create and track master campaign codes (e.g., SUMMER2026) instead of managing them in .env</p>
+                </div>
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="openAddCampaignModal()">
+                    <i class="fas fa-plus"></i> Generate New Campaign
+                </button>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header-premium">Active & Past Campaigns</div>
+                <div class="table-responsive">
+                    <table class="table premium-table align-middle" id="campaigns-table">
+                        <thead>
+                            <tr>
+                                <th>Campaign Code</th>
+                                <th>Discount</th>
+                                <th>Min. Order</th>
+                                <th>Max. Discount</th>
+                                <th>Expiry Date</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                                <th style="min-width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaigns-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">Loading campaigns...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== REPORTS TAB ==================== -->
         <div id="reports-tab" class="tab-panel">
             
@@ -4239,6 +4408,7 @@ html:not(.light-mode) .form-select:focus{
                             <tr style="background: #f8f8f8;">
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Completed Orders</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Average Order Value (AOV)</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Acceptance / Completion</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Performance Score</th>
                             </tr>
                         </thead>
@@ -4246,6 +4416,7 @@ html:not(.light-mode) .form-select:focus{
                             <tr>
                                 <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_orders"></td>
                                 <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_aov"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_rates"></td>
                                 <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_score"></td>
                             </tr>
                         </tbody>
@@ -4253,13 +4424,55 @@ html:not(.light-mode) .form-select:focus{
                 </div>
 
                 <div style="margin-bottom: 30px;">
-                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Revenue Trend</h2>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <img id="print_sales_chart_img" src="" style="max-width: 100%; height: auto; max-height: 250px; border: 1px solid #eee; padding: 10px; background: white;" alt="Sales Chart">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Customer Analytics</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Total Customers</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">New Customers</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Returning</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Retention Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_total"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_new"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_return"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_rate"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 30px; display: flex; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Revenue Trend</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_sales_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Sales Chart">
+                        </div>
+                    </div>
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Payment Split</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_payment_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Payment Chart">
+                        </div>
                     </div>
                 </div>
 
-                <div style="page-break-before: always; padding-top: 20px;">
+                <div style="margin-bottom: 30px; display: flex; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Category Split</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_category_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Category Chart">
+                        </div>
+                    </div>
+                    <div style="flex: 1; break-inside: avoid;">
+                        <!-- Empty flex space to align sizes nicely -->
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px; padding-top: 20px; break-inside: avoid;">
                     <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Top Performing Items</h2>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
                         <thead>
@@ -4271,6 +4484,38 @@ html:not(.light-mode) .form-select:focus{
                             </tr>
                         </thead>
                         <tbody id="print_top_dishes_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; break-inside: avoid;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Payment Breakdown</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Payment Method</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Transactions</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Amount (INR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_payments_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; break-inside: avoid;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Top Performing Customers</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Customer Name & Phone</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Orders</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total Spent (INR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_customers_tbody">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
@@ -4916,6 +5161,20 @@ html:not(.light-mode) .form-select:focus{
                             <button id="btnDineInAct" class="btn btn-sm btn-gold-action"><i class="fas fa-plus"></i> Open Dine-In Bill</button>
                             <button onclick="printTableQR()" class="btn btn-sm btn-outline-secondary text-white"><i class="fas fa-print"></i> Print</button>
                         </div>
+                        
+                        <!-- Reservations Section -->
+                        <div class="mt-4 pt-3 border-top border-secondary text-start">
+                            <h6 class="text-gold"><i class="fas fa-calendar-check"></i> Manage Reservations</h6>
+                            <div id="tableReservationsList" class="mb-3 small">
+                                <!-- Reservations injected here -->
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" id="resCustName" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white" placeholder="Name">
+                                <input type="text" id="resCustPhone" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white" placeholder="Phone">
+                                <input type="datetime-local" id="resTime" class="form-control form-control-sm form-control-dashboard bg-dark border-secondary text-white">
+                                <button onclick="addTableReservation()" class="btn btn-sm btn-gold-action whitespace-nowrap"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5268,6 +5527,14 @@ html:not(.light-mode) .form-select:focus{
             if (tabId === 'liquor-tab') {
                 loadActiveQuotas();
             }
+            
+            if (tabId === 'reports-tab') {
+                setTimeout(() => { if(typeof loadReportsData === 'function') loadReportsData(null); }, 150);
+            }
+            
+            if (tabId === 'campaigns-tab') {
+                setTimeout(() => { if(typeof fetchCampaigns === 'function') fetchCampaigns(); }, 150);
+            }
         }
 
         // 1. Chart.js Sales Graph
@@ -5288,6 +5555,7 @@ html:not(.light-mode) .form-select:focus{
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -5477,10 +5745,27 @@ html:not(.light-mode) .form-select:focus{
         }
 
         // 6. QR Code Configuration Dialog
-        function openTableQRModal(tableCode, isOccupied) {
+        function openTableQRModal(tableCode, isOccupied, isReserved) {
             selectedTableQR = tableCode;
             document.getElementById('qrModalTitle').textContent = 'Table ' + tableCode + ' Configuration';
             document.getElementById('qrTableLabel').textContent = 'Table ' + tableCode;
+            
+            // Load reservations for this table
+            fetch('../api/table_reservations.php?table_code=' + tableCode)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('tableReservationsList');
+                if (data.success && data.reservations.length > 0) {
+                    list.innerHTML = data.reservations.map(r => 
+                        `<div class="d-flex justify-content-between p-2 border-bottom border-secondary">
+                            <div><i class="fas fa-user-circle"></i> ${r.customer_name} <br> <i class="fas fa-phone"></i> ${r.customer_phone}</div>
+                            <div class="text-end"><span class="badge bg-warning text-dark">${new Date(r.reservation_time).toLocaleString()}</span></div>
+                        </div>`
+                    ).join('');
+                } else {
+                    list.innerHTML = '<div class="text-muted p-2">No upcoming reservations</div>';
+                }
+            });
             
             // Generate QR Code targeting the menu page with this table number prefilled
             // Use PHP to inject the real local Wi-Fi IP address so smartphones can reach it instead of looking for 'localhost'
@@ -6297,6 +6582,29 @@ html:not(.light-mode) .form-select:focus{
         // =====================================================================
         let _kitchenStatusFilter = 'all';
 
+        function addTableReservation() {
+            const name = document.getElementById('resCustName').value;
+            const phone = document.getElementById('resCustPhone').value;
+            const time = document.getElementById('resTime').value;
+            
+            if (!name || !phone || !time) return alert("All fields are required.");
+            
+            fetch('../api/table_reservations.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ table_code: selectedTableQR, customer_name: name, customer_phone: phone, reservation_time: time })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('resCustName').value = '';
+                    document.getElementById('resCustPhone').value = '';
+                    document.getElementById('resTime').value = '';
+                    openTableQRModal(selectedTableQR, false, true); // Refresh reservations
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        }
+
         function filterKitchenOrders() {
             const query = (document.getElementById('kitchen_search_input')?.value || '').trim().toLowerCase();
             const resetBtn = document.getElementById('kitchen-reset-btn');
@@ -6732,6 +7040,7 @@ html:not(.light-mode) .form-select:focus{
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -6778,6 +7087,7 @@ html:not(.light-mode) .form-select:focus{
                     datasets: [{ data, backgroundColor: colors.palette.slice(0, labels.length), borderWidth: 2, borderColor: document.documentElement.classList.contains('light-mode') ? '#fff' : '#0a0a0a' }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '65%',
@@ -6813,6 +7123,7 @@ html:not(.light-mode) .form-select:focus{
                     datasets: [{ data, backgroundColor: colors.palette.slice(0, labels.length), borderWidth: 2, borderColor: document.documentElement.classList.contains('light-mode') ? '#fff' : '#0a0a0a' }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '60%',
@@ -6879,11 +7190,21 @@ html:not(.light-mode) .form-select:focus{
             
             // Populate summary
             document.getElementById('print_report_revenue').textContent = `₹${parseFloat(summary.revenue || 0).toFixed(2)}`;
-            document.getElementById('print_report_orders').textContent = summary.orders_count || 0;
+            document.getElementById('print_report_orders').textContent = `${summary.orders_count || 0} (${summary.online_orders || 0} Online, ${summary.dinein_orders || 0} Dine-In)`;
             document.getElementById('print_report_aov').textContent = `₹${parseFloat(summary.aov || 0).toFixed(2)}`;
+            
+            let acc = parseFloat(summary.acceptance_rate || 0).toFixed(0);
+            let cmp = parseFloat(summary.completion_rate || 0).toFixed(0);
+            document.getElementById('print_report_rates').textContent = `${acc}% / ${cmp}%`;
             
             let score = parseFloat(summary.performance_score || 0);
             document.getElementById('print_report_score').textContent = `${score.toFixed(0)} / 100`;
+            
+            // Customer Analytics
+            document.getElementById('print_report_cust_total').textContent = summary.total_customers || 0;
+            document.getElementById('print_report_cust_new').textContent = summary.new_customers || 0;
+            document.getElementById('print_report_cust_return').textContent = summary.returning_customers || 0;
+            document.getElementById('print_report_cust_rate').textContent = `${summary.retention_rate || 0}%`;
             
             // Top Dishes
             const dishesTbody = document.getElementById('print_top_dishes_tbody');
@@ -6891,18 +7212,69 @@ html:not(.light-mode) .form-select:focus{
             dishes.slice(0, 15).forEach(dish => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="padding: 10px; border: 1px solid #ddd;">${dish.name || 'Unknown'}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.category || 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${dish.item_name || dish.name || 'Unknown'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.category || dish.category_name || 'N/A'}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.qty_sold || 0}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(dish.revenue || 0).toFixed(2)}</td>
                 `;
                 dishesTbody.appendChild(tr);
             });
             
-            // Grab chart canvas image
-            if (typeof repSalesChartInst !== 'undefined' && repSalesChartInst) {
-                document.getElementById('print_sales_chart_img').src = repSalesChartInst.toBase64Image();
+            // Payment Methods
+            const payments = _lastReportData.payments || {};
+            const paymentsTbody = document.getElementById('print_payments_tbody');
+            paymentsTbody.innerHTML = '';
+            Object.entries(payments).forEach(([method, vals]) => {
+                if (vals.count > 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${method.toUpperCase()}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${vals.count}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(vals.amount || 0).toFixed(2)}</td>
+                    `;
+                    paymentsTbody.appendChild(tr);
+                }
+            });
+
+            // Top Customers
+            const customers = _lastReportData.top_customers || [];
+            const customersTbody = document.getElementById('print_customers_tbody');
+            if (customersTbody) {
+                customersTbody.innerHTML = '';
+                customers.slice(0, 10).forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${c.customer_name || 'Unknown'}<br><small style="color:#666;">${c.customer_phone}</small></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${c.order_count || 0}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(c.total_spent || 0).toFixed(2)}</td>
+                    `;
+                    customersTbody.appendChild(tr);
+                });
             }
+
+            // Helper to grab chart canvas with white background
+            function getCanvasDataURL(canvasId) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return '';
+                try {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const ctx = tempCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    ctx.drawImage(canvas, 0, 0);
+                    return tempCanvas.toDataURL('image/jpeg', 0.95);
+                } catch(e) {
+                    console.error('Canvas extract error:', e);
+                    return '';
+                }
+            }
+
+            // Grab chart canvas images
+            document.getElementById('print_sales_chart_img').src = getCanvasDataURL('repSalesChart');
+            document.getElementById('print_payment_chart_img').src = getCanvasDataURL('repPaymentChart');
+            document.getElementById('print_category_chart_img').src = getCanvasDataURL('repCategoryChart');
             
             return true;
         }
@@ -6925,93 +7297,243 @@ html:not(.light-mode) .form-select:focus{
             
             // Temporarily show the template for html2pdf rendering since it clones it
             const originalDisplay = element.style.display;
+            const originalWidth = element.style.width;
+            
             element.style.display = 'block';
+            // Force A4 physical pixel width so that it wraps and sizes identically to print view
+            element.style.width = '794px'; 
             
             const opt = {
                 margin:       10,
                 filename:     'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
             html2pdf().set(opt).from(element).save().then(() => {
                 element.style.display = originalDisplay;
+                element.style.width = originalWidth;
             });
         }
 
-        function exportReportToExcel() {
+        async function exportReportToExcel() {
             if (!_lastReportData) {
                 alert('Please generate a report first by clicking "Update Report".');
                 return;
+            }
+
+            // Dynamically load ExcelJS if not available
+            if (typeof ExcelJS === 'undefined') {
+                const btn = document.querySelector('[onclick="exportReportToExcel()"]');
+                const origHtml = btn ? btn.innerHTML : '';
+                if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+                
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js";
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                if (btn) btn.innerHTML = origHtml;
             }
 
             const summary = _lastReportData.summary || {};
             const dishes = _lastReportData.dishes || [];
             const categories = _lastReportData.categories || [];
             const payments = _lastReportData.payments || {};
+            const customers = _lastReportData.top_customers || [];
 
-            // Helper to create a worksheet with auto-width
-            function createWsWithAutoWidth(aoa) {
-                const ws = XLSX.utils.aoa_to_sheet(aoa);
-                const colWidths = aoa[0].map((_, colIndex) => ({
-                    wch: Math.max(...aoa.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))) + 2
-                }));
-                ws['!cols'] = colWidths;
-                return ws;
-            }
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Medusa Luxury Dashboard';
+            workbook.created = new Date();
 
-            const wb = XLSX.utils.book_new();
+            // Colors
+            const gold = 'FFD4AF37'; // Medusa Gold
+            const dark = 'FF111111'; // Dark bg
+            const white = 'FFFFFFFF';
+            const gray = 'FFF0F0F0';
+            
+            // Reusable Border Style
+            const thinBorder = {
+                top: {style:'thin', color: {argb:'FFCCCCCC'}},
+                left: {style:'thin', color: {argb:'FFCCCCCC'}},
+                bottom: {style:'thin', color: {argb:'FFCCCCCC'}},
+                right: {style:'thin', color: {argb:'FFCCCCCC'}}
+            };
 
             // 1. Summary Sheet
-            const summaryAoa = [
-                ['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT'],
-                ['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`],
-                ['Generated At', new Date().toLocaleString()],
-                [],
-                ['Metric', 'Value', 'Growth vs Last Period'],
-                ['Total Revenue (INR)', parseFloat(summary.revenue || 0).toFixed(2), `${summary.revenue_growth || 0}%`],
-                ['Completed Orders', summary.orders_count || 0, `${summary.orders_growth || 0}%`],
-                ['Average Order Value (INR)', parseFloat(summary.aov || 0).toFixed(2), `${summary.aov_growth || 0}%`],
-                ['Performance Score', `${summary.performance_score || 0}/100`, '']
-            ];
-            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(summaryAoa), "Summary");
+            const wsSum = workbook.addWorksheet('Summary');
+            wsSum.columns = [{ width: 25 }, { width: 20 }, { width: 25 }];
+            
+            // Header
+            wsSum.addRow(['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT']);
+            wsSum.mergeCells('A1:C1');
+            wsSum.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsSum.getCell('A1').font = { color: { argb: gold }, size: 14, bold: true };
+            wsSum.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+            wsSum.getRow(1).height = 30;
+
+            wsSum.addRow([]);
+            wsSum.addRow(['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`]);
+            wsSum.mergeCells('B3:C3');
+            wsSum.addRow(['Generated At', new Date().toLocaleString()]);
+            wsSum.mergeCells('B4:C4');
+            wsSum.addRow([]);
+
+            // Subheader - Financials
+            const sumHeader = wsSum.addRow(['Financial Metric', 'Value', 'Growth vs Last Period']);
+            sumHeader.eachCell(c => {
+                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                c.font = { color: { argb: white }, bold: true };
+                c.border = thinBorder;
+            });
+
+            // Data - Financials
+            const revG = parseFloat(summary.revenue_growth || 0);
+            const ordG = parseFloat(summary.orders_growth || 0);
+            const aovG = parseFloat(summary.aov_growth || 0);
+
+            const r1 = wsSum.addRow(['Total Revenue (INR)', parseFloat(summary.revenue || 0), (revG>0?'+':'') + revG + '%']);
+            r1.getCell(2).numFmt = '₹#,##0.00';
+            r1.getCell(3).font = { color: { argb: revG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r1.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            const r2 = wsSum.addRow(['Completed Orders', parseInt(summary.orders_count || 0), (ordG>0?'+':'') + ordG + '%']);
+            r2.getCell(3).font = { color: { argb: ordG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r2.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            const r3 = wsSum.addRow(['Average Order Value (INR)', parseFloat(summary.aov || 0), (aovG>0?'+':'') + aovG + '%']);
+            r3.getCell(2).numFmt = '₹#,##0.00';
+            r3.getCell(3).font = { color: { argb: aovG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r3.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            const r4 = wsSum.addRow(['Performance Score', `${summary.performance_score || 0}/100`, '']);
+            r4.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            wsSum.addRow([]);
+
+            // Subheader - Operations
+            const opsHeader = wsSum.addRow(['Operations & Customers', 'Value', '']);
+            wsSum.mergeCells(`B${opsHeader.number}:C${opsHeader.number}`);
+            opsHeader.eachCell(c => {
+                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                c.font = { color: { argb: white }, bold: true };
+                c.border = thinBorder;
+            });
+            
+            const addOpRow = (label, val) => {
+                const row = wsSum.addRow([label, val, '']);
+                wsSum.mergeCells(`B${row.number}:C${row.number}`);
+                row.eachCell(c => { c.border = thinBorder; });
+                row.getCell(2).alignment = { horizontal: 'right' };
+            };
+            
+            addOpRow('Online Orders', summary.online_orders || 0);
+            addOpRow('Dine-in Orders', summary.dinein_orders || 0);
+            addOpRow('Acceptance Rate', `${parseFloat(summary.acceptance_rate || 0).toFixed(1)}%`);
+            addOpRow('Completion Rate', `${parseFloat(summary.completion_rate || 0).toFixed(1)}%`);
+            addOpRow('Total Customers Reached', summary.total_customers || 0);
+            addOpRow('New Guest Registrations', summary.new_customers || 0);
+            addOpRow('Returning Customer Base', summary.returning_customers || 0);
+            addOpRow('Guest Retention Rate', `${parseFloat(summary.retention_rate || 0).toFixed(1)}%`);
 
             // 2. Top Dishes Sheet
-            const dishesAoa = [['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue (INR)']];
-            dishes.forEach((d, i) => dishesAoa.push([i + 1, d.item_name || d.name, d.category || 'N/A', d.qty_sold, parseFloat(d.revenue || 0).toFixed(2)]));
-            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(dishesAoa), "Top Dishes");
-
-            // 3. Category Performance Sheet
-            const catAoa = [['Category', 'Units Sold', 'Revenue (INR)']];
-            categories.forEach(c => catAoa.push([c.category_name || c.category, c.units_sold || c.qty, parseFloat(c.revenue || 0).toFixed(2)]));
-            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(catAoa), "Categories");
-
-            // 4. Payments Sheet
-            const payAoa = [['Payment Method', 'Transactions', 'Total Amount (INR)']];
-            Object.entries(payments).forEach(([method, vals]) => {
-                if (vals.count > 0) payAoa.push([method.toUpperCase(), vals.count, parseFloat(vals.amount || 0).toFixed(2)]);
+            const wsDishes = workbook.addWorksheet('Top Dishes');
+            wsDishes.columns = [{ width: 10 }, { width: 35 }, { width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsDishes.addRow(['BEST SELLING DISHES']);
+            wsDishes.mergeCells('A1:E1');
+            wsDishes.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsDishes.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsDishes.getCell('A1').alignment = { horizontal: 'center' };
+            
+            const dh = wsDishes.addRow(['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue (INR)']);
+            dh.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+            
+            dishes.forEach((d, i) => {
+                const r = wsDishes.addRow([i + 1, d.item_name || d.name, d.category || 'N/A', parseInt(d.qty_sold), parseFloat(d.revenue || 0)]);
+                r.getCell(5).numFmt = '₹#,##0.00';
+                r.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 3 ? 'right' : 'left' }; });
+                r.getCell(1).alignment = { horizontal: 'center' };
             });
-            XLSX.utils.book_append_sheet(wb, createWsWithAutoWidth(payAoa), "Payments");
 
-            // Write and download
-            XLSX.writeFile(wb, 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+            // 3. Category Performance
+            const wsCat = workbook.addWorksheet('Categories');
+            wsCat.columns = [{ width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsCat.addRow(['CATEGORY PERFORMANCE']);
+            wsCat.mergeCells('A1:C1');
+            wsCat.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsCat.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsCat.getCell('A1').alignment = { horizontal: 'center' };
+
+            const ch = wsCat.addRow(['Category', 'Units Sold', 'Revenue (INR)']);
+            ch.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            categories.forEach(c => {
+                const r = wsCat.addRow([c.category_name || c.category, parseInt(c.units_sold || c.qty), parseFloat(c.revenue || 0)]);
+                r.getCell(3).numFmt = '₹#,##0.00';
+                r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 1 ? 'right' : 'left' }; });
+            });
+
+            // 4. Payments
+            const wsPay = workbook.addWorksheet('Payments');
+            wsPay.columns = [{ width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsPay.addRow(['PAYMENT BREAKDOWN']);
+            wsPay.mergeCells('A1:C1');
+            wsPay.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsPay.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsPay.getCell('A1').alignment = { horizontal: 'center' };
+
+            const ph = wsPay.addRow(['Payment Method', 'Transactions', 'Total Amount (INR)']);
+            ph.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            Object.entries(payments).forEach(([method, vals]) => {
+                if (vals.count > 0) {
+                    const r = wsPay.addRow([method.toUpperCase(), parseInt(vals.count), parseFloat(vals.amount || 0)]);
+                    r.getCell(3).numFmt = '₹#,##0.00';
+                    r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 1 ? 'right' : 'left' }; });
+                }
+            });
+
+            // 5. Top Customers
+            const wsCust = workbook.addWorksheet('Top Customers');
+            wsCust.columns = [{ width: 25 }, { width: 15 }, { width: 15 }, { width: 20 }];
+            
+            wsCust.addRow(['TOP PERFORMING CUSTOMERS']);
+            wsCust.mergeCells('A1:D1');
+            wsCust.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsCust.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsCust.getCell('A1').alignment = { horizontal: 'center' };
+
+            const cuh = wsCust.addRow(['Customer Name', 'Phone', 'Orders', 'Total Spent (INR)']);
+            cuh.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            customers.slice(0, 50).forEach(c => {
+                const r = wsCust.addRow([c.customer_name || 'Unknown', c.customer_phone, parseInt(c.order_count || 0), parseFloat(c.total_spent || 0)]);
+                r.getCell(4).numFmt = '₹#,##0.00';
+                r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 2 ? 'right' : 'left' }; });
+            });
+
+            // Trigger Download
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // =====================================================================
         // 8. AUTO-INITIALIZATION
         // =====================================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-load reports when reports tab is activated
-            const reportsLink = document.querySelector('[onclick*="reports-tab"]');
-            if (reportsLink) {
-                const origOnclick = reportsLink.getAttribute('onclick');
-                reportsLink.setAttribute('onclick', origOnclick);
-                reportsLink.addEventListener('click', function() {
-                    setTimeout(() => { loadReportsData(null); }, 150);
-                });
-            }
-
             // Real-time debounced orders search (search-as-you-type on the text field)
             const orderInput = document.getElementById('order_search_input');
             if (orderInput) {
@@ -7170,10 +7692,33 @@ html:not(.light-mode) .form-select:focus{
                             <button class="btn-action-circle btn-action-circle-light" onclick="updateCareerStatus(${app.id}, 'Reviewed')" title="Mark Reviewed"><i class="fas fa-check-double"></i></button>
                             <button class="btn-action-circle btn-action-circle-success" onclick="updateCareerStatus(${app.id}, 'Shortlisted')" title="Shortlist"><i class="fas fa-user-check"></i></button>
                             <button class="btn-action-circle btn-action-circle-danger" onclick="updateCareerStatus(${app.id}, 'Rejected')" title="Reject"><i class="fas fa-user-times"></i></button>
+                            <button class="btn-action-circle btn-action-circle-danger" style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626;" onclick="deleteCareerApplication(${app.id})" title="Delete Application"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        function deleteCareerApplication(id) {
+            if (!confirm('Are you sure you want to permanently delete this application?')) return;
+            
+            fetch('dashboardtest.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'delete_career_application',
+                    id: id
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    performCareersSearch(); // Refresh list
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete'));
+                }
+            })
+            .catch(() => alert('Network error while deleting application.'));
         }
 
         function updateCareerStatus(id, newStatus) {
@@ -8210,7 +8755,204 @@ function printTableQR() {
             btn.disabled = false;
         }
     });
+
+    // =====================================================================
+    // CAMPAIGNS MANAGEMENT JS
+    // =====================================================================
+    function fetchCampaigns() {
+        setTableLoading('campaigns-table-body', 8);
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=get_campaigns'
+        })
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('campaigns-table-body');
+            if (!data.success || !data.campaigns || data.campaigns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No campaigns found.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.campaigns.map(c => {
+                const isAct = parseInt(c.is_active) === 1;
+                const typeStr = c.discount_type === 'percentage' ? c.discount_value + '%' : '₹' + c.discount_value;
+                const statusBadge = isAct ? '<span class="status-badge bg-success text-dark">Active</span>' : '<span class="status-badge bg-danger text-white">Inactive</span>';
+                
+                let usageStr = c.used_count;
+                if (c.usage_limit) usageStr += ' / ' + c.usage_limit;
+                
+                return `<tr>
+                    <td><strong>${c.campaign_code}</strong></td>
+                    <td class="text-gold">${typeStr}</td>
+                    <td>₹${c.min_order_value}</td>
+                    <td>${c.max_discount ? '₹'+c.max_discount : 'N/A'}</td>
+                    <td>${c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : 'Never'}</td>
+                    <td>${usageStr}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn-action-circle btn-action-circle-light" onclick='openEditCampaignModal(${JSON.stringify(c).replace(/'/g, "&#39;")})' title="Edit Campaign"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action-circle ${isAct ? 'btn-action-circle-warning' : 'btn-action-circle-success'}" onclick="toggleCampaign(${c.id})" title="${isAct ? 'Deactivate' : 'Activate'}"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'}"></i></button>
+                            <button class="btn-action-circle btn-action-circle-danger" style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626;" onclick="deleteCampaign(${c.id})" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        })
+        .catch(() => showSearchError('campaigns-table-body', 8, 'Failed to load campaigns'));
+    }
+
+    function generateRandomCampaignCode() {
+        const input = document.getElementById('campaign_code');
+        if (input.readOnly) return; // Cannot modify if editing
+        
+        const rand4 = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+        let base = input.value.trim().toUpperCase();
+        
+        // If empty, or looks like a previously auto-generated code, replace entirely
+        if (!base || /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(base)) {
+            input.value = rand4() + '-' + rand4();
+            return;
+        }
+        
+        // Otherwise, keep the custom event name the admin typed
+        // If it already ends with -XXXX from a previous click, replace just that part
+        if (/-[A-Z0-9]{4}$/.test(base)) {
+            base = base.substring(0, base.length - 5);
+        }
+        
+        input.value = base + '-' + rand4();
+    }
+
+    function openAddCampaignModal() {
+        document.getElementById('campaignForm').reset();
+        document.getElementById('campaign_id').value = '';
+        document.getElementById('campaignModalLabel').innerText = 'Generate New Campaign';
+        new bootstrap.Modal(document.getElementById('campaignModal')).show();
+    }
+
+    function openEditCampaignModal(campaign) {
+        document.getElementById('campaignForm').reset();
+        document.getElementById('campaign_id').value = campaign.id;
+        document.getElementById('campaign_code').value = campaign.campaign_code;
+        document.getElementById('campaign_code').readOnly = true;
+        document.getElementById('discount_type').value = campaign.discount_type;
+        document.getElementById('discount_value').value = campaign.discount_value;
+        document.getElementById('min_order_value').value = campaign.min_order_value || '';
+        document.getElementById('max_discount').value = campaign.max_discount || '';
+        document.getElementById('expiry_date').value = campaign.expiry_date ? campaign.expiry_date.replace(' ', 'T').slice(0,16) : '';
+        document.getElementById('usage_limit').value = campaign.usage_limit || '';
+        
+        document.getElementById('campaignModalLabel').innerText = 'Edit Campaign';
+        new bootstrap.Modal(document.getElementById('campaignModal')).show();
+    }
+
+    document.getElementById('campaignForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('campaign_id').value;
+        const formData = new URLSearchParams(new FormData(this));
+        formData.append('action', id ? 'update_campaign' : 'create_campaign');
+        if (id) formData.append('id', id);
+
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('campaignModal')).hide();
+                fetchCampaigns();
+            } else {
+                alert(data.message || 'Error saving campaign');
+            }
+        });
+    });
+
+    function toggleCampaign(id) {
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=toggle_campaign&id=' + id
+        })
+        .then(() => fetchCampaigns());
+    }
+
+    function deleteCampaign(id) {
+        if (!confirm('Are you sure you want to delete this campaign permanently?')) return;
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=delete_campaign&id=' + id
+        })
+        .then(() => fetchCampaigns());
+    }
 </script>
+
+<!-- Campaign Modal -->
+<div class="modal fade" id="campaignModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+            <div class="modal-header border-bottom border-dark">
+                <h5 class="modal-title text-gold" id="campaignModalLabel">Generate Campaign</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="campaignForm">
+                    <input type="hidden" name="campaign_id" id="campaign_id">
+                    <div class="mb-3">
+                        <label class="form-label text-white">Campaign Code</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="code" id="campaign_code" required placeholder="e.g. SUMMER2026" style="text-transform: uppercase;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="generateRandomCampaignCode()" title="Generate Random Code">
+                                <i class="fas fa-random"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Discount Type</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="discount_type" id="discount_type" required>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="flat">Flat Amount (₹)</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Discount Value</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="discount_value" id="discount_value" required min="1" step="0.01">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Min Order Value (₹)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="min_order_value" id="min_order_value" min="0" step="0.01">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Max Discount (₹)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="max_discount" id="max_discount" min="0" step="0.01" placeholder="(Optional for %)">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Expiry Date</label>
+                            <input type="datetime-local" class="form-control bg-dark text-white border-secondary" name="expiry_date" id="expiry_date">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Usage Limit</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="usage_limit" id="usage_limit" min="1" placeholder="(Total overall uses)">
+                        </div>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Coupon</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
 

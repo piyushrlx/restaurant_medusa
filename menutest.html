@@ -357,6 +357,34 @@
                 const navLogout = document.getElementById('navLogout');
                 if (navLogout) navLogout.style.display = 'none';
 
+                // Check if table is reserved
+                fetch('api/check_table_access.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ table_code: tableCode })
+                }).then(res => res.json()).then(data => {
+                    if (data.is_reserved) {
+                        const phone = prompt(`This table is reserved for ${data.time}.\n\nIf this is your reservation, please enter your phone number to unlock the menu:`);
+                        if (phone) {
+                            fetch('api/check_table_access.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ table_code: tableCode, phone: phone })
+                            }).then(res => res.json()).then(unlockData => {
+                                if (unlockData.is_reserved) {
+                                    alert(unlockData.error || 'Incorrect phone number.');
+                                    document.body.innerHTML = '<h2 style="color:white; text-align:center; margin-top:20%">Table Locked</h2>';
+                                } else {
+                                    alert('Menu unlocked successfully.');
+                                }
+                            });
+                        } else {
+                            alert('You cannot order from a reserved table.');
+                            document.body.innerHTML = '<h2 style="color:white; text-align:center; margin-top:20%">Table Locked</h2>';
+                        }
+                    }
+                });
+
                 const navMenu = document.getElementById('navMenu');
                 if (navMenu) navMenu.href = 'menutest.html?table=' + tableCode;
                 const navCart = document.getElementById('navCart');
