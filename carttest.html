@@ -1403,12 +1403,13 @@
         function displayCartItems(items) {
             const tbody = document.getElementById('cartTableBody');
             tbody.innerHTML = items.map(item => {
-                let imgSrc = item.image_url || 'default.jpg';
-                if (imgSrc && !imgSrc.startsWith('http://') && !imgSrc.startsWith('https://') && !imgSrc.startsWith('//')) {
+                let imgSrc = item.image_url || '';
+                if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
                     if (!imgSrc.startsWith('uploads/')) {
                         imgSrc = 'uploads/' + imgSrc;
                     }
                 }
+                if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop';
 
                 // Retrieve description and veg status if present, otherwise fallback
                 const desc = item.description || 'Fresh premium dish crafted with quality ingredients.';
@@ -1421,7 +1422,7 @@
                 <tr>
                     <td class="item-col">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${imgSrc}" class="cart-img" onerror="this.src='uploads/default.jpg'">
+                            <img src="${imgSrc}" class="cart-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
                             <div class="dish-details">
                                 <span class="cart-item-name">${item.name}</span>
                                 <div class="diet-label mt-1">

@@ -1082,12 +1082,17 @@ if (isset($_REQUEST['action'])) {
         $order_id = $_POST['order_id'];
         $status = $_POST['status'];
         
+        // Fetch order details first to determine order_type
+        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address, order_type FROM orders WHERE id = ?");
+        $o_stmt->execute([$order_id]);
+        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
+
         // Map order_status to tracking_status to keep customer live tracking updated
         $tracking_status = 'placed';
         if ($status === 'preparing') {
             $tracking_status = 'preparing';
         } elseif ($status === 'ready') {
-            $tracking_status = 'out_for_delivery';
+            $tracking_status = (isset($ord_info['order_type']) && $ord_info['order_type'] === 'takeaway') ? 'ready_for_pickup' : 'out_for_delivery';
         } elseif ($status === 'completed') {
             $tracking_status = 'delivered';
         } elseif ($status === 'cancelled') {
@@ -1097,10 +1102,6 @@ if (isset($_REQUEST['action'])) {
         $stmt = $pdo->prepare("UPDATE orders SET order_status = ?, tracking_status = ? WHERE id = ?");
         $stmt->execute([$status, $tracking_status, $order_id]);
         
-        // Fetch order details for notification
-        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address FROM orders WHERE id = ?");
-        $o_stmt->execute([$order_id]);
-        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
         if ($ord_info) {
             require_once dirname(__DIR__) . '/includes/notifications_helper.php';
             
@@ -1282,30 +1283,37 @@ if (isset($_REQUEST['action'])) {
             'gst_rate' => intval($_POST['gst_rate'] ?? 18),
             'packing_charge' => floatval($_POST['packing_charge'] ?? 0.00),
             'opening_hours' => $_POST['opening_hours'] ?? '11:00 AM - 11:00 PM',
-            'silver_discount' => floatval($_POST['silver_discount'] ?? 10.00),
-            'gold_discount' => floatval($_POST['gold_discount'] ?? 15.00),
-            'platinum_discount' => floatval($_POST['platinum_discount'] ?? 20.00),
-            'gold_threshold' => floatval($_POST['gold_threshold'] ?? 25000.00),
-            'platinum_threshold' => floatval($_POST['platinum_threshold'] ?? 75000.00),
+            'bronze_discount' => floatval($_POST['bronze_discount'] ?? 10.00),
+            'silver_threshold' => floatval($_POST['silver_threshold'] ?? 25000.00),
+            'silver_discount' => floatval($_POST['silver_discount'] ?? 15.00),
+            'gold_threshold' => floatval($_POST['gold_threshold'] ?? 75000.00),
+            'gold_discount' => floatval($_POST['gold_discount'] ?? 20.00),
+            'platinum_threshold' => floatval($_POST['platinum_threshold'] ?? 150000.00),
+            'platinum_discount' => floatval($_POST['platinum_discount'] ?? 25.00),
             'points_earning_percent' => floatval($_POST['points_earning_percent'] ?? 2.00),
             'inactivity_months' => intval($_POST['inactivity_months'] ?? 3),
             'inactivity_deduction_percent' => floatval($_POST['inactivity_deduction_percent'] ?? 20.00),
+            'last_annual_reset_year' => $settings['last_annual_reset_year'] ?? date('Y')
         ];
         file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT));
 
         // Sync to customer_tiers table
         try {
-            // Update Silver (ID 1)
+            // Update Bronze (ID 1)
             $stmt1 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, points_earning_percent = ? WHERE id = 1");
-            $stmt1->execute([$settings['silver_discount'], $settings['points_earning_percent']]);
+            $stmt1->execute([$settings['bronze_discount'], $settings['points_earning_percent']]);
 
-            // Update Gold (ID 2)
+            // Update Silver (ID 2)
             $stmt2 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 2");
-            $stmt2->execute([$settings['gold_discount'], $settings['gold_threshold'], $settings['points_earning_percent']]);
+            $stmt2->execute([$settings['silver_discount'], $settings['silver_threshold'], $settings['points_earning_percent']]);
 
-            // Update Platinum (ID 3)
+            // Update Gold (ID 3)
             $stmt3 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 3");
-            $stmt3->execute([$settings['platinum_discount'], $settings['platinum_threshold'], $settings['points_earning_percent']]);
+            $stmt3->execute([$settings['gold_discount'], $settings['gold_threshold'], $settings['points_earning_percent']]);
+            
+            // Update Platinum (ID 4)
+            $stmt4 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 4");
+            $stmt4->execute([$settings['platinum_discount'], $settings['platinum_threshold'], $settings['points_earning_percent']]);
         } catch (PDOException $db_err) {
             // Fail silently or log
         }
@@ -4925,27 +4933,35 @@ html:not(.light-mode) .form-select:focus{
                     <div class="card-header-premium mt-4 pt-4 border-top border-secondary">Loyalty & Tier Configurations</div>
                     
                     <div class="row g-3">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Bronze Discount (%)</label>
+                            <input type="number" step="0.1" id="set_bronze_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['bronze_discount']); ?>" required min="0" max="100">
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Silver Discount (%)</label>
                             <input type="number" step="0.1" id="set_silver_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['silver_discount']); ?>" required min="0" max="100">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Gold Discount (%)</label>
                             <input type="number" step="0.1" id="set_gold_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_discount']); ?>" required min="0" max="100">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Platinum Discount (%)</label>
                             <input type="number" step="0.1" id="set_platinum_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_discount']); ?>" required min="0" max="100">
                         </div>
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted text-uppercase small">Gold Spending Requirement (₹)</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Silver Spend Req. (₹)</label>
+                            <input type="number" step="0.01" id="set_silver_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['silver_threshold']); ?>" required min="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Gold Spend Req. (₹)</label>
                             <input type="number" step="0.01" id="set_gold_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_threshold']); ?>" required min="0">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted text-uppercase small">Platinum Spending Requirement (₹)</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Platinum Spend Req. (₹)</label>
                             <input type="number" step="0.01" id="set_platinum_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_threshold']); ?>" required min="0">
                         </div>
                     </div>
@@ -6364,9 +6380,11 @@ html:not(.light-mode) .form-select:focus{
                     gst_rate: document.getElementById('set_gst_rate').value,
                     packing_charge: document.getElementById('set_packing_charge').value,
                     opening_hours: document.getElementById('set_opening_hours').value,
+                    bronze_discount: document.getElementById('set_bronze_discount').value,
                     silver_discount: document.getElementById('set_silver_discount').value,
                     gold_discount: document.getElementById('set_gold_discount').value,
                     platinum_discount: document.getElementById('set_platinum_discount').value,
+                    silver_threshold: document.getElementById('set_silver_threshold').value,
                     gold_threshold: document.getElementById('set_gold_threshold').value,
                     platinum_threshold: document.getElementById('set_platinum_threshold').value,
                     points_earning_percent: document.getElementById('set_points_earning_percent').value,

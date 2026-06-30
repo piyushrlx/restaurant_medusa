@@ -20,12 +20,15 @@ try {
                 throw new Exception("Order number is required");
             }
 
-            $stmt = $pdo->prepare("SELECT order_number, customer_name, customer_phone, delivery_address, total_amount, payment_method, status FROM orders WHERE order_number = ?");
+            $stmt = $pdo->prepare("SELECT order_number, customer_name, customer_phone, delivery_address, total_amount, payment_method, status, order_type FROM orders WHERE order_number = ?");
             $stmt->execute([$order_number]);
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$order) {
                 throw new Exception("Order not found");
+            }
+            if ($order['order_type'] === 'takeaway') {
+                throw new Exception("This is a Takeaway order. Customer will pick it up at the restaurant.");
             }
 
             // Standardize status if order_status is used instead of status

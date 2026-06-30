@@ -156,10 +156,12 @@ $settings['opening_hours'] = get_env_var('OPENING_HOURS', $settings['opening_hou
 
 $gst_rate = isset($settings['gst_rate']) ? intval($settings['gst_rate']) : 18;
 $packing_charge = isset($settings['packing_charge']) ? floatval($settings['packing_charge']) : 0.00;
+$order_type_raw = trim($data['order_type'] ?? 'home');
+$db_order_type = ($order_type_raw === 'pickup' || $order_type_raw === 'takeaway') ? 'takeaway' : 'delivery';
 $restaurant_name = $settings['restaurant_name'];
 
 $gst = $subtotal * ($gst_rate / 100);
-$delivery = floatval(get_env_var('DELIVERY_CHARGE', '40.00'));
+$delivery = ($db_order_type === 'takeaway') ? 0.00 : floatval(get_env_var('DELIVERY_CHARGE', '40.00'));
 $packing = (strpos(strtolower($delivery_address), 'table') !== false) ? 0.00 : $packing_charge;
 $total = $subtotal + $gst + $delivery + $packing;
 
@@ -385,7 +387,7 @@ if (isset($pdo)) {
         $db_user_id = $_SESSION['user_id'] ?? null;
         $db_status = 'pending'; // Default status for new orders
         
-        $ins_order = $pdo->prepare("INSERT INTO orders (order_number, customer_name, customer_phone, delivery_address, total_amount, order_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $ins_order = $pdo->prepare("INSERT INTO orders (order_number, customer_name, customer_phone, delivery_address, total_amount, order_status, user_id, order_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $ins_order->execute([
             $order_id,
             $customer_name,
@@ -393,7 +395,8 @@ if (isset($pdo)) {
             $delivery_address,
             $total,
             $db_status,
-            $db_user_id
+            $db_user_id,
+            $db_order_type
         ]);
         
         $db_order_id = $pdo->lastInsertId();
