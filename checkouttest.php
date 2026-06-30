@@ -2737,7 +2737,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
 </script>
 <?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
 <?php require_once __DIR__ . '/includes/order_toast.php'; ?>

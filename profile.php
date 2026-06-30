@@ -128,6 +128,9 @@ foreach ($orders as $o) {
     }
 }
 
+$all_tiers_stmt = $pdo->query("SELECT * FROM customer_tiers ORDER BY spending_requirement ASC");
+$all_tiers_data = $all_tiers_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Fetch user's current loyalty tier
 $tier_stmt = $pdo->prepare("
     SELECT t.id as tier_id, t.tier_name, t.discount_percent 
@@ -1512,7 +1515,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     $trk_active = !in_array(strtolower($order['order_status']), ['completed','cancelled']) && $trk_token;
                                                     ?>
                                                     <?php if ($trk_active): ?>
-                                                    <a href="track.php?token=<?php echo htmlspecialchars($trk_token); ?>" class="btn btn-sm text-gold" style="border: 1px solid var(--gold); background: transparent; font-weight: 500; border-radius: 6px; padding: 0.4rem 0.8rem;" target="_blank">
+                                                    <a href="track.php?token=<?php echo htmlspecialchars($trk_token); ?>" class="btn btn-sm text-gold" style="border: 1px solid var(--gold); background: transparent; font-weight: 500; border-radius: 6px; padding: 0.4rem 0.8rem;">
                                                         <i class="fa-solid fa-location-dot me-1"></i> Track Order
                                                     </a>
                                                     <?php endif; ?>
@@ -1657,7 +1660,7 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 
                                 <div>
-                                    <button class="btn btn-sm text-white px-4 py-2 text-nowrap" style="background-color: #143628; border-radius: 6px; font-weight: 500;">
+                                    <button type="button" class="btn btn-sm text-white px-4 py-2 text-nowrap" style="background-color: #143628; border-radius: 6px; font-weight: 500;" data-bs-toggle="modal" data-bs-target="#tierBenefitsModal">
                                         View Tier Benefits <i class="fa-solid fa-chevron-right ms-2" style="font-size: 0.7rem;"></i>
                                     </button>
                                 </div>
@@ -2186,10 +2189,6 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- How It Works Section -->
                     <div class="rounded-4 border p-4 p-md-5 position-relative mb-4" style="background-color: #F9F6F0; border-color: rgba(0,0,0,0.05) !important; overflow: hidden;">
-                        <div class="position-absolute" style="bottom: -20px; right: -20px; opacity: 0.1; pointer-events: none; z-index: 0;">
-                            <img src="assets/images/wine_watermark.png" width="300" alt="" onerror="this.style.display='none'">
-                        </div>
-
                         <div class="position-relative" style="z-index: 1; max-width: 800px;">
                             <div class="d-flex align-items-center mb-4 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.3) !important;">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="background-color: #5a2a35; width: 32px; height: 32px;">
@@ -4127,6 +4126,47 @@ $login_logs = $login_logs_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 @keyframes liveAcc { 0%,100%{opacity:1} 50%{opacity:0.3} }
 </style>
+
+<!-- Tier Benefits Modal -->
+<div class="modal fade" id="tierBenefitsModal" tabindex="-1" aria-labelledby="tierBenefitsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title" id="tierBenefitsModalLabel" style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.5rem; font-weight: 600;">Loyalty Tier Benefits</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-4">
+        <p class="text-muted mb-4">Learn about the perks you receive as you level up your loyalty tier by ordering with us.</p>
+        <div class="row g-4">
+          <?php foreach ($all_tiers_data as $tier): ?>
+          <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm" style="background-color: #fcfbf8; border-radius: 12px;">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #e6e6e6, #f5f5f5); border: 2px solid #d4af37;">
+                    <i class="fa-solid fa-crown" style="font-size: 1.5rem; color: #b48530;"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-0" style="font-family: 'Playfair Display', serif; font-weight: 600; color: #5a2a35;"><?php echo htmlspecialchars($tier['tier_name']); ?></h5>
+                    <small class="text-muted"><?php echo $tier['spending_requirement'] > 0 ? number_format($tier['spending_requirement']) . '+ pts required' : 'Base Tier'; ?></small>
+                  </div>
+                </div>
+                <ul class="list-unstyled mb-0 text-muted" style="font-size: 0.9rem; line-height: 1.6;">
+                  <li><i class="fa-solid fa-check text-success me-2"></i><strong><?php echo floatval($tier['discount_percent']); ?>% Discount</strong> on all orders</li>
+                  <li><i class="fa-solid fa-check text-success me-2"></i>Earn <strong><?php echo floatval($tier['points_earning_percent']); ?>%</strong> of order value back in points</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn text-white w-100 py-2" style="background-color: #143628; border-radius: 8px; font-weight: 500;" data-bs-dismiss="modal">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <?php require_once __DIR__ . '/includes/active_order_bar.php'; ?>
 <?php require_once __DIR__ . '/includes/order_toast.php'; ?>
