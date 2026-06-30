@@ -4024,6 +4024,11 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="Sharing Boards">Sharing Boards</option>
                                 <option value="Brick Oven Pizza">Brick Oven Pizza</option>
                                 <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
+                                <option value="Pasta & Risotto Station">Pasta & Risotto Station</option>
+                                <option value="Veg Appetizer">Veg Appetizer</option>
+                                <option value="Veg Indian Main Course">Veg Indian Main Course</option>
+                                <option value="Non-Veg Indian Main Course">Non-Veg Indian Main Course</option>
+                                <option value="Tandoori Starter">Tandoori Starter</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -5377,6 +5382,11 @@ html:not(.light-mode) .form-select:focus{
                                 <option value="Sharing Boards">Sharing Boards</option>
                                 <option value="Brick Oven Pizza">Brick Oven Pizza</option>
                                 <option value="Non-Veg Appetizer">Non-Veg Appetizer</option>
+                                <option value="Pasta & Risotto Station">Pasta & Risotto Station</option>
+                                <option value="Veg Appetizer">Veg Appetizer</option>
+                                <option value="Veg Indian Main Course">Veg Indian Main Course</option>
+                                <option value="Non-Veg Indian Main Course">Non-Veg Indian Main Course</option>
+                                <option value="Tandoori Starter">Tandoori Starter</option>
                             </select>
                         </div>
 

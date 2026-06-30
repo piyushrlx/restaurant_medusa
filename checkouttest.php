@@ -1399,48 +1399,32 @@ $csrf_token = csrf_token();
         #themeToggleBtn {
             display: none !important;
         }
-</style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_env_var('GOOGLE_MAPS_API_KEY', ''); ?>&libraries=places"></script>
-
-    <!-- Navbar Performance Optimization Links -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-        <script>
-        const originalWarn = console.warn;
-        console.warn = function(...args) {
-            if (args[0] && typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com should not be used in production")) {
-                return;
-            }
-            originalWarn.apply(console, args);
-        };
-    </script>
-<script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        if (typeof tailwind !== 'undefined') {
-            tailwind.config = {
-                corePlugins: {
-                    preflight: false
-                },
-                theme: {
-                    extend: {
-                        colors: {
-                            gold: '#b8973a',
-                            'gold-light': '#d4af5a',
-                        }
-                    }
-                }
-            };
-        }
-    </script>
+    </style>
 </head>
 <body>
-    <!-- NAVBAR -->
-    <?php include_once __DIR__ . '/includes/navbar.php'; ?>
-    <script src="assets/js/navbar.js" defer></script>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="menutest.html" style="display: flex; align-items: center; gap: 8px;">
+                <img src="assets/images/versace_logo.png" alt="Medusa Logo" style="height: 32px; border-radius: 50%; border: 1px solid var(--gold); padding: 1px;">
+                Medusa
+            </a>
+            <a href="carttest.html" class="btn btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Back to Cart</a>
+        </div>
+    </nav>
 
-    <form id="orderForm">
-        <input type="hidden" id="name" value="">
-        <input type="hidden" id="address" value="">
-        <input type="hidden" id="csrf_token" value="<?php echo $csrf_token; ?>">
+    <div class="checkout-hero">
+        <div class="container">
+            <h1>Checkout</h1>
+            <p>Medusa Premium Theme</p>
+        </div>
+    </div>
+
+    <div class="container my-5 fade-up">
+        <form id="orderForm">
+            <!-- Hidden inputs for legacy API compatibility -->
+            <input type="hidden" id="name" value="">
+            <input type="hidden" id="address" value="">
+            <input type="hidden" id="csrf_token" value="<?php echo $csrf_token; ?>">
 
         <div class="checkout-page-title">
             <h1>Checkout</h1>
@@ -1529,15 +1513,22 @@ $csrf_token = csrf_token();
                                     <label>Email Address*</label>
                                 </div>
                             </div>
-                            
-                            <div class="col-12 mt-3 d-flex gap-2">
-                                <div class="medusa-input-group mb-0 flex-grow-1">
-                                    <input type="text" id="billing_street" placeholder=" " required>
-                                    <label>Delivery Address*</label>
-                                </div>
-                                <div class="medusa-square-btn" id="btnChooseFromMap" title="Choose from Map">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </div>
+
+                            <div class="col-12">
+                                <label for="billing_state" class="form-label-checkout">State<span class="required-asterisk">*</span></label>
+                                <select id="billing_state" class="form-control-checkout" required>
+                                    <!-- Populated dynamically via JS -->
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="billing_zip" class="form-label-checkout">ZIP Code<span class="required-asterisk">*</span></label>
+                                <input type="text" id="billing_zip" class="form-control-checkout" placeholder="ZIP Code" value="" required>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="billing_phone" class="form-label-checkout">Phone<span class="required-asterisk">*</span></label>
+                                <input type="tel" id="billing_phone" class="form-control-checkout" placeholder="Phone" value="<?php echo htmlspecialchars($user_details['phone']); ?>" required pattern="[0-9]{10}" maxlength="10" minlength="10" title="Phone number must be exactly 10 digits">
                             </div>
                             <div class="col-12 mt-3">
                                 <div class="medusa-input-group mb-0">
@@ -1586,27 +1577,17 @@ $csrf_token = csrf_token();
                                     <input type="radio" name="delivery_option" value="home" class="option-radio" checked>
                                     <span class="option-title">Home Delivery</span>
                                 </div>
-                                <div class="option-desc">Delivered to your doorstep</div>
-                                <div class="option-meta text-red">20-25 mins</div>
-                            </label>
-                            <label class="option-box" onclick="setDeliveryMode('pickup', this)">
-                                <div class="option-box-header">
-                                    <input type="radio" name="delivery_option" value="pickup" class="option-radio">
-                                    <span class="option-title">Takeaway</span>
+                                <div class="summary-totals-row" id="points-discount-row" style="display: none; color: #dfba86;">
+                                    <span>Points Redeemed (<span id="redeemed-points-label">0</span> pts)</span>
+                                    <span id="checkout-points-discount">-₹0.00</span>
                                 </div>
-                                <div class="option-desc">Pick up your order from restaurant</div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="medusa-card mb-0">
-                        <div class="medusa-card-header">
-                            <div class="medusa-card-icon" style="background: #5A1827; color: #ffffff;">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <div>
-                                <h2 class="medusa-card-title">Payment Method</h2>
-                                <p class="medusa-card-subtitle">Select a payment method</p>
+                                <div class="summary-totals-row grand-total">
+                                    <span>Total</span>
+                                    <span id="checkout-total">₹0.00</span>
+                                </div>
+                                <div class="mt-2 text-end text-success small" id="points-earned-tracker" style="display: none; font-weight: 600;">
+                                    <i class="fa-solid fa-gift"></i> You will earn <span id="earned-points-value">0</span> reward points!
+                                </div>
                             </div>
                         </div>
 
@@ -1650,106 +1631,94 @@ $csrf_token = csrf_token();
                     </div>
                 </div>
 
-                <div class="col-lg-5">
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <div class="summary-header-top">
-                                <i class="fas fa-shopping-bag"></i>
-                                <h3>Order Summary</h3>
-                            </div>
-                            <div class="summary-order-id">
-                                <span>ORDER #<span id="order-id-display"></span></span>
-                                <script>
-                                    document.getElementById('order-id-display').textContent = 'P' + Math.floor(10000 + Math.random() * 90000);
-                                </script>
-                                <span class="summary-items-badge"><span id="item-count">0</span> Items</span>
-                            </div>
-                        </div>
-                        <div class="summary-body">
-                            <div id="order-items-list"></div>
-
-                            <div class="summary-totals">
-                                <div class="summary-row">
-                                    <span class="lbl">Subtotal</span>
-                                    <span class="val" id="checkout-subtotal">₹0.00</span>
-                                </div>
-                                <div class="summary-row">
-                                    <span class="lbl">GST (<span id="gst-rate-display"><?php echo $gst_rate; ?></span>%)</span>
-                                    <span class="val" id="checkout-gst">₹0.00</span>
-                                </div>
-                                <div class="summary-row" id="packing-row">
-                                    <span class="lbl">Packing Charges</span>
-                                    <span class="val" id="checkout-packing">₹<?php echo number_format($packing_charge, 2); ?></span>
-                                </div>
-                                <div class="summary-row" id="delivery-row">
-                                    <span class="lbl">Delivery Fee</span>
-                                    <span class="val" id="checkout-delivery">₹40.00</span>
-                                </div>
-                                <div class="summary-row text-success" id="total-discount-row" style="display: none; align-items: center; position: relative;">
-                                    <span class="lbl" style="display: flex; align-items: center; gap: 6px; position: relative;">
-                                        Total Discount 
-                                        <i class="fas fa-info-circle discount-info-icon" id="discountInfoBtn" style="cursor: pointer; color: var(--gold);"></i>
-                                        <div id="discountPopover" style="display: none; position: absolute; top: 120%; left: 0; background: var(--bg-dark, #0a0a0a); border: 1px solid rgba(223, 186, 134, 0.3); padding: 12px; border-radius: 8px; z-index: 100; min-width: 200px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
-                                            <div id="bd-mrp-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);">Discount on MRP</span><span class="text-success" id="bd-mrp">-₹0.00</span></div>
-                                            <div id="bd-tier-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);" id="bd-tier-label">Tier Discount</span><span class="text-success" id="bd-tier">-₹0.00</span></div>
-                                            <div id="bd-coupon-row" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;"><span style="color: rgba(255,255,255,0.7);">Coupon Discount</span><span class="text-success" id="bd-coupon">-₹0.00</span></div>
-                                            <div id="bd-points-row" style="display: none; justify-content: space-between; font-size: 0.8rem;"><span style="color: rgba(255,255,255,0.7);">Reward Points</span><span class="text-success" id="bd-points">-₹0.00</span></div>
+                                <!-- UPI -->
+                                <div class="payment-option-item" data-target="upi-panel">
+                                    <input type="radio" name="payment_method" value="upi" id="payment_upi" class="payment-option-radio">
+                                    <div class="payment-option-content">
+                                        <label for="payment_upi" class="payment-option-text" style="cursor: pointer;">UPI (PhonePe, Paytm, BHIM)</label>
+                                        <div class="payment-option-icons">
+                                            <i class="fas fa-mobile-alt"></i>
                                         </div>
-                                    </span>
-                                    <span class="val" id="checkout-total-discount">-₹0.00</span>
+                                    </div>
                                 </div>
-                                <div class="summary-row grand-total">
-                                    <span class="lbl">Grand Total</span>
-                                    <span class="val" id="checkout-total">₹0.00</span>
+
+                                <!-- Other Banking Options -->
+                                <div class="payment-option-item" data-target="banking-panel">
+                                    <input type="radio" name="payment_method" value="banking" id="payment_banking" class="payment-option-radio">
+                                    <div class="payment-option-content">
+                                        <label for="payment_banking" class="payment-option-text" style="cursor: pointer;">Cards & Net Banking</label>
+                                        <div class="payment-option-icons">
+                                            <i class="fas fa-credit-card"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Membership Card Option -->
+                                <div class="payment-option-item" data-target="membership-panel">
+                                    <input type="radio" name="payment_method" value="membership" id="payment_membership" class="payment-option-radio">
+                                    <div class="payment-option-content">
+                                        <label for="payment_membership" class="payment-option-text" style="cursor: pointer;">Membership Pass</label>
+                                        <div class="payment-option-icons">
+                                            <i class="fas fa-id-badge" style="color: #C09B5B;"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="coupon-container">
-                                <div class="coupon-title">
-                                    <i class="fas fa-tag"></i> Have a coupon code?
+                            <!-- Payment Details Panels -->
+                            <div id="gpay-panel" class="payment-details-panel active">
+                                Pay instantly using your Google Pay app or registered Google Account. Safe and encrypted transaction.
+                            </div>
+                            <div id="upi-panel" class="payment-details-panel">
+                                Enter your UPI ID (e.g. username@upi) to receive a payment request on your phone.
+                                <div class="mt-2">
+                                    <input type="text" id="upi_id" class="form-control-checkout" placeholder="Enter UPI ID (e.g. user@bank)">
                                 </div>
-                                <div id="couponMessage" style="display: none; font-size: 0.85rem; margin-bottom: 10px;"></div>
-                                <div class="coupon-input-wrapper">
-                                    <input type="text" id="couponCodeInput" placeholder="Enter coupon code">
-                                    <button type="button" id="applyCouponBtn">Apply</button>
+                            </div>
+                            <div id="banking-panel" class="payment-details-panel">
+                                Pay securely using Credit/Debit Cards, Net Banking, or other supported wallets.
+                            </div>
+                            <div id="membership-panel" class="payment-details-panel">
+                                Pay using your Medusa Elite Membership Pass.
+                                <div class="mt-3">
+                                    <input type="text" id="membership_card_number" name="membership_card_number" class="form-control-checkout mb-2" placeholder="Card Number (e.g. 8824 4590 1200 0002)">
+                                    <input type="text" id="membership_cvv" name="membership_cvv" class="form-control-checkout" placeholder="CVV (3 digits)" maxlength="4">
                                 </div>
                             </div>
 
-                            <!-- Points Container -->
-                            <div class="points-container mt-3" style="border: 1px dashed rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.01); border-radius: 8px; padding: 1.1rem; transition: all 0.3s;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <div class="coupon-title m-0" style="font-size: 1rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
-                                        <i class="fas fa-star"></i> Medusa Rewards
-                                    </div>
-                                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">
-                                        Tier: <strong class="text-white"><?php echo htmlspecialchars($user_tier_name); ?></strong>
-                                    </div>
-                                </div>
-                                <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 12px;">
-                                    Available Points: <strong class="text-white"><?php echo $user_points_balance; ?></strong> <span style="font-size: 0.75rem; opacity: 0.7;">(1 pt = ₹1)</span>
-                                </p>
-                                
-                                <?php if ($user_points_balance > 0): ?>
-                                <div class="form-check form-switch" style="display: flex; align-items: center; gap: 10px; padding-left: 0;">
-                                    <input class="form-check-input" type="checkbox" id="redeem_loyalty_points" style="margin: 0; width: 40px; height: 20px; cursor: pointer; border-color: rgba(255,255,255,0.3); background-color: rgba(255,255,255,0.1);">
-                                    <label class="form-check-label text-white" for="redeem_loyalty_points" style="font-size: 0.9rem; cursor: pointer; padding-top: 2px;">
-                                        Redeem points on this order
-                                    </label>
-                                </div>
-                                <?php else: ?>
-                                <div style="font-size: 0.8rem; color: #ef4444;">
-                                    <i class="fas fa-info-circle"></i> You don't have enough points to redeem yet.
-                                </div>
-                                <?php endif; ?>
-                                
-                                <div id="points-earned-tracker" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: rgba(255,255,255,0.6);">
-                                    <i class="fas fa-gift text-success me-1"></i> You will earn <strong class="text-success"><span id="earned-points-value">0</span> points</strong> on this order!
-                                </div>
+                            <p class="privacy-policy-text">
+                                Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.
+                            </p>
+
+                            <!-- Place Order Button -->
+                            <button type="submit" class="btn-place-order w-100">
+                                <span>Place order</span>
+                            </button>
+
+                            <!-- Center-aligned Modify Order -->
+                            <div class="modify-order-container">
+                                <a href="carttest.html" class="modify-order-link">
+                                    <i class="fas fa-edit"></i> Modify Order
+                                </a>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
-
+    <!-- Footer Section -->
+    <footer class="main-footer py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Column 1: Menu Links -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-title">Menu Links</h5>
+                    <ul class="footer-links list-unstyled m-0">
+                        <li><a href="index.html"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>FAQ</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right me-2"></i>Contacts</a></li>
+                    </ul>
                 </div>
 
             </div>
@@ -2024,33 +1993,6 @@ async function loadCheckoutSummary() {
 
 function renderOrderItems(items) {
     const listContainer = document.getElementById('order-items-list');
-    listContainer.innerHTML = items.map(item => {
-        let imgSrc = item.image_url || item.image || '';
-        if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
-            if (!imgSrc.startsWith('uploads/')) {
-                imgSrc = 'uploads/' + imgSrc;
-            }
-        }
-        if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop';
-
-        return `
-        <div class="summary-item">
-            <img src="${imgSrc}" class="summary-item-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
-            <div class="summary-item-details">
-                <div class="summary-item-name">${item.name}</div>
-                <div class="summary-item-qty">Qty: ${item.quantity}</div>
-            </div>
-            <div class="summary-item-price">₹${(item.price * item.quantity).toFixed(2)}</div>
-        </div>
-        `;
-    }).join('');
-
-    const totalQty = items.reduce((sum, item) => sum + (parseInt(item.quantity) || 1), 0);
-    const countEl = document.getElementById('item-count');
-    if (countEl) countEl.textContent = totalQty;
-}
-function _old_renderOrderItems(items) {
-    const listContainer = document.getElementById('order-items-list');
     listContainer.innerHTML = items.map(item => `
         <tr>
             <td class="product-name">${item.name} × ${item.quantity}</td>
@@ -2073,11 +2015,22 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     let couponDiscount = 0;
     if (typeof appliedCouponCode !== 'undefined' && appliedCouponCode && appliedCouponDiscountPercent > 0) {
         couponDiscount = subtotal * (appliedCouponDiscountPercent / 100);
+        document.getElementById('coupon-percent-label').textContent = appliedCouponDiscountPercent;
+        document.getElementById('checkout-discount').textContent = `-₹${couponDiscount.toFixed(2)}`;
+        document.getElementById('coupon-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('coupon-discount-row').style.display = 'none';
     }
 
     let tierDiscount = 0;
     if (typeof USER_TIER_DISCOUNT_PERCENT !== 'undefined' && USER_TIER_DISCOUNT_PERCENT > 0) {
         tierDiscount = subtotal * (USER_TIER_DISCOUNT_PERCENT / 100);
+        document.getElementById('tier-name-label').textContent = USER_TIER_NAME;
+        document.getElementById('tier-percent-label').textContent = USER_TIER_DISCOUNT_PERCENT;
+        document.getElementById('checkout-tier-discount').textContent = `-₹${tierDiscount.toFixed(2)}`;
+        document.getElementById('tier-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('tier-discount-row').style.display = 'none';
     }
 
     let pointsDiscount = 0;
@@ -2085,36 +2038,11 @@ function updateSummaryUI(subtotal, delivery, gst, total, packing = 0) {
     const baseTotal = subtotal + gst + delivery + packing - couponDiscount - tierDiscount;
     if (redeemCheckbox && redeemCheckbox.checked && typeof USER_POINTS_BALANCE !== 'undefined') {
         pointsDiscount = Math.min(USER_POINTS_BALANCE, Math.max(0, baseTotal));
-    }
-    
-    const totalDiscount = mrpDiscount + couponDiscount + tierDiscount + pointsDiscount;
-    
-    const discountRow = document.getElementById('total-discount-row');
-    if (discountRow) {
-        if (totalDiscount > 0) {
-            discountRow.style.display = 'flex';
-            document.getElementById('checkout-total-discount').textContent = `-₹${totalDiscount.toFixed(2)}`;
-            
-            // Update popover rows
-            const bdMrp = document.getElementById('bd-mrp-row');
-            if(bdMrp) { bdMrp.style.display = mrpDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-mrp').textContent = `-₹${mrpDiscount.toFixed(2)}`; }
-            
-            const bdTier = document.getElementById('bd-tier-row');
-            if(bdTier) { 
-                bdTier.style.display = tierDiscount > 0 ? 'flex' : 'none'; 
-                const bdTierLabel = document.getElementById('bd-tier-label');
-                if (bdTierLabel) bdTierLabel.textContent = `${USER_TIER_NAME} Tier (${USER_TIER_DISCOUNT_PERCENT}%)`;
-                document.getElementById('bd-tier').textContent = `-₹${tierDiscount.toFixed(2)}`; 
-            }
-            
-            const bdCoupon = document.getElementById('bd-coupon-row');
-            if(bdCoupon) { bdCoupon.style.display = couponDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-coupon').textContent = `-₹${couponDiscount.toFixed(2)}`; }
-            
-            const bdPoints = document.getElementById('bd-points-row');
-            if(bdPoints) { bdPoints.style.display = pointsDiscount > 0 ? 'flex' : 'none'; document.getElementById('bd-points').textContent = `-₹${pointsDiscount.toFixed(2)}`; }
-        } else {
-            discountRow.style.display = 'none';
-        }
+        document.getElementById('redeemed-points-label').textContent = pointsDiscount;
+        document.getElementById('checkout-points-discount').textContent = `-₹${pointsDiscount.toFixed(2)}`;
+        document.getElementById('points-discount-row').style.display = 'flex';
+    } else {
+        document.getElementById('points-discount-row').style.display = 'none';
     }
     
     const finalTotal = Math.max(0, baseTotal - pointsDiscount);
@@ -2555,186 +2483,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // We will just patch the global delivery variable if it exists or reset the total element later.
         
         // Hide "Pay with cash on delivery" text in payment panel if needed, but the main goal is just hiding address fields!
-    }
-});
-
-// UI Toggles for Redesign
-let currentDeliveryMode = 'home';
-let currentPaymentMode = 'online';
-
-function setDeliveryMode(mode, element) {
-    currentDeliveryMode = mode;
-    document.querySelectorAll('input[name="delivery_option"]').forEach(radio => radio.closest('.option-box').classList.remove('active'));
-    element.classList.add('active');
-    element.querySelector('input').checked = true;
-    loadCheckoutSummary();
-}
-
-function setPaymentMode(mode, element) {
-    currentPaymentMode = mode;
-    document.querySelectorAll('input[name="payment_method"]').forEach(radio => radio.closest('.option-box').classList.remove('active'));
-    element.classList.add('active');
-    element.querySelector('input').checked = true;
-}
-
-// Map Modal Logic
-let map, marker;
-const mapModal = document.getElementById('mapModal');
-const btnChooseFromMap = document.getElementById('btnChooseFromMap');
-const closeMapModalBtn = document.getElementById('closeMapModal');
-const confirmLocationBtn = document.getElementById('confirmLocationBtn');
-
-let selectedLat = 22.5726; // Default: Kolkata
-let selectedLon = 88.3639;
-
-if(btnChooseFromMap) {
-    btnChooseFromMap.addEventListener('click', function() {
-        mapModal.style.display = 'block';
-        
-        if (!map) {
-            // Google Maps Styling (Dark theme)
-            const darkTheme = [
-              {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
-              {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
-              {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
-              {featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{color: '#d59563'}]},
-              {featureType: 'road', elementType: 'geometry', stylers: [{color: '#38414e'}]},
-              {featureType: 'road', elementType: 'geometry.stroke', stylers: [{color: '#212a37'}]},
-              {featureType: 'road', elementType: 'labels.text.fill', stylers: [{color: '#9ca5b3'}]},
-              {featureType: 'water', elementType: 'geometry', stylers: [{color: '#17263c'}]},
-              {featureType: 'water', elementType: 'labels.text.fill', stylers: [{color: '#515c6d'}]},
-              {featureType: 'water', elementType: 'labels.text.stroke', stylers: [{color: '#17263c'}]}
-            ];
-
-            const mapOptions = {
-                zoom: 13,
-                center: {lat: selectedLat, lng: selectedLon},
-                styles: darkTheme,
-                disableDefaultUI: true,
-                zoomControl: true
-            };
-            map = new google.maps.Map(document.getElementById('leafletMap'), mapOptions);
-
-            marker = new google.maps.Marker({
-                position: {lat: selectedLat, lng: selectedLon},
-                map: map,
-                draggable: true,
-                animation: google.maps.Animation.DROP
-            });
-
-            google.maps.event.addListener(marker, 'dragend', function() {
-                const position = marker.getPosition();
-                selectedLat = position.lat();
-                selectedLon = position.lng();
-            });
-
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    selectedLat = position.coords.latitude;
-                    selectedLon = position.coords.longitude;
-                    const pos = {lat: selectedLat, lng: selectedLon};
-                    map.setCenter(pos);
-                    map.setZoom(15);
-                    marker.setPosition(pos);
-                });
-            }
-        }
-        
-        // Trigger resize so it renders correctly inside the modal
-        setTimeout(() => { 
-            google.maps.event.trigger(map, 'resize'); 
-            map.setCenter({lat: selectedLat, lng: selectedLon}); 
-        }, 200);
-    });
-}
-
-if(closeMapModalBtn) {
-    closeMapModalBtn.addEventListener('click', () => { mapModal.style.display = 'none'; });
-}
-
-if(confirmLocationBtn) {
-    confirmLocationBtn.addEventListener('click', function() {
-        const originalText = confirmLocationBtn.innerHTML;
-        confirmLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
-        
-        const geocoder = new google.maps.Geocoder();
-        const latlng = {lat: selectedLat, lng: selectedLon};
-        
-        geocoder.geocode({ location: latlng }, function(results, status) {
-            confirmLocationBtn.innerHTML = originalText;
-            if (status === 'OK' && results[0]) {
-                let street = 'Selected Location';
-                let city = '';
-                let state = '';
-                let zip = '';
-                
-                results[0].address_components.forEach(comp => {
-                    if (comp.types.includes('route') || comp.types.includes('neighborhood')) street = comp.long_name;
-                    if (comp.types.includes('locality')) city = comp.long_name;
-                    if (comp.types.includes('administrative_area_level_1')) state = comp.long_name;
-                    if (comp.types.includes('postal_code')) zip = comp.long_name;
-                });
-                
-                if (street === 'Selected Location') {
-                    street = results[0].formatted_address.split(',')[0];
-                }
-                
-                document.getElementById('billing_street').value = street + (city ? ', ' + city : '');
-                
-                const cityInput = document.getElementById('billing_city');
-                if(cityInput) cityInput.value = city;
-                
-                const stateInput = document.getElementById('billing_state');
-                if(stateInput) stateInput.value = state;
-                
-                const zipInput = document.getElementById('billing_zip');
-                if(zipInput) zipInput.value = zip;
-                
-                mapModal.style.display = 'none';
-            } else {
-                alert('Could not determine address from maps API. Status: ' + status);
-            }
-        });
-    });
-}
-
-// Handle Notification Dropdown Click to Mark as Read
-const notifDropdown = document.getElementById('notifDropdown');
-if (notifDropdown) {
-    notifDropdown.addEventListener('show.bs.dropdown', function () {
-        const bellIcon = document.getElementById('notifBellIcon');
-        const redDot = document.getElementById('notifRedDot');
-        
-        if (bellIcon && bellIcon.classList.contains('bell-ringing')) {
-            // Remove animation and dot instantly for better UX
-            bellIcon.classList.remove('bell-ringing');
-            if (redDot) redDot.style.display = 'none';
-            
-            // Call API to update database
-            fetch('api/mark-notifications-read.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).catch(err => console.error('Error marking notifications as read:', err));
-        }
-    });
-}
-
-// Pre-load coupon from sessionStorage if set from cart page
-document.addEventListener('DOMContentLoaded', () => {
-    const preAppliedCoupon = sessionStorage.getItem('applied_coupon_code');
-    if (preAppliedCoupon) {
-        const couponInput = document.getElementById('couponCodeInput');
-        if (couponInput) {
-            couponInput.value = preAppliedCoupon;
-            const applyBtn = document.getElementById('applyCouponBtn');
-            if (applyBtn) {
-                const couponInputGroup = document.getElementById('couponInputGroup');
-                if (couponInputGroup) couponInputGroup.classList.add('active');
-                applyBtn.click();
-            }
-        }
     }
 });
 </script>
