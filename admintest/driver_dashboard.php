@@ -498,11 +498,11 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             <div class="reason-options">
                 <select id="cancellationReason" class="modal-select">
                     <option value="" disabled selected>Select a reason...</option>
-                    <option value="reason1">Reason 1</option>
-                    <option value="reason2">Reason 2</option>
-                    <option value="reason3">Reason 3</option>
-                    <option value="reason4">Reason 4</option>
-                    <option value="reason5">Reason 5</option>
+                    <option value="reason1">Customer Not Available</option>
+                    <option value="reason2">Customer Requested Cancellation/Customer Refused Delivery</option>
+                    <option value="reason3">Delivery Address Not Found</option>
+                    <option value="reason4">Vehicle Breakdown / Emergency</option>
+                    <option value="reason5">Unable to Contact Customer</option>
                 </select>
             </div>
             

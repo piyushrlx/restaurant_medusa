@@ -80,8 +80,8 @@ $zip = trim($data['zip'] ?? '');
 // Build subtotal from server-side menu records. Browser prices are never trusted.
 $subtotal = 0;
 $normalized_cart_items = [];
-$lookup_by_id = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE id = ? AND is_available = 1");
-$lookup_by_name = $pdo->prepare("SELECT id, name, price, category FROM food_items WHERE name = ? AND is_available = 1 LIMIT 1");
+$lookup_by_id = $pdo->prepare("SELECT id, name, price, category, subcategory FROM food_items WHERE id = ? AND is_available = 1");
+$lookup_by_name = $pdo->prepare("SELECT id, name, price, category, subcategory FROM food_items WHERE name = ? AND is_available = 1 LIMIT 1");
 
 foreach ($cart_items as $item) {
     if (!is_array($item)) {
@@ -121,6 +121,7 @@ foreach ($cart_items as $item) {
         'price' => $item_price,
         'quantity' => $item_qty,
         'category' => $menu_item['category'] ?? '',
+        'subcategory' => $menu_item['subcategory'] ?? '',
         'subtotal' => $item_subtotal
     ];
 }
@@ -415,8 +416,19 @@ if (isset($pdo)) {
         foreach ($cart_items as $item) {
             $food_item_id = intval($item['food_item_id'] ?? 0);
             $category = trim($item['category'] ?? '');
+            $subcategory = trim($item['subcategory'] ?? '');
 
-            if ($category && strtolower($category) === 'liquor') {
+            $is_alcoholic = false;
+            if ($category && strtolower($category) === 'beverages') {
+                $non_alcoholic_subs = ['detox', 'signature mocktails', 'coffee (hot)', 'coffee (cold)', 'shakes & smoothies', 'iced teas', 'green tea', 'quenchers'];
+                if (!in_array(strtolower($subcategory), $non_alcoholic_subs)) {
+                    $is_alcoholic = true;
+                }
+            } elseif ($category && strtolower($category) === 'liquor') {
+                $is_alcoholic = true;
+            }
+
+            if ($is_alcoholic) {
                 $pegs_to_add += 8 * intval($item['quantity'] ?? 1);
             }
             

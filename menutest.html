@@ -324,7 +324,8 @@
 
         const ICONS = {
             'All': 'fas fa-utensils',
-            'Liquor': 'fas fa-wine-glass-alt',
+            'Beverages': 'fas fa-wine-glass-alt',
+            'Beverage': 'fas fa-wine-glass-alt',
             'Soups': 'fas fa-mug-hot',
             'Salad': 'fas fa-leaf',
             'Bread Basket': 'fas fa-bread-slice',
@@ -471,58 +472,155 @@
 
             let html = '';
             for (const [cat, items] of Object.entries(grouped)) {
-                html += `
-                    <div class="w-full fade-up">
-                        <div class="flex items-center justify-center my-10 opacity-80">
-                            <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -right-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
-                            <span class="font-serif text-xl md:text-2xl font-bold text-[#3b1c1c] uppercase tracking-widest mx-6">${cat}</span>
-                            <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -left-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
-                `;
+                // Check if any items in this category have a subcategory
+                const hasSubcategories = items.some(item => item.subcategory);
 
-                items.forEach((item, index) => {
-                    let imgSrc = item.image_url || '';
-                    if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
-                        if (!imgSrc.startsWith('uploads/')) {
-                            imgSrc = 'uploads/' + imgSrc;
-                        }
-                    }
-                    if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'; // Default placeholder
-
-                    const hasCust = item.customizations && item.customizations.length > 0;
-                    const delay = (index % 4) * 0.1;
+                if (hasSubcategories) {
+                    // Group items by subcategory
+                    const subgrouped = {};
+                    items.forEach(item => {
+                        const sub = item.subcategory || 'Other';
+                        if (!subgrouped[sub]) subgrouped[sub] = [];
+                        subgrouped[sub].push(item);
+                    });
 
                     html += `
-                        <div class="menu-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col fade-up" style="animation-delay: ${delay}s">
-                            <div class="relative h-48 w-full overflow-hidden bg-gray-100 shrink-0">
-                                <img src="${imgSrc}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
-                                ${hasCust ? '<div class="absolute top-3 left-3 bg-cream/90 backdrop-blur-sm text-rosewood text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm"><i class="fas fa-sliders-h mr-1"></i>Customizable</div>' : ''}
+                        <div class="w-full fade-up">
+                            <div class="flex items-center justify-center my-10 opacity-80">
+                                <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -right-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
+                                <span class="font-serif text-xl md:text-2xl font-bold text-[#3b1c1c] uppercase tracking-widest mx-6">${cat}</span>
+                                <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -left-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
                             </div>
-                            <div class="p-5 flex flex-col flex-1">
-                                <div class="flex justify-between items-start gap-2 mb-2">
-                                    <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight">${item.name}</h3>
-                                    <span class="font-bold text-rosewood whitespace-nowrap">₹${Math.round(parseFloat(item.price || 0))}</span>
+                    `;
+
+                    let subIndex = 0;
+                    for (const [subcat, subitems] of Object.entries(subgrouped)) {
+                        const mtClass = subIndex === 0 ? 'mt-6' : 'mt-16';
+                        html += `
+                            <div class="w-full mb-8 ${mtClass}">
+                                <div class="flex items-center gap-4 mb-8">
+                                    <h4 class="font-serif text-md md:text-lg font-semibold text-rosewood uppercase tracking-wider">${subcat}</h4>
+                                    <div class="flex-grow h-[1px] bg-gradient-to-r from-gold-dark/30 to-transparent"></div>
                                 </div>
-                                <p class="text-sm text-gray-500 leading-relaxed flex-1 mb-4">${item.description || 'Premium dish crafted with quality ingredients.'}</p>
-                                
-                                <div class="mt-auto">
-                                    <button id="add-btn-${item.id}" onclick="handleAddToCart(${item.id})" class="w-full py-2.5 rounded-lg border-2 border-rosewood text-rosewood font-semibold hover:bg-rosewood hover:text-white transition-colors text-sm uppercase tracking-wider">
-                                        Add to Cart
-                                    </button>
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                        `;
+
+                        subitems.forEach((item, index) => {
+                            let imgSrc = item.image_url || '';
+                            if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+                                if (!imgSrc.startsWith('uploads/')) {
+                                    imgSrc = 'uploads/' + imgSrc;
+                                }
+                            }
+                            if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop';
+
+                            const hasCust = item.customizations && item.customizations.length > 0;
+                            const delay = (index % 4) * 0.1;
+
+                            const isVeg = (item.diet_type === 'veg');
+                            const dietBadge = isVeg 
+                                ? `<span class="inline-flex shrink-0 align-middle mr-1.5" title="Vegetarian"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#0f8a45" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#0f8a45"/></svg></span>`
+                                : `<span class="inline-flex shrink-0 align-middle mr-1.5" title="Non-Vegetarian"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#c82333" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#c82333"/></svg></span>`;
+
+                            html += `
+                                <div class="menu-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col fade-up" style="animation-delay: ${delay}s">
+                                    <div class="relative h-48 w-full overflow-hidden bg-gray-100 shrink-0">
+                                        <img src="${imgSrc}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
+                                        ${hasCust ? '<div class="absolute top-3 left-3 bg-cream/90 backdrop-blur-sm text-rosewood text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm"><i class="fas fa-sliders-h mr-1"></i>Customizable</div>' : ''}
+                                    </div>
+                                    <div class="p-5 flex flex-col flex-1">
+                                        <div class="flex justify-between items-start gap-2 mb-2">
+                                            <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight flex items-center">${dietBadge}<span>${item.name}</span></h3>
+                                            <span class="font-bold text-rosewood whitespace-nowrap">₹${Math.round(parseFloat(item.price || 0))}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-500 leading-relaxed flex-1 mb-4">${item.description || 'Premium dish crafted with quality ingredients.'}</p>
+                                        
+                                        <div class="mt-auto">
+                                            <button id="add-btn-${item.id}" onclick="handleAddToCart(${item.id})" class="w-full py-2.5 rounded-lg border-2 border-rosewood text-rosewood font-semibold hover:bg-rosewood hover:text-white transition-colors text-sm uppercase tracking-wider">
+                                                Add to Cart
+                                            </button>
+                                            
+                                            <div id="qty-controller-${item.id}" class="hidden items-center justify-between bg-rosewood text-white rounded-lg overflow-hidden h-[44px]">
+                                                <button onclick="changeQuantity(${item.id}, -1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-minus text-xs"></i></button>
+                                                <span id="qty-${item.id}" class="font-bold w-8 text-center text-sm">1</span>
+                                                <button onclick="changeQuantity(${item.id}, 1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-plus text-xs"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                        subIndex++;
+                    }
+
+                    html += `
+                        </div>
+                    `;
+                } else {
+                    // Standard rendering without subcategories
+                    html += `
+                        <div class="w-full fade-up">
+                            <div class="flex items-center justify-center my-10 opacity-80">
+                                <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -right-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
+                                <span class="font-serif text-xl md:text-2xl font-bold text-[#3b1c1c] uppercase tracking-widest mx-6">${cat}</span>
+                                <div class="h-[1px] w-16 lg:w-32 bg-gold-dark relative"><div class="absolute -left-1.5 -top-1 w-2 h-2 rounded-full border border-gold-dark bg-cream"></div></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+                    `;
+
+                    items.forEach((item, index) => {
+                        let imgSrc = item.image_url || '';
+                        if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('//')) {
+                            if (!imgSrc.startsWith('uploads/')) {
+                                imgSrc = 'uploads/' + imgSrc;
+                            }
+                        }
+                        if (!imgSrc) imgSrc = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'; // Default placeholder
+
+                        const hasCust = item.customizations && item.customizations.length > 0;
+                        const delay = (index % 4) * 0.1;
+
+                        const isVeg = (item.diet_type === 'veg');
+                        const dietBadge = isVeg 
+                            ? `<span class="inline-flex shrink-0 align-middle mr-1.5" title="Vegetarian"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#0f8a45" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#0f8a45"/></svg></span>`
+                            : `<span class="inline-flex shrink-0 align-middle mr-1.5" title="Non-Vegetarian"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#c82333" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#c82333"/></svg></span>`;
+
+                        html += `
+                            <div class="menu-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col fade-up" style="animation-delay: ${delay}s">
+                                <div class="relative h-48 w-full overflow-hidden bg-gray-100 shrink-0">
+                                    <img src="${imgSrc}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop'">
+                                    ${hasCust ? '<div class="absolute top-3 left-3 bg-cream/90 backdrop-blur-sm text-rosewood text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm"><i class="fas fa-sliders-h mr-1"></i>Customizable</div>' : ''}
+                                </div>
+                                <div class="p-5 flex flex-col flex-1">
+                                    <div class="flex justify-between items-start gap-2 mb-2">
+                                        <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight flex items-center">${dietBadge}<span>${item.name}</span></h3>
+                                        <span class="font-bold text-rosewood whitespace-nowrap">₹${Math.round(parseFloat(item.price || 0))}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 leading-relaxed flex-1 mb-4">${item.description || 'Premium dish crafted with quality ingredients.'}</p>
                                     
-                                    <div id="qty-controller-${item.id}" class="hidden items-center justify-between bg-rosewood text-white rounded-lg overflow-hidden h-[44px]">
-                                        <button onclick="changeQuantity(${item.id}, -1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-minus text-xs"></i></button>
-                                        <span id="qty-${item.id}" class="font-bold w-8 text-center text-sm">1</span>
-                                        <button onclick="changeQuantity(${item.id}, 1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-plus text-xs"></i></button>
+                                    <div class="mt-auto">
+                                        <button id="add-btn-${item.id}" onclick="handleAddToCart(${item.id})" class="w-full py-2.5 rounded-lg border-2 border-rosewood text-rosewood font-semibold hover:bg-rosewood hover:text-white transition-colors text-sm uppercase tracking-wider">
+                                            Add to Cart
+                                        </button>
+                                        
+                                        <div id="qty-controller-${item.id}" class="hidden items-center justify-between bg-rosewood text-white rounded-lg overflow-hidden h-[44px]">
+                                            <button onclick="changeQuantity(${item.id}, -1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-minus text-xs"></i></button>
+                                            <span id="qty-${item.id}" class="font-bold w-8 text-center text-sm">1</span>
+                                            <button onclick="changeQuantity(${item.id}, 1)" class="w-12 h-full flex items-center justify-center hover:bg-maroon transition-colors"><i class="fas fa-plus text-xs"></i></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
 
-                html += `</div></div>`;
+                    html += `</div></div>`;
+                }
             }
 
             container.innerHTML = html;
