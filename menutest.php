@@ -389,6 +389,11 @@
                     <button class="category-pill" onclick="filterCategory('Sharing Boards')">Sharing Boards</button>
                     <button class="category-pill" onclick="filterCategory('Brick Oven Pizza')">Brick Oven Pizza</button>
                     <button class="category-pill" onclick="filterCategory('Non-Veg Appetizer')">Non-Veg Appetizer</button>
+                    <button class="category-pill" onclick="filterCategory('Pasta & Risotto Station')">Pasta & Risotto Station</button>
+                    <button class="category-pill" onclick="filterCategory('Veg Appetizer')">Veg Appetizer</button>
+                    <button class="category-pill" onclick="filterCategory('Veg Indian Main Course')">Veg Indian Main Course</button>
+                    <button class="category-pill" onclick="filterCategory('Non-Veg Indian Main Course')">Non-Veg Indian Main Course</button>
+                    <button class="category-pill" onclick="filterCategory('Tandoori Starter')">Tandoori Starter</button>
                 </div>
             </div>
 
