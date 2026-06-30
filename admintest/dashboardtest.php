@@ -35,6 +35,26 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ";
     $pdo->exec($createTableQuery);
+
+    $createCampaignsQuery = "
+        CREATE TABLE IF NOT EXISTS `campaigns` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `campaign_code` VARCHAR(50) UNIQUE NOT NULL,
+            `discount_type` ENUM('percentage', 'flat') NOT NULL,
+            `discount_value` DECIMAL(10,2) NOT NULL,
+            `min_order_value` DECIMAL(10,2) DEFAULT 0.00,
+            `max_discount` DECIMAL(10,2) DEFAULT NULL,
+            `expiry_date` DATETIME DEFAULT NULL,
+            `is_active` TINYINT(1) DEFAULT 1,
+            `usage_limit` INT DEFAULT NULL,
+            `used_count` INT DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ";
+    $pdo->exec($createCampaignsQuery);
+
+    // Seed the default SUMMER2026 campaign if not exists
+    $pdo->exec("INSERT IGNORE INTO `campaigns` (`campaign_code`, `discount_type`, `discount_value`) VALUES ('SUMMER2026', 'percentage', 10.00)");
 } catch (PDOException $e) {
     // Fail silently
 }
@@ -409,28 +429,31 @@ if (isset($_REQUEST['action'])) {
         try {
             $user_id = null;
             // 1. Check if it's an order number
-            $stmt = $pdo->prepare("SELECT user_id FROM orders WHERE order_number = ?");
+            $stmt = $pdo->prepare("SELECT user_id, customer_phone FROM orders WHERE order_number = ?");
             $stmt->execute([$clean_term]);
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($order && !empty($order['user_id'])) {
-                $user_id = $order['user_id'];
-            } else {
-                // 2. Check if it matches phone, email, or exact name
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? OR email = ? OR full_name = ?");
-                $stmt->execute([$clean_term, $clean_term, $clean_term]);
+            if ($order) {
+                if (!empty($order['user_id'])) {
+                    $user_id = $order['user_id'];
+                } elseif (!empty($order['customer_phone'])) {
+                    // Order has no direct user_id, try linking via phone
+                    $stmt_u = $pdo->prepare("SELECT id FROM users WHERE phone LIKE ?");
+                    $stmt_u->execute(['%' . $order['customer_phone'] . '%']);
+                    $user = $stmt_u->fetch(PDO::FETCH_ASSOC);
+                    if ($user) $user_id = $user['id'];
+                }
+            } 
+            
+            if (!$user_id) {
+                // 2. Check if it matches phone, email, or partial name
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE phone LIKE ? OR email = ? OR full_name LIKE ? LIMIT 1");
+                $wildcard = "%" . $clean_term . "%";
+                $stmt->execute([$wildcard, $clean_term, $wildcard]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($user) {
                     $user_id = $user['id'];
-                } else {
-                    // 3. Fallback: Check if it's a partial name
-                    $stmt = $pdo->prepare("SELECT id FROM users WHERE full_name LIKE ? LIMIT 1");
-                    $stmt->execute(['%' . $clean_term . '%']);
-                    $user_partial = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($user_partial) {
-                        $user_id = $user_partial['id'];
-                    }
                 }
             }
 
@@ -504,15 +527,11 @@ if (isset($_REQUEST['action'])) {
             $upd = $pdo->prepare("UPDATE user_liquor_quota SET total_pegs = ? WHERE user_id = ? AND food_item_id = ?");
             $upd->execute([$new_pegs, $user_id, $food_item_id]);
 
-            // 2. Decrement general quota in users table
-            $upd_user = $pdo->prepare("UPDATE users SET liquor_quota_pegs = GREATEST(0, liquor_quota_pegs - 1) WHERE id = ?");
-            $upd_user->execute([$user_id]);
-
             // 3. Add system notification of consumption
             $notif_title = "Peg Consumed";
             $notif_body = "1 peg of " . $quota['item_name'] . " logged for " . $user_name . " (Verified via: " . $search_term . "). Remaining brand quota: " . $new_pegs . " pegs.";
             
-            $stmt_notif = $pdo->prepare("INSERT INTO notifications (title, body) VALUES (?, ?)");
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (type, title, body) VALUES ('system', ?, ?)");
             $stmt_notif->execute([$notif_title, $notif_body]);
 
             $pdo->commit();
@@ -523,7 +542,7 @@ if (isset($_REQUEST['action'])) {
                 $pdo->rollBack();
             }
             error_log('Admin consume peg error: ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Unable to consume peg quota.']);
+            echo json_encode(['success' => false, 'message' => 'Unable to consume peg quota. Error: ' . $e->getMessage()]);
         }
         exit;
     }
@@ -767,24 +786,25 @@ if (isset($_REQUEST['action'])) {
         $params = [];
         
         if (!empty($_POST['search'])) {
+            $clean_search = ltrim(trim($_POST['search']), '#');
             $sql .= " AND (order_number LIKE ? OR customer_name LIKE ?)";
-            $wildcard = "%" . $_POST['search'] . "%";
+            $wildcard = "%" . $clean_search . "%";
             $params[] = $wildcard; $params[] = $wildcard;
         }
         
         if (!empty($_POST['method']) && $_POST['method'] !== 'all') {
             if ($_POST['method'] === 'cash') {
-                $sql .= " AND delivery_address LIKE '%Paid via CASH%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via CASH%' OR payment_method = 'cash' OR payment_method = 'cod')";
             } elseif ($_POST['method'] === 'card') {
-                $sql .= " AND delivery_address LIKE '%Paid via CARD%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via CARD%' OR payment_method = 'card')";
             } elseif ($_POST['method'] === 'upi') {
-                $sql .= " AND delivery_address LIKE '%Paid via UPI%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via UPI%' OR payment_method = 'upi')";
             } elseif ($_POST['method'] === 'netbanking') {
-                $sql .= " AND (delivery_address LIKE '%Paid via NETBANKING%' OR delivery_address LIKE '%Paid via NET BANKING%')";
+                $sql .= " AND (delivery_address LIKE '%Paid via NETBANKING%' OR delivery_address LIKE '%Paid via NET BANKING%' OR payment_method = 'netbanking')";
             } elseif ($_POST['method'] === 'wallet') {
-                $sql .= " AND delivery_address LIKE '%Paid via WALLET%'";
+                $sql .= " AND (delivery_address LIKE '%Paid via WALLET%' OR payment_method = 'wallet')";
             } elseif ($_POST['method'] === 'gateway') {
-                $sql .= " AND delivery_address NOT LIKE '%Paid via %'";
+                $sql .= " AND (delivery_address NOT LIKE '%Paid via %' AND (payment_method = 'Online' OR payment_method IS NULL OR payment_method = ''))";
             }
         }
         
@@ -888,9 +908,11 @@ if (isset($_REQUEST['action'])) {
         // 4. Best Selling Dishes
         $dish_stmt = $pdo->prepare("SELECT 
                                         oi.item_name, 
+                                        MAX(f.category) as category,
                                         SUM(oi.quantity) as qty_sold, 
                                         SUM(oi.quantity * oi.price) as revenue
                                     FROM order_items oi
+                                    LEFT JOIN food_items f ON oi.food_item_id = f.id
                                     JOIN orders o ON oi.order_id = o.id
                                     WHERE o.order_status = 'completed' AND o.order_date BETWEEN ? AND ?
                                     GROUP BY oi.item_name
@@ -899,7 +921,7 @@ if (isset($_REQUEST['action'])) {
         $dishes = $dish_stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // 5. Payment Breakup
-        $pay_stmt = $pdo->prepare("SELECT total_amount, delivery_address FROM orders WHERE order_status = 'completed' AND order_date BETWEEN ? AND ?");
+        $pay_stmt = $pdo->prepare("SELECT total_amount, delivery_address, payment_method FROM orders WHERE order_status = 'completed' AND order_date BETWEEN ? AND ?");
         $pay_stmt->execute([$start_date, $end_date]);
         $pay_orders = $pay_stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -913,18 +935,19 @@ if (isset($_REQUEST['action'])) {
         ];
         
         foreach ($pay_orders as $po) {
-            $addr = strtoupper($po['delivery_address']);
+            $addr = strtoupper($po['delivery_address'] ?? '');
+            $method = strtolower($po['payment_method'] ?? '');
             $amt = floatval($po['total_amount']);
             
-            if (strpos($addr, 'PAID VIA CASH') !== false) {
+            if ($method === 'cash' || $method === 'cod' || strpos($addr, 'PAID VIA CASH') !== false) {
                 $payments['CASH']['amount'] += $amt; $payments['CASH']['count']++;
-            } elseif (strpos($addr, 'PAID VIA CARD') !== false) {
+            } elseif ($method === 'card' || strpos($addr, 'PAID VIA CARD') !== false) {
                 $payments['CARD']['amount'] += $amt; $payments['CARD']['count']++;
-            } elseif (strpos($addr, 'PAID VIA UPI') !== false) {
+            } elseif ($method === 'upi' || strpos($addr, 'PAID VIA UPI') !== false) {
                 $payments['UPI']['amount'] += $amt; $payments['UPI']['count']++;
-            } elseif (strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false) {
+            } elseif ($method === 'netbanking' || strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false) {
                 $payments['NET BANKING']['amount'] += $amt; $payments['NET BANKING']['count']++;
-            } elseif (strpos($addr, 'PAID VIA WALLET') !== false) {
+            } elseif ($method === 'wallet' || strpos($addr, 'PAID VIA WALLET') !== false) {
                 $payments['WALLET']['amount'] += $amt; $payments['WALLET']['count']++;
             } else {
                 if (strpos($addr, 'TABLE ') === false) {
@@ -1059,12 +1082,17 @@ if (isset($_REQUEST['action'])) {
         $order_id = $_POST['order_id'];
         $status = $_POST['status'];
         
+        // Fetch order details first to determine order_type
+        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address, order_type FROM orders WHERE id = ?");
+        $o_stmt->execute([$order_id]);
+        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
+
         // Map order_status to tracking_status to keep customer live tracking updated
         $tracking_status = 'placed';
         if ($status === 'preparing') {
             $tracking_status = 'preparing';
         } elseif ($status === 'ready') {
-            $tracking_status = 'out_for_delivery';
+            $tracking_status = (isset($ord_info['order_type']) && $ord_info['order_type'] === 'takeaway') ? 'ready_for_pickup' : 'out_for_delivery';
         } elseif ($status === 'completed') {
             $tracking_status = 'delivered';
         } elseif ($status === 'cancelled') {
@@ -1074,10 +1102,6 @@ if (isset($_REQUEST['action'])) {
         $stmt = $pdo->prepare("UPDATE orders SET order_status = ?, tracking_status = ? WHERE id = ?");
         $stmt->execute([$status, $tracking_status, $order_id]);
         
-        // Fetch order details for notification
-        $o_stmt = $pdo->prepare("SELECT order_number, customer_name, total_amount, user_id, delivery_address FROM orders WHERE id = ?");
-        $o_stmt->execute([$order_id]);
-        $ord_info = $o_stmt->fetch(PDO::FETCH_ASSOC);
         if ($ord_info) {
             require_once dirname(__DIR__) . '/includes/notifications_helper.php';
             
@@ -1259,30 +1283,37 @@ if (isset($_REQUEST['action'])) {
             'gst_rate' => intval($_POST['gst_rate'] ?? 18),
             'packing_charge' => floatval($_POST['packing_charge'] ?? 0.00),
             'opening_hours' => $_POST['opening_hours'] ?? '11:00 AM - 11:00 PM',
-            'silver_discount' => floatval($_POST['silver_discount'] ?? 10.00),
-            'gold_discount' => floatval($_POST['gold_discount'] ?? 15.00),
-            'platinum_discount' => floatval($_POST['platinum_discount'] ?? 20.00),
-            'gold_threshold' => floatval($_POST['gold_threshold'] ?? 25000.00),
-            'platinum_threshold' => floatval($_POST['platinum_threshold'] ?? 75000.00),
+            'bronze_discount' => floatval($_POST['bronze_discount'] ?? 10.00),
+            'silver_threshold' => floatval($_POST['silver_threshold'] ?? 25000.00),
+            'silver_discount' => floatval($_POST['silver_discount'] ?? 15.00),
+            'gold_threshold' => floatval($_POST['gold_threshold'] ?? 75000.00),
+            'gold_discount' => floatval($_POST['gold_discount'] ?? 20.00),
+            'platinum_threshold' => floatval($_POST['platinum_threshold'] ?? 150000.00),
+            'platinum_discount' => floatval($_POST['platinum_discount'] ?? 25.00),
             'points_earning_percent' => floatval($_POST['points_earning_percent'] ?? 2.00),
             'inactivity_months' => intval($_POST['inactivity_months'] ?? 3),
             'inactivity_deduction_percent' => floatval($_POST['inactivity_deduction_percent'] ?? 20.00),
+            'last_annual_reset_year' => $settings['last_annual_reset_year'] ?? date('Y')
         ];
         file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT));
 
         // Sync to customer_tiers table
         try {
-            // Update Silver (ID 1)
+            // Update Bronze (ID 1)
             $stmt1 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, points_earning_percent = ? WHERE id = 1");
-            $stmt1->execute([$settings['silver_discount'], $settings['points_earning_percent']]);
+            $stmt1->execute([$settings['bronze_discount'], $settings['points_earning_percent']]);
 
-            // Update Gold (ID 2)
+            // Update Silver (ID 2)
             $stmt2 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 2");
-            $stmt2->execute([$settings['gold_discount'], $settings['gold_threshold'], $settings['points_earning_percent']]);
+            $stmt2->execute([$settings['silver_discount'], $settings['silver_threshold'], $settings['points_earning_percent']]);
 
-            // Update Platinum (ID 3)
+            // Update Gold (ID 3)
             $stmt3 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 3");
-            $stmt3->execute([$settings['platinum_discount'], $settings['platinum_threshold'], $settings['points_earning_percent']]);
+            $stmt3->execute([$settings['gold_discount'], $settings['gold_threshold'], $settings['points_earning_percent']]);
+            
+            // Update Platinum (ID 4)
+            $stmt4 = $pdo->prepare("UPDATE customer_tiers SET discount_percent = ?, spending_requirement = ?, points_earning_percent = ? WHERE id = 4");
+            $stmt4->execute([$settings['platinum_discount'], $settings['platinum_threshold'], $settings['points_earning_percent']]);
         } catch (PDOException $db_err) {
             // Fail silently or log
         }
@@ -1336,6 +1367,75 @@ if (isset($_REQUEST['action'])) {
         exit;
     }
     
+    // --- CAMPAIGNS API START ---
+    if ($action === 'get_campaigns') {
+        $stmt = $pdo->query("SELECT * FROM campaigns ORDER BY created_at DESC");
+        $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'campaigns' => $campaigns]);
+        exit;
+    }
+
+    if ($action === 'create_campaign') {
+        $code = strtoupper(trim($_POST['code']));
+        $type = $_POST['discount_type'];
+        $val = floatval($_POST['discount_value']);
+        $min = floatval($_POST['min_order_value'] ?? 0);
+        $max = !empty($_POST['max_discount']) ? floatval($_POST['max_discount']) : null;
+        $exp = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $limit = !empty($_POST['usage_limit']) ? intval($_POST['usage_limit']) : null;
+        
+        try {
+            $stmt = $pdo->prepare("INSERT INTO campaigns (campaign_code, discount_type, discount_value, min_order_value, max_discount, expiry_date, usage_limit) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$code, $type, $val, $min, $max, $exp, $limit]);
+            echo json_encode(['success' => true, 'message' => 'Campaign created successfully']);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Failed to create campaign (may already exist)']);
+        }
+        exit;
+    }
+
+    if ($action === 'update_campaign') {
+        $id = intval($_POST['id']);
+        $type = $_POST['discount_type'];
+        $val = floatval($_POST['discount_value']);
+        $min = floatval($_POST['min_order_value'] ?? 0);
+        $max = !empty($_POST['max_discount']) ? floatval($_POST['max_discount']) : null;
+        $exp = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $limit = !empty($_POST['usage_limit']) ? intval($_POST['usage_limit']) : null;
+        
+        $stmt = $pdo->prepare("UPDATE campaigns SET discount_type=?, discount_value=?, min_order_value=?, max_discount=?, expiry_date=?, usage_limit=? WHERE id=?");
+        $stmt->execute([$type, $val, $min, $max, $exp, $limit, $id]);
+        
+        echo json_encode(['success' => true, 'message' => 'Campaign updated successfully']);
+        exit;
+    }
+
+    if ($action === 'delete_campaign') {
+        $id = intval($_POST['id']);
+        $stmt = $pdo->prepare("DELETE FROM campaigns WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Campaign deleted successfully']);
+        exit;
+    }
+    
+    if ($action === 'toggle_campaign') {
+        $id = intval($_POST['id']);
+        $stmt = $pdo->prepare("UPDATE campaigns SET is_active = NOT is_active WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Campaign status toggled']);
+        exit;
+    }
+    // --- CAMPAIGNS API END ---
+
+    // Delete Career Application Endpoint
+    if ($action === 'delete_career_application') {
+        $app_id = intval($_POST['id']);
+        $stmt = $pdo->prepare("DELETE FROM career_applications WHERE id = ?");
+        $stmt->execute([$app_id]);
+        echo json_encode(['success' => true, 'message' => 'Application deleted successfully']);
+        exit;
+    }
+
     // Update Career Application Status Endpoint
     if ($action === 'update_career_status') {
         $app_id = intval($_POST['id']);
@@ -1445,6 +1545,10 @@ $table_zones = [
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF Export (html2pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Excel Export (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
         (function() {
@@ -3222,6 +3326,40 @@ html:not(.light-mode) .form-select:focus{
             background: rgba(220, 38, 38, 0.12);
             color: #ffffff;
         }
+
+        #printableReportTemplate {
+            background: white !important;
+            color: black !important;
+        }
+        #printableReportTemplate * {
+            color: #000 !important;
+        }
+        #printableReportTemplate th, #printableReportTemplate td {
+            color: #000 !important;
+            border-color: #ddd !important;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableReportTemplate, #printableReportTemplate * {
+                visibility: visible !important;
+            }
+            #printableReportTemplate {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+        }
 </style>
 </head>
 <body>
@@ -3331,6 +3469,12 @@ html:not(.light-mode) .form-select:focus{
                 <a class="sidebar-link" onclick="switchTab('reports-tab', this)">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Reports</span>
+                </a>
+            </li>
+            <li>
+                <a class="sidebar-link" onclick="switchTab('campaigns-tab', this)">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Campaigns</span>
                 </a>
             </li>
             <li>
@@ -4157,12 +4301,14 @@ html:not(.light-mode) .form-select:focus{
                             $pay_stmt = $pdo->query("SELECT * FROM orders ORDER BY id DESC LIMIT 50");
                             $pay_logs = $pay_stmt->fetchAll(PDO::FETCH_ASSOC);
                             foreach ($pay_logs as $log):
-                                $method = 'Online Gateway';
-                                if (stripos($log['delivery_address'], 'Paid via CASH') !== false) $method = 'CASH';
-                                elseif (stripos($log['delivery_address'], 'Paid via CARD') !== false) $method = 'CARD';
-                                elseif (stripos($log['delivery_address'], 'Paid via UPI') !== false) $method = 'UPI';
-                                elseif (stripos($log['delivery_address'], 'Paid via NETBANKING') !== false || stripos($log['delivery_address'], 'Paid via NET BANKING') !== false) $method = 'NET BANKING';
-                                elseif (stripos($log['delivery_address'], 'Paid via WALLET') !== false) $method = 'WALLET';
+                                $method = 'ONLINE GATEWAY';
+                                $addr = strtoupper($log['delivery_address'] ?? '');
+                                $pm = strtolower($log['payment_method'] ?? '');
+                                if (strpos($addr, 'PAID VIA CASH') !== false || $pm === 'cash' || $pm === 'cod') $method = 'CASH';
+                                elseif (strpos($addr, 'PAID VIA CARD') !== false || $pm === 'card') $method = 'CARD';
+                                elseif (strpos($addr, 'PAID VIA UPI') !== false || $pm === 'upi') $method = 'UPI';
+                                elseif (strpos($addr, 'PAID VIA NETBANKING') !== false || strpos($addr, 'PAID VIA NET BANKING') !== false || $pm === 'netbanking') $method = 'NET BANKING';
+                                elseif (strpos($addr, 'PAID VIA WALLET') !== false || $pm === 'wallet') $method = 'WALLET';
                             ?>
                             <tr>
                                 <td>#<?php echo htmlspecialchars($log['order_number']); ?></td>
@@ -4183,8 +4329,189 @@ html:not(.light-mode) .form-select:focus{
             </div>
         </div>
 
+        <!-- ==================== CAMPAIGNS TAB ==================== -->
+        <div id="campaigns-tab" class="tab-panel">
+            <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="page-title">Campaigns Management</h1>
+                    <p class="page-subtitle">Create and track master campaign codes (e.g., SUMMER2026) instead of managing them in .env</p>
+                </div>
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="openAddCampaignModal()">
+                    <i class="fas fa-plus"></i> Generate New Campaign
+                </button>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header-premium">Active & Past Campaigns</div>
+                <div class="table-responsive">
+                    <table class="table premium-table align-middle" id="campaigns-table">
+                        <thead>
+                            <tr>
+                                <th>Campaign Code</th>
+                                <th>Discount</th>
+                                <th>Min. Order</th>
+                                <th>Max. Discount</th>
+                                <th>Expiry Date</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                                <th style="min-width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaigns-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">Loading campaigns...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== REPORTS TAB ==================== -->
         <div id="reports-tab" class="tab-panel">
+            
+            <!-- Professional Written Report Template (Hidden from screen) -->
+            <div id="printableReportTemplate" style="display: none; background: white; color: black; padding: 40px; font-family: 'Times New Roman', serif;">
+                <div style="text-align: center; border-bottom: 2px solid #dfba86; padding-bottom: 20px; margin-bottom: 30px;">
+                    <h1 style="margin: 0; color: #111; font-family: 'Playfair Display', serif; font-size: 32px; letter-spacing: 2px;">LA MEDUSA</h1>
+                    <p style="margin: 5px 0 0; color: #555; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Bar & Lounge - Professional Business Report</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 12px; color: #333;">
+                    <div>
+                        <strong>Report Period:</strong> <span id="print_report_period"></span><br>
+                        <strong>Generated On:</strong> <span id="print_report_date"></span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>Total Revenue:</strong> <span id="print_report_revenue" style="font-size: 16px; font-weight: bold; color: #dfba86;"></span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Executive Summary</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Completed Orders</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Average Order Value (AOV)</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Acceptance / Completion</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Performance Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_orders"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_aov"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_rates"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_score"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Customer Analytics</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Total Customers</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">New Customers</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Returning</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Retention Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_total"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_new"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_return"></td>
+                                <td style="padding: 10px; border: 1px solid #ddd;" id="print_report_cust_rate"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 30px; display: flex; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Revenue Trend</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_sales_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Sales Chart">
+                        </div>
+                    </div>
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Payment Split</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_payment_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Payment Chart">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px; display: flex; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1; break-inside: avoid;">
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Category Split</h2>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <img id="print_category_chart_img" src="" style="width: 100%; height: auto; border: 1px solid #eee; padding: 10px; background: white;" alt="Category Chart">
+                        </div>
+                    </div>
+                    <div style="flex: 1; break-inside: avoid;">
+                        <!-- Empty flex space to align sizes nicely -->
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px; padding-top: 20px; break-inside: avoid;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Top Performing Items</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item Name</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Category</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Qty Sold</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_top_dishes_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; break-inside: avoid;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Payment Breakdown</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Payment Method</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Transactions</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Amount (INR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_payments_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; break-inside: avoid;">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Top Performing Customers</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8f8f8;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Customer Name & Phone</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Orders</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total Spent (INR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print_customers_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #777; border-top: 1px solid #eee; padding-top: 20px;">
+                    End of Report. Confidential Business Document.
+                </div>
+            </div>
+
             <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h1 class="page-title">Business Intelligence Dashboard</h1>
@@ -4606,27 +4933,35 @@ html:not(.light-mode) .form-select:focus{
                     <div class="card-header-premium mt-4 pt-4 border-top border-secondary">Loyalty & Tier Configurations</div>
                     
                     <div class="row g-3">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Bronze Discount (%)</label>
+                            <input type="number" step="0.1" id="set_bronze_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['bronze_discount']); ?>" required min="0" max="100">
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Silver Discount (%)</label>
                             <input type="number" step="0.1" id="set_silver_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['silver_discount']); ?>" required min="0" max="100">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Gold Discount (%)</label>
                             <input type="number" step="0.1" id="set_gold_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_discount']); ?>" required min="0" max="100">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-muted text-uppercase small">Platinum Discount (%)</label>
                             <input type="number" step="0.1" id="set_platinum_discount" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_discount']); ?>" required min="0" max="100">
                         </div>
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted text-uppercase small">Gold Spending Requirement (₹)</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Silver Spend Req. (₹)</label>
+                            <input type="number" step="0.01" id="set_silver_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['silver_threshold']); ?>" required min="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Gold Spend Req. (₹)</label>
                             <input type="number" step="0.01" id="set_gold_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['gold_threshold']); ?>" required min="0">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted text-uppercase small">Platinum Spending Requirement (₹)</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted text-uppercase small">Platinum Spend Req. (₹)</label>
                             <input type="number" step="0.01" id="set_platinum_threshold" class="form-control form-control-dashboard" value="<?php echo floatval($settings['platinum_threshold']); ?>" required min="0">
                         </div>
                     </div>
@@ -4668,21 +5003,24 @@ html:not(.light-mode) .form-select:focus{
                                 <label class="form-label text-muted small text-uppercase">Search Customer</label>
                                 <input type="text" id="consume_search_term" class="form-control form-control-dashboard" placeholder="Enter Name, Phone, or Order ID..." required>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
-                                <select id="consume_brand_id" class="form-select form-control-dashboard" required>
-                                    <option value="">-- Click Verify to load brands --</option>
-                                </select>
-                            </div>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-light btn-sm mb-3" onclick="loadCustomerBrands()">
-                                    <i class="fas fa-check-circle me-1"></i> Verify & Load Brands
+                                <button type="button" class="btn btn-outline-light btn-sm mb-3" id="btn-admin-verify" onclick="loadCustomerBrands()">
+                                    <i class="fas fa-search me-1"></i> Search Customer
                                 </button>
                             </div>
-                            <hr style="border-color: rgba(255,255,255,0.08);">
-                            <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
-                                <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
-                            </button>
+                            
+                            <div id="consume_brand_section" style="display:none;">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small text-uppercase">Select Liquor Brand</label>
+                                    <select id="consume_brand_id" class="form-select form-control-dashboard" required>
+                                        <option value="">-- Choose Brand --</option>
+                                    </select>
+                                </div>
+                                <hr style="border-color: rgba(255,255,255,0.08);">
+                                <button type="submit" class="btn btn-gold-action w-100 mt-2" id="btn-admin-consume" disabled>
+                                    <i class="fas fa-glass-water me-1"></i> Consume 1 Peg
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -5169,6 +5507,14 @@ html:not(.light-mode) .form-select:focus{
             if (tabId === 'liquor-tab') {
                 loadActiveQuotas();
             }
+            
+            if (tabId === 'reports-tab') {
+                setTimeout(() => { if(typeof loadReportsData === 'function') loadReportsData(null); }, 150);
+            }
+            
+            if (tabId === 'campaigns-tab') {
+                setTimeout(() => { if(typeof fetchCampaigns === 'function') fetchCampaigns(); }, 150);
+            }
         }
 
         // 1. Chart.js Sales Graph
@@ -5189,6 +5535,7 @@ html:not(.light-mode) .form-select:focus{
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -6033,9 +6380,11 @@ html:not(.light-mode) .form-select:focus{
                     gst_rate: document.getElementById('set_gst_rate').value,
                     packing_charge: document.getElementById('set_packing_charge').value,
                     opening_hours: document.getElementById('set_opening_hours').value,
+                    bronze_discount: document.getElementById('set_bronze_discount').value,
                     silver_discount: document.getElementById('set_silver_discount').value,
                     gold_discount: document.getElementById('set_gold_discount').value,
                     platinum_discount: document.getElementById('set_platinum_discount').value,
+                    silver_threshold: document.getElementById('set_silver_threshold').value,
                     gold_threshold: document.getElementById('set_gold_threshold').value,
                     platinum_threshold: document.getElementById('set_platinum_threshold').value,
                     points_earning_percent: document.getElementById('set_points_earning_percent').value,
@@ -6493,11 +6842,12 @@ html:not(.light-mode) .form-select:focus{
             tbody.innerHTML = logs.map(log => {
                 let method = 'ONLINE GATEWAY';
                 const addr = (log.delivery_address || '').toUpperCase();
-                if (addr.includes('PAID VIA CASH')) method = 'CASH';
-                else if (addr.includes('PAID VIA CARD')) method = 'CARD';
-                else if (addr.includes('PAID VIA UPI')) method = 'UPI';
-                else if (addr.includes('PAID VIA NETBANKING') || addr.includes('PAID VIA NET BANKING')) method = 'NET BANKING';
-                else if (addr.includes('PAID VIA WALLET')) method = 'WALLET';
+                const pm = (log.payment_method || '').toLowerCase();
+                if (addr.includes('PAID VIA CASH') || pm === 'cash' || pm === 'cod') method = 'CASH';
+                else if (addr.includes('PAID VIA CARD') || pm === 'card') method = 'CARD';
+                else if (addr.includes('PAID VIA UPI') || pm === 'upi') method = 'UPI';
+                else if (addr.includes('PAID VIA NETBANKING') || addr.includes('PAID VIA NET BANKING') || pm === 'netbanking') method = 'NET BANKING';
+                else if (addr.includes('PAID VIA WALLET') || pm === 'wallet') method = 'WALLET';
 
                 const isPaid = log.order_status?.toLowerCase() === 'completed';
                 const statusHtml = isPaid
@@ -6632,6 +6982,7 @@ html:not(.light-mode) .form-select:focus{
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -6678,6 +7029,7 @@ html:not(.light-mode) .form-select:focus{
                     datasets: [{ data, backgroundColor: colors.palette.slice(0, labels.length), borderWidth: 2, borderColor: document.documentElement.classList.contains('light-mode') ? '#fff' : '#0a0a0a' }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '65%',
@@ -6713,6 +7065,7 @@ html:not(.light-mode) .form-select:focus{
                     datasets: [{ data, backgroundColor: colors.palette.slice(0, labels.length), borderWidth: 2, borderColor: document.documentElement.classList.contains('light-mode') ? '#fff' : '#0a0a0a' }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '60%',
@@ -6767,118 +7120,362 @@ html:not(.light-mode) .form-select:focus{
         // =====================================================================
         // 7. EXPORT FUNCTIONS
         // =====================================================================
+        function populateReportTemplate() {
+            if (!_lastReportData) return false;
+            
+            const summary = _lastReportData.summary || {};
+            const dishes = _lastReportData.dishes || [];
+            
+            // Format dates
+            document.getElementById('print_report_period').textContent = `${summary.start_date || 'N/A'} to ${summary.end_date || 'N/A'}`;
+            document.getElementById('print_report_date').textContent = new Date().toLocaleString();
+            
+            // Populate summary
+            document.getElementById('print_report_revenue').textContent = `₹${parseFloat(summary.revenue || 0).toFixed(2)}`;
+            document.getElementById('print_report_orders').textContent = `${summary.orders_count || 0} (${summary.online_orders || 0} Online, ${summary.dinein_orders || 0} Dine-In)`;
+            document.getElementById('print_report_aov').textContent = `₹${parseFloat(summary.aov || 0).toFixed(2)}`;
+            
+            let acc = parseFloat(summary.acceptance_rate || 0).toFixed(0);
+            let cmp = parseFloat(summary.completion_rate || 0).toFixed(0);
+            document.getElementById('print_report_rates').textContent = `${acc}% / ${cmp}%`;
+            
+            let score = parseFloat(summary.performance_score || 0);
+            document.getElementById('print_report_score').textContent = `${score.toFixed(0)} / 100`;
+            
+            // Customer Analytics
+            document.getElementById('print_report_cust_total').textContent = summary.total_customers || 0;
+            document.getElementById('print_report_cust_new').textContent = summary.new_customers || 0;
+            document.getElementById('print_report_cust_return').textContent = summary.returning_customers || 0;
+            document.getElementById('print_report_cust_rate').textContent = `${summary.retention_rate || 0}%`;
+            
+            // Top Dishes
+            const dishesTbody = document.getElementById('print_top_dishes_tbody');
+            dishesTbody.innerHTML = '';
+            dishes.slice(0, 15).forEach(dish => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid #ddd;">${dish.item_name || dish.name || 'Unknown'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.category || dish.category_name || 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dish.qty_sold || 0}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(dish.revenue || 0).toFixed(2)}</td>
+                `;
+                dishesTbody.appendChild(tr);
+            });
+            
+            // Payment Methods
+            const payments = _lastReportData.payments || {};
+            const paymentsTbody = document.getElementById('print_payments_tbody');
+            paymentsTbody.innerHTML = '';
+            Object.entries(payments).forEach(([method, vals]) => {
+                if (vals.count > 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${method.toUpperCase()}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${vals.count}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(vals.amount || 0).toFixed(2)}</td>
+                    `;
+                    paymentsTbody.appendChild(tr);
+                }
+            });
+
+            // Top Customers
+            const customers = _lastReportData.top_customers || [];
+            const customersTbody = document.getElementById('print_customers_tbody');
+            if (customersTbody) {
+                customersTbody.innerHTML = '';
+                customers.slice(0, 10).forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${c.customer_name || 'Unknown'}<br><small style="color:#666;">${c.customer_phone}</small></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${c.order_count || 0}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">₹${parseFloat(c.total_spent || 0).toFixed(2)}</td>
+                    `;
+                    customersTbody.appendChild(tr);
+                });
+            }
+
+            // Helper to grab chart canvas with white background
+            function getCanvasDataURL(canvasId) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return '';
+                try {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const ctx = tempCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    ctx.drawImage(canvas, 0, 0);
+                    return tempCanvas.toDataURL('image/jpeg', 0.95);
+                } catch(e) {
+                    console.error('Canvas extract error:', e);
+                    return '';
+                }
+            }
+
+            // Grab chart canvas images
+            document.getElementById('print_sales_chart_img').src = getCanvasDataURL('repSalesChart');
+            document.getElementById('print_payment_chart_img').src = getCanvasDataURL('repPaymentChart');
+            document.getElementById('print_category_chart_img').src = getCanvasDataURL('repCategoryChart');
+            
+            return true;
+        }
+
         function printReport() {
+            if (!populateReportTemplate()) {
+                alert('Please generate a report first by clicking "Update Report".');
+                return;
+            }
             window.print();
         }
-
+  
         function exportReportToPDF() {
-            // Use browser's built-in print-to-PDF (print styles handle layout)
-            const originalTitle = document.title;
-            document.title = 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10);
-            window.print();
-            document.title = originalTitle;
+            if (!populateReportTemplate()) {
+                alert('Please generate a report first by clicking "Update Report".');
+                return;
+            }
+            
+            const element = document.getElementById('printableReportTemplate');
+            
+            // Temporarily show the template for html2pdf rendering since it clones it
+            const originalDisplay = element.style.display;
+            const originalWidth = element.style.width;
+            
+            element.style.display = 'block';
+            // Force A4 physical pixel width so that it wraps and sizes identically to print view
+            element.style.width = '794px'; 
+            
+            const opt = {
+                margin:       10,
+                filename:     'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.pdf',
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = originalDisplay;
+                element.style.width = originalWidth;
+            });
         }
 
-        function exportReportToExcel() {
+        async function exportReportToExcel() {
             if (!_lastReportData) {
                 alert('Please generate a report first by clicking "Update Report".');
                 return;
+            }
+
+            // Dynamically load ExcelJS if not available
+            if (typeof ExcelJS === 'undefined') {
+                const btn = document.querySelector('[onclick="exportReportToExcel()"]');
+                const origHtml = btn ? btn.innerHTML : '';
+                if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+                
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js";
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                if (btn) btn.innerHTML = origHtml;
             }
 
             const summary = _lastReportData.summary || {};
             const dishes = _lastReportData.dishes || [];
             const categories = _lastReportData.categories || [];
             const payments = _lastReportData.payments || {};
-            const topCustomers = _lastReportData.top_customers || [];
+            const customers = _lastReportData.top_customers || [];
 
-            // Build CSV rows
-            let csv = [];
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Medusa Luxury Dashboard';
+            workbook.created = new Date();
 
-            csv.push(['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT']);
-            csv.push(['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`]);
-            csv.push(['Generated At', summary.generated_at || new Date().toLocaleString()]);
-            csv.push([]);
+            // Colors
+            const gold = 'FFD4AF37'; // Medusa Gold
+            const dark = 'FF111111'; // Dark bg
+            const white = 'FFFFFFFF';
+            const gray = 'FFF0F0F0';
+            
+            // Reusable Border Style
+            const thinBorder = {
+                top: {style:'thin', color: {argb:'FFCCCCCC'}},
+                left: {style:'thin', color: {argb:'FFCCCCCC'}},
+                bottom: {style:'thin', color: {argb:'FFCCCCCC'}},
+                right: {style:'thin', color: {argb:'FFCCCCCC'}}
+            };
 
-            // Summary section
-            csv.push(['=== SUMMARY METRICS ===']);
-            csv.push(['Metric', 'Value', 'Growth vs Last Period']);
-            csv.push(['Total Revenue', `INR ${parseFloat(summary.revenue || 0).toFixed(2)}`, `${summary.revenue_growth || 0}%`]);
-            csv.push(['Completed Orders', summary.orders_count || 0, `${summary.orders_growth || 0}%`]);
-            csv.push(['Average Order Value', `INR ${parseFloat(summary.aov || 0).toFixed(2)}`, `${summary.aov_growth || 0}%`]);
-            csv.push(['Total Orders', summary.total_orders || 0, '']);
-            csv.push(['Online Orders', summary.online_orders || 0, '']);
-            csv.push(['Dine-In Orders', summary.dinein_orders || 0, '']);
-            csv.push(['Cancelled Orders', summary.cancelled_orders || 0, '']);
-            csv.push(['Acceptance Rate', `${summary.acceptance_rate || 0}%`, '']);
-            csv.push(['Completion Rate', `${summary.completion_rate || 0}%`, '']);
-            csv.push(['Performance Score', `${summary.performance_score || 0}/100`, '']);
-            csv.push([]);
+            // 1. Summary Sheet
+            const wsSum = workbook.addWorksheet('Summary');
+            wsSum.columns = [{ width: 25 }, { width: 20 }, { width: 25 }];
+            
+            // Header
+            wsSum.addRow(['MEDUSA RESTAURANT - BUSINESS INTELLIGENCE REPORT']);
+            wsSum.mergeCells('A1:C1');
+            wsSum.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsSum.getCell('A1').font = { color: { argb: gold }, size: 14, bold: true };
+            wsSum.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+            wsSum.getRow(1).height = 30;
 
-            // Customer metrics
-            csv.push(['=== CUSTOMER ANALYTICS ===']);
-            csv.push(['Total Customers', summary.total_customers || 0]);
-            csv.push(['New Customers', summary.new_customers || 0]);
-            csv.push(['Returning Customers', summary.returning_customers || 0]);
-            csv.push(['Retention Rate', `${summary.retention_rate || 0}%`]);
-            csv.push([]);
+            wsSum.addRow([]);
+            wsSum.addRow(['Report Period', `${summary.start_date || ''} to ${summary.end_date || ''}`]);
+            wsSum.mergeCells('B3:C3');
+            wsSum.addRow(['Generated At', new Date().toLocaleString()]);
+            wsSum.mergeCells('B4:C4');
+            wsSum.addRow([]);
 
-            // Top dishes
-            csv.push(['=== TOP SELLING DISHES ===']);
-            csv.push(['Rank', 'Dish Name', 'Qty Sold', 'Revenue (INR)']);
-            dishes.forEach((d, i) => csv.push([i + 1, d.item_name, d.qty_sold, parseFloat(d.revenue || 0).toFixed(2)]));
-            csv.push([]);
-
-            // Category performance
-            csv.push(['=== CATEGORY PERFORMANCE ===']);
-            csv.push(['Category', 'Units Sold', 'Revenue (INR)']);
-            categories.forEach(c => csv.push([c.category_name, c.units_sold, parseFloat(c.revenue || 0).toFixed(2)]));
-            csv.push([]);
-
-            // Payment breakdown
-            csv.push(['=== PAYMENT METHOD BREAKDOWN ===']);
-            csv.push(['Method', 'Transactions', 'Total Amount (INR)']);
-            Object.entries(payments).forEach(([method, vals]) => {
-                if (vals.count > 0) csv.push([method, vals.count, parseFloat(vals.amount || 0).toFixed(2)]);
+            // Subheader - Financials
+            const sumHeader = wsSum.addRow(['Financial Metric', 'Value', 'Growth vs Last Period']);
+            sumHeader.eachCell(c => {
+                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                c.font = { color: { argb: white }, bold: true };
+                c.border = thinBorder;
             });
-            csv.push([]);
 
-            // Top customers
-            csv.push(['=== TOP PERFORMING CUSTOMERS ===']);
-            csv.push(['Name', 'Phone', 'Orders', 'Total Spent (INR)']);
-            topCustomers.forEach(c => csv.push([c.customer_name, c.customer_phone, c.order_count, parseFloat(c.total_spent || 0).toFixed(2)]));
+            // Data - Financials
+            const revG = parseFloat(summary.revenue_growth || 0);
+            const ordG = parseFloat(summary.orders_growth || 0);
+            const aovG = parseFloat(summary.aov_growth || 0);
 
-            // Convert to CSV string
-            const csvStr = csv.map(row => row.map(cell => {
-                const s = String(cell || '').replace(/"/g, '""');
-                return s.includes(',') || s.includes('\n') || s.includes('"') ? `"${s}"` : s;
-            }).join(',')).join('\r\n');
+            const r1 = wsSum.addRow(['Total Revenue (INR)', parseFloat(summary.revenue || 0), (revG>0?'+':'') + revG + '%']);
+            r1.getCell(2).numFmt = '₹#,##0.00';
+            r1.getCell(3).font = { color: { argb: revG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r1.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
 
-            // Trigger download
-            const blob = new Blob(['\uFEFF' + csvStr], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Medusa_Report_' + new Date().toISOString().slice(0, 10) + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const r2 = wsSum.addRow(['Completed Orders', parseInt(summary.orders_count || 0), (ordG>0?'+':'') + ordG + '%']);
+            r2.getCell(3).font = { color: { argb: ordG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r2.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            const r3 = wsSum.addRow(['Average Order Value (INR)', parseFloat(summary.aov || 0), (aovG>0?'+':'') + aovG + '%']);
+            r3.getCell(2).numFmt = '₹#,##0.00';
+            r3.getCell(3).font = { color: { argb: aovG >= 0 ? 'FF007A33' : 'FFC1272D' }, bold: true };
+            r3.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            const r4 = wsSum.addRow(['Performance Score', `${summary.performance_score || 0}/100`, '']);
+            r4.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 1 ? 'right' : 'left' }; });
+
+            wsSum.addRow([]);
+
+            // Subheader - Operations
+            const opsHeader = wsSum.addRow(['Operations & Customers', 'Value', '']);
+            wsSum.mergeCells(`B${opsHeader.number}:C${opsHeader.number}`);
+            opsHeader.eachCell(c => {
+                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+                c.font = { color: { argb: white }, bold: true };
+                c.border = thinBorder;
+            });
+            
+            const addOpRow = (label, val) => {
+                const row = wsSum.addRow([label, val, '']);
+                wsSum.mergeCells(`B${row.number}:C${row.number}`);
+                row.eachCell(c => { c.border = thinBorder; });
+                row.getCell(2).alignment = { horizontal: 'right' };
+            };
+            
+            addOpRow('Online Orders', summary.online_orders || 0);
+            addOpRow('Dine-in Orders', summary.dinein_orders || 0);
+            addOpRow('Acceptance Rate', `${parseFloat(summary.acceptance_rate || 0).toFixed(1)}%`);
+            addOpRow('Completion Rate', `${parseFloat(summary.completion_rate || 0).toFixed(1)}%`);
+            addOpRow('Total Customers Reached', summary.total_customers || 0);
+            addOpRow('New Guest Registrations', summary.new_customers || 0);
+            addOpRow('Returning Customer Base', summary.returning_customers || 0);
+            addOpRow('Guest Retention Rate', `${parseFloat(summary.retention_rate || 0).toFixed(1)}%`);
+
+            // 2. Top Dishes Sheet
+            const wsDishes = workbook.addWorksheet('Top Dishes');
+            wsDishes.columns = [{ width: 10 }, { width: 35 }, { width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsDishes.addRow(['BEST SELLING DISHES']);
+            wsDishes.mergeCells('A1:E1');
+            wsDishes.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsDishes.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsDishes.getCell('A1').alignment = { horizontal: 'center' };
+            
+            const dh = wsDishes.addRow(['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue (INR)']);
+            dh.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+            
+            dishes.forEach((d, i) => {
+                const r = wsDishes.addRow([i + 1, d.item_name || d.name, d.category || 'N/A', parseInt(d.qty_sold), parseFloat(d.revenue || 0)]);
+                r.getCell(5).numFmt = '₹#,##0.00';
+                r.eachCell(c => { c.border = thinBorder; c.alignment = { horizontal: c._column._number > 3 ? 'right' : 'left' }; });
+                r.getCell(1).alignment = { horizontal: 'center' };
+            });
+
+            // 3. Category Performance
+            const wsCat = workbook.addWorksheet('Categories');
+            wsCat.columns = [{ width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsCat.addRow(['CATEGORY PERFORMANCE']);
+            wsCat.mergeCells('A1:C1');
+            wsCat.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsCat.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsCat.getCell('A1').alignment = { horizontal: 'center' };
+
+            const ch = wsCat.addRow(['Category', 'Units Sold', 'Revenue (INR)']);
+            ch.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            categories.forEach(c => {
+                const r = wsCat.addRow([c.category_name || c.category, parseInt(c.units_sold || c.qty), parseFloat(c.revenue || 0)]);
+                r.getCell(3).numFmt = '₹#,##0.00';
+                r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 1 ? 'right' : 'left' }; });
+            });
+
+            // 4. Payments
+            const wsPay = workbook.addWorksheet('Payments');
+            wsPay.columns = [{ width: 25 }, { width: 15 }, { width: 20 }];
+            
+            wsPay.addRow(['PAYMENT BREAKDOWN']);
+            wsPay.mergeCells('A1:C1');
+            wsPay.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsPay.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsPay.getCell('A1').alignment = { horizontal: 'center' };
+
+            const ph = wsPay.addRow(['Payment Method', 'Transactions', 'Total Amount (INR)']);
+            ph.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            Object.entries(payments).forEach(([method, vals]) => {
+                if (vals.count > 0) {
+                    const r = wsPay.addRow([method.toUpperCase(), parseInt(vals.count), parseFloat(vals.amount || 0)]);
+                    r.getCell(3).numFmt = '₹#,##0.00';
+                    r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 1 ? 'right' : 'left' }; });
+                }
+            });
+
+            // 5. Top Customers
+            const wsCust = workbook.addWorksheet('Top Customers');
+            wsCust.columns = [{ width: 25 }, { width: 15 }, { width: 15 }, { width: 20 }];
+            
+            wsCust.addRow(['TOP PERFORMING CUSTOMERS']);
+            wsCust.mergeCells('A1:D1');
+            wsCust.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: dark } };
+            wsCust.getCell('A1').font = { color: { argb: gold }, size: 12, bold: true };
+            wsCust.getCell('A1').alignment = { horizontal: 'center' };
+
+            const cuh = wsCust.addRow(['Customer Name', 'Phone', 'Orders', 'Total Spent (INR)']);
+            cuh.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: gray } }; c.font = { bold: true }; c.border = thinBorder; });
+
+            customers.slice(0, 50).forEach(c => {
+                const r = wsCust.addRow([c.customer_name || 'Unknown', c.customer_phone, parseInt(c.order_count || 0), parseFloat(c.total_spent || 0)]);
+                r.getCell(4).numFmt = '₹#,##0.00';
+                r.eachCell(cell => { cell.border = thinBorder; cell.alignment = { horizontal: cell._column._number > 2 ? 'right' : 'left' }; });
+            });
+
+            // Trigger Download
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Medusa_Business_Report_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // =====================================================================
         // 8. AUTO-INITIALIZATION
         // =====================================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-load reports when reports tab is activated
-            const reportsLink = document.querySelector('[onclick*="reports-tab"]');
-            if (reportsLink) {
-                const origOnclick = reportsLink.getAttribute('onclick');
-                reportsLink.setAttribute('onclick', origOnclick);
-                reportsLink.addEventListener('click', function() {
-                    setTimeout(() => { loadReportsData(null); }, 150);
-                });
-            }
-
             // Real-time debounced orders search (search-as-you-type on the text field)
             const orderInput = document.getElementById('order_search_input');
             if (orderInput) {
@@ -7037,10 +7634,33 @@ html:not(.light-mode) .form-select:focus{
                             <button class="btn-action-circle btn-action-circle-light" onclick="updateCareerStatus(${app.id}, 'Reviewed')" title="Mark Reviewed"><i class="fas fa-check-double"></i></button>
                             <button class="btn-action-circle btn-action-circle-success" onclick="updateCareerStatus(${app.id}, 'Shortlisted')" title="Shortlist"><i class="fas fa-user-check"></i></button>
                             <button class="btn-action-circle btn-action-circle-danger" onclick="updateCareerStatus(${app.id}, 'Rejected')" title="Reject"><i class="fas fa-user-times"></i></button>
+                            <button class="btn-action-circle btn-action-circle-danger" style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626;" onclick="deleteCareerApplication(${app.id})" title="Delete Application"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        function deleteCareerApplication(id) {
+            if (!confirm('Are you sure you want to permanently delete this application?')) return;
+            
+            fetch('dashboardtest.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'delete_career_application',
+                    id: id
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    performCareersSearch(); // Refresh list
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete'));
+                }
+            })
+            .catch(() => alert('Network error while deleting application.'));
         }
 
         function updateCareerStatus(id, newStatus) {
@@ -7798,7 +8418,7 @@ html:not(.light-mode) .form-select:focus{
                                     <td class="text-center"><strong>${bottles}</strong></td>
                                     <td class="text-center"><strong>${pegs}</strong></td>
                                     <td class="text-center">
-                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0})">
+                                        <button class="btn btn-gold-action btn-sm" onclick="selectQuotaForConsume('${escapeHtml(q.user_name)}', ${bottles > 0 || pegs > 0}, ${q.food_item_id})">
                                             <i class="fas fa-glass-water me-1"></i> Log Consume
                                         </button>
                                     </td>
@@ -7816,26 +8436,32 @@ html:not(.light-mode) .form-select:focus{
                 });
         }
 
-        function selectQuotaForConsume(customerName, hasQuota) {
+        function selectQuotaForConsume(customerName, hasQuota, brandId = null) {
             document.getElementById('consume_search_term').value = customerName;
             document.getElementById('consume_brand_id').innerHTML = '<option value="">-- Verifying... --</option>';
             document.getElementById('btn-admin-consume').disabled = true;
             verifiedUserId = null;
             
             showToast(`Selected ${customerName}. Verifying active quota...`, 'info');
-            loadCustomerBrands(); // Auto load it!
+            loadCustomerBrands(brandId); // Auto load it!
         }
 
-        function loadCustomerBrands() {
+        function loadCustomerBrands(autoSelectBrandId = null) {
             const searchTerm = document.getElementById('consume_search_term').value.trim();
             const brandSelect = document.getElementById('consume_brand_id');
+            const brandSection = document.getElementById('consume_brand_section');
+            const btnVerify = document.getElementById('btn-admin-verify');
 
             if (!searchTerm) {
                 showToast('Please enter a search term.', 'error');
                 return;
             }
 
-            brandSelect.innerHTML = '<option value="">Verifying...</option>';
+            const origText = btnVerify.innerHTML;
+            btnVerify.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Searching...';
+            btnVerify.disabled = true;
+
+            brandSection.style.display = 'none';
             document.getElementById('btn-admin-consume').disabled = true;
             verifiedUserId = null;
 
@@ -7848,6 +8474,9 @@ html:not(.light-mode) .form-select:focus{
             })
             .then(res => res.json())
             .then(data => {
+                btnVerify.innerHTML = origText;
+                btnVerify.disabled = false;
+
                 if (data.success) {
                     verifiedUserId = data.user_id;
                     let html = '<option value="">-- Choose Brand --</option>';
@@ -7856,7 +8485,16 @@ html:not(.light-mode) .form-select:focus{
                         html += `<option value="${b.food_item_id}">${escapeHtml(b.item_name)} (${total_pegs} pegs left)</option>`;
                     });
                     brandSelect.innerHTML = html;
+                    
+                    // Auto-select the brand if requested
+                    if (autoSelectBrandId) {
+                        brandSelect.value = autoSelectBrandId;
+                    }
+                    
+                    // Reveal the hidden selection box and consume button
+                    brandSection.style.display = 'block';
                     document.getElementById('btn-admin-consume').disabled = false;
+                    
                     showToast('Customer verified successfully! Please select a brand to log peg consumption.', 'success');
                 } else {
                     brandSelect.innerHTML = '<option value="">Verification Failed</option>';
@@ -7865,6 +8503,8 @@ html:not(.light-mode) .form-select:focus{
             })
             .catch(err => {
                 console.error(err);
+                btnVerify.innerHTML = origText;
+                btnVerify.disabled = false;
                 brandSelect.innerHTML = '<option value="">Error verifying customer</option>';
                 showToast('Network error verifying customer.', 'error');
             });
@@ -8057,7 +8697,204 @@ function printTableQR() {
             btn.disabled = false;
         }
     });
+
+    // =====================================================================
+    // CAMPAIGNS MANAGEMENT JS
+    // =====================================================================
+    function fetchCampaigns() {
+        setTableLoading('campaigns-table-body', 8);
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=get_campaigns'
+        })
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('campaigns-table-body');
+            if (!data.success || !data.campaigns || data.campaigns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No campaigns found.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.campaigns.map(c => {
+                const isAct = parseInt(c.is_active) === 1;
+                const typeStr = c.discount_type === 'percentage' ? c.discount_value + '%' : '₹' + c.discount_value;
+                const statusBadge = isAct ? '<span class="status-badge bg-success text-dark">Active</span>' : '<span class="status-badge bg-danger text-white">Inactive</span>';
+                
+                let usageStr = c.used_count;
+                if (c.usage_limit) usageStr += ' / ' + c.usage_limit;
+                
+                return `<tr>
+                    <td><strong>${c.campaign_code}</strong></td>
+                    <td class="text-gold">${typeStr}</td>
+                    <td>₹${c.min_order_value}</td>
+                    <td>${c.max_discount ? '₹'+c.max_discount : 'N/A'}</td>
+                    <td>${c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : 'Never'}</td>
+                    <td>${usageStr}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn-action-circle btn-action-circle-light" onclick='openEditCampaignModal(${JSON.stringify(c).replace(/'/g, "&#39;")})' title="Edit Campaign"><i class="fas fa-edit"></i></button>
+                            <button class="btn-action-circle ${isAct ? 'btn-action-circle-warning' : 'btn-action-circle-success'}" onclick="toggleCampaign(${c.id})" title="${isAct ? 'Deactivate' : 'Activate'}"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'}"></i></button>
+                            <button class="btn-action-circle btn-action-circle-danger" style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626;" onclick="deleteCampaign(${c.id})" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        })
+        .catch(() => showSearchError('campaigns-table-body', 8, 'Failed to load campaigns'));
+    }
+
+    function generateRandomCampaignCode() {
+        const input = document.getElementById('campaign_code');
+        if (input.readOnly) return; // Cannot modify if editing
+        
+        const rand4 = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+        let base = input.value.trim().toUpperCase();
+        
+        // If empty, or looks like a previously auto-generated code, replace entirely
+        if (!base || /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(base)) {
+            input.value = rand4() + '-' + rand4();
+            return;
+        }
+        
+        // Otherwise, keep the custom event name the admin typed
+        // If it already ends with -XXXX from a previous click, replace just that part
+        if (/-[A-Z0-9]{4}$/.test(base)) {
+            base = base.substring(0, base.length - 5);
+        }
+        
+        input.value = base + '-' + rand4();
+    }
+
+    function openAddCampaignModal() {
+        document.getElementById('campaignForm').reset();
+        document.getElementById('campaign_id').value = '';
+        document.getElementById('campaignModalLabel').innerText = 'Generate New Campaign';
+        new bootstrap.Modal(document.getElementById('campaignModal')).show();
+    }
+
+    function openEditCampaignModal(campaign) {
+        document.getElementById('campaignForm').reset();
+        document.getElementById('campaign_id').value = campaign.id;
+        document.getElementById('campaign_code').value = campaign.campaign_code;
+        document.getElementById('campaign_code').readOnly = true;
+        document.getElementById('discount_type').value = campaign.discount_type;
+        document.getElementById('discount_value').value = campaign.discount_value;
+        document.getElementById('min_order_value').value = campaign.min_order_value || '';
+        document.getElementById('max_discount').value = campaign.max_discount || '';
+        document.getElementById('expiry_date').value = campaign.expiry_date ? campaign.expiry_date.replace(' ', 'T').slice(0,16) : '';
+        document.getElementById('usage_limit').value = campaign.usage_limit || '';
+        
+        document.getElementById('campaignModalLabel').innerText = 'Edit Campaign';
+        new bootstrap.Modal(document.getElementById('campaignModal')).show();
+    }
+
+    document.getElementById('campaignForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('campaign_id').value;
+        const formData = new URLSearchParams(new FormData(this));
+        formData.append('action', id ? 'update_campaign' : 'create_campaign');
+        if (id) formData.append('id', id);
+
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('campaignModal')).hide();
+                fetchCampaigns();
+            } else {
+                alert(data.message || 'Error saving campaign');
+            }
+        });
+    });
+
+    function toggleCampaign(id) {
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=toggle_campaign&id=' + id
+        })
+        .then(() => fetchCampaigns());
+    }
+
+    function deleteCampaign(id) {
+        if (!confirm('Are you sure you want to delete this campaign permanently?')) return;
+        fetch('dashboardtest.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=delete_campaign&id=' + id
+        })
+        .then(() => fetchCampaigns());
+    }
 </script>
+
+<!-- Campaign Modal -->
+<div class="modal fade" id="campaignModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+            <div class="modal-header border-bottom border-dark">
+                <h5 class="modal-title text-gold" id="campaignModalLabel">Generate Campaign</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="campaignForm">
+                    <input type="hidden" name="campaign_id" id="campaign_id">
+                    <div class="mb-3">
+                        <label class="form-label text-white">Campaign Code</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="code" id="campaign_code" required placeholder="e.g. SUMMER2026" style="text-transform: uppercase;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="generateRandomCampaignCode()" title="Generate Random Code">
+                                <i class="fas fa-random"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Discount Type</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="discount_type" id="discount_type" required>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="flat">Flat Amount (₹)</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Discount Value</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="discount_value" id="discount_value" required min="1" step="0.01">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Min Order Value (₹)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="min_order_value" id="min_order_value" min="0" step="0.01">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Max Discount (₹)</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="max_discount" id="max_discount" min="0" step="0.01" placeholder="(Optional for %)">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white">Expiry Date</label>
+                            <input type="datetime-local" class="form-control bg-dark text-white border-secondary" name="expiry_date" id="expiry_date">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white">Usage Limit</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="usage_limit" id="usage_limit" min="1" placeholder="(Total overall uses)">
+                        </div>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Coupon</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
 

@@ -30,6 +30,9 @@ $tomtomApiKey = "qI82bUxco20qcXu2avJFVppor79rrqzM";
         .driver-order { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
         .driver-status { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
         
+        .call-driver-btn { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid #38bdf8; border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .call-driver-btn:hover { background: #38bdf8; color: #0f172a; }
+
         .ol-control button { background-color: rgba(30, 41, 59, 0.9) !important; color: #f8fafc !important; }
         .ol-control button:hover { background-color: rgba(56, 189, 248, 0.9) !important; }
         .ol-zoom { top: unset !important; bottom: 20px !important; left: 20px !important; }
@@ -144,8 +147,12 @@ $tomtomApiKey = "qI82bUxco20qcXu2avJFVppor79rrqzM";
                         html += `
                             <div class="driver-card" onclick="focusMap(${lat}, ${lng})">
                                 <div class="driver-name">${driver.customer_name} (Order: ${driver.order_number})</div>
+                                <div class="driver-order" style="margin-bottom: 4px; color: #cbd5e1;"><i class="fa-solid fa-user-ninja"></i> Driver: ${driver.driver_name || 'Unassigned'}</div>
                                 <div class="driver-order"><i class="fa-solid fa-location-dot"></i> ${driver.delivery_address}</div>
-                                <div class="driver-status"><i class="fa-solid fa-truck-fast"></i> ${driver.status}</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                    <div class="driver-status"><i class="fa-solid fa-truck-fast"></i> ${driver.status}</div>
+                                    <button class="call-driver-btn" onclick="event.stopPropagation(); window.location.href='tel:${driver.driver_phone || '+919876543210'}'"><i class="fa-solid fa-phone"></i> Call Driver</button>
+                                </div>
                             </div>
                         `;
 

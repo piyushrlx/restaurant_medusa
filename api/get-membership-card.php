@@ -15,7 +15,7 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$user_id]);
 $db_user = $stmt->fetch(PDO::FETCH_ASSOC);
-$user_tier = 'SILVER'; // Default
+$user_tier = 'BRONZE'; // Default
 if ($db_user) {
     $user_name = $db_user['full_name'];
     if (!empty($db_user['tier'])) {
