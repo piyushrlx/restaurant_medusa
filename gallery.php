@@ -10,6 +10,19 @@ $manifest_path = __DIR__ . '/uploads/gallery/gallery.json';
 if (file_exists($manifest_path)) {
     $gallery_manifest = json_decode(file_get_contents($manifest_path), true) ?: [];
 }
+
+// Scan local shoot images
+$local_images = [];
+$shoot_dir = __DIR__ . '/assets/Medusa Zomato shoot-20260630T084504Z-3-001/Medusa Zomato shoot';
+if (is_dir($shoot_dir)) {
+    $files = glob($shoot_dir . '/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', GLOB_BRACE);
+    if ($files) {
+        sort($files);
+        foreach ($files as $file) {
+            $local_images[] = 'assets/Medusa Zomato shoot-20260630T084504Z-3-001/Medusa Zomato shoot/' . basename($file);
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -553,48 +566,7 @@ if (file_exists($manifest_path)) {
 
 <script>
 // ═══════════════════ DATA ═══════════════════
-const PHOTO_IDS = [
-    '1FCIKJRzyYmcHqLk-aBlWHqluzf8YkMwN', // CFP00934
-    '1ZQld0GIstlTJVY9EQmuw0fkXFIHlM0j9', // CFP00980
-    '11yE6qL8W3J9bNyeW99QomMMnjWCuCAVz', // CFP00936
-    '1w9Lb105vArLvGzY6J0G1sAW-DEwbUdnQ', // CFP00927
-    '1wr0OiGSZFRNl7jphyxk9onVT5qQHLcD4', // CFP01002
-    '1CqTJMH3or60L_gc-sJAcgL_dSbkfA4Xd', // CFP00947
-    '14mAeeKeGKcWT2AzgtmvJr7CAckY9AXYC', // CFP00995
-    '1bhoySrfJqxGZDUtM4rXT5b3BqgRCI7mb', // CFP00988
-    '1y62fHs-C-TiEnLOF0_qfjUeLiyIo7xTZ', // CFP00990
-    '1PSIQZ2NDUc1qCyQB5FCNbVX1iP_73eoC', // CFP00960
-    '1Ssf169Jm55t_E1eqAfycQFiaFRbQh-Rl', // CFP00969
-    '1_3yOwACMlYjl83_G0_ozOQ-Dda7qBhBl', // CFP00998
-    '1wpVrHy0ON5B76ZCJdD__R07726tIpq1O', // CFP00932
-    '1QSZeSA7ahH7rwsCamXQd58saCNqE_TdP', // CFP00976
-    '1FApmLgBI1a2QSoC1pz2i3O0K7a0N5N2g', // CFP00972
-    '1mvHbt22jOQemvJRHFNUJt_kadCp1sp0h', // CFP00973
-    '1L6h6ATW8ri89tW5kICnWZzXwaNFG2KMN', // CFP00930
-    '1Bp42PT8ujzuVCyryRZmh6DiBp-JOz3v-', // CFP00926
-    '1e3wX3NCB0P2ya0X2kIkAo-2gkP8SEZct', // CFP00991
-    '1b5XvLPjvWT32GXY93Y5gK1SSbNRo_zx1', // CFP00935
-    '1vkl62jL8shGa4gF0ZO74PRmyQNGKcecF', // CFP01001
-    '1ZxacVbTv5xakVemuiRTedRwP1iyUAD1o', // CFP00945
-    '127GT8SUBPSyl0BUIqtuJO1rrmCCHK1c7', // CFP00999
-    '1ieg-ZgX2z6bQ---Tc5NqY-GCkJFcfnzj', // CFP00959
-    '1wHLHtJweKPRhE86CPG8jfJT0QeJt74BJ', // CFP00942
-    '1x9eDePXyk2xgT5c-6_axxalOsXHcxzsm', // CFP00965
-    '1utK6keLe8IgEyKt8XVttsEO7Qgn-sNA6', // CFP00963
-    '1pfr54r6Jfj5ichFD4s4EYsU6kB9KtV6P', // CFP00928
-    '1IpnQzfRLAV7rjI8UEQv1D0Up3b4Guhwt', // CFP00992
-    '1HPKbzhJlJ_fucN37vptyL075v-qUkY4Q', // CFP00997
-    '1Dp_zowglak3P7W4fSQBebPE_nsvQOJvQ', // CFP00956
-    '1hdY_c6EsygGgkVKdaG7_3EhQVdXP8I0i', // CFP00975
-    '1Ss7Gs5GSMdV1wovNHDwzrAQsgkPIggwE', // CFP00946
-    '1guVrKFOSoHFCVDbldQWZpiO4vt7Jh50-', // CFP00996
-    '1KeGNq679WMCE-a30R222jZy3kDfL0ZiN', // CFP00940
-    '1Rrst4oU3CN7cSGV6sOJ2SBvYbyPEQwyu', // CFP00984
-    '1qo-Xlod0kpWfADJm0dwOwLWGguJGF2uU', // CFP00977
-    '1HphuY26KN3JtO0U0Lx5Y7t-YFpcn2d_D', // CFP00964
-    '1KLzMuvux_hQEut0Drk-ilalGr1F4EypO', // CFP00981
-    '1QjgRiXohjsSXdat1Hwy1d_-8K0q4HCBZ', // CFP00966
-];
+const PHOTO_IDS = <?php echo json_encode($local_images); ?>;
 
 const VIDEO_IDS = [
     { id: '1LDRgiPlYAqmliRkFdLakKtqaWALZDu9M', name: 'Kitchen Vibes', desc: 'Behind the scenes energy from our kitchen.' },
@@ -681,8 +653,14 @@ let visibleVideos = 9;
 const PHOTO_BATCH = 12;
 const VIDEO_BATCH = 6;
 
-function thumbUrl(id)  { return `https://drive.google.com/thumbnail?id=${id}&sz=w800`; }
-function highResUrl(id){ return `https://drive.google.com/thumbnail?id=${id}&sz=w2000`; }
+function thumbUrl(id)  { 
+    if (id.startsWith('assets/')) return id;
+    return `https://drive.google.com/thumbnail?id=${id}&sz=w800`; 
+}
+function highResUrl(id){ 
+    if (id.startsWith('assets/')) return id;
+    return `https://drive.google.com/thumbnail?id=${id}&sz=w2000`; 
+}
 function driveViewUrl(id){ return `https://drive.google.com/file/d/${id}/preview`; }
 
 // ═══════════════════ PHOTOS ═══════════════════
