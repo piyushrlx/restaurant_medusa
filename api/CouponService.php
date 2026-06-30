@@ -64,6 +64,16 @@ class CouponService {
                 return $existing['coupon_code'];
             }
         }
+        
+        // Prevent duplicate ACTIVE coupons for the same user and campaign
+        if ($userId !== null) {
+            $checkUserCampaign = $this->pdo->prepare("SELECT coupon_code FROM coupons WHERE user_id = ? AND campaign_code = ? AND status = 'active'");
+            $checkUserCampaign->execute([$userId, $campaignCode]);
+            $existingActive = $checkUserCampaign->fetch(PDO::FETCH_ASSOC);
+            if ($existingActive) {
+                return $existingActive['coupon_code'];
+            }
+        }
 
         $secretKey = get_env_var('COUPON_SECRET_KEY', 'MedusaDefaultSecretKey2026!');
         $expiryDays = intval(get_env_var('DEFAULT_COUPON_EXPIRY_DAYS', 30));
