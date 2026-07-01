@@ -1176,3 +1176,39 @@ Download URL: http://192.168.1.8/restaurant_medusa/download_bill.php?id=70&token
 
 
 [2026-06-23 06:52:55] [EMAIL] OTP for customer@example.com: 508427
+[2026-06-30 18:16:42] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.3 port 8080 after 3015 ms: Timeout was reached
+[2026-06-30 18:16:45] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 7814585430
+Order ID: ORD-9D028
+PDF Path: bills/order_103_20260630_181642.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=103&token=047213b85149cb6182cca9f881b1aa032fe5892d22d5be84b18f78d7d4741d41
+----------------------------------------
+
+[2026-06-30 18:16:51] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_103_20260630_181642.pdf
+[2026-06-30 18:39:32] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.3 port 8080 after 2623 ms: Couldn't connect to server
+[2026-06-30 18:39:35] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 7814585430
+Order ID: ORD-46D0E
+PDF Path: bills/order_104_20260630_183932.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=104&token=c26434efc7a7815189c4c6e217064280cf933f5c8318e3fa186262ca0f6b6fa4
+----------------------------------------
+
+[2026-06-30 18:39:41] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_104_20260630_183932.pdf
+[2026-06-30 19:33:31] [SMS_GATEWAY_ERROR] SMS failed for 7814585430: cURL Error: Failed to connect to 192.168.1.3 port 8080 after 3001 ms: Timeout was reached
+[2026-06-30 19:33:34] [ORDER_BILL_ATTACHMENT] Email queued/sent to customer@example.com:
+----------------------------------------
+Name: Test Customer
+Email: customer@example.com
+Phone: 7814585430
+Order ID: ORD-B4D0B
+PDF Path: bills/order_105_20260630_193331.pdf
+Download URL: http://192.168.1.6/restaurant_medusa/download_bill.php?id=105&token=6b686834ff225ff031d88ef1f4edc8a80358da165fc1b967caf53352db43d5fc
+----------------------------------------
+
+[2026-06-30 19:33:40] [WHATSAPP_INVOICE] WhatsApp dispatch skipped (API not configured) for 7814585430 with attachment: bills/order_105_20260630_193331.pdf

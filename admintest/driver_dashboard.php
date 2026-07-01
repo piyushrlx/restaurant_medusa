@@ -17,7 +17,22 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Google Maps -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($mapsApiKey); ?>&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($mapsApiKey); ?>&libraries=places&loading=async&callback=initGoogleMapsCallback" defer></script>
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === "string" && (
+                args[0].includes("cdn.tailwindcss.com") ||
+                args[0].includes("google.maps.Marker") ||
+                args[0].includes("DirectionsService") ||
+                args[0].includes("DirectionsRenderer") ||
+                args[0].includes("deprecated")
+            )) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
 
     <style>
         :root {
@@ -161,6 +176,63 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             top: 60px; /* Header height */
             left: 0;
             z-index: 1;
+        }
+
+        #nav-instruction-banner {
+            position: absolute;
+            top: 75px; /* Floats just below the main header, above the map */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 480px;
+            background-color: rgba(30, 30, 30, 0.95);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .nav-icon-container {
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(223, 186, 134, 0.4);
+        }
+        .nav-text-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            text-align: left;
+        }
+        .nav-instruction-dist {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .nav-instruction-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .delivery-details {
@@ -428,6 +500,16 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
     <!-- Screen 2: Active Delivery -->
     <div id="screen-delivery" class="screen">
+        <!-- Floating Navigation Turn-by-Turn Instruction Banner -->
+        <div id="nav-instruction-banner" style="display: none;">
+            <div class="nav-icon-container">
+                <i class="fa-solid fa-arrow-up" id="navInstructionIcon"></i>
+            </div>
+            <div class="nav-text-container">
+                <div class="nav-instruction-dist" id="navInstructionDist">---</div>
+                <div class="nav-instruction-text" id="navInstructionText">Starting navigation...</div>
+            </div>
+        </div>
         <div id="map-container"></div>
         
         <div class="delivery-details">
@@ -469,9 +551,12 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
 
             <!-- Customer Card -->
             <div class="info-card">
-                <div class="card-header">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <span class="card-title">Dropoff: <span id="uiCustomerName">---</span></span>
-                    <a href="#" id="uiCustomerPhone" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <a href="#" id="uiCustomerPhone" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
+                        <a href="#" id="uiMapsApp" target="_blank" class="btn-call" style="background-color: #2196F3; color: #fff; border: none; display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-map-location-dot"></i> Maps App</a>
+                    </div>
                 </div>
                 <div class="card-value" id="uiCustomerAddress" style="font-size: 0.95rem; font-weight: 400; color: var(--text-muted);">
                     ---
@@ -527,9 +612,36 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
         let driverMarker = null;
         let restaurantMarker = null;
         let customerMarker = null;
+        let customerLat = null;
+        let customerLng = null;
+        let lastRouteUpdate = 0;
         let watchId = null;
         let currentLat = null;
         let currentLng = null;
+        let previousLat = null;
+        let previousLng = null;
+        let currentHeading = 0;
+
+        function calculateHeading(lat1, lng1, lat2, lng2) {
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const lat1Rad = lat1 * Math.PI / 180;
+            const lat2Rad = lat2 * Math.PI / 180;
+
+            const y = Math.sin(dLng) * Math.cos(lat2Rad);
+            const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+                      Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+                      
+            let brng = Math.atan2(y, x) * 180 / Math.PI;
+            return (brng + 360) % 360;
+        }
+
+        let pendingMapInit = false;
+        window.initGoogleMapsCallback = function() {
+            if (pendingMapInit) {
+                initMapAndFulfillRoute();
+                pendingMapInit = false;
+            }
+        };
 
         // Initialize Map
         function initMap() {
@@ -605,13 +717,21 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             updateStatusBadge(currentOrder.status);
 
             // Init Map and Tracking
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+                initMapAndFulfillRoute();
+            } else {
+                pendingMapInit = true;
+            }
+            startGPSTracking();
+        }
+
+        function initMapAndFulfillRoute() {
             initMap();
             if (map && restaurantMarker) {
                 const restPos = { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG };
                 map.setCenter(restPos);
                 restaurantMarker.setPosition(restPos);
             }
-            startGPSTracking();
 
             // Geocode Customer Address
             try {
@@ -624,6 +744,8 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                 if (forceDropLat && forceDropLng) {
                     cLat = forceDropLat;
                     cLng = forceDropLng;
+                    customerLat = cLat;
+                    customerLng = cLng;
                     
                     customerMarker = new google.maps.Marker({
                         position: { lat: cLat, lng: cLng },
@@ -648,6 +770,8 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
                         } else {
                             console.warn('Google Maps Geocoding failed. Using fallback.');
                         }
+                        customerLat = cLat;
+                        customerLng = cLng;
                         
                         customerMarker = new google.maps.Marker({
                             position: { lat: cLat, lng: cLng },
@@ -673,57 +797,115 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
         // GPS Tracking
         function startGPSTracking() {
             if ("geolocation" in navigator) {
-                watchId = navigator.geolocation.watchPosition(
-                    (position) => {
-                        currentLat = position.coords.latitude;
-                        currentLng = position.coords.longitude;
-                        
-                        const pos = { lat: currentLat, lng: currentLng };
+                const options = { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 };
+                
+                function successCallback(position) {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    
+                    // Prevent script errors if Google Maps API has not finished loading yet
+                    if (typeof google === 'undefined' || !google.maps || !google.maps.SymbolPath || !map) {
+                        return;
+                    }
+                    
+                    let heading = position.coords.heading;
+                    if (heading === null || heading === undefined || isNaN(heading)) {
+                        if (previousLat !== null && previousLng !== null) {
+                            const dLat = currentLat - previousLat;
+                            const dLng = currentLng - previousLng;
+                            const distSq = dLat*dLat + dLng*dLng;
+                            if (distSq > 0.00000004) { // approx 2 meters threshold
+                                currentHeading = calculateHeading(previousLat, previousLng, currentLat, currentLng);
+                            }
+                        }
+                    } else {
+                        currentHeading = heading;
+                    }
+                    
+                    previousLat = currentLat;
+                    previousLng = currentLng;
+                    
+                    const pos = { lat: currentLat, lng: currentLng };
+                    const arrowIcon = {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: '#2196F3',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        rotation: currentHeading || 0
+                    };
 
-                        if (!driverMarker) {
-                            driverMarker = new google.maps.Marker({
-                                position: pos,
-                                map: map,
-                                icon: {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 12,
-                                    fillColor: '#2196F3',
-                                    fillOpacity: 1,
-                                    strokeColor: '#ffffff',
-                                    strokeWeight: 2
-                                },
-                                title: 'Driver'
-                            });
-                        } else {
-                            driverMarker.setPosition(pos);
+                    if (!driverMarker) {
+                        driverMarker = new google.maps.Marker({
+                            position: pos,
+                            map: map,
+                            icon: arrowIcon,
+                            title: 'Driver'
+                        });
+                    } else {
+                        driverMarker.setPosition(pos);
+                        driverMarker.setIcon(arrowIcon);
+                    }
+
+                    // Dynamically recalculate route from driver's current location to customer
+                    if (customerLat && customerLng) {
+                        const now = Date.now();
+                        if (now - lastRouteUpdate > 10000) { // throttle updates to once every 10 seconds
+                            setupRoute(customerLat, customerLng, currentLat, currentLng);
+                            lastRouteUpdate = now;
+                        }
+                    }
+
+                    // Send location to backend if an order is active
+                    if (currentOrder && currentOrder.order_number) {
+                        const payload = {
+                            action: 'update_location',
+                            order_number: currentOrder.order_number,
+                            lat: currentLat,
+                            lng: currentLng
+                        };
+                        if (remainingDurationSeconds !== null) {
+                            payload.remaining_duration = remainingDurationSeconds;
                         }
 
-                        // Send location to backend if an order is active
-                        if (currentOrder && currentOrder.order_number) {
-                            fetch('../api/driver_api.php', {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({
-                                    action: 'update_location',
-                                    order_number: currentOrder.order_number,
-                                    lat: currentLat,
-                                    lng: currentLng
-                                })
-                            }).catch(err => console.error("Error updating location", err));
-                        }
-                    },
-                    (error) => { console.warn("GPS Error", error); },
-                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-                );
+                        fetch('../api/driver_api.php', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        }).catch(err => console.error("Error updating location", err));
+                    }
+                }
+
+                function errorCallback(error) {
+                    console.log("GPS High Accuracy Error (falling back to standard accuracy):", error.message);
+                    if (watchId) {
+                        navigator.geolocation.clearWatch(watchId);
+                    }
+                    // Fallback to standard accuracy
+                    watchId = navigator.geolocation.watchPosition(
+                        successCallback,
+                        (err) => { console.log("GPS Standard Accuracy Error:", err.message); },
+                        { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 }
+                    );
+                }
+
+                watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, options);
             }
         }
 
         // Google Maps Routing Setup
-        function setupRoute(custLat, custLng) {
+        let remainingDurationSeconds = null;
+
+        function setupRoute(custLat, custLng, originLat = null, originLng = null) {
             if (!directionsService || !directionsRenderer) return;
             
+            const originCoord = (originLat !== null && originLng !== null)
+                ? { lat: originLat, lng: originLng }
+                : { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG };
+
             const request = {
-                origin: { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG },
+                origin: originCoord,
                 destination: { lat: custLat, lng: custLng },
                 travelMode: google.maps.TravelMode.DRIVING
             };
@@ -731,6 +913,60 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             directionsService.route(request, (result, status) => {
                 if (status == 'OK') {
                     directionsRenderer.setDirections(result);
+                    
+                    // Turn-by-Turn Instruction Banner updates
+                    try {
+                        const route = result.routes[0];
+                        if (route && route.legs && route.legs[0]) {
+                            const leg = route.legs[0];
+                            
+                            // Save remaining travel duration in seconds
+                            remainingDurationSeconds = leg.duration.value;
+                            
+                            // Update external maps app redirection link
+                            const mapsAppBtn = document.getElementById('uiMapsApp');
+                            if (mapsAppBtn) {
+                                mapsAppBtn.style.display = 'flex';
+                                mapsAppBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${originCoord.lat},${originCoord.lng}&destination=${custLat},${custLng}&travelmode=driving`;
+                            }
+
+                            if (leg.steps && leg.steps.length > 0) {
+                                const nextStep = leg.steps[0];
+                                const banner = document.getElementById('nav-instruction-banner');
+                                const distEl = document.getElementById('navInstructionDist');
+                                const textEl = document.getElementById('navInstructionText');
+                                const iconEl = document.getElementById('navInstructionIcon');
+                                
+                                banner.style.display = 'flex';
+                                
+                                // Display next step distance, total remaining distance, and ETA duration
+                                distEl.textContent = `In ${nextStep.distance.text} · ${leg.distance.text} left (${leg.duration.text})`;
+                                
+                                // Strip HTML tags returned by Google Directions API
+                                const cleanText = nextStep.instructions.replace(/<[^>]*>/g, '');
+                                textEl.textContent = cleanText;
+                                
+                                // Map step directions to FontAwesome icons
+                                const action = nextStep.maneuver || '';
+                                let iconClass = 'fa-arrow-up'; // default straight
+                                if (action.includes('turn-left') || cleanText.toLowerCase().includes('turn left')) {
+                                    iconClass = 'fa-arrow-turn-up fa-flip-horizontal';
+                                } else if (action.includes('turn-right') || cleanText.toLowerCase().includes('turn right')) {
+                                    iconClass = 'fa-arrow-turn-up';
+                                } else if (action.includes('merge') || action.includes('fork') || cleanText.toLowerCase().includes('keep')) {
+                                    iconClass = 'fa-arrow-trend-up';
+                                } else if (action.includes('roundabout') || cleanText.toLowerCase().includes('roundabout')) {
+                                    iconClass = 'fa-arrows-spin';
+                                } else if (cleanText.toLowerCase().includes('destination')) {
+                                    iconClass = 'fa-flag-checkered';
+                                }
+                                
+                                iconEl.className = `fa-solid ${iconClass}`;
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error setting turn-by-turn banner:", e);
+                    }
                 } else {
                     console.error("Routing error", status);
                 }
@@ -818,6 +1054,8 @@ $driverName = htmlspecialchars($_SESSION['user_name']);
             if (restaurantMarker) { restaurantMarker.setMap(null); restaurantMarker = null; }
             if (customerMarker) { customerMarker.setMap(null); customerMarker = null; }
             
+            document.getElementById('uiMapsApp').style.display = 'none';
+            document.getElementById('nav-instruction-banner').style.display = 'none';
             localStorage.removeItem('active_delivery_order_number');
             
             document.getElementById('screen-delivery').classList.remove('active');

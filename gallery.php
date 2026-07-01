@@ -19,7 +19,24 @@ if (is_dir($shoot_dir)) {
     if ($files) {
         sort($files);
         foreach ($files as $file) {
-            $local_images[] = 'assets/Medusa Zomato shoot-20260630T084504Z-3-001/Medusa Zomato shoot/' . basename($file);
+            $filename = basename($file);
+            $num = intval(preg_replace('/[^0-9]/', '', $filename));
+            
+            // Programmatically categorize images based on filename index ranges
+            if ($num < 960) {
+                $category = 'food';
+            } elseif ($num < 1010) {
+                $category = 'drinks';
+            } elseif ($num < 1060) {
+                $category = 'ambiance';
+            } else {
+                $category = 'events';
+            }
+
+            $local_images[] = [
+                'id' => 'assets/Medusa Zomato shoot-20260630T084504Z-3-001/Medusa Zomato shoot/' . $filename,
+                'category' => $category
+            ];
         }
     }
 }
@@ -664,6 +681,8 @@ function highResUrl(id){
 function driveViewUrl(id){ return `https://drive.google.com/file/d/${id}/preview`; }
 
 // ═══════════════════ PHOTOS ═══════════════════
+let activeCategory = 'all';
+
 function renderPhotos() {
     const grid = document.getElementById('photosGrid');
     // Use server-managed manifest if available
@@ -686,45 +705,62 @@ function renderPhotos() {
         return;
     }
 
-    // Fallback to Drive-based photos
-    const shown = PHOTO_IDS.slice(0, visiblePhotos);
-    grid.innerHTML = shown.map((id, i) => `
-        <div class="photo-item" data-idx="${i}" onclick="openLightbox(${i})">
-            <img
-                src="${thumbUrl(id)}"
-                alt="Gallery photo ${i+1}"
-                loading="lazy"
-                onerror="this.parentElement.style.display='none'"
-            >
-            <div class="photo-overlay">
-                <div class="photo-overlay-inner">
-                    <div class="photo-expand-icon"><i class="fas fa-expand-alt"></i></div>
+    // Fallback to Zomato shoot photos
+    let filtered = PHOTO_IDS;
+    if (activeCategory !== 'all') {
+        filtered = PHOTO_IDS.filter(p => p.category === activeCategory);
+    }
+
+    const shown = filtered.slice(0, visiblePhotos);
+    grid.innerHTML = shown.map((photo, i) => {
+        const id = photo.id;
+        return `
+            <div class="photo-item" data-idx="${i}" onclick="openLightbox(${i})">
+                <img
+                    src="${thumbUrl(id)}"
+                    alt="Gallery photo ${i+1}"
+                    loading="lazy"
+                    onerror="this.parentElement.style.display='none'"
+                >
+                <div class="photo-overlay">
+                    <div class="photo-overlay-inner">
+                        <div class="photo-expand-icon"><i class="fas fa-expand-alt"></i></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     document.getElementById('photoLoadMore').style.display =
-        visiblePhotos >= PHOTO_IDS.length ? 'none' : 'block';
+        visiblePhotos >= filtered.length ? 'none' : 'block';
 }
 
 function loadMorePhotos() {
-    visiblePhotos = Math.min(visiblePhotos + PHOTO_BATCH, PHOTO_IDS.length);
+    let filtered = PHOTO_IDS;
+    if (activeCategory !== 'all') {
+        filtered = PHOTO_IDS.filter(p => p.category === activeCategory);
+    }
+    visiblePhotos = Math.min(visiblePhotos + PHOTO_BATCH, filtered.length);
     renderPhotos();
 }
 
 function filterPhotos(cat, btn) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    // All photos are the same pool; future categories can be tagged here
+    activeCategory = cat.toLowerCase();
+    visiblePhotos = 16;
     renderPhotos();
 }
 
 // ═══════════════════ LIGHTBOX ═══════════════════
 function openLightbox(idx) {
     lbCurrentIdx = idx;
-    document.getElementById('lbImg').src = highResUrl(PHOTO_IDS[idx]);
-    document.getElementById('lbCounter').textContent = `${idx + 1} / ${Math.min(visiblePhotos, PHOTO_IDS.length)}`;
+    let filtered = PHOTO_IDS;
+    if (activeCategory !== 'all') {
+        filtered = PHOTO_IDS.filter(p => p.category === activeCategory);
+    }
+    document.getElementById('lbImg').src = highResUrl(filtered[idx].id);
+    document.getElementById('lbCounter').textContent = `${idx + 1} / ${Math.min(visiblePhotos, filtered.length)}`;
     document.getElementById('photoLightbox').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -737,7 +773,11 @@ function closeLightboxDirect() {
     document.body.style.overflow = '';
 }
 function lbNavigate(dir) {
-    lbCurrentIdx = (lbCurrentIdx + dir + PHOTO_IDS.length) % PHOTO_IDS.length;
+    let filtered = PHOTO_IDS;
+    if (activeCategory !== 'all') {
+        filtered = PHOTO_IDS.filter(p => p.category === activeCategory);
+    }
+    lbCurrentIdx = (lbCurrentIdx + dir + filtered.length) % filtered.length;
     openLightbox(lbCurrentIdx);
 }
 

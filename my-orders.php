@@ -239,7 +239,25 @@ if (isset($_GET['tab'])) {
 
                 $orderDate = date('d M Y, h:i A', strtotime($order['order_date']));
                 $type      = (strpos(strtolower($order['delivery_address']), 'table') !== false) ? 'Dine-in' : 'Delivery';
-                $estTime   = ($curStep == 1) ? '20-25 mins' : (($curStep >= 4) ? '--' : '10-15 mins');
+                // Compute real ETA countdown from estimated_delivery
+                $estTime = '---';
+                if (!empty($order['estimated_delivery'])) {
+                    $eta_ts  = strtotime($order['estimated_delivery']);
+                    $now_ts  = time();
+                    $diff_s  = $eta_ts - $now_ts;
+                    if ($diff_s > 0) {
+                        $eta_mins = ceil($diff_s / 60);
+                        $estTime  = $eta_mins === 1 ? '1 min' : $eta_mins . ' mins';
+                    } elseif ($diff_s > -300) { // within 5 min past ETA
+                        $estTime = 'Arriving';
+                    } else {
+                        $estTime = '---';
+                    }
+                } elseif ($curStep === 1) {
+                    $estTime = '20-25 mins';
+                } elseif ($curStep >= 2 && $curStep <= 3) {
+                    $estTime = '10-15 mins';
+                }
             ?>
 
 
@@ -330,13 +348,25 @@ if (isset($_GET['tab'])) {
                                 </div>
                             <?php elseif ($curStep == 0): ?>
                                 <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:rgba(46,46,46,0.38); margin-bottom:5px;">Status</div>
-                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#dc2626;">
+                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#dc2626; margin-bottom:4px;">
                                     <i class="fa-regular fa-circle-xmark" style="font-size:14px;"></i>
                                     <span style="font-size:14px; font-weight:600;">Cancelled</span>
                                 </div>
+                                <?php if (!empty($order['cancellation_reason'])): ?>
+                                <div style="font-size:11px; color:#dc2626; font-weight:500; font-style:italic; text-align:right; max-width:160px; margin-left:auto; word-break:break-word; line-height:1.2;">
+                                    <?php echo htmlspecialchars($order['cancellation_reason']); ?>
+                                </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div><!-- /header -->
+
+                    <?php if ($curStep == 0 && !empty($order['cancellation_reason'])): ?>
+                    <div style="margin-bottom:16px; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; display:flex; align-items:center; gap:8px; color:#b91c1c; font-size:12px; line-height:1.4;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:14px;"></i>
+                        <span><strong>Cancellation Reason:</strong> <?php echo htmlspecialchars($order['cancellation_reason']); ?></span>
+                    </div>
+                    <?php endif; ?>
 
                     <!-- Items -->
                     <div style="border-top:1px solid #EDE5D8; padding-top:14px;">
@@ -378,8 +408,8 @@ if (isset($_GET['tab'])) {
                             <div style="font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; color:#C89B3C; line-height:1.1;">₹<?php echo number_format($order['total_amount'],2); ?></div>
                         </div>
 
-                        <?php if ($curStep > 0 && $curStep < 5): ?>
-                        <a href="track.php?order_id=<?php echo urlencode($order['order_number']); ?>"
+                        <?php if ($curStep > 0 && $curStep < 5 && !empty($order['tracking_token'])): ?>
+                        <a href="track.php?token=<?php echo urlencode($order['tracking_token']); ?>"
                            style="display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 20px; background:#C89B3C; color:#fff; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:background .2s; white-space:nowrap; border:none;"
                            onmouseover="this.style.background='#b88c2e'" onmouseout="this.style.background='#C89B3C'">
                             Track Order <i class="fa-solid fa-location-arrow" style="font-size:9px;"></i>
